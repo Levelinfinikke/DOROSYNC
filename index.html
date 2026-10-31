@@ -2041,7 +2041,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
   }
 
   function renderPareto() {
-    $('.pickrow').classList.add('on');
+    { const pr = $('.pickrow'); pr.classList.remove('on'); void pr.offsetWidth; pr.classList.add('on'); }
     const par = OPT.par, good = OPT.good;
     let h = '<thead><tr><th>총 과금</th><th>일수</th><th>도달 날짜</th><th title="총 과금액 ÷ (목표 − 현재 싱크로 Lv.)">1Lv.당 비용</th></tr></thead><tbody>';
     const only = $('#o-good') && $('#o-good').checked;
