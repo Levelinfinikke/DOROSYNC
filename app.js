@@ -776,7 +776,7 @@
       root.classList.remove('cap');
       let out = cv, code = null, qm = null;
       if (withCode) {
-        try { code = await encodeSettings(); if ($('#o-qr').checked) { qm = qrcode(0, 'L'); qm.addData(code); qm.make(); } } catch (e) { qm = null; }
+        try { code = await encodeSettings(); if ($('#o-qr').checked) { qm = qrcode(0, 'L'); qm.addData(SITE + '#' + code); qm.make(); } } catch (e) { qm = null; }
       }
       if (pad || qm) {
         const pp = (pad || 0) * 2, below = withCode === 'below';
@@ -804,6 +804,8 @@
   $('#btn-boss-img').addEventListener('click', () => saveImage($('#tab-boss'), 'DOROSYNC_보스잡는날.png', $('#btn-boss-img')));
 
   /* ---------- 설정 코드 (이미지 내장 / QR) ---------- */
+  const SITE = 'https://levelinfinikke.github.io/DOROSYNC/';
+  const codeOf = (t) => { const m = /(DS[01]\.[A-Za-z0-9_-]+)\s*$/.exec(String(t)); return m ? m[1] : String(t); };
   const b64u = (u8) => { let t = ''; for (let i = 0; i < u8.length; i += 0x8000) t += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(t).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); };
   const unb64u = (t) => { t = t.replace(/-/g, '+').replace(/_/g, '/'); while (t.length % 4) t += '='; const a = atob(t), u = new Uint8Array(a.length); for (let i = 0; i < a.length; i++) u[i] = a.charCodeAt(i); return u; };
   async function pipeBytes(u8, stream) { return new Uint8Array(await new Response(new Blob([u8]).stream().pipeThrough(stream)).arrayBuffer()); }
@@ -871,7 +873,7 @@
       const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
       const cx = cv.getContext('2d', { willReadFrequently: true }); cx.drawImage(bmp, sx, sy, w, h, 0, 0, w, h);
       const r = jsQR(cx.getImageData(0, 0, w, h).data, w, h, { inversionAttempts: 'attemptBoth' });
-      if (r && r.data) { try { return await decodeSettings(r.data); } catch (e) { /* 다음 영역 */ } }
+      if (r && r.data) { try { return await decodeSettings(codeOf(r.data)); } catch (e) { /* 다음 영역 */ } }
     }
     throw new Error('none');
   }
@@ -909,5 +911,8 @@
   }
   init();
   const h0 = (location.hash || '').slice(1);
-  if (h0 && $('#tab-' + h0)) showTab(h0);
+  if (/^DS[01]\./.test(h0)) {
+    decodeSettings(h0).then((o) => { applyState(o); toast('QR 설정을 불러왔습니다.'); }).catch(() => toast('QR 설정 코드를 읽지 못했습니다.', 4000))
+      .finally(() => { try { history.replaceState(null, '', location.pathname + location.search + '#main'); } catch (e) { /* ignore */ } });
+  } else if (h0 && $('#tab-' + h0)) showTab(h0);
 })();

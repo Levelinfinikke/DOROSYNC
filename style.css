@@ -243,3 +243,15 @@ input[type=number]:not(#u-sortie)::-webkit-outer-spin-button,input[type=number]:
 :root[data-theme="dark"] .tbl tr.sel td{background:rgba(107,155,255,.30)}
 :root[data-theme="dark"] .tbl tr.good.sel td{background:rgba(76,195,138,.40)}
 #opt-pick:empty{display:none}
+/* 모바일 */
+.fields{grid-template-columns:repeat(auto-fill,minmax(min(210px,100%),1fr))}
+@media (max-width:900px){.grid2,.optgrid{grid-template-columns:minmax(0,1fr)}.card{min-width:0}}
+@media (max-width:520px){
+  .fields{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .wrap{padding-left:10px;padding-right:10px}
+  .card{padding:14px 12px}
+  .optbtns button{font-size:13px}
+}
+.foot{padding-top:6px;padding-bottom:28px;font-size:11.5px;color:var(--muted);text-align:center;line-height:1.6}
+.top-act label,.top-act button,.ver{white-space:nowrap}
+@media (max-width:480px){.top-act label.upl{padding:6px 10px;font-size:12.5px}.top h1,.top .brand h1{font-size:23px}}
