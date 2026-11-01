@@ -707,7 +707,7 @@ h3 .cart{vertical-align:-3px;margin-right:6px}
         </div>
       </div>
       <div class="card" id="result-card">
-        <div class="row-ctl sp"><h2 class="inline hi-res">결과</h2><span class="btns" data-html2canvas-ignore><button class="ghost sm" id="btn-save-res" type="button">결과만 저장</button> <button class="ghost sm" id="btn-save" type="button">전체 저장</button></span></div>
+        <div class="row-ctl sp"><h2 class="inline hi-res">결과</h2><span class="btns" data-html2canvas-ignore><button class="ghost sm" id="btn-save-res" type="button">결과 저장</button></span></div>
         <div id="result"></div>
       </div>
     </div>
@@ -2555,8 +2555,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     root.classList.remove('cap'); (capHi || []).forEach((it) => it.el.classList.remove('nohi')); capHi = null;
     btn.textContent = old; btn.disabled = false;
   }
-  $('#btn-save-res').addEventListener('click', () => saveImage($('#result-card'), 'DOROSYNC_결과.png', $('#btn-save-res'), 16, 'below'));
-  $('#btn-save').addEventListener('click', () => saveImage($('#tab-main'), 'DOROSYNC_계산기.png', $('#btn-save'), 16, 'below'));
+  $('#btn-save-res').addEventListener('click', () => { const d = new Date(), p2 = (n) => String(n).padStart(2, '0'); saveImage($('#result-card'), 'DOROSYNC_' + st.S0 + 'LV_' + d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate()) + '.png', $('#btn-save-res'), 16, 'below'); });
   $('#btn-boss-img').addEventListener('click', () => saveImage($('#tab-boss'), 'DOROSYNC_보스잡는날.png', $('#btn-boss-img')));
 
   /* ---------- 설정 코드 (이미지 내장 / QR) ---------- */
