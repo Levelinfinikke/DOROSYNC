@@ -235,7 +235,7 @@ label.upl:hover{border-color:var(--accent);color:var(--accent-text)}
 .stp{display:inline-flex;align-items:center;gap:4px}.stp input{width:56px !important;min-width:56px !important}.stp button{padding:2px 9px}
 input[type=number]{-moz-appearance:textfield;appearance:textfield}
 input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
-.stp.fw{display:flex;width:max-content}.stp.fw input{width:58px !important;min-width:0 !important;text-align:center}.stp.fw button{padding:6px 14px;font-size:16px;line-height:1}
+.stp.fw{display:flex;width:max-content}.stp.fw input{width:58px !important;min-width:0 !important;text-align:center}.stp.fw button{padding:0;font-size:16px;line-height:1;width:39px;height:39px;display:inline-flex;align-items:center;justify-content:center}
 /* 현재→목표 싱크로: 가운데 정렬로 붙이고 화살표 */
 .syrow{grid-column:1/-1;margin-bottom:20px;display:flex;justify-content:center;align-items:flex-start;gap:20px}
 .syrow .fld{text-align:center}.syrow .fld input{display:block;margin:0 auto}
@@ -248,7 +248,7 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
 .qgrid>.fld .hint{text-align:center;white-space:nowrap}
 .qgrid>.fld:nth-child(odd){border-right:3px solid rgba(128,128,128,.4);padding-left:20px}
 .qgrid>.fld:nth-child(even){padding-right:20px}
-@media (max-width:480px){.qgrid>.fld:nth-child(odd){padding-left:8px;padding-right:10px}.qgrid>.fld:nth-child(even){padding-right:8px;padding-left:10px}.qgrid .stp.fw{gap:3px}.qgrid .stp.fw button{padding:6px 10px}.qgrid .stp.fw input{width:46px !important}}
+@media (max-width:480px){.qgrid>.fld:nth-child(odd){padding-left:8px;padding-right:10px}.qgrid>.fld:nth-child(even){padding-right:8px;padding-left:10px}.qgrid .stp.fw{gap:3px}.qgrid .stp.fw button{padding:0;width:36px;height:36px}.qgrid .stp.fw input{width:46px !important}}
 #f-user input::placeholder{color:rgba(150,150,150,.55);opacity:1}
 #f-user input:focus::placeholder{color:transparent}
 /* 유저 정보 입력칸: 들어갈 자릿수에 맞춰 폭 축소 */
@@ -393,7 +393,8 @@ body{background:#0b100f url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.or
 .startbox #o-must-slot .chk{margin:0;white-space:nowrap}
 .stline{position:relative;display:flex;align-items:center;gap:10px;font-size:14px}
 .stline b{font-variant-numeric:tabular-nums}
-:root input.dpick{position:absolute;left:0;bottom:0;width:1px;height:1px;opacity:0;pointer-events:none;border:0 !important;padding:0 !important}
+.dwrap{position:relative;display:inline-block}
+:root input.dpick{position:absolute;left:0;top:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0 !important;padding:0 !important;margin:0 !important;font-size:16px;-webkit-appearance:none;appearance:none}
 
 /* 현재 싱크로 레벨 강조 */
 :root #u-S0{border:1px solid #ffa31a !important;box-shadow:0 0 0 2px rgba(255,163,26,.45),0 0 14px rgba(255,163,26,.35);font-weight:700;font-size:17px;color:#fff !important}
@@ -675,7 +676,8 @@ h3 .cart{vertical-align:-3px;margin-right:6px}
 button.themebtn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:8px;padding:6px 12px;cursor:pointer;color:var(--ink);background:var(--card);font:inherit;font-size:inherit;white-space:nowrap}
 button.themebtn:hover{border-color:var(--accent);color:var(--accent-text)}
 button.themebtn svg{flex:none}
-@media (max-width:480px){button.themebtn{padding:6px 10px;font-size:12.5px}}
+button.themebtn{justify-content:center;padding:0 !important;width:37px;height:37px}
+@media (max-width:480px){button.themebtn{width:33px;height:33px}}
 .lvhead{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .lvhead h3{margin-bottom:4px}
 .pinx{font:inherit;line-height:1;padding:0 5px;margin-left:2px;border:1px solid var(--line);border-radius:4px;background:transparent;color:var(--muted);cursor:pointer}
@@ -757,7 +759,7 @@ body.lvfs{overflow:hidden}
         </div>
         <div class="tscroll"><table class="tbl compact" id="t-stock"></table></div>
         <div class="startbox">
-          <div class="stline"><span class="muted">시작 날짜</span><b id="u-start-t"></b><button id="btn-date" class="ghost sm" type="button">날짜 변경</button><input type="date" id="u-start" class="dpick" tabindex="-1" aria-hidden="true"></div>
+          <div class="stline"><span class="muted">시작 날짜</span><b id="u-start-t"></b><span class="dwrap"><button id="btn-date" class="ghost sm" type="button">날짜 변경</button><input type="date" id="u-start" class="dpick" aria-label="시작 날짜 변경"></span></div>
           <div id="o-must-slot"></div>
         </div>
       </div>
@@ -1674,7 +1676,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     if (!window.__startBound) {
       window.__startBound = true;
       $('#u-start').addEventListener('input', (e) => { st.start = e.target.value; updStart(); onChange(); });
-      $('#btn-date').addEventListener('click', () => { const i = $('#u-start'); try { i.showPicker(); } catch (err) { i.focus(); i.click(); } });
+      $('#u-start').addEventListener('click', () => { try { $('#u-start').showPicker(); } catch (err) { /* 모바일은 입력칸 탭으로 바로 열림 */ } });
     }
     const bind = (id, fn) => $('#' + id).addEventListener('input', (e) => { fn(e.target.value); onChange(); });
     bind('u-S0', (v) => { st.S0 = +v; RW_EDIT['u-S0'] = true; rangeWarn(); });
@@ -2934,7 +2936,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     const SUN = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.4M12 19.1v2.4M2.5 12h2.4M19.1 12h2.4M5.3 5.3l1.7 1.7M17 17l1.7 1.7M5.3 18.7L7 17M17 7l1.7-1.7"/></svg>';
     const MOON = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.7 6.7 0 0 0 10.5 10.5z"/></svg>';
     const isDark = () => (root.dataset.theme ? root.dataset.theme === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches);
-    const paint = () => { btn.innerHTML = isDark() ? SUN + '일반 모드' : MOON + '다크 모드'; };
+    const paint = () => { btn.innerHTML = isDark() ? SUN : MOON; btn.setAttribute('aria-label', isDark() ? '일반 모드로' : '다크 모드로'); btn.title = isDark() ? '일반 모드' : '다크 모드'; };
     try { const sv = localStorage.getItem(KEY); if (sv === 'dark' || sv === 'light') root.dataset.theme = sv; } catch (e) { /* 저장 불가 환경 */ }
     paint();
     btn.addEventListener('click', () => {
