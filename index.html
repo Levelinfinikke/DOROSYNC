@@ -649,6 +649,11 @@ h3 .cart{vertical-align:-3px;margin-right:6px}
 .pickrow .gfilt input:focus,.pickrow .gfilt input:focus-visible,.pillchk input:focus,.pillchk input:focus-visible{outline:none;box-shadow:none}
 .cap .sbin::before,.cap .sbin::after{display:none !important}
 .cap h2.nohi::before{content:none !important;display:none !important;width:0 !important;margin:0 !important}
+.top-btns{display:flex;gap:8px;align-items:center}
+button.themebtn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:8px;padding:6px 12px;cursor:pointer;color:var(--ink);background:var(--card);font:inherit;font-size:inherit;white-space:nowrap}
+button.themebtn:hover{border-color:var(--accent);color:var(--accent-text)}
+button.themebtn svg{flex:none}
+@media (max-width:480px){button.themebtn{padding:6px 10px;font-size:12.5px}}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
@@ -662,7 +667,8 @@ h3 .cart{vertical-align:-3px;margin-right:6px}
       <p class="sub">싱크로 레벨업 시간·과금 시뮬레이터 <span class="ver">V2.1 · 웹</span></p>
     </div>
     <div class="top-act">
-      <label class="ghost upl" for="img-file"><svg class="qri" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h2.5v2.5H14zM19 14h2M18.5 18.5H21V21M14 20h2.5"/></svg>QR 업로드</label>
+      <div class="top-btns"><button type="button" class="ghost upl themebtn" id="btn-theme" aria-label="화면 모드 전환"></button>
+      <label class="ghost upl" for="img-file"><svg class="qri" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h2.5v2.5H14zM19 14h2M18.5 18.5H21V21M14 20h2.5"/></svg>QR 업로드</label></div>
       <p class="upl-note">이전에 계산한 정보를 <br>불러올 수 있습니다.</p><input type="file" id="img-file" accept="image/png,image/*" hidden>
     </div>
   </div>
@@ -2651,6 +2657,22 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
   document.addEventListener('click', (e) => { const g = e.target.closest('[data-go]'); if (g) { e.preventDefault(); showTab(g.dataset.go); window.scrollTo(0, 0); } });
   $('#tabs').addEventListener('click', (e) => { const b = e.target.closest('button[data-tab]'); if (b) showTab(b.dataset.tab); });
   let rsT = 0;
+
+  /* 다크 / 일반 모드 토글 (선택은 이 브라우저에만 기억) */
+  (function () {
+    const root = document.documentElement, btn = $('#btn-theme'), KEY = 'dorosync-theme';
+    const SUN = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.4M12 19.1v2.4M2.5 12h2.4M19.1 12h2.4M5.3 5.3l1.7 1.7M17 17l1.7 1.7M5.3 18.7L7 17M17 7l1.7-1.7"/></svg>';
+    const MOON = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.7 6.7 0 0 0 10.5 10.5z"/></svg>';
+    const isDark = () => (root.dataset.theme ? root.dataset.theme === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches);
+    const paint = () => { btn.innerHTML = isDark() ? SUN + '일반 모드' : MOON + '다크 모드'; };
+    try { const sv = localStorage.getItem(KEY); if (sv === 'dark' || sv === 'light') root.dataset.theme = sv; } catch (e) { /* 저장 불가 환경 */ }
+    paint();
+    btn.addEventListener('click', () => {
+      const t = isDark() ? 'light' : 'dark';
+      root.dataset.theme = t; paint();
+      try { localStorage.setItem(KEY, t); } catch (e) { /* 무시 */ }
+    });
+  })();
   $('#btn-reset').addEventListener('click', () => {
     const b = $('#btn-reset');
     if (!rsT) { b.textContent = '한 번 더 누르면 초기화'; rsT = setTimeout(() => { rsT = 0; b.textContent = '초기화'; }, 3000); return; }
