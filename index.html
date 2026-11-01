@@ -422,16 +422,18 @@ label.upl{display:inline-flex;align-items:center;gap:7px}.qri{flex:none}
 
 /* 계산 완료 안내 박스 (오버클럭 배너풍) */
 :root #opt-status:has(.ovb){margin-top:12px;width:100%}
-.ovb{position:relative;display:flex;align-items:center;justify-content:space-between;gap:6px;width:100%;max-width:340px;margin:0 auto;padding:9px 10px;box-sizing:border-box;
-  background:linear-gradient(#ffcb00,#ffcb00) 0 50%/4px 58% no-repeat,linear-gradient(#ffcb00,#ffcb00) 100% 50%/4px 58% no-repeat,linear-gradient(90deg,#ffcb00 0,#ffcb00 5px,transparent 5px,transparent 7px,#ffcb00 7px,#ffcb00 12px) 6px 93%/12px 3px no-repeat,linear-gradient(90deg,#ffcb00 0,#ffcb00 5px,transparent 5px,transparent 7px,#ffcb00 7px,#ffcb00 12px) 98% 93%/12px 3px no-repeat,linear-gradient(#3d3d3a,#2c2c2a);border:1px solid #77734a;border-radius:4px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.05),0 2px 6px rgba(0,0,0,.28)}
+.ovb{position:relative;display:flex;align-items:center;justify-content:space-between;gap:6px;width:100%;max-width:340px;margin:0 auto;padding:13px 16px 9px;box-sizing:border-box;
+  background:linear-gradient(90deg,#ffcb00 0,#ffcb00 5px,transparent 5px,transparent 7px,#ffcb00 7px,#ffcb00 12px) left 14px bottom 5px/12px 3px no-repeat,linear-gradient(90deg,#ffcb00 0,#ffcb00 5px,transparent 5px,transparent 7px,#ffcb00 7px,#ffcb00 12px) right 14px bottom 5px/12px 3px no-repeat,linear-gradient(#3d3d3a,#2c2c2a);border:0;clip-path:polygon(5.6px 0,calc(50% - 26% - 6px) 0,calc(50% - 26%) 6px,calc(50% + 26%) 6px,calc(50% + 26% + 6px) 0,calc(100% - 5.6px) 0,calc(100% - 5.6px) 22%,100% 33%,100% 67%,calc(100% - 5.6px) 78%,calc(100% - 5.6px) 100%,5.6px 100%,5.6px 78%,0 67%,0 33%,5.6px 22%)}
 .ovb::before,.ovb::after{content:"";position:absolute;top:4px;width:5px;height:3px;background:#ffcb00;box-shadow:7px 0 0 #ffcb00}
-.ovb::before{left:6px}.ovb::after{right:13px}
+.ovb::before{left:14px;top:10px}.ovb::after{right:21px;top:10px}
+.ovb .eb{position:absolute;top:0;bottom:0;width:9.8px;background:#ffcb00;pointer-events:none;clip-path:polygon(5.6px 0,100% 0,100% 100%,5.6px 100%,5.6px 78%,0 67%,0 33%,5.6px 22%)}
+.ovb .eb.l{left:0}.ovb .eb.r{right:0;transform:scaleX(-1)}
 .ovt{flex:1;text-align:center;color:#fff;font-size:14px;font-weight:700;line-height:1.35;padding-top:4px}
 .ovt small{display:block;color:#ffcb00;font-size:12.5px;font-weight:700;margin-bottom:2px}
 .ovb .ar{display:flex;flex-direction:column;gap:2px;flex:none}
-.ovb .ar b{display:block;width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:7px solid #5b573a;animation:arlit 1.6s linear infinite}
-.ovb .ar b:nth-child(2){animation-delay:.2s}.ovb .ar b:nth-child(3){animation-delay:.4s}.ovb .ar b:nth-child(4){animation-delay:.6s}
-@keyframes arlit{0%{border-top-color:#5b573a;filter:none}6%,26%{border-top-color:#ffcb00;filter:drop-shadow(0 0 4px #ffcb00)}40%,100%{border-top-color:#5b573a;filter:none}}
+.ovb .ar b{display:block;width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:7px solid #5b573a;animation:arlit 2s step-end infinite}
+.ovb .ar b:nth-child(2){animation-delay:.5s}.ovb .ar b:nth-child(3){animation-delay:1s}.ovb .ar b:nth-child(4){animation-delay:1.5s}
+@keyframes arlit{0%{border-top-color:#ffcb00}25%,100%{border-top-color:#5b573a}}
 
 /* 최적 조합 목록 */
 .pickrow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 8px}
@@ -2390,7 +2392,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
       let bd = 1e9;
       list.forEach((r) => { if (r[1] < bd) { par.push(r); bd = r[1]; } });
       btn.disabled = false; $('#opt-stop').hidden = true; bar.hidden = true;
-      status.innerHTML = '<div class="ovb"><i class="ar"><b></b><b></b><b></b><b></b></i><span class="ovt"><small>[계산 완료]</small>아래에서 패키지 조합을<br>선택하세요</span><i class="ar"><b></b><b></b><b></b><b></b></i></div>';
+      status.innerHTML = '<div class="ovb"><i class="eb l"></i><i class="eb r"></i><i class="ar"><b></b><b></b><b></b><b></b></i><span class="ovt"><small>[계산 완료]</small>아래에서 패키지 조합을<br>선택하세요</span><i class="ar"><b></b><b></b><b></b><b></b></i></div>';
       showOpt(par, cand, snap, forced);
       setTimeout(() => slowScrollTo($('#opt-card')), 450);
     };
@@ -2853,7 +2855,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
       const bg = getComputedStyle(document.body).backgroundColor;
       await new Promise((r) => setTimeout(r, 60));
       stage = 'render';
-      const cv = await html2canvas(root, { ignoreElements: (e) => MD >= 2 && e.tagName && e.tagName.toLowerCase() === 'svg' && e.getBoundingClientRect().width > 40, backgroundColor: bg, scale: SC, useCORS: true, logging: false, windowWidth: Math.max(root.scrollWidth, 1000), onclone: (doc) => { const cr = doc.querySelector('#' + root.id); resolveSvg(root, cr); fixColors(root, cr); fixInputs(root, cr); if (MD >= 1) fixIcons(root, cr); fixDeco(root, cr); if (MD >= 1) { const sy = doc.createElement('style'); sy.textContent = '.sbfill{background:linear-gradient(90deg,#d6c400,#fff500)!important}'; doc.head.appendChild(sy); } const ob = cr.querySelector('#opt-run'); if (ob) { ob.classList.add('capimg'); ob.style.setProperty('background', 'url(' + BTN_IMG + ') center/100% 100% no-repeat', 'important'); } } });
+      const cv = await html2canvas(root, { ignoreElements: (e) => MD >= 2 && e.tagName && e.tagName.toLowerCase() === 'svg' && e.getBoundingClientRect().width > 40, backgroundColor: bg, scale: SC, useCORS: true, logging: false, windowWidth: Math.max(root.scrollWidth, 1000), onclone: (doc) => { const cr = doc.querySelector('#' + root.id); resolveSvg(root, cr); fixColors(root, cr); fixInputs(root, cr); fixIcons(root, cr); fixDeco(root, cr); if (MD >= 1) { const sy = doc.createElement('style'); sy.textContent = '.sbfill{background:linear-gradient(90deg,#d6c400,#fff500)!important}'; doc.head.appendChild(sy); } const ob = cr.querySelector('#opt-run'); if (ob) { ob.classList.add('capimg'); ob.style.setProperty('background', 'url(' + BTN_IMG + ') center/100% 100% no-repeat', 'important'); } } });
       root.classList.remove('cap');
       let out = cv, code = null, qm = null;
       if (withCode) {
