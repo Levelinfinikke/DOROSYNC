@@ -2764,10 +2764,11 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
   /** 이미지 저장: 큰 캔버스를 못 만드는 환경(모바일 등)을 위해 배율을 낮춰 재시도 */
   async function saveImage(root, filename, btn, pad, withCode) {
     SAVE_ERR = '';
-    for (const sc of [2, 1.5, 1]) { if (await saveImage0(root, filename, btn, pad, withCode, sc)) return; }
+    for (const [sc, md] of [[2, 0], [1.5, 0], [1, 1], [1, 2]]) { if (await saveImage0(root, filename, btn, pad, withCode, sc, md)) return; }
     toast('이미지를 만들지 못했습니다.' + (SAVE_ERR ? ' (' + SAVE_ERR.slice(0, 60) + ')' : ''), 5000);
   }
-  async function saveImage0(root, filename, btn, pad, withCode, SC) {
+  async function saveImage0(root, filename, btn, pad, withCode, SC, MD) {
+    let stage = 'init';
     const old = btn.textContent;
     let ok = true;
     if (typeof html2canvas !== 'function') { btn.textContent = '이미지 도구 로드 실패'; setTimeout(() => (btn.textContent = old), 2500); return true; }
@@ -2778,12 +2779,14 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     try {
       const bg = getComputedStyle(document.body).backgroundColor;
       await new Promise((r) => setTimeout(r, 60));
-      const cv = await html2canvas(root, { backgroundColor: bg, scale: SC, useCORS: true, logging: false, windowWidth: Math.max(root.scrollWidth, 1000), onclone: (doc) => { const cr = doc.querySelector('#' + root.id); resolveSvg(root, cr); fixColors(root, cr); fixDeco(root, cr); const ob = cr.querySelector('#opt-run'); if (ob) { ob.classList.add('capimg'); ob.style.setProperty('background', 'url(' + BTN_IMG + ') center/100% 100% no-repeat', 'important'); } } });
+      stage = 'render';
+      const cv = await html2canvas(root, { ignoreElements: (e) => MD === 2 && e.tagName && e.tagName.toLowerCase() === 'svg', backgroundColor: bg, scale: SC, useCORS: true, logging: false, windowWidth: Math.max(root.scrollWidth, 1000), onclone: (doc) => { const cr = doc.querySelector('#' + root.id); resolveSvg(root, cr); fixColors(root, cr); if (!MD) fixDeco(root, cr); const ob = cr.querySelector('#opt-run'); if (ob) { ob.classList.add('capimg'); ob.style.setProperty('background', 'url(' + BTN_IMG + ') center/100% 100% no-repeat', 'important'); } } });
       root.classList.remove('cap');
       let out = cv, code = null, qm = null;
       if (withCode) {
         try { code = await encodeSettings(true); try { qm = qrcode(0, 'L'); qm.addData(SITE + '#' + code); qm.make(); } catch (e2) { const c0 = await encodeSettings(false); qm = qrcode(0, 'L'); qm.addData(SITE + '#' + c0); qm.make(); } } catch (e) { qm = null; }
       }
+      stage = 'compose';
       if (pad || qm) {
         const pp = (pad || 0) * SC, below = withCode === 'below';
         const n = qm ? qm.getModuleCount() : 0, cell = n > 60 ? 2 : 3, q = 2, qb = qm ? (n + q * 2) * cell : 0, gap = 32, fh = qm && below ? qb + gap * 1.5 : 0;
@@ -2795,14 +2798,16 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
           for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (qm.isDark(r, c)) cx.fillRect(qx + (c + q) * cell, qy + (r + q) * cell, cell, cell);
         }
       }
+      stage = 'blob';
       let blob = await new Promise((res) => out.toBlob(res, 'image/png'));
       if (!blob) throw new Error('캔버스 변환 실패');
       if (code && blob) blob = new Blob([pngAddText(await blob.arrayBuffer(), 'dorosync', code)], { type: 'image/png' });
+      stage = 'save';
       const r = await saveBlob(blob, filename);
       if (r === true) toast('이미지를 저장했습니다.');
       else if (r === 'declined') toast('저장이 취소되었습니다.');
       else showImg(URL.createObjectURL(blob), '이 환경에서는 파일 저장이 막혀 있습니다. 이미지를 길게 누르거나 우클릭해서 저장하세요.');
-    } catch (e) { console.error('img', e && e.message); SAVE_ERR = (e && e.message) || String(e); ok = false; }
+    } catch (e) { console.error('img', e && e.message); SAVE_ERR = stage + '/' + MD + ':' + ((e && (e.name + ' ' + e.message)) || String(e)); ok = false; }
     root.classList.remove('cap'); (capHi || []).forEach((it) => it.el.classList.remove('nohi')); capHi = null;
     btn.textContent = old; btn.disabled = false;
     return ok;
