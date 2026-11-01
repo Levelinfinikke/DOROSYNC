@@ -654,6 +654,33 @@ button.themebtn{display:inline-flex;align-items:center;gap:7px;border:1px solid 
 button.themebtn:hover{border-color:var(--accent);color:var(--accent-text)}
 button.themebtn svg{flex:none}
 @media (max-width:480px){button.themebtn{padding:6px 10px;font-size:12.5px}}
+.lvhead{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.lvhead h3{margin-bottom:4px}
+.pinx{font:inherit;line-height:1;padding:0 5px;margin-left:2px;border:1px solid var(--line);border-radius:4px;background:transparent;color:var(--muted);cursor:pointer}
+.pinx:hover{color:var(--bad);border-color:var(--bad)}
+.legend{flex-wrap:wrap}
+.lvbtns{display:flex;gap:6px;flex-wrap:wrap}
+@media (max-width:520px){#lvbox:not(.fs) #ch-lv .tip{font-size:10px;line-height:1.3;padding:3px 6px}}
+#ch-lv svg{touch-action:pan-y pinch-zoom}
+#lvbox.fs #ch-lv svg{touch-action:none}
+@media (pointer:coarse){.legend i.sw,.legend i.anc{width:16px;height:16px;touch-action:manipulation}.pinx{padding:3px 9px}#lvbox .legend{gap:10px 16px}}
+body.lvfs{overflow:hidden}
+#lvbox.fs{position:fixed;inset:0;z-index:9000;background:var(--card);padding:16px 24px;overflow:auto}
+#lvbox.fs #ch-lv{max-width:none;display:flex;flex-direction:column;align-items:center}
+#lvbox.fs #ch-lv .legend{align-self:stretch;font-size:15px}
+#lvbox.fs #ch-lv svg{width:min(100%,calc((100vh - 150px) * 560 / 270));height:auto;aspect-ratio:560/270}
+.legend i.sw,.legend i.anc{cursor:pointer;user-select:none}
+.legend i.anc{outline:2px solid var(--ink);outline-offset:1px}
+.legend .lgtip{font-weight:600;cursor:help}
+.legend .anchnote{color:var(--ok);font-weight:600}
+#pinrest{position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:16px}
+#pinrest .pbox{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:16px;max-width:460px;width:100%}
+#pinrest h4{margin:0 0 8px}
+#pinrest .pname{width:100%;box-sizing:border-box;padding:7px 9px;font-size:14px;margin-bottom:6px}
+.pinen{margin-right:2px}
+#pinrest .prow{display:flex;align-items:center;gap:8px;padding:6px 0;cursor:pointer;font-size:13px}
+#pinrest .prow i{width:10px;height:10px;border-radius:2px;flex:none}
+#pinrest .pbtn{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
@@ -727,8 +754,8 @@ button.themebtn svg{flex:none}
         <div class="optgrid wide">
           <div class="leftcol">
             <div id="ch-opt" class="chart"></div>
-            <h3 class="mt">싱크로 Lv · 전초기지 Lv</h3>
-            <div id="ch-lv" class="chart"></div>
+            <div id="lvbox"><div class="lvhead"><h3 class="mt">싱크로 Lv · 전초기지 Lv</h3><span class="lvbtns"><button type="button" class="ghost sm" id="btn-pin-restore" disabled>플랜 복원</button><button type="button" class="ghost sm" id="btn-pin">플랜 고정</button><button type="button" class="ghost sm" id="btn-lv-fs">⛶ 전체화면</button></span></div>
+            <div id="ch-lv" class="chart"></div></div>
           </div>
           <div class="rightcol"><div class="pickrow"><span class="pickhere"><span><i>▼</i> 패키지 조합</span></span><label class="chk gfilt"><input type="checkbox" id="o-good" checked> 효율구간만 표시</label></div><div class="tscroll"><table class="tbl compact" id="t-pareto"><thead><tr><th>총 과금</th><th>일수</th><th>도달 날짜</th><th>1Lv.당 비용</th></tr></thead></table></div></div>
         </div>
@@ -1799,7 +1826,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
       const A = o.series[o.area.a].pts, B = o.series[o.area.b].pts;
       if (A.length && B.length) {
         const poly = A.concat(B.slice().reverse()).map((p) => X(p[0]).toFixed(1) + ',' + Y(p[1]).toFixed(1)).join(' ');
-        g += '<polygon points="' + poly + '" fill="rgba(76,195,138,.22)" stroke="none"/>';
+        g += '<g class="dflt"><polygon points="' + poly + '" fill="rgba(76,195,138,.22)" stroke="none"/></g>';
       }
     }
     o.series.forEach((s, si) => {
@@ -1808,7 +1835,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
         if (s.step && i) d += 'L' + X(p[0]).toFixed(1) + ',' + Y(s.pts[i - 1][1]).toFixed(1);
         d += (i ? 'L' : 'M') + X(p[0]).toFixed(1) + ',' + Y(p[1]).toFixed(1);
       });
-      if (!s.noline) g += '<path d="' + d + '" fill="none" stroke="' + s.color + '" stroke-width="2" stroke-linejoin="round"' + (s.dash ? ' stroke-dasharray="6 4"' : '') + '/>';
+      if (!s.noline) g += '<path d="' + d + '" fill="none" stroke="' + s.color + '" stroke-width="' + (s.cid && o.hov && o.hov.anchor === s.cid ? 3.8 : 2) + '" stroke-linejoin="round"' + (s.dash ? ' stroke-dasharray="6 4"' : '') + '/>';
       if (s.dots) s.pts.forEach((p, i) => { g += '<circle data-i="' + i + '" cx="' + X(p[0]).toFixed(1) + '" cy="' + Y(p[1]).toFixed(1) + '" r="' + (s.sel === i ? (s.selR || 6) : (s.dotColors && s.dotColors[i] ? 5 : 3.5)) + '" fill="' + (s.sel === i ? (s.selColor || 'var(--c2)') : (s.dotColors && s.dotColors[i]) || s.color) + '" stroke="var(--card)" stroke-width="1.5"/>'; });
       if (s.selArrow && s.sel != null && s.sel >= 0 && s.pts[s.sel]) {
         const ax = X(s.pts[s.sel][0]).toFixed(1), py = Y(s.pts[s.sel][1]).toFixed(1);
@@ -1818,13 +1845,18 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
       }
     });
     if (o.link) {
+      g += '<g class="dflt">';
       const k = o.link, ax = X(k.x1), bx = X(k.x2), ay = Y(k.y1), by = Y(k.y2);
       g += '<line x1="' + ax.toFixed(1) + '" y1="' + ay.toFixed(1) + '" x2="' + bx.toFixed(1) + '" y2="' + by.toFixed(1) + '" stroke="' + k.color + '" stroke-width="2.5" stroke-linecap="round"/>';
-      g += '<text x="' + ((ax + bx) / 2).toFixed(1) + '" y="' + (((ay + by) / 2) - 7).toFixed(1) + '" text-anchor="middle" font-size="11.5" font-weight="700" fill="' + k.color + '" stroke="var(--card)" stroke-width="3" paint-order="stroke">' + k.text + '</text>';
+      g += '<text x="' + ((ax + bx) / 2).toFixed(1) + '" y="' + (((ay + by) / 2) - 7).toFixed(1) + '" text-anchor="middle" font-size="11.5" font-weight="700" fill="' + k.color + '" stroke="var(--card)" stroke-width="3" paint-order="stroke">' + k.text + '</text></g>';
     }
+    g += '<g id="hv" pointer-events="none"></g>';
     g += '<line id="cx" class="ax" y1="' + mt + '" y2="' + (H - mb) + '" style="display:none"/>';
     let lg = '';
-    if (o.series.length > 1) lg = '<div class="legend">' + o.series.map((s) => '<span><i style="background:' + s.color + '"></i>' + s.name + '</span>').join('') + '</div>';
+    if (o.series.length > 1) {
+      const an = o.hov && o.hov.anchor, anc = an && o.hov.curves.find((c) => c.id === an);
+      lg = '<div class="legend">' + o.series.filter((s) => !s.nolegend).map((s) => '<span><i' + (s.cid ? ' data-cid="' + s.cid + '" class="' + (an === s.cid ? 'anc' : 'sw') + '"' : '') + ' style="background:' + s.color + '"></i>' + (s.tipText ? '<b class="lgtip" data-tip="' + s.tipText + '">' + s.name + '</b>' : s.name) + (s.pin ? ' <button type="button" class="pinx pinen" data-pin="' + s.pin + '" aria-label="이름 변경" title="이름 변경">✎</button><button type="button" class="pinx" data-pin="' + s.pin + '" aria-label="이 플랜 지우기" title="이 플랜 지우기">×</button>' : '') + '</span>').join('') + (anc ? '<span class="anchnote">비교 기준: ' + anc.name + ' · 다른 곳 클릭 시 해제</span>' : '') + '</div>';
+    }
     el.innerHTML = lg + '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + (o.label || '그래프') + '">' + g + '</svg><div class="tip"></div>';
     const svg = $('svg', el), tip = $('.tip', el), cx = $('#cx', el);
     const snaps = (o.snaps || []).map((s) => Object.assign({}, s, { px: X(s.x), py: Y(s.y) }));
@@ -1833,6 +1865,71 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
       snaps.forEach((s) => { mk += '<circle cx="' + s.px.toFixed(1) + '" cy="' + s.py.toFixed(1) + '" r="4.5" fill="' + s.color + '" stroke="var(--card)" stroke-width="1.5"/>'; });
       svg.insertAdjacentHTML('beforeend', mk);
     }
+    const hv = $('#hv', el), dfl = el.querySelectorAll('.dflt');
+    const clearHv = () => { if (hv) hv.innerHTML = ''; dfl.forEach((n) => { n.style.display = ''; }); };
+    function nearSnap(ev) {
+      const r = svg.getBoundingClientRect(), mx = ((ev.clientX - r.left) / r.width) * W, my = ((ev.clientY - r.top) / r.height) * H;
+      let sn = null, sd = Math.max(18, 26 / (r.width / W));
+      snaps.forEach((s) => { const d = Math.hypot(s.px - mx, s.py - my); if (d < sd) { sd = d; sn = s; } });
+      return sn;
+    }
+    /** 커서 위치의 두 곡선 사이 영역을 초록으로 칠하고 사잇값 문구 반환 */
+    function region(mpx, mpy, sn) {
+      clearHv();
+      if (sn && o.hov) { mpx = sn.px; mpy = sn.py; }
+      if (!o.hov || mpx < ml || mpx > W - mr || mpy < mt || mpy > H - mb) return '';
+      const C = o.hov.curves, td = x0 + ((mpx - ml) / (W - ml - mr)) * (x1 - x0), lvl = y0 + ((H - mb - mpy) / (H - mt - mb)) * (y1 - y0);
+      const val = (c, t) => { let v = c.pts[0][1]; for (const p of c.pts) { if (p[0] <= t) v = p[1]; else break; } return v; };
+      const vs = C.map((c) => ({ c, v: val(c, td) }));
+      let P = null, Q = null;
+      const Lq = Math.round(lvl), rc = (c) => { const q = c.pts.find((z) => z[1] >= Lq); return q ? q[0] : null; };
+      if (sn && sn.id) {
+        const me = vs.find((q) => q.c.id === sn.id);
+        if (o.hov.anchor && me && me.c.id !== o.hov.anchor) { P = vs.find((q) => q.c.id === o.hov.anchor); Q = me; }
+        else if (me) {
+          const me0 = rc(me.c), oth = vs.filter((q) => q !== me && rc(q.c) != null).sort((a, b) => Math.abs(rc(a.c) - me0) - Math.abs(rc(b.c) - me0));
+          if (o.hov.anchor && o.hov.anchor === me.c.id) { P = me; Q = oth[0]; }
+          else if (oth[0]) { const f = rc(oth[0].c) < me0; P = f ? oth[0] : me; Q = f ? me : oth[0]; }
+        }
+      } else if (o.hov.anchor) {
+        P = vs.find((q) => q.c.id === o.hov.anchor);
+        if (P) Q = vs.filter((q) => q !== P).sort((a, b) => Math.abs(a.v - lvl) - Math.abs(b.v - lvl))[0];
+      } else {
+        const so = vs.slice().sort((a, b) => a.v - b.v);
+        for (let k = 0; k + 1 < so.length; k++) if (so[k].v <= lvl && lvl <= so[k + 1].v && so[k].v < so[k + 1].v) { Q = so[k]; P = so[k + 1]; break; }
+      }
+      if (!P || !Q) return '';
+      const Lv = Math.round(lvl), reach = (c, L) => { const p = c.pts.find((q) => q[1] >= L); return p ? p[0] : null; };
+      const poly = P.c.pts.concat(Q.c.pts.slice().reverse()).map((p) => X(p[0]).toFixed(1) + ',' + Y(p[1]).toFixed(1)).join(' ');
+      let h = '<polygon points="' + poly + '" fill="rgba(76,195,138,.30)" stroke="none"/>', txt = '', col = 'var(--ok)';
+      const dP = reach(P.c, Lv), dQ = reach(Q.c, Lv), lo = Math.min(P.c.pts[0][1], Q.c.pts[0][1]);
+      if (dP != null && dQ != null && Lv > lo) {
+        const d = dQ - dP, mx = Math.max(dP, dQ), pct = mx ? Math.round(Math.abs(d) / mx * 100) : 0, sg = d > 0 ? '-' : d < 0 ? '+' : '±';
+        col = d >= 0 ? 'var(--ok)' : 'var(--bad)'; txt = sg + Math.abs(d) + '일 / ' + sg + pct + '%';
+        const ax = X(dP), bx = X(dQ), yy = Y(Lv);
+        h += '<line x1="' + ax.toFixed(1) + '" y1="' + yy.toFixed(1) + '" x2="' + bx.toFixed(1) + '" y2="' + yy.toFixed(1) + '" stroke="' + col + '" stroke-width="2.5" stroke-linecap="round"/>';
+        h += '<text x="' + ((ax + bx) / 2).toFixed(1) + '" y="' + (yy - 7).toFixed(1) + '" text-anchor="middle" font-size="11.5" font-weight="700" fill="' + col + '" stroke="var(--card)" stroke-width="3" paint-order="stroke">' + txt + '</text>';
+      }
+      hv.innerHTML = h; dfl.forEach((n) => { n.style.display = 'none'; });
+      return '<br><b>' + P.c.name + ' ↔ ' + Q.c.name + '</b>' + (txt ? '<br>싱크로 ' + Lv + ' 도달: <span style="color:' + col + '">' + txt + '</span>' : '');
+    }
+    svg.addEventListener('click', (ev) => { if (nearSnap(ev)) ev.__keep = true; });
+    let tt = 0;
+    const toggleA = (id) => { if (id && o.hov) o.hov.onAnchor(id === o.hov.anchor ? null : id); };
+    /* 더블클릭(마우스) / 더블탭(터치: 브라우저가 dblclick을 안 주는 경우 대비) */
+    const dbl = (node, getId) => {
+      let lt = 0, lx = 0, ly = 0;
+      node.addEventListener('dblclick', (ev) => { if (Date.now() - ANCH_T < 900) return; toggleA(getId(ev)); });
+      node.addEventListener('pointerup', (ev) => {
+        if (ev.pointerType !== 'touch') return;
+        const now = Date.now();
+        if (now - lt < 450 && Math.hypot(ev.clientX - lx, ev.clientY - ly) < 36) { const id = getId(ev); if (id) { tt = now; toggleA(id); } lt = 0; }
+        else { lt = now; lx = ev.clientX; ly = ev.clientY; }
+      });
+    };
+    dbl(svg, (ev) => { const sn = nearSnap(ev); return sn && sn.id; });
+    const lgd = $('.legend', el);
+    if (lgd && o.hov) dbl(lgd, (ev) => { const i = ev.target.closest('[data-cid]'); return i && i.dataset.cid; });
     const base = o.series.reduce((m, s) => (s.pts.length > m.length ? s.pts : m), o.series[0].pts);
     function near(ev) {
       const r = svg.getBoundingClientRect();
@@ -1841,21 +1938,39 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
       base.forEach((p, i) => { const d = Math.abs(X(p[0]) - px); if (d < bd) { bd = d; bi = i; } });
       return bi;
     }
-    svg.addEventListener('mousemove', (ev) => {
+    /** 정보창을 곡선이 없는 빈 모서리(커서 반대편)로 옮겨 그래프를 가리지 않게 함 */
+    function cornerTip(px, py) {
+      if (!o.hov) return;
+      const r = svg.getBoundingClientRect(), k = r.width / W, tw = tip.offsetWidth, th = tip.offsetHeight, er = el.getBoundingClientRect(), ot = r.top - er.top, ol = r.left - er.left;
+      tip.style.transform = 'none';
+      if (px > (ml + W - mr) * 0.55 && py > (mt + H - mb) / 2) { tip.style.left = ol + ml * k + 8 + 'px'; tip.style.top = ot + mt * k + 4 + 'px'; }
+      else { tip.style.left = ol + (W - mr) * k - tw - 8 + 'px'; tip.style.top = ot + (H - mb) * k - th - 6 + 'px'; }
+    }
+    let hintId = null, hintOn = null, hintT = 0;
+    const hintHtml = (id) => '<br><span style="color:#f4c542">' + (id === (o.hov && o.hov.anchor) ? '💡 ' : '💡 ') + (matchMedia('(pointer:coarse)').matches ? '두 번 탭' : '두 번 눌러') + (id === (o.hov && o.hov.anchor) ? ' 기준 해제' : ' 선택') + '</span>';
+    const hintReset = () => { clearTimeout(hintT); hintId = hintOn = null; };
+    const hoverAt = (ev) => {
       const r = svg.getBoundingClientRect();
       const mpx = ((ev.clientX - r.left) / r.width) * W, mpy = ((ev.clientY - r.top) / r.height) * H;
-      let sn = null, sd = 18;
-      snaps.forEach((s) => { const d = Math.hypot(s.px - mpx, s.py - mpy); if (d < sd) { sd = d; sn = s; } });
+      const sn = nearSnap(ev), rg = region(mpx, mpy, sn);
       if (sn) {
         cx.setAttribute('x1', sn.px); cx.setAttribute('x2', sn.px); cx.style.display = '';
-        tip.innerHTML = sn.html; tip.style.left = (sn.px / W) * r.width + 'px'; tip.style.top = (sn.py / H) * r.height + (lg ? 22 : 0) + 'px'; tip.classList.add('on');
+        if (sn.id && o.hov) {
+          if (hintId !== sn.id) { hintReset(); hintId = sn.id; hintT = setTimeout(() => { if (hintId === sn.id && tip.classList.contains('on')) { hintOn = sn.id; tip.insertAdjacentHTML('beforeend', hintHtml(sn.id)); cornerTip(sn.px, sn.py); } }, 500); }
+        } else hintReset();
+        tip.innerHTML = sn.html + rg + (hintOn === sn.id && sn.id ? hintHtml(sn.id) : ''); tip.style.left = (sn.px / W) * r.width + 'px'; tip.style.top = (sn.py / H) * r.height + (lg ? 22 : 0) + 'px'; tip.classList.add('on'); cornerTip(sn.px, sn.py);
         return;
       }
+      hintReset();
       const i = near(ev), p = base[i];
       cx.setAttribute('x1', X(p[0])); cx.setAttribute('x2', X(p[0])); cx.style.display = '';
-      tip.innerHTML = o.tip(i); tip.style.left = (X(p[0]) / W) * r.width + 'px'; tip.style.top = (Y(p[1]) / H) * r.height + (lg ? 22 : 0) + 'px'; tip.classList.add('on');
-    });
-    svg.addEventListener('mouseleave', () => { tip.classList.remove('on'); cx.style.display = 'none'; });
+      tip.innerHTML = o.tip(i) + rg; tip.style.left = (X(p[0]) / W) * r.width + 'px'; tip.style.top = (Y(p[1]) / H) * r.height + (lg ? 22 : 0) + 'px'; tip.classList.add('on'); cornerTip(mpx, mpy);
+    };
+    svg.addEventListener('mousemove', hoverAt);
+    ['pointerdown', 'pointermove'].forEach((n) => svg.addEventListener(n, (ev) => { if (ev.pointerType === 'touch') hoverAt(ev); }));
+    let lastTouch = 0;
+    ['pointerdown', 'pointerup'].forEach((n) => svg.addEventListener(n, (ev) => { if (ev.pointerType === 'touch') lastTouch = Date.now(); }));
+    svg.addEventListener('mouseleave', () => { if (Date.now() - lastTouch < 1200) return; hintReset(); tip.classList.remove('on'); cx.style.display = 'none'; clearHv(); });
     if (o.onPick) svg.addEventListener('click', (ev) => o.onPick(near(ev)));
   }
 
@@ -1895,6 +2010,74 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     });
     return h + '</div></div></div>';
   }
+  /* 현재 플랜을 싱크로·전초기지 Lv 그래프에 고정(조건을 바꿔도 남음, 이미지 저장 시 함께 보관) */
+  let ANCH = null, ANCH_T = 0;
+  const PINS = [], PIN_COL = ['#ff5d73', '#3ea6ff', '#2ec4b6', '#ff8ad8'];
+  function pinTexts(p) { p.lab = (p.label || '').trim(); p.short = p.lab ? esc(p.lab) : '플랜' + p.slot; p.name = p.short + ' · ' + p.rest; }
+  function makePin(slot, snap, label) {
+    const sx = stFromSnap(snap), mm = E.buildModel(sx, D), tr = E.simulate(mm, null, true), days = tr.rows, last = days[days.length - 1];
+    const p = { slot, id: 'p' + slot, color: PIN_COL[slot - 1], snap, label: String(label || '').slice(0, 12),
+      rest: sx.S0 + '→' + sx.T + ' · ' + (last ? fmt(last.billCum) + '원 · ' + last.t + '일' : ''),
+      S: [[0, sx.S0]].concat(days.map((r) => [r.t, r.S])), L: [[0, mm.L0]].concat(days.map((r) => [r.t, r.L])) };
+    pinTexts(p); return p;
+  }
+  function pinRenameDlg(id) {
+    const p = PINS.find((q) => q.id === id); if (!p) return;
+    const d = document.createElement('div'); d.id = 'pinrest';
+    d.innerHTML = '<div class="pbox" role="dialog" aria-modal="true"><h4>플랜 이름 변경</h4><input type="text" class="pname" maxlength="12" placeholder="플랜' + p.slot + '" value="' + esc(p.lab) + '"><p class="note">최대 12자. 비우면 기본 이름(플랜' + p.slot + ')으로 돌아갑니다.</p><div class="pbtn"><button type="button" class="ghost sm" data-pr="x">취소</button><button type="button" class="sm" data-pr="ok">확인</button></div></div>';
+    document.body.appendChild(d);
+    const inp = d.querySelector('input'); inp.focus(); inp.select();
+    const ok = () => { p.label = inp.value.slice(0, 12); pinTexts(p); d.remove(); clearTimeout(tmr); recalc(); };
+    inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') ok(); else if (e.key === 'Escape') d.remove(); });
+    d.addEventListener('click', (e) => { const b = e.target.closest('[data-pr]'); if (e.target === d || (b && b.dataset.pr === 'x')) d.remove(); else if (b) ok(); });
+  }
+  function pinPlan() {
+    if (!TR || !M || PINS.length >= PIN_COL.length) return;
+    const cur = JSON.stringify(snapshot());
+    const dup = PINS.find((p) => JSON.stringify(p.snap) === cur);
+    if (dup) { toast('이미 ' + (dup.lab || dup.short) + '(으)로 고정된 플랜입니다.'); return; }
+    let slot = 1; while (PINS.some((p) => p.slot === slot)) slot++;
+    PINS.push(makePin(slot, JSON.parse(cur))); PINS.sort((a, b) => a.slot - b.slot);
+    clearTimeout(tmr); recalc();
+  }
+  /* 터치: 그래프 바깥을 누르면 정보창·구간 표시 해제 */
+  document.addEventListener('pointerdown', (e) => {
+    if (e.pointerType !== 'touch' || e.target.closest('.chart svg')) return;
+    $$('.chart .tip.on').forEach((t) => t.classList.remove('on'));
+    $$('#hv').forEach((h) => { h.innerHTML = ''; h.closest('svg').querySelectorAll('.dflt').forEach((n) => { n.style.display = ''; }); });
+    $$('#cx').forEach((c) => { c.style.display = 'none'; });
+  });
+  function lvFs(on) {
+    const b = $('#lvbox'), f = on === undefined ? !b.classList.contains('fs') : on;
+    b.classList.toggle('fs', f); document.body.classList.toggle('lvfs', f); $('#btn-lv-fs').textContent = f ? '✕ 전체화면 닫기' : '⛶ 전체화면';
+  }
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && $('#lvbox').classList.contains('fs') && !$('#pinrest')) lvFs(false); });
+  function updatePinBtn() { const b = $('#btn-pin'); if (b) { b.disabled = PINS.length >= PIN_COL.length; b.textContent = PINS.length >= PIN_COL.length ? '플랜 고정 최대 ' + PIN_COL.length + '개' : '플랜 고정'; } const r = $('#btn-pin-restore'); if (r) r.disabled = !PINS.length; }
+  function pinRestoreDlg() {
+    if (!PINS.length) return;
+    const d = document.createElement('div'); d.id = 'pinrest';
+    d.innerHTML = '<div class="pbox" role="dialog" aria-modal="true"><h4>플랜 복원</h4><p class="note warn">복원할 플랜을 선택하세요. 현재 입력된 값은 사라지고 선택한 플랜의 입력값으로 바뀝니다.</p>' + PINS.map((p, k) => '<label class="prow"><input type="radio" name="prp" value="' + p.id + '"' + (k ? '' : ' checked') + '><i style="background:' + p.color + '"></i><span>' + p.name + '</span></label>').join('') + '<div class="pbtn"><button type="button" class="ghost sm" data-pr="x">취소</button><button type="button" class="sm" data-pr="ok">확인</button></div></div>';
+    document.body.appendChild(d);
+    d.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-pr]');
+      if (e.target === d || (b && b.dataset.pr === 'x')) { d.remove(); return; }
+      if (b && b.dataset.pr === 'ok') {
+        const sel = d.querySelector('input:checked'), p = sel && PINS.find((q) => q.id === sel.value);
+        d.remove();
+        if (p) { st = stFromSnap(JSON.parse(JSON.stringify(p.snap))); OPT = null; save(); init(); $('#opt-stale').hidden = true; clearTimeout(tmr); recalc(); toast((p.lab || p.short) + '의 입력값으로 복원했습니다.'); }
+      }
+    });
+  }
+  document.addEventListener('click', (e) => {
+    if (ANCH && Date.now() - ANCH_T > 700 && !e.__keep && !e.target.closest('[data-cid]') && !e.target.closest('#pinrest')) { ANCH = null; clearTimeout(tmr); recalc(); }
+    if (e.target.closest('#btn-lv-fs')) { lvFs(); return; }
+    if (e.target.closest('#btn-pin')) { pinPlan(); return; }
+    if (e.target.closest('#btn-pin-restore')) { pinRestoreDlg(); return; }
+    const en = e.target.closest('.pinen');
+    if (en) { pinRenameDlg(en.dataset.pin); return; }
+    const x = e.target.closest('.pinx');
+    if (x) { const i = PINS.findIndex((p) => p.id === x.dataset.pin); if (i >= 0) { if (PINS[i].id === ANCH) ANCH = null; PINS.splice(i, 1); clearTimeout(tmr); recalc(); } }
+  });
   function recalc() {
     const pr = problems();
     const box = $('#result');
@@ -1961,21 +2144,27 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     chart($('#ch-lv'), {
       label: '싱크로·전초기지 레벨', xl: '일차',
       series: [
-        { name: '싱크로 Lv', color: 'var(--c1)', pts: [[0, st.S0]].concat(days.map((r) => [r.t, r.S])) },
-        { name: '싱크로 Lv (무과금)', color: 'var(--muted)', dash: true, pts: [[0, st.S0]].concat(np.map((r) => [r.t, r.S])) },
+        { name: '싱크로 Lv', cid: 'cur', color: 'var(--c1)', pts: [[0, st.S0]].concat(days.map((r) => [r.t, r.S])) },
+        { name: '싱크로 Lv (무과금)', cid: 'np', color: 'var(--muted)', dash: true, pts: [[0, st.S0]].concat(np.map((r) => [r.t, r.S])) },
         { name: '전초기지 Lv', color: 'var(--c2)', pts: [[0, M.L0]].concat(days.map((r) => [r.t, r.L])) },
-      ],
+      ].concat(...PINS.map((p) => [
+        { name: p.short, tipText: p.name, cid: p.id, color: p.color, pin: p.id, pts: p.S },
+        { name: p.name, color: p.color, dash: true, nolegend: true, pts: p.L },
+      ])),
       area: (np.length && days.length && np[np.length - 1].S === days[days.length - 1].S && np[np.length - 1].t !== days[days.length - 1].t) ? { a: 0, b: 1 } : null,
       link: (np.length && days.length && np[np.length - 1].S === days[days.length - 1].S && np[np.length - 1].t !== days[days.length - 1].t) ? (() => {
         const n = np[np.length - 1], c = days[days.length - 1], d = n.t - c.t, pct = Math.round(Math.abs(d) / n.t * 100);
         return { x1: c.t, y1: c.S, x2: n.t, y2: n.S, color: d > 0 ? 'var(--ok)' : 'var(--bad)', text: (d > 0 ? '-' : '+') + Math.abs(d) + '일 / ' + (d > 0 ? '-' : '+') + pct + '%' };
       })() : null,
-      snaps: [
-        np.length ? { x: np[np.length - 1].t, y: np[np.length - 1].S, color: 'var(--muted)', html: '무과금 도달점<br>' + np[np.length - 1].t + '일차 · ' + dstr(np[np.length - 1].t) + '<br>싱크로 ' + np[np.length - 1].S } : null,
-        days.length ? { x: days[days.length - 1].t, y: days[days.length - 1].S, color: 'var(--c1)', html: '현재 플랜 도달점<br>' + days[days.length - 1].t + '일차 · ' + dstr(days[days.length - 1].t) + '<br>싱크로 ' + days[days.length - 1].S } : null,
-      ].filter(Boolean),
-      tip: (i) => (i === 0 ? '시작' : i + '일차 · ' + dstr(i)) + '<br>싱크로 ' + at(days, i, 'S', st.S0) + ' · 무과금 ' + at(np, i, 'S', st.S0) + '<br>전초기지 ' + at(days, i, 'L', M.L0),
+      hov: { anchor: PINS.concat([{ id: 'cur' }, { id: 'np' }]).some((q) => q.id === ANCH) ? ANCH : null, onAnchor: (id) => { ANCH = id; ANCH_T = Date.now(); clearTimeout(tmr); recalc(); },
+        curves: [{ id: 'cur', name: '현재 플랜', color: 'var(--c1)', pts: [[0, st.S0]].concat(days.map((r) => [r.t, r.S])) }, { id: 'np', name: '무과금', color: 'var(--muted)', pts: [[0, st.S0]].concat(np.map((r) => [r.t, r.S])) }].concat(PINS.map((p) => ({ id: p.id, name: p.short, color: p.color, pts: p.S }))) },
+      snaps: PINS.map((p) => ({ id: p.id, x: p.S[p.S.length - 1][0], y: p.S[p.S.length - 1][1], color: p.color, html: p.name + '<br>도달점 · ' + p.S[p.S.length - 1][0] + '일차<br>싱크로 ' + p.S[p.S.length - 1][1] })).concat([
+        np.length ? { id: 'np', x: np[np.length - 1].t, y: np[np.length - 1].S, color: 'var(--muted)', html: '무과금 도달점<br>' + np[np.length - 1].t + '일차 · ' + dstr(np[np.length - 1].t) + '<br>싱크로 ' + np[np.length - 1].S } : null,
+        days.length ? { id: 'cur', x: days[days.length - 1].t, y: days[days.length - 1].S, color: 'var(--c1)', html: '현재 플랜 도달점<br>' + days[days.length - 1].t + '일차 · ' + dstr(days[days.length - 1].t) + '<br>싱크로 ' + days[days.length - 1].S } : null,
+      ]).filter(Boolean),
+      tip: (i) => (i === 0 ? '시작' : i + '일차 · ' + dstr(i)) + '<br>싱크로 ' + at(days, i, 'S', st.S0) + ' · 무과금 ' + at(np, i, 'S', st.S0) + '<br>전초기지 ' + at(days, i, 'L', M.L0) + PINS.map((p) => '<br><span style="color:' + p.color + '">' + p.short + ' 싱크로 ' + (p.S[Math.min(i, p.S.length - 1)] || [0, 0])[1] + '</span>').join(''),
     });
+    updatePinBtn();
     renderOut();
   }
 
@@ -2538,7 +2727,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
       root.classList.remove('cap');
       let out = cv, code = null, qm = null;
       if (withCode) {
-        try { code = await encodeSettings(); { qm = qrcode(0, 'L'); qm.addData(SITE + '#' + code); qm.make(); } } catch (e) { qm = null; }
+        try { code = await encodeSettings(true); try { qm = qrcode(0, 'L'); qm.addData(SITE + '#' + code); qm.make(); } catch (e2) { const c0 = await encodeSettings(false); qm = qrcode(0, 'L'); qm.addData(SITE + '#' + c0); qm.make(); } } catch (e) { qm = null; }
       }
       if (pad || qm) {
         const pp = (pad || 0) * 2, below = withCode === 'below';
@@ -2570,14 +2759,15 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
   const b64u = (u8) => { let t = ''; for (let i = 0; i < u8.length; i += 0x8000) t += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(t).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); };
   const unb64u = (t) => { t = t.replace(/-/g, '+').replace(/_/g, '/'); while (t.length % 4) t += '='; const a = atob(t), u = new Uint8Array(a.length); for (let i = 0; i < a.length; i++) u[i] = a.charCodeAt(i); return u; };
   async function pipeBytes(u8, stream) { return new Uint8Array(await new Response(new Blob([u8]).stream().pipeThrough(stream)).arrayBuffer()); }
-  function snapshot() {
+  function snapshot(withPins) {
     const cfg = Object.assign({}, st.cfg); delete cfg.mlen; delete cfg.ratio;
     const o = { v: 1, a: [st.S0, st.T, st.L0, st.sortie, st.start, st.G, st.power, st.must ? 1 : 0], b: st.boxes, l: st.loose, c: cfg, p: st.pk.map((p) => [p.opt ? 1 : 0, p.use ? 1 : 0, p.max > 0 ? p.max : 0, p.sel || '']) };
     if (JSON.stringify(st.inc) !== JSON.stringify(D.inc)) o.i = st.inc;
+    if (withPins && PINS.length) o.pn = PINS.map((p) => (p.lab ? [p.slot, p.snap, p.lab] : [p.slot, p.snap]));
     return o;
   }
-  async function encodeSettings() {
-    const u8 = new TextEncoder().encode(JSON.stringify(snapshot()));
+  async function encodeSettings(withPins) {
+    const u8 = new TextEncoder().encode(JSON.stringify(snapshot(withPins)));
     if (typeof CompressionStream === 'function') return 'DS1.' + b64u(await pipeBytes(u8, new CompressionStream('deflate-raw')));
     return 'DS0.' + b64u(u8);
   }
@@ -2590,14 +2780,22 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     if (!(o && o.v === 1 && Array.isArray(o.a) && o.a.length === 8 && Array.isArray(o.p) && o.p.length === D.pk.length && Array.isArray(o.b) && Array.isArray(o.l) && (!o.i || o.i.length === D.inc.length))) throw new Error('shape');
     return o;
   }
-  function applyState(o) {
+  function stFromSnap(o) {
     const d = defaults(), a = o.a;
     d.S0 = a[0]; d.T = a[1]; d.L0 = a[2]; d.sortie = a[3]; d.start = a[4]; d.G = a[5]; d.power = a[6]; d.must = !!a[7];
     d.boxes = o.b; d.loose = o.l; Object.assign(d.cfg, o.c || {});
     if (o.i) d.inc = o.i;
     d.pk.forEach((p, j) => { const x = o.p[j]; p.opt = !!x[0]; p.use = !!x[1]; p.max = +x[2] || 0; if (x[3]) p.sel = x[3]; });
-    st = d; st.cfg = Object.assign({}, st.cfg, { mlen: 30, ratio: [1, 1, 3] });
+    d.cfg = Object.assign({}, d.cfg, { mlen: 30, ratio: [1, 1, 3] });
+    return d;
+  }
+  function applyState(o) {
+    st = stFromSnap(o);
     OPT = null; save(); init(); $('#opt-stale').hidden = true;
+    PINS.length = 0;
+    (o.pn || []).forEach((x) => { try { if (x && x[0] >= 1 && x[0] <= PIN_COL.length) PINS.push(makePin(x[0], x[1], x[2])); } catch (e) { /* 손상된 플랜은 건너뜀 */ } });
+    PINS.sort((a, b) => a.slot - b.slot);
+    clearTimeout(tmr); recalc();
   }
   const CRCT = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
   function crc32(u) { let c = 0xFFFFFFFF; for (let i = 0; i < u.length; i++) c = CRCT[(c ^ u[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
@@ -2740,11 +2938,11 @@ new MutationObserver(sync).observe(b,{attributes:true,attributeFilter:['disabled
 <div id="tagtip" role="tooltip"></div>
 <script>
 (function(){var tip=document.getElementById('tagtip');
-document.addEventListener('mouseover',function(e){var t=e.target.closest&&e.target.closest('.ctag[data-tip]');if(!t||!t.dataset.tip){tip.classList.remove('on');return;}
+document.addEventListener('mouseover',function(e){var t=e.target.closest&&e.target.closest('.ctag[data-tip],.lgtip[data-tip]');if(!t||!t.dataset.tip){tip.classList.remove('on');return;}
  tip.textContent=t.dataset.tip;var r=t.getBoundingClientRect();tip.classList.add('on');
  var w=tip.offsetWidth,h=tip.offsetHeight,x=Math.min(Math.max(8,r.left+r.width/2-w/2),window.innerWidth-w-8),y=r.top-h-8;if(y<8)y=r.bottom+8;
  tip.style.left=x+'px';tip.style.top=y+'px';});
-document.addEventListener('mouseout',function(e){if(e.target.closest&&e.target.closest('.ctag'))tip.classList.remove('on');});
+document.addEventListener('mouseout',function(e){if(e.target.closest&&e.target.closest('.ctag,.lgtip'))tip.classList.remove('on');});
 window.addEventListener('scroll',function(){tip.classList.remove('on');},{passive:true});
 })();
 </script>
