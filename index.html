@@ -2774,7 +2774,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
       const st = { fill: g('fill', 'black'), stroke: g('stroke', 'none'), 'stroke-width': g('stroke-width', '1'), 'stroke-linecap': g('stroke-linecap', 'butt'), 'stroke-linejoin': g('stroke-linejoin', 'miter'), opacity: g('opacity', '1') };
       const t = n.tagName.toLowerCase(); let p = null; const f = (a) => parseFloat(n.getAttribute(a)) || 0;
       if (t === 'path') p = new Path2D(n.getAttribute('d'));
-      else if (t === 'rect') { p = new Path2D(); const rx = f('rx'), ry = n.getAttribute('ry') ? f('ry') : rx; if (rx || ry) p.roundRect(f('x'), f('y'), f('width'), f('height'), Math.min(rx, f('width') / 2)); else p.rect(f('x'), f('y'), f('width'), f('height')); }
+      else if (t === 'rect') { p = new Path2D(); const rx = f('rx'), ry = n.getAttribute('ry') ? f('ry') : rx; if (rx || ry) { const X = f('x'), Y = f('y'), Wd = f('width'), Ht = f('height'), R = Math.min(rx, Wd / 2, Ht / 2); p.moveTo(X + R, Y); p.arcTo(X + Wd, Y, X + Wd, Y + Ht, R); p.arcTo(X + Wd, Y + Ht, X, Y + Ht, R); p.arcTo(X, Y + Ht, X, Y, R); p.arcTo(X, Y, X + Wd, Y, R); p.closePath(); } else p.rect(f('x'), f('y'), f('width'), f('height')); }
       else if (t === 'circle') { p = new Path2D(); p.arc(f('cx'), f('cy'), f('r'), 0, 7); }
       else if (t === 'ellipse') { p = new Path2D(); p.ellipse(f('cx'), f('cy'), f('rx'), f('ry'), 0, 0, 7); }
       else if (t === 'line') { p = new Path2D(); p.moveTo(f('x1'), f('y1')); p.lineTo(f('x2'), f('y2')); }
