@@ -13,7 +13,7 @@
 <meta name="description" content="니케 싱크로 레벨업에 걸리는 시간과 과금액을 일자별로 계산하고, 최적 패키지 조합을 찾아주는 시뮬레이터">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Jua&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Jua&family=Aldrich&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#f5f6f8; --card:#ffffff; --ink:#1b2430; --muted:#667085; --line:#e3e7ee;
@@ -415,8 +415,9 @@ label.upl{display:inline-flex;align-items:center;gap:7px}.qri{flex:none}
 /* 최적 조합 목록 */
 .pickrow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 8px}
 .pickrow .gfilt{margin:0 !important;white-space:nowrap}
-.pickhere{display:none;align-items:center;gap:6px;padding:4px 12px;border-radius:5px;background:#3c3c3c;border:1px solid #ffcb00;color:#ffcb00;font-weight:700;font-size:15px;white-space:nowrap;animation:pickglow 2s ease-in-out 5 both}
-.pickhere i{font-style:normal;font-size:12px;display:inline-block;animation:pickbob 1.2s ease-in-out 8.3333 both}
+.pickhere{display:none;margin-left:20px;padding:3px 3px 0;background:#6a6757;white-space:nowrap;clip-path:polygon(0 100%,0 9px,9px 0,calc(100% - 9px) 0,100% 9px,100% 100%)}
+.pickhere>span{display:flex;align-items:center;gap:7px;padding:3px 16px 4px;font-weight:800;font-size:15px;letter-spacing:1px;color:#d8d6c2;background:repeating-linear-gradient(135deg,#46453d 0 3px,#33322c 3px 6px);clip-path:polygon(0 100%,0 6px,6px 0,calc(100% - 6px) 0,100% 6px,100% 100%)}
+.pickhere i{font-style:normal;font-size:11px;display:inline-block}
 
 .pickrow.on .pickhere{display:inline-flex}
 @keyframes pickglow{0%,100%{box-shadow:0 0 0 rgba(255,203,0,0)}50%{box-shadow:0 0 12px rgba(255,203,0,.65)}}
@@ -537,6 +538,91 @@ label.upl{display:inline-flex;align-items:center;gap:7px}.qri{flex:none}
 #opt-run.pad.capimg::before,#opt-run.pad.capimg::after{display:none !important}
 #opt-run.pad.capimg>*{display:none !important}
 #opt-run.pad.capimg{filter:none !important;box-shadow:none !important}
+/* 패키지 조합 드롭다운 */
+.tbl tr.pkdrop td{padding:0 !important;border:0 !important;background:#2b2b29 !important;box-shadow:inset 3px 0 0 #ffcb00}
+.tbl tr.pkdrop:hover td{background:#2b2b29 !important}
+.pkd{display:grid;grid-template-rows:0fr;transition:grid-template-rows .26s ease}
+.pkd.open{grid-template-rows:1fr}
+.pkd>div{overflow:hidden;min-height:0}
+.pkin{display:flex;flex-wrap:wrap;gap:6px;padding:9px 12px 10px 14px}
+.pkchip{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:5px;background:#3c3c3c;border:1px solid #5a5636;color:#f2eccd;font-size:12.5px;font-weight:600;line-height:1.35}
+.pkchip em{font-style:normal;color:#ffcb00;font-size:11.5px}.pkchip em.req{color:#ff9a6e}
+.pkchip.none{color:#aab0b8;font-weight:500}
+/* 조합 과금 태그 */
+.tag.ctag{margin-left:5px;color:#fff;font-weight:700;vertical-align:middle;font-size:11px;padding:2px 8px}
+.tag.ctag.c0{background:#5b6470}.tag.ctag.cm{background:#3b73c9}.tag.ctag.c1{background:#1f9d63}
+.tag.ctag.c2{background:#c98a00}.tag.ctag.c3{background:#dc6420}.tag.ctag.c4{background:#c23a2a}
+#t-pareto{width:100%}
+#t-pareto th,#t-pareto td{padding-left:5px !important;padding-right:5px !important}
+#t-pareto td:first-child{white-space:normal;line-height:1.9}
+#t-pareto .tag.ctag{margin-left:3px;padding:2px 6px}
+#opt-title .gn{color:var(--c3)}
+.tag.ctag.cb{background:#0b0b0b;color:#ffd75a;box-shadow:0 0 0 1px #8a6d10 inset;letter-spacing:.2px}
+#t-pareto .tag.ctag{margin-left:2px;padding:2px 5px;font-size:10.5px}
+#t-pareto{font-size:12.5px}
+#t-pareto th,#t-pareto td{padding-left:3px !important;padding-right:3px !important}
+#t-pareto .won5{padding:1px 6px}
+#t-pareto td:nth-child(n+2){white-space:nowrap}
+.tag.ctag.cs{background:#3b73c9}
+.tag.ctag.cr{background:#3b4890}.tag.ctag.cr .star{display:inline-block;vertical-align:-1px;margin-right:2px}
+#tagtip{position:fixed;z-index:9999;max-width:240px;padding:6px 9px;border-radius:6px;background:#1d1d1b;color:#f4efd2;border:1px solid #6a6430;font-size:12px;line-height:1.4;box-shadow:0 4px 12px rgba(0,0,0,.35);pointer-events:none;opacity:0;transition:opacity .12s}
+#tagtip.on{opacity:1}
+@media (min-width:901px){:root .optgrid{grid-template-columns:minmax(0,1fr) 470px}}
+#t-pareto{table-layout:fixed;width:100%}
+#t-pareto th:nth-child(2){width:72px}#t-pareto th:nth-child(3){width:50px}#t-pareto th:nth-child(4){width:90px}
+#t-pareto td:nth-child(n+2),#t-pareto th:nth-child(n+2){text-align:right}
+.optgrid.wide .rightcol .tscroll{scrollbar-gutter:stable;scrollbar-width:thin}
+.pkchip em.cnt{color:#fff;background:#555;border-radius:4px;padding:0 5px;font-size:11px}
+/* SYNCHRO BOOST */
+.sboost{position:relative;margin:40px 0 14px;padding:2px 7px;border-radius:5px;background:#fff500;color:#fff}
+.sbtab{position:absolute;bottom:calc(100% - 2px);left:50%;transform:translateX(-50%);padding:2px 8px 0;background:#fff500;
+  clip-path:polygon(0 100%,6px calc(100% - 6px),6px 6px,12px 0,calc(100% - 12px) 0,calc(100% - 6px) 6px,calc(100% - 6px) calc(100% - 6px),100% 100%)}
+.sbtab>span{display:block;padding:1px 0 2px;white-space:nowrap;line-height:1.1;text-align:center;
+  background:repeating-linear-gradient(135deg,#443e12 0 3px,#292609 3px 6px);clip-path:polygon(0 100%,0 5px,5px 0,calc(100% - 5px) 0,100% 5px,100% 100%)}
+.sbtab>span>b{display:inline-block;margin:0 -16.4px;color:#fff500;font-weight:800;font-size:21px;letter-spacing:.3px;transform:scaleX(.68);text-shadow:0 1px 0 rgba(0,0,0,.5)}
+.sbin{position:relative;border-radius:3px;padding:10px 40px 6px;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.16) 0 1px,transparent 1px 3px),linear-gradient(#4b4419,#2c2a0f)}
+.sbin::before,.sbin::after{content:"";position:absolute;top:0;bottom:0;width:6px;background-size:100% 100%;background-repeat:no-repeat}
+.sbin::before{left:0;background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 6 100%22 preserveAspectRatio=%22none%22 fill=%22%23fff500%22%3E%3Cpolygon points=%220%2C0 4%2C0 4%2C8 0%2C16%22/%3E%3Cpolygon points=%220%2C100 4%2C100 4%2C92 0%2C84%22/%3E%3Crect x=%220%22 y=%2239.2%22 width=%223%22 height=%221.9%22/%3E%3Crect x=%220%22 y=%2242.7%22 width=%223%22 height=%221.9%22/%3E%3Crect x=%220%22 y=%2246.2%22 width=%223%22 height=%221.9%22/%3E%3Crect x=%220%22 y=%2249.7%22 width=%223%22 height=%221.9%22/%3E%3Crect x=%220%22 y=%2253.2%22 width=%223%22 height=%221.9%22/%3E%3Crect x=%220%22 y=%2256.7%22 width=%223%22 height=%221.9%22/%3E%3C/svg%3E")}.sbin::after{right:0;background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 6 100%22 preserveAspectRatio=%22none%22 fill=%22%23fff500%22%3E%3Cg transform=%22translate%286 0%29 scale%28-1 1%29%22%3E%3Cpolygon points=%220%2C0 4%2C0 4%2C8 0%2C16%22/%3E%3Cpolygon points=%220%2C100 4%2C100 4%2C92 0%2C84%22/%3E%3Crect x=%220%22 y=%2239.2%22 width=%223%22 height=%221.9%22/%3E%3Crect x=%220%22 y=%2242.7%22 width=%223%22 height=%221.9%22/%3E%3Crect x=%220%22 y=%2246.2%22 width=%223%22 height=%221.9%22/%3E%3Crect x=%220%22 y=%2249.7%22 width=%223%22 height=%221.9%22/%3E%3Crect x=%220%22 y=%2253.2%22 width=%223%22 height=%221.9%22/%3E%3Crect x=%220%22 y=%2256.7%22 width=%223%22 height=%221.9%22/%3E%3C/g%3E%3C/svg%3E")}
+.sbnext{display:flex;flex-direction:column;align-items:center;gap:4px;margin-bottom:12px}
+.sbnext>span{font-size:14px;font-weight:700;color:#f1f1ec;text-shadow:0 1px 2px rgba(0,0,0,.6)}
+.sbval{display:flex;align-items:center;gap:12px}
+.sbva{display:flex;gap:1px}
+.sbva u{display:block;width:0;height:0;border-top:6px solid transparent;border-bottom:6px solid transparent;opacity:.25;animation:sbarr 3.4s ease-in-out infinite}
+.sbva.r u{border-left:9px solid #fff500}.sbva.l u{border-right:9px solid #fff500}
+.sbva u:nth-child(2){animation-delay:-1.7s;margin-left:-2px}
+@keyframes sbarr{0%,100%{opacity:.25}50%{opacity:1}}
+.sbbox{position:relative;min-width:104px;padding:0 14px;text-align:center;background:#fff500;color:#2b2807;font-weight:400;font-size:25px;line-height:25px;height:25px;letter-spacing:-1px;display:flex;align-items:center;justify-content:center}
+.sbbox>b{display:block;font-family:'Aldrich','Noto Sans KR',sans-serif;font-weight:400;line-height:1;white-space:nowrap;margin:0 -.33em;transform:scaleX(.8);text-box:trim-both cap alphabetic}
+.sbbox::before,.sbbox::after{content:"";position:absolute;top:0;bottom:0;width:2px;background:#fff500}
+.sbbox::before{left:-4px}.sbbox::after{right:-4px}
+.sbtrack{position:relative;height:7px;border-radius:4px;background:#1a1807;box-shadow:inset 0 0 0 1px #5b5314}
+.sbfill{position:absolute;left:0;top:0;bottom:0;border-radius:4px;min-width:0;
+  background:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%228%22 height=%227%22 viewBox=%220 0 8 7%22 preserveAspectRatio=%22none%22%3E%3Cpath d=%22M1.5 -.5L5.5 3.5L1.5 7.5%22 fill=%22none%22 stroke=%22%23ffffff%22 stroke-opacity=%22.55%22 stroke-width=%221.6%22/%3E%3C/svg%3E") 0 0/8px 100% repeat-x,linear-gradient(90deg,#d6c400,#fff500);
+  animation:sbflow 1.4s linear infinite}
+@keyframes sbflow{from{background-position:0 0,0 0}to{background-position:8px 0,0 0}}
+.sbdot{position:absolute;top:50%;width:13px;height:13px;margin:-6.5px 0 0 -6.5px;border-radius:50%;background:#77776f;border:2px solid #25230a;box-sizing:border-box}
+.sbdot.on{background:#fff500;border-color:#6b6200;box-shadow:0 0 6px rgba(255,245,0,.6)}
+.sblabs{position:relative;height:40px;margin-top:8px}
+.sblab{position:absolute;top:0;transform:translateX(-50%);text-align:center;font-size:11px;line-height:1.3;white-space:nowrap;color:#a9a78a}
+.sblab b{display:block;font-size:13px;color:#cfcdb4}
+.sblab em{display:block;font-style:normal;color:#e4e2c4;font-weight:600}
+.sblab span{display:block;font-size:10.5px}
+.sblab.on b{color:#fff500}
+.sblab strong{display:block;margin-top:1px;font-size:11px;font-weight:700;color:#8f8d72}
+.sblab.on strong{color:#fff500}
+.sblab:first-child strong{transform:translateX(10px)}
+.cap .sbfill{animation:none !important}
+.cap .sbtrack,.cap .sbdot{box-shadow:none !important}
+.cap .sbva u{animation:none !important;opacity:1 !important}.cap .sbva u:first-child{opacity:.4 !important}
+.pickrow{align-items:flex-end}
+.pickrow .gfilt{align-self:center}
+:root .optgrid .rightcol .tscroll{border:3px solid #6a6757;border-radius:5px;padding:4px 6px;box-sizing:border-box}
+:root .optgrid.wide .rightcol .pickrow{z-index:2}
+:root .optgrid.wide .rightcol .tscroll{top:30px !important}
+@media (max-width:900px){:root .optgrid.wide .rightcol .pickrow{margin-bottom:-3px}:root .optgrid.wide .rightcol .tscroll{margin-top:0 !important}}
+:root .cap .optgrid.wide .rightcol .pickrow{margin-bottom:-3px}
+:root .cap .optgrid.wide .rightcol .tscroll{margin-top:0 !important}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
@@ -601,7 +687,7 @@ label.upl{display:inline-flex;align-items:center;gap:7px}.qri{flex:none}
     </div>
 
     <div class="card" id="opt-card">
-      <h2>최적 조합</h2>
+      <h2 id="opt-title">최적 조합</h2>
       <p class="note warn" id="opt-stale" hidden>입력이 바뀌어 아래 곡선이 현재 입력과 맞지 않을 수 있습니다. 계산을 다시 눌러 주세요.<button type="button" class="wx" id="opt-stale-x" aria-label="닫기">×</button></p>
       <div id="opt-out">
         <div class="best" id="opt-pick"></div>
@@ -612,7 +698,7 @@ label.upl{display:inline-flex;align-items:center;gap:7px}.qri{flex:none}
             <h3 class="mt">싱크로 Lv · 전초기지 Lv</h3>
             <div id="ch-lv" class="chart"></div>
           </div>
-          <div class="rightcol"><div class="pickrow"><span class="pickhere"><i>▼</i> 패키지 조합</span><label class="chk gfilt"><input type="checkbox" id="o-good" checked> 효율구간만 표시</label></div><div class="tscroll"><table class="tbl compact" id="t-pareto"><thead><tr><th>총 과금</th><th>일수</th><th>도달 날짜</th><th>1Lv.당 비용</th></tr></thead></table></div></div>
+          <div class="rightcol"><div class="pickrow"><span class="pickhere"><span><i>▼</i> 패키지 조합</span></span><label class="chk gfilt"><input type="checkbox" id="o-good" checked> 효율구간만 표시</label></div><div class="tscroll"><table class="tbl compact" id="t-pareto"><thead><tr><th>총 과금</th><th>일수</th><th>도달 날짜</th><th>1Lv.당 비용</th></tr></thead></table></div></div>
         </div>
       </div>
     </div>
@@ -1756,6 +1842,27 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     return p;
   }
 
+  /** 싱크로 부스트: 300/400/500/600 레벨 도달 지점 */
+  function boostHtml(t) {
+    const RW = {300: '오버클럭+50%', 400: '요격전 +1', 500: '오버클럭+100%', 600: '요격전 +1'};
+    const LV = [300, 400, 500, 600], MIN = 300, MAX = 600, S0 = st.S0;
+    const pct = (v) => Math.max(0, Math.min(100, (v - MIN) / (MAX - MIN) * 100));
+    const nx = LV.find((l) => l > S0);
+    let h = '<div class="sboost"><div class="sbtab"><span><b>SYNCHRO BOOST</b></span></div><div class="sbin"><div class="sbnext"><span>' + (nx ? '다음 부스트 까지' : '모든 부스트 달성') + '</span>' +
+      (nx ? '<div class="sbval"><span class="sbva r"><u></u><u></u></span><div class="sbbox"><b>' + (nx - S0) + ' LV</b></div><span class="sbva l"><u></u><u></u></span></div>' : '') + '</div>' +
+      '<div class="sbtrack"><div class="sbfill" style="width:' + pct(S0).toFixed(2) + '%"></div>';
+    LV.forEach((lv) => { h += '<i class="sbdot' + (S0 >= lv ? ' on' : '') + '" style="left:' + pct(lv).toFixed(2) + '%"></i>'; });
+    h += '</div><div class="sblabs">';
+    LV.forEach((lv) => {
+      let sub = '<strong>' + RW[lv] + '</strong>';
+      if (S0 < lv) {
+        const r = t.rows.find((x) => x.S >= lv);
+        sub = r ? '<em>' + r.t + '일차</em><span>' + dstr(r.t, false).slice(2) + '</span>' : '<span>목표 이후</span>';
+      }
+      h += '<div class="sblab' + (S0 >= lv ? ' on' : '') + '" style="left:' + pct(lv).toFixed(2) + '%"><b>' + lv + '</b>' + sub + '</div>';
+    });
+    return h + '</div></div></div>';
+  }
   function recalc() {
     const pr = problems();
     const box = $('#result');
@@ -1792,7 +1899,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     let h = '<div class="kpis">';
     h += '<div class="kpi' + (allOk ? '' : ' bad') + '"><small>전체 목표 달성</small><b>' + (allOk ? daysAll + '일' : '미도달') + '' + '</b><span>' + (allOk ? dstr(daysAll, true) : '1500일 안에 도달하지 못했습니다') + '</span></div>';
     h += '<div class="kpi bill"><small>총 과금액</small><b>' + won(bill) + '</b><span>' + (allOk ? '월 환산 약 ' + won(bill / Math.max(1, daysAll) * 30) : '1500일까지 누적한 값') + '</span></div>';
-    h += '</div><div class="tscroll"><table class="tbl"><thead><tr><th class="l">재화</th><th>남는 재화</th><th>도달 일수</th><th>도달 날짜</th></tr></thead><tbody>';
+    h += '</div>' + boostHtml(t) + '<div class="tscroll"><table class="tbl"><thead><tr><th class="l">재화</th><th>남는 재화</th><th>도달 일수</th><th>도달 날짜</th></tr></thead><tbody>';
     RES.forEach((n, k) => {
       const cl = reachCls[k];
       h += '<tr><td class="l">' + n + '</td><td>' + (allOk ? (Math.max(0, t.rows[daysAll - 1].cum[k] - M.Need[k]) / M.Boxes[t.rows[daysAll - 1].L - 1][k]).toLocaleString('ko-KR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + 'h' : '-') + '</td><td class="' + cl + '"><b>' + (first[k] ? first[k] + '일' : '미도달') + '</b></td><td>' + (first[k] ? dstr(first[k], true) : '-') + '</td></tr>';
@@ -1970,6 +2077,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
       btn.disabled = false; $('#opt-stop').hidden = true; bar.hidden = true;
       status.innerHTML = '<div class="ovb"><i class="ar"><b></b><b></b><b></b><b></b></i><span class="ovt"><small>[계산 완료]</small>아래에서 패키지 조합을<br>선택하세요</span><i class="ar"><b></b><b></b><b></b><b></b></i></div>';
       showOpt(par, cand, snap, forced);
+      setTimeout(() => slowScrollTo($('#opt-card')), 450);
     };
     const prog = (n) => { done += n; fill.style.width = Math.min(100, (done / total) * 100) + '%'; status.textContent = '계산 중… ' + Math.min(100, Math.round((done / total) * 100)) + '%'; };
     let workers = [];
@@ -2032,9 +2140,26 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     return good;
   }
 
+  let scrollJob = 0;
+  function slowScrollTo(el) {
+    if (!el) return;
+    const hdr = document.querySelector('.top'), off = (hdr ? hdr.offsetHeight : 0) + 12;
+    const from = window.scrollY, to = Math.max(0, Math.min(el.getBoundingClientRect().top + from - off, document.documentElement.scrollHeight - window.innerHeight));
+    const dist = to - from; if (dist < 40) return;
+    const dur = Math.min(3400, Math.max(1800, Math.abs(dist) * 2.4)), t0 = performance.now(), job = ++scrollJob;
+    const stop = () => { scrollJob++; };
+    ['wheel', 'touchstart', 'keydown', 'mousedown'].forEach((ev) => window.addEventListener(ev, stop, { once: true, passive: true }));
+    (function step(t) {
+      if (job !== scrollJob) return;
+      const k = Math.min(1, (t - t0) / dur), e = k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+      window.scrollTo(0, from + dist * e);
+      if (k < 1) requestAnimationFrame(step);
+    })(t0);
+  }
   function showOpt(par, cand, snap, forced) {
     if (!par.length) {
       OPT = null;
+      $('#opt-title').textContent = '최적 조합';
       $('#ch-opt').innerHTML = ''; $('#t-pareto').innerHTML = ''; $('.pickrow').classList.remove('on');
       $('#opt-pick').textContent = '1500일 안에 목표에 도달하는 조합이 없습니다.';
       return;
@@ -2042,21 +2167,100 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     const mm = E.buildModel(snap, D);
     OPT = { par, cand, snap, forced, sel: -1, op: E.optSetup(mm, cand, snap, true, forced), good: hullSet(par) };
     OPT.dd = (d) => { const t = new Date(M.startMs + (d - 1) * 86400000); return t.getUTCFullYear() + '-' + String(t.getUTCMonth() + 1).padStart(2, '0') + '-' + String(t.getUTCDate()).padStart(2, '0'); };
-    $('#opt-pick').textContent = '곡선의 점이나 목록의 행을 눌러 패키지 조합을 선택하세요.';
+    $('#opt-pick').textContent = '';
     $('#g-sum').textContent = '· 효율 구간 ' + OPT.good.filter(Boolean).length + '개 / 전체 ' + par.length + '개';
     renderPareto();
     drawOpt();
   }
 
+  const mwon = (v) => (Math.round(v / 1000) / 10).toLocaleString('ko-KR', { maximumFractionDigits: 1 }) + '만원';
+  const TIPS = {
+    '월정액': '한달 지출 2.5만원 이하',
+    '소과금': '한달 지출 2.5만원 초과 ~ 20만원 이하',
+    '중과금': '한달 지출 20만원 초과 ~ 50만원 이하',
+    '대과금': '한달 지출 50만원 초과 ~ 150만원 이하',
+    '핵과금': '한달 지출 150만원 초과',
+    '부르주아': '부거 줄',
+    '쌀먹': '1Lv.당 비용 1만원 이하',
+    '추천': '무릎점: 곡선 양 끝을 이었을 때 가장 먼 점',
+    '일일': '일일 패키지를 포함',
+    '주간': '주간 패키지를 포함',
+    '월간': '월간 패키지를 포함'
+  };
+  const tg = (cls, label) => ' <span class="tag ctag ' + cls + '" data-tip="' + (TIPS[label.replace('👑 ', '').replace(/<[^>]*>/g, '').trim()] || '') + '">' + label + '</span>';
+  function kneeIdx(par, good) {
+    const n = par.length; if (n < 3) return -1;
+    const x0 = par[0][0], x1 = par[n - 1][0], y0 = par[0][1], y1 = par[n - 1][1];
+    const dx = x1 - x0 || 1, dy = y0 - y1 || 1; let best = -1, bd = 0;
+    par.forEach((p, i) => {
+      if (i === 0 || i === n - 1 || (good && !good[i])) return;
+      const nx = (p[0] - x0) / dx, ny = (y0 - p[1]) / dy, d = ny - nx;
+      if (d > bd) { bd = d; best = i; }
+    });
+    return best;
+  }
+  function comboTag(r, c, idx) {
+    let t = '', k = '', per = '';
+    const list = r[0] === 0 ? [] : OPT.op.decode(r[2]), mo = r[1] > 0 ? r[0] / r[1] * 30 : 0;
+    if (r[0] === 0) { t = '무과금'; k = 'c0'; }
+    else {
+      if (idx === OPT.par.length - 1 && OPT.par.length > 1) { t = '👑 부르주아'; k = 'cb'; }
+      else if (mo <= 25000) { t = '월정액'; k = 'cm'; }
+      else if (mo <= 200000) { t = '소과금'; k = 'c1'; }
+      else if (mo <= 500000) { t = '중과금'; k = 'c2'; }
+      else if (mo <= 1500000) { t = '대과금'; k = 'c3'; }
+      else { t = '👑 핵과금'; k = 'c4'; }
+      if (t !== '월정액') {
+        const nm = list.map((x) => st.pk[x.j].name);
+        per = nm.some((n) => /^일일/.test(n)) ? (k === 'c4' || k === 'cb' ? '' : '일일') : nm.some((n) => /^주간/.test(n)) ? '주간' : nm.length ? '월간' : '';
+      }
+    }
+    if (OPT.knee === undefined) OPT.knee = kneeIdx(OPT.par, OPT.good);
+    const ssal = r[0] > 0 && c !== null && c <= 10000;
+    return (t ? tg(k, t) : '') + (r[0] === 0 ? tg('c0', '현명한 청년') : '') + (ssal ? tg('cs', '쌀먹') : '') + (per ? tg('c0', per) : '') + (idx === OPT.knee ? tg('cr', '<svg class="star" viewBox="0 0 24 24" width="11" height="11" aria-hidden="true"><polygon points="12.00,2.00 15.29,7.47 21.51,8.91 17.33,13.73 17.88,20.09 12.00,17.60 6.12,20.09 6.67,13.73 2.49,8.91 8.71,7.47" fill="#ffcc00" stroke="#ffcc00" stroke-width="3.4" stroke-linejoin="round"/></svg> 추천') : '');
+  }
+  function dropRow(list, open) {
+    const body = list.length
+      ? list.map((x) => '<span class="pkchip">' + esc(st.pk[x.j].name) + (x.k >= 0 ? ' <em>' + RES[x.k] + '</em>' : '') + (x.forced ? ' <em class="req">필수</em>' : '') + (TR && TR.cnt && TR.cnt[x.j] != null ? ' <em class="cnt">' + TR.cnt[x.j] + '회</em>' : '') + '</span>').join('')
+      : '<span class="pkchip none">구매 없음 (일일 수급만)</span>';
+    return '<tr class="pkdrop"><td colspan="4"><div class="pkd' + (open ? ' open' : '') + '"><div><div class="pkin">' + body + '</div></div></div></td></tr>';
+  }
+  function toggleDrop(i) {
+    const tb = $('#t-pareto'); if (!tb) return;
+    const row = tb.querySelector('tr[data-i="' + i + '"]'); if (!row) return;
+    const cur = row.nextElementSibling && row.nextElementSibling.classList.contains('pkdrop') ? row.nextElementSibling : null;
+    if (cur && OPT.dropOpen !== false) {
+      OPT.dropOpen = false; cur.querySelector('.pkd').classList.remove('open'); setTimeout(() => cur.remove(), 280);
+    } else {
+      OPT.dropOpen = true;
+      row.insertAdjacentHTML('afterend', dropRow(OPT.op.decode(OPT.par[i][2]), false));
+      const nd = row.nextElementSibling.querySelector('.pkd'); void nd.offsetWidth; requestAnimationFrame(() => nd.classList.add('open'));
+    }
+  }
+  function showDrop(i, list, animate) {
+    const tb = $('#t-pareto'); if (!tb) return;
+    tb.querySelectorAll('tr.pkdrop').forEach((r) => {
+      const d = r.querySelector('.pkd'); d.classList.remove('open');
+      setTimeout(() => r.remove(), 280);
+    });
+    tb.querySelectorAll('tr.sel').forEach((r) => r.classList.remove('sel'));
+    const row = tb.querySelector('tr[data-i="' + i + '"]'); if (!row) return;
+    row.classList.add('sel');
+    row.insertAdjacentHTML('afterend', dropRow(list, false));
+    const nd = row.nextElementSibling.querySelector('.pkd');
+    void nd.offsetWidth; requestAnimationFrame(() => nd.classList.add('open'));
+  }
   function renderPareto() {
     { const pr = $('.pickrow'); pr.classList.remove('on'); void pr.offsetWidth; pr.classList.add('on'); }
     const par = OPT.par, good = OPT.good;
-    let h = '<thead><tr><th>총 과금</th><th>일수</th><th>도달 날짜</th><th title="총 과금액 ÷ (목표 − 현재 싱크로 Lv.)">1Lv.당 비용</th></tr></thead><tbody>';
+    let h = '<thead><tr><th>총 과금</th><th title="총 과금 ÷ 일수 × 30">한달 지출</th><th>일수</th><th>도달 날짜</th></tr></thead><tbody>';
     const only = $('#o-good') && $('#o-good').checked;
+    $('#opt-title').innerHTML = OPT.op.total.toLocaleString('ko-KR') + '가지 중 <span class="gn">' + good.filter(Boolean).length + '개</span> 효율 조합을 찾았습니다';
     par.forEach((r, i) => {
       if (only && !good[i]) return;
       const c = costPerDay(par, i);
-      h += '<tr class="click' + (good[i] ? ' good' : '') + (i === OPT.sel ? ' sel' : '') + '" data-i="' + i + '"><td><span class="won5">' + won(r[0]) + '</span></td><td>' + r[1] + '일</td><td>' + OPT.dd(r[1]) + '</td><td>' + (c === null ? '-' : won(c)) + '</td></tr>';
+      h += '<tr class="click' + (good[i] ? ' good' : '') + (i === OPT.sel ? ' sel' : '') + '" data-i="' + i + '"><td><span class="won5">' + won(r[0]) + '</span>' + comboTag(r, c, i) + '</td><td>' + mwon(r[0] / r[1] * 30) + '</td><td>' + r[1] + '일</td><td>' + OPT.dd(r[1]) + '</td></tr>';
+      if (i === OPT.sel && OPT.dropOpen !== false) h += dropRow(OPT.op.decode(r[2]), true);
     });
     $('#t-pareto').innerHTML = h + '</tbody>';
   }
@@ -2066,7 +2270,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     chart($('#ch-opt'), {
       label: '비용-일수 곡선', xl: '총 과금(만원)', xf: (v) => fmt(v), yf: (v) => v + '일',
       series: [{ name: '최적 곡선', color: 'var(--gr)', step: true, dots: true, sel: OPT.sel, selColor: OPT.good[OPT.sel] ? '#22e070' : 'var(--gr)', selArrow: true, dotColors: OPT.good.map((g) => (g ? 'var(--c3)' : null)), pts: par.map((p) => [p[0] / 10000, p[1]]) }],
-      tip: (k) => won(par[k][0]) + ' · ' + par[k][1] + '일' + (costPerDay(par, k) !== null ? '<br>1Lv.당 ' + won(costPerDay(par, k)) : '') + (OPT.good[k] ? ' · 효율 구간' : ''),
+      tip: (k) => won(par[k][0]) + ' · ' + par[k][1] + '일' + '<br>한달 지출 ' + mwon(par[k][0] / par[k][1] * 30) + (OPT.good[k] ? ' · 효율 구간' : ''),
       onPick: (k) => selectOpt(k),
     });
   }
@@ -2074,17 +2278,19 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
   /** 곡선/목록에서 조합을 고르면 패키지 설정에 적용 */
   function selectOpt(i) {
     if (!OPT) return;
-    OPT.sel = i;
+    { const stt = $('#opt-status'); if (stt && stt.querySelector('.ovb')) stt.innerHTML = ''; }
+    if (OPT.sel === i) { toggleDrop(i); return; }
+    const i0 = i;
+    OPT.sel = i; OPT.dropOpen = true;
     const r = OPT.par[i], list = OPT.op.decode(r[2]);
     const useNow = new Array(st.pk.length).fill(false);
     list.forEach((x) => { useNow[x.j] = true; if (x.k >= 0) st.pk[x.j].sel = RES[x.k]; });
     st.pk.forEach((p, j) => (p.use = useNow[j]));
     buildPkg();
     onChange('apply');
-    renderPareto();
+    clearTimeout(tmr); recalc();
     drawOpt();
-    $('#opt-pick').innerHTML = '<b>선택: ' + won(r[0]) + ' · ' + r[1] + '일 (' + OPT.dd(r[1]) + ' 도달)</b><br><span class="muted">' +
-      (list.length ? list.map((x) => esc(st.pk[x.j].name) + (x.k >= 0 ? ' [' + RES[x.k] + ']' : '') + (x.forced ? ' [필수]' : '')).join(' · ') : '구매 없음 (일일 수급만)') + '</span>';
+    showDrop(i0, list, true);
   }
   $('#o-good').checked = true;
   $('#o-good').addEventListener('change', () => { if (OPT) renderPareto(); });
@@ -2388,6 +2594,17 @@ function tick(t){var dt=Math.min(.05,(t-last)/1000);last=t;
  if(!run&&w<3){w=0;raf=0;b.classList.remove('glow');return;}raf=requestAnimationFrame(tick);}
 function sync(){run=b.disabled;clearTimeout(gt);if(run){was=true;b.classList.remove('glow');}else if(was){b.classList.add('glow');}if(!raf){last=performance.now();raf=requestAnimationFrame(tick);}}
 new MutationObserver(sync).observe(b,{attributes:true,attributeFilter:['disabled']});sync();
+})();
+</script>
+<div id="tagtip" role="tooltip"></div>
+<script>
+(function(){var tip=document.getElementById('tagtip');
+document.addEventListener('mouseover',function(e){var t=e.target.closest&&e.target.closest('.ctag[data-tip]');if(!t||!t.dataset.tip){tip.classList.remove('on');return;}
+ tip.textContent=t.dataset.tip;var r=t.getBoundingClientRect();tip.classList.add('on');
+ var w=tip.offsetWidth,h=tip.offsetHeight,x=Math.min(Math.max(8,r.left+r.width/2-w/2),window.innerWidth-w-8),y=r.top-h-8;if(y<8)y=r.bottom+8;
+ tip.style.left=x+'px';tip.style.top=y+'px';});
+document.addEventListener('mouseout',function(e){if(e.target.closest&&e.target.closest('.ctag'))tip.classList.remove('on');});
+window.addEventListener('scroll',function(){tip.classList.remove('on');},{passive:true});
 })();
 </script>
 </body>
