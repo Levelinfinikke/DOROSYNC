@@ -2757,6 +2757,20 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
       c.insertBefore(ic, c.firstChild);
     });
   }
+  /* 숫자 입력칸은 캡처 시 글자가 아래로 쏠리므로 같은 모양의 상자로 바꿔 가운데 정렬한다 */
+  function fixInputs(orig, clone) {
+    const os = orig.querySelectorAll('input:not([type=checkbox]):not([type=radio])'), cs = clone.querySelectorAll('input:not([type=checkbox]):not([type=radio])');
+    os.forEach((el, i) => {
+      const c = cs[i]; if (!c) return;
+      const cm = getComputedStyle(el), r = el.getBoundingClientRect(); if (!r.width) return;
+      const d = clone.ownerDocument.createElement('div');
+      d.textContent = el.value || '';
+      const css = ['background-color', 'color', 'border-top-left-radius', 'border-top-right-radius', 'border-bottom-left-radius', 'border-bottom-right-radius', 'font-family', 'font-size', 'font-weight', 'letter-spacing', 'border-top', 'border-right', 'border-bottom', 'border-left', 'margin-left', 'margin-right', 'margin-top', 'margin-bottom', 'position', 'left', 'top'];
+      css.forEach((p) => d.style.setProperty(p, cm.getPropertyValue(p)));
+      d.style.cssText += ';box-sizing:border-box;display:flex;align-items:center;justify-content:center;flex:none;width:' + r.width + 'px;height:' + r.height + 'px;padding:0;line-height:1;overflow:hidden';
+      c.parentNode.replaceChild(d, c);
+    });
+  }
   function fixColors(orig, clone) {
     const os = orig.querySelectorAll('*'), cs = clone.querySelectorAll('*');
     const cv = (s) => { const m = /^color\(srgb\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)(?:\s*\/\s*([\d.]+))?\)/.exec(s); return m ? 'rgba(' + Math.round(m[1] * 255) + ',' + Math.round(m[2] * 255) + ',' + Math.round(m[3] * 255) + ',' + (m[4] == null ? 1 : m[4]) + ')' : null; };
@@ -2793,7 +2807,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
       const bg = getComputedStyle(document.body).backgroundColor;
       await new Promise((r) => setTimeout(r, 60));
       stage = 'render';
-      const cv = await html2canvas(root, { ignoreElements: (e) => MD >= 2 && e.tagName && e.tagName.toLowerCase() === 'svg', backgroundColor: bg, scale: SC, useCORS: true, logging: false, windowWidth: Math.max(root.scrollWidth, 1000), onclone: (doc) => { const cr = doc.querySelector('#' + root.id); resolveSvg(root, cr); fixColors(root, cr); fixDeco(root, cr); if (MD >= 3) { const sy = doc.createElement('style'); sy.textContent = '.sbfill{background:linear-gradient(90deg,#d6c400,#fff500)!important}'; doc.head.appendChild(sy); } const ob = cr.querySelector('#opt-run'); if (ob) { ob.classList.add('capimg'); ob.style.setProperty('background', 'url(' + BTN_IMG + ') center/100% 100% no-repeat', 'important'); } } });
+      const cv = await html2canvas(root, { ignoreElements: (e) => MD >= 2 && e.tagName && e.tagName.toLowerCase() === 'svg', backgroundColor: bg, scale: SC, useCORS: true, logging: false, windowWidth: Math.max(root.scrollWidth, 1000), onclone: (doc) => { const cr = doc.querySelector('#' + root.id); resolveSvg(root, cr); fixColors(root, cr); fixInputs(root, cr); fixDeco(root, cr); if (MD >= 3) { const sy = doc.createElement('style'); sy.textContent = '.sbfill{background:linear-gradient(90deg,#d6c400,#fff500)!important}'; doc.head.appendChild(sy); } const ob = cr.querySelector('#opt-run'); if (ob) { ob.classList.add('capimg'); ob.style.setProperty('background', 'url(' + BTN_IMG + ') center/100% 100% no-repeat', 'important'); } } });
       root.classList.remove('cap');
       let out = cv, code = null, qm = null;
       if (withCode) {
