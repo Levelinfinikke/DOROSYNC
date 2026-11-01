@@ -649,6 +649,11 @@ label.upl{display:inline-flex;align-items:center;gap:7px}.qri{flex:none}
 .sbtab>span,.pickhere>span{background-size:8.4853px 100%;animation:stripemv 1s linear infinite}
 @keyframes stripemv{from{background-position-x:0}to{background-position-x:8.4853px}}
 .cap .sbtab>span,.cap .pickhere>span{animation:none}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .optgrid .rightcol .tscroll{border-color:#25282d !important}:root:not([data-theme="light"]) .pickhere{background:#25282d}:root:not([data-theme="light"]) .pickhere>span{background-image:repeating-linear-gradient(135deg,#2e3137 0 3px,#1d1f23 3px 6px)}}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .pickrow .gfilt,:root:not([data-theme="light"]) .pillchk{background:#25282d}}
+:root[data-theme="dark"] .pickrow .gfilt,:root[data-theme="dark"] .pillchk{background:#25282d}
+:root[data-theme="dark"] .optgrid .rightcol .tscroll{border-color:#25282d !important}:root[data-theme="dark"] .pickhere{background:#25282d}:root[data-theme="dark"] .pickhere>span{background-image:repeating-linear-gradient(135deg,#2e3137 0 3px,#1d1f23 3px 6px)}
+
 :root .optgrid.wide .rightcol .tscroll{bottom:auto !important;max-height:calc(100% - 30px)}
 :root .pickrow .pickhere{display:inline-block}
 .pkok{display:flex;justify-content:flex-end;padding:0 12px 9px}
@@ -2714,6 +2719,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
       d.setAttribute('style', 'position:absolute;left:0;top:0;' + (w < 10 ? 'width:' + w + 'px;bottom:0;' : 'right:0;bottom:0;') + 'background-image:' + bg + ' !important;background-size:100% 100%;background-repeat:no-repeat;pointer-events:none;z-index:' + z);
       host.insertBefore(d, host.firstChild);
     };
+    const DK = () => { const t = document.documentElement.dataset.theme; return t ? t === 'dark' : matchMedia('(prefers-color-scheme:dark)').matches; };
     const plate = (sel, outerFn, c0, c1, cut) => {
       const os = orig.querySelectorAll(sel), cs = clone.querySelectorAll(sel);
       os.forEach((el, i) => {
@@ -2735,7 +2741,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
       });
     };
     plate('.sbtab', (W, H) => [[0, H], [6, H - 6], [6, 6], [12, 0], [W - 12, 0], [W - 6, 6], [W - 6, H - 6], [W, H]], '#443e12', '#292609', 5);
-    plate('.pickhere', (W, H) => [[0, H], [0, 9], [9, 0], [W - 9, 0], [W, 9], [W, H]], '#4a4a4a', '#2f2f2f', 6);
+    plate('.pickhere', (W, H) => [[0, H], [0, 9], [9, 0], [W - 9, 0], [W, 9], [W, H]], DK() ? '#2e3137' : '#4a4a4a', DK() ? '#1d1f23' : '#2f2f2f', 6);
     /* 싱크로 부스트 양옆 띠 */
     const so = orig.querySelectorAll('.sbin'), sc = clone.querySelectorAll('.sbin');
     so.forEach((el, i) => {
