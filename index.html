@@ -705,6 +705,23 @@ h3 .cart{vertical-align:-3px;margin-right:6px}
 #rules .warnsec{margin-top:14px}
 #rules .warnsec h3{font-size:16px;font-weight:700;padding:9px 12px;background:rgba(194,50,31,.08);border-left:4px solid var(--bad);border-radius:6px;margin:0 0 8px}
 #boss-help{margin-top:14px}
+.bossbtns{display:flex;gap:6px}
+.bossfix{margin:10px 0 12px;padding:12px 14px;border:1px solid var(--line);border-left:4px solid var(--blue);border-radius:8px;background:var(--bg)}
+.bossfix[hidden]{display:none}
+.bossfix .note{margin:0 0 8px}
+.bossfix .fixrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:6px 0}
+.bossfix .fixrow label{font-size:13px;font-weight:600;min-width:200px}
+.bossfix select{max-width:100%;flex:1 1 240px}
+#fix-msg:empty{display:none}
+.bossfix[hidden],#fix-extra[hidden]{display:none}
+.bossfix input[type=number]{width:140px;flex:0 0 auto}
+.bossfix .fixhint{margin:2px 0 6px;font-size:12px}
+#fix-msg{margin:8px 0 0;font-weight:600}
+.gdot{position:relative;display:inline-block;width:9px;height:9px;border-radius:50%;background:#22e070;margin-right:5px;vertical-align:1px}
+.gdot::before,.gdot::after{content:"";position:absolute;inset:-2px;border-radius:50%;border:2px solid #22e070;opacity:0;pointer-events:none;animation:gping 2.4s ease-out infinite}
+.gdot::after{animation-delay:1.2s}
+@keyframes gping{0%{transform:scale(.7);opacity:.5}100%{transform:scale(3.6);opacity:0}}
+.cap .gdot::before,.cap .gdot::after{animation:none;opacity:0}
 .bossctl{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
 .bossctl .gtb{font-size:12px;font-weight:600;white-space:nowrap;cursor:pointer;color:var(--muted);display:inline-flex;align-items:center;gap:4px}
 #boss-help .qic{display:inline-grid;place-items:center;width:15px;height:15px;border-radius:50%;background:#3b82f6;color:#fff;font-size:11px;font-weight:800;line-height:1;margin-right:3px;vertical-align:1px}
@@ -957,7 +974,18 @@ body.lvfs{overflow:hidden}
   <!-- 보스 -->
   <section id="tab-boss" class="tab">
     <div class="card">
-      <div class="row-ctl sp"><h2 class="inline">보스잡는날</h2><span class="bossctl" data-html2canvas-ignore><button class="ghost sm" id="btn-boss-img" type="button" data-html2canvas-ignore>이미지 저장</button><label class="gtb"><input type="checkbox" id="boss-all"> 모든 보스 표시</label></span></div>
+      <div class="row-ctl sp"><h2 class="inline">보스잡는날</h2><span class="bossctl" data-html2canvas-ignore><span class="bossbtns"><button class="ghost sm" id="btn-boss-fix" type="button" aria-expanded="false" data-html2canvas-ignore>예측이 빗나갔나요?</button><button class="ghost sm" id="btn-boss-img" type="button" data-html2canvas-ignore>이미지 저장</button></span><label class="gtb"><input type="checkbox" id="boss-all"> 모든 보스 표시</label></span></div>
+      <div class="bossfix" id="boss-fix" hidden data-html2canvas-ignore>
+        <p class="note">실제 클리어 기록을 입력하면 투력차를 보정해 예상을 다시 계산합니다. 과거 클리어 기록은 <a href="https://www.blablalink.com/shiftyspad/home" target="_blank" rel="noopener noreferrer">블라블라링크</a>에서 확인할 수 있습니다.</p>
+        <div class="fixrow"><label for="fix-cl">내가 클리어한 가장 어려운 보스</label><select id="fix-cl"></select></div>
+        <div id="fix-extra" hidden>
+          <div class="fixrow"><label for="fix-sc">클리어 당시 싱크로 <small class="muted">(선택)</small></label><input type="number" id="fix-sc" min="1" max="1500" step="1" inputmode="numeric" placeholder="예: 215"></div>
+          <div class="fixrow"><label for="fix-pc">클리어 당시 투력 <small class="muted">(선택)</small></label><input type="number" id="fix-pc" min="0" step="1" inputmode="numeric" placeholder="예: 330000"></div>
+          <p class="muted fixhint">입력하면 더 정확하게 보정합니다. 투력만 입력: 그 투력으로 투력차 계산 / 싱크로만 입력: 그때 투력을 추정 / 둘 다 입력: 1군 전투력이 비어 있으면 본인 곡선도 함께 보정</p>
+        </div>
+        <div class="fixrow"><button class="sm" id="fix-apply" type="button">보정하기</button><button class="ghost sm" id="fix-close" type="button">닫기</button></div>
+        <p class="note" id="fix-msg"></p>
+      </div>
       <p class="muted" id="boss-note"></p>
       <div class="tscroll tall"><table class="tbl compact" id="t-boss"></table></div>
       <p class="note" id="boss-help"><span class="qic" aria-hidden="true">?</span> 이미 잡은 보스가 보여요: 실력이 좋은겁니다. 투력차를 키워보세요.<br><span class="warnic" aria-hidden="true">⚠</span> 예상 투력은 돌파, 모듈작 여하에 따라 ±6% 오차가 있습니다.<br><span class="warnic" aria-hidden="true">⚠</span> 49·50챕터는 개방 직후라 신뢰도가 낮습니다.</p>
@@ -1302,9 +1330,16 @@ self.DATA={"boxes":[[20.24,6437.98,3456],[21.93,9221.99,3935.98],[23.39,12353.99
         for (const x of rows) { if (x.power >= thr) { day = x.t; break; } }
       }
       let S = null, P = null;
-      if (day === 0) { S = tr.S0; P = tr.p0; }
+      let lo = false;
+      if (day === 0) { // 이미 클리어 가능: 투력표를 거꾸로 찾아 클리어 가능했던 최소 싱크로 추산
+        S = tr.S0;
+        const f0 = tr.p0 / m.cpsAt(tr.S0);
+        while (S > 200 && f0 * m.cpsAt(S - 1) >= thr) S--;
+        lo = S === 200 && tr.S0 >= 200;
+        P = f0 * m.cpsAt(S);
+      }
       else if (day !== null) { const x = rows[day - 1]; S = x.S; P = x.power; }
-      out.push({ no: r[0], mode: r[1], name: r[2], base: r[3], judge: r[4], stages: r[5], day, S, P, K: r[6] });
+      out.push({ no: r[0], mode: r[1], name: r[2], base: r[3], judge: r[4], stages: r[5], day, S, P, lo, K: r[6] });
     }
     return out;
   }
@@ -1697,9 +1732,16 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
         for (const x of rows) { if (x.power >= thr) { day = x.t; break; } }
       }
       let S = null, P = null;
-      if (day === 0) { S = tr.S0; P = tr.p0; }
+      let lo = false;
+      if (day === 0) { // 이미 클리어 가능: 투력표를 거꾸로 찾아 클리어 가능했던 최소 싱크로 추산
+        S = tr.S0;
+        const f0 = tr.p0 / m.cpsAt(tr.S0);
+        while (S > 200 && f0 * m.cpsAt(S - 1) >= thr) S--;
+        lo = S === 200 && tr.S0 >= 200;
+        P = f0 * m.cpsAt(S);
+      }
       else if (day !== null) { const x = rows[day - 1]; S = x.S; P = x.power; }
-      out.push({ no: r[0], mode: r[1], name: r[2], base: r[3], judge: r[4], stages: r[5], day, S, P, K: r[6] });
+      out.push({ no: r[0], mode: r[1], name: r[2], base: r[3], judge: r[4], stages: r[5], day, S, P, lo, K: r[6] });
     }
     return out;
   }
@@ -2748,17 +2790,61 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     return h;
   }
   document.addEventListener('change', (e) => { if (e.target && e.target.id === 'boss-all') renderBoss(); });
+  /* 예측 보정: 실제 클리어 기록으로 투력차(G) 역산 */
+  function fixOpts() {
+    const bs = M.boss.slice().sort((x, y) => x[4] - y[4] || x[0] - y[0]);
+    const lab = (r) => { const code = r[2].replace(' (STAGE)', ''), info = BOSSNAME[code]; return r[1] + ' ' + code + (r[2].indexOf('(STAGE)') >= 0 ? ' STAGE' : '') + (info ? ' ' + info[0] : '') + ' · 판정 ' + fmt(r[4]); };
+    const o = bs.map((r) => '<option value="' + r[0] + '">' + esc(lab(r)) + '</option>').join('');
+    const cl = $('#fix-cl'), pc = cl.value;
+    cl.innerHTML = '<option value="">선택하세요</option>' + o;
+    cl.value = pc;
+  }
+  $('#btn-boss-fix').addEventListener('click', () => {
+    const box = $('#boss-fix'), open = box.hidden;
+    if (open && M) fixOpts();
+    box.hidden = !open;
+    $('#btn-boss-fix').setAttribute('aria-expanded', String(open));
+  });
+  $('#fix-cl').addEventListener('change', () => { $('#fix-extra').hidden = !$('#fix-cl').value; $('#fix-msg').textContent = ''; });
+  $('#fix-close').addEventListener('click', () => { $('#boss-fix').hidden = true; $('#btn-boss-fix').setAttribute('aria-expanded', 'false'); });
+  $('#fix-apply').addEventListener('click', () => {
+    const msg = $('#fix-msg');
+    if (!TR || !M) { msg.textContent = '먼저 계산을 실행해 주세요.'; return; }
+    const byNo = (v) => M.boss.find((r) => String(r[0]) === String(v));
+    const c = byNo($('#fix-cl').value);
+    if (!c) { msg.textContent = '클리어한 가장 어려운 보스를 선택해 주세요.'; return; }
+    const sc = Math.round(+$('#fix-sc').value) || 0, pcv = +$('#fix-pc').value || 0;
+    let P = TR.p0, extra = '';
+    if (pcv > 0) {
+      P = pcv;
+      if (sc >= 1 && !(st.power > 0)) { // 당시 싱크로·투력 → 본인 곡선 보정(1군 전투력 비어 있을 때만)
+        const np = Math.round(pcv / M.cpsAt(Math.min(1500, sc)) * M.cpsAt(M.S0)), pw = $('#u-power');
+        pw.value = np; pw.dispatchEvent(new Event('input', { bubbles: true }));
+        extra = ' 1군 전투력은 ' + fmt(np) + '(으)로 추정해 입력했습니다.';
+      }
+    } else if (sc >= 1) P = M.fac * M.cpsAt(Math.min(1500, sc));
+    const gHi = P / c[4] - 1;
+    const ps = []; for (let p = 0; p <= 45; p += 5) ps.push(-p / 100);
+    let g = ps.find((x) => x <= gHi + 1e-9), note = '';
+    if (g === undefined) { g = -0.45; note = ' 선택한 보스를 잡으려면 -45%보다 큰 차이가 필요합니다. 1군 전투력과 현재 싱크로를 확인해 주세요.'; }
+    const old = st.G, sel = $('#u-G'), opt = Array.from(sel.options).find((o) => Math.abs(+o.value - g) < 1e-9);
+    if (opt) { sel.value = opt.value; sel.dispatchEvent(new Event('input', { bubbles: true })); }
+    const pc = (x) => (x === 0 ? '0%' : Math.round(x * 100) + '%');
+    msg.textContent = '투력차를 ' + pc(old) + ' → ' + pc(g) + '(으)로 보정해 다시 계산했습니다.' + extra + note;
+  });
   function renderBoss() {
     if (!TR) return;
     const all = E.bossTable(M, TR), skipped = all.filter((b) => b.day === 0).length;
     const showAll = $('#boss-all') && $('#boss-all').checked;
-    const rows = all.filter((b) => showAll || b.day !== 0).sort((x, y) => (x.day === null ? 1e9 : x.day) - (y.day === null ? 1e9 : y.day) || x.no - y.no);
+    const rows = all.filter((b) => showAll || b.day !== 0).sort((x, y) => (x.day === null ? 1e9 : x.day) - (y.day === null ? 1e9 : y.day) || (x.day === 0 ? (x.P - y.P || x.base - y.base) : 0) || x.no - y.no);
     $('#boss-note').textContent = skipped && !showAll ? '시작 시점에 이미 클리어 가능한 보스 ' + skipped + '개는 생략했습니다.' : '';
+    const nxt = {}; // 모드별 현재 막힌 보스(아직 못 잡는 보스 중 가장 먼저 잡는 보스)
+    rows.forEach((b) => { if (b.day !== 0 && !nxt[b.mode]) nxt[b.mode] = b; });
     let h = '<thead><tr><th>순서</th><th class="l">모드</th><th class="l">보스</th><th>기준 전투력</th><th>예상 투력</th><th>예상 싱크로 Lv</th><th>예상 날짜</th><th>일차</th><th>한섭 최저클 평균</th></tr></thead><tbody>';
     const kr = {};
     if (self.TABLES) { self.TABLES.bump.stage.rows.forEach((r) => { if (typeof r[6] === 'number') kr[r[1]] = r[6]; }); self.TABLES.bump.sum.rows.forEach((r) => { if (typeof r[6] === 'number') kr[r[1]] = r[6]; }); }
     rows.forEach((b) => {
-      h += '<tr' + (b.K ? ' class="bump"' : '') + '><td>' + b.no + '</td><td class="l">' + b.mode + '</td><td class="l name">' + bossCell(b) + '</td><td>' + fmt(b.base) + '</td><td>' + (b.P == null ? '-' : fmt(b.P)) + '</td><td class="hs">' + (b.S == null ? '-' : '<span class="lvc">' + b.S + '</span>') + '</td><td class="' + (b.day === null ? 'bad' : '') + '">' + (b.day === null ? '미도달' : dstr(b.day, true)) + '</td><td>' + (b.day === null ? '-' : b.day) + '</td><td>' + (b.mode === '하드' && kr[b.name.replace(' (STAGE)', '')] ? fmt(kr[b.name.replace(' (STAGE)', '')]) : '-') + '</td></tr>';
+      h += '<tr' + (b.K ? ' class="bump"' : '') + '><td>' + b.no + '</td><td class="l">' + b.mode + '</td><td class="l name">' + (nxt[b.mode] === b ? '<span class="gdot" title="현재 막힌 보스"></span>' : '') + bossCell(b) + '</td><td>' + fmt(b.base) + '</td><td>' + (b.P == null ? '-' : (b.day === 0 ? '<span class="muted" title="과거 추산">' + (b.lo ? '≤' : '≈') + '</span>' : '') + fmt(b.P)) + '</td><td class="hs">' + (b.S == null ? '-' : '<span class="lvc">' + (b.day === 0 && b.lo ? '≤' : '') + b.S + '</span>') + '</td><td class="' + (b.day === null ? 'bad' : '') + '">' + (b.day === null ? '미도달' : b.day === 0 ? '-' : dstr(b.day, true)) + '</td><td>' + (b.day === null || b.day === 0 ? '-' : b.day) + '</td><td>' + (b.mode === '하드' && kr[b.name.replace(' (STAGE)', '')] ? fmt(kr[b.name.replace(' (STAGE)', '')]) : '-') + '</td></tr>';
     });
     $('#t-boss').innerHTML = h + '</tbody>';
   }
