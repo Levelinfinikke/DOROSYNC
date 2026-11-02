@@ -2528,6 +2528,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     }
     const mm = E.buildModel(snap, D);
     OPT = { par, cand, snap, forced, sel: -1, op: E.optSetup(mm, cand, snap, true, forced), good: hullSet(par) };
+    try { OPT.npMiss = par[0][0] > 0 && E.simulate(mm, new Array(mm.Pk.length).fill(false), false).days >= 9999; } catch (e) { OPT.npMiss = false; }
     OPT.dd = (d) => { const t = new Date(M.startMs + (d - 1) * 86400000); return t.getUTCFullYear() + '-' + String(t.getUTCMonth() + 1).padStart(2, '0') + '-' + String(t.getUTCDate()).padStart(2, '0'); };
     $('#opt-pick').textContent = '';
     $('#g-sum').textContent = '· 효율 구간 ' + OPT.good.filter(Boolean).length + '개 / 전체 ' + par.length + '개';
@@ -2618,6 +2619,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     let h = '<thead><tr><th>총 과금</th><th title="총 과금 ÷ 일수 × 30">한달 지출</th><th>일수</th><th>도달 날짜</th></tr></thead><tbody>';
     const only = $('#o-good') && $('#o-good').checked;
     $('#opt-title').innerHTML = OPT.op.total.toLocaleString('ko-KR') + '가지 중 <span class="gn">' + good.filter(Boolean).length + '개</span> 효율 조합을 찾았습니다';
+    if (OPT.npMiss) h += '<tr class="good"><td><span class="won5">0원</span>' + tg('c0', '무과금') + '</td><td>0만원</td><td>1500일 초과</td><td>미도달</td></tr>';
     par.forEach((r, i) => {
       if (only && !good[i]) return;
       const c = costPerDay(par, i);
