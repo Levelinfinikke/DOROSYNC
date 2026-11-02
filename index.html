@@ -1235,6 +1235,7 @@ self.DATA={"boxes":[[20.24,6437.98,3456],[21.93,9221.99,3935.98],[23.39,12353.99
       },
       /** idx 의 구성 : [{j, k}] (k = 선택 재화 번호, 없으면 -1) */
       decode(idx) {
+        if (idx < 0) return [];
         const out = forced.map((j) => ({ j, k: -1, forced: true }));
         let x = idx;
         for (let i = 0; i < slots.length; i++) {
@@ -1606,6 +1607,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
       },
       /** idx 의 구성 : [{j, k}] (k = 선택 재화 번호, 없으면 -1) */
       decode(idx) {
+        if (idx < 0) return [];
         const out = forced.map((j) => ({ j, k: -1, forced: true }));
         let x = idx;
         for (let i = 0; i < slots.length; i++) {
@@ -2527,6 +2529,12 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
       return;
     }
     const mm = E.buildModel(snap, D);
+    if (forced && forced.length && par[0][0] > 0) { // 필수 패키지가 있어도 무과금(아무것도 구매 안 함)은 항상 후보
+      try {
+        const r0 = E.simulate(mm, new Array(mm.Pk.length).fill(false), false);
+        if (r0.days < 9999) par = [[0, r0.days, -1]].concat(par.filter((p) => p[1] < r0.days));
+      } catch (e) { /* 무시 */ }
+    }
     OPT = { par, cand, snap, forced, sel: -1, op: E.optSetup(mm, cand, snap, true, forced), good: hullSet(par) };
     try { OPT.npMiss = par[0][0] > 0 && E.simulate(mm, new Array(mm.Pk.length).fill(false), false).days >= 9999; } catch (e) { OPT.npMiss = false; }
     OPT.dd = (d) => { const t = new Date(M.startMs + (d - 1) * 86400000); return t.getUTCFullYear() + '-' + String(t.getUTCMonth() + 1).padStart(2, '0') + '-' + String(t.getUTCDate()).padStart(2, '0'); };
