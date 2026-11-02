@@ -2497,7 +2497,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
       }
       h.push(i);
     });
-    h.forEach((i) => { if (i > 0) good[i] = true; });
+    h.forEach((i) => { if (i > 0 || par[0][0] === 0) good[i] = true; });
     return good;
   }
 
