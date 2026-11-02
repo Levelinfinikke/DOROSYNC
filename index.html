@@ -258,7 +258,7 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
 #f-user input:focus::placeholder{color:transparent}
 /* 유저 정보 입력칸: 들어갈 자릿수에 맞춰 폭 축소 */
 #f-user #u-S0,#f-user #u-T,#f-user #u-L0{width:86px}
-#f-user #u-power,#f-user #u-G{width:136px}
+#f-user #u-power{width:136px}#f-user #u-G{width:156px}
 .cntc .stp{position:relative;left:-16px}
 #opt-stale{display:flex;align-items:center;justify-content:space-between;gap:12px}
 #opt-stale[hidden]{display:none}
@@ -713,6 +713,9 @@ h3 .cart{vertical-align:-3px;margin-right:6px}
 .bossfix .fixrow label{font-size:13px;font-weight:600;min-width:200px}
 .bossfix select{max-width:100%;flex:1 1 240px}
 #fix-msg:empty{display:none}
+#f-user .gcw{display:flex;align-items:center;gap:4px;margin-top:6px;font-size:13px}
+#f-user .gcw[hidden]{display:none}
+#f-user #u-Gc{width:96px}
 .bossfix[hidden],#fix-extra[hidden]{display:none}
 .bossfix input[type=number]{width:140px;flex:0 0 auto}
 .bossfix .fixhint{margin:2px 0 6px;font-size:12px}
@@ -1915,8 +1918,13 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     w('u-T', tv === '' ? '' : T > 1500 ? '최대 1500레벨까지만 입력 가능합니다' : (sv !== '' && T < S) ? '너무 낮습니다' : '');
   }
   function buildUser() {
+    const gFromPct = (x) => Math.min(0, Math.max(-0.9, -Math.abs(x) / 100));
+    const gFmt = (g) => (g === 0 ? '0%' : (Math.round(g * 1000) / 10) + '%');
+    const gLabel = () => { const o = $('#u-G') && $('#u-G').querySelector('option[value="__c"]'); if (!o) return; const on = $('#u-G').value === '__c'; o.textContent = on ? '커스텀 ' + gFmt(st.G) : '커스텀 (직접 입력)'; };
     const gopt = [];
     for (let p = 0; p <= 45; p += 5) gopt.push('<option value="' + (-p / 100) + '"' + (Math.abs(st.G + p / 100) < 1e-9 ? ' selected' : '') + '>' + (p === 0 ? '0%' : '-' + p + '%' + ({ 20: ' (자동)', 30: ' (손컨)', 35: ' (어려움)', 40: ' (극한)', 45: ' (불가능)' }[p] || '')) + '</option>');
+    const gOff = !gopt.some((o) => o.indexOf(' selected') >= 0); // 5% 단위가 아닌 값 = 커스텀
+    gopt.push('<option value="__c"' + (gOff ? ' selected' : '') + '>' + (gOff ? '커스텀 ' + gFmt(st.G) : '커스텀 (직접 입력)') + '</option>');
     $('#opt-hold').appendChild($('#o-must-lbl'));
     $('#f-user').innerHTML =
       '<div class="syrow">' + field('u-S0', '현재 싱크로', num('u-S0', st.S0, 1, 1499, 1), '<span class="rw"></span>') +
@@ -1925,7 +1933,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
       '<div class="qgrid">' + field('u-L0', '전초기지 레벨', num('u-L0', st.L0, 1, 800, 1), '<span id="u-L0-t">비우면 평균 기지레벨 사용</span>') +
       field('u-power', '현재 1군 전투력', num('u-power', st.power || '', 0, null, 1), '<span id="u-power-t"></span>') +
       field('u-sortie', '단기섬멸 횟수', '<span class="stp fw"><button type="button" class="ghost sm" data-su="-1" aria-label="횟수 줄이기">−</button>' + num('u-sortie', st.sortie, 1, 12, 1) + '<button type="button" class="ghost sm" data-su="1" aria-label="횟수 늘리기">+</button></span>', '1~12 (1회는 무료)') +
-      field('u-G', '투력차 (클리어 성향)', '<select id="u-G">' + gopt.join('') + '</select>', '0% ~ -45% (5% 단위)') + '</div>';
+      field('u-G', '투력차 (클리어 성향)', '<select id="u-G">' + gopt.join('') + '</select><span class="gcw" id="u-Gc-w"' + (gOff ? '' : ' hidden') + '><input type="number" id="u-Gc" min="-90" max="0" step="0.1" inputmode="decimal" placeholder="예: -23.4" value="' + (gOff ? Math.round(st.G * 1000) / 10 : '') + '" aria-label="투력차 직접 입력(%)"> %</span>', '') + '</div>';
     $('#o-must-slot').appendChild($('#o-must-lbl'));
     const WD = ['일', '월', '화', '수', '목', '금', '토'];
     const updStart = () => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(st.start || ''); $('#u-start').value = st.start || ''; $('#u-start-t').textContent = m ? st.start + '(' + WD[new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])).getUTCDay()] + ')' : '-'; };
@@ -1946,7 +1954,19 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
       const i = $('#u-sortie'), v = Math.min(12, Math.max(1, (+i.value || 1) + (+b.dataset.su)));
       i.value = v; i.dispatchEvent(new Event('input', { bubbles: true }));
     }));
-    bind('u-G', (v) => (st.G = +v));
+    bind('u-G', (v) => {
+      if (v === '__c') { // 커스텀: 현재 값을 채워 두고 입력 유도
+        $('#u-Gc-w').hidden = false;
+        const x = parseFloat($('#u-Gc').value);
+        if (isFinite(x)) st.G = gFromPct(x); else $('#u-Gc').value = Math.round(st.G * 1000) / 10;
+        gLabel();
+      } else { $('#u-Gc-w').hidden = true; st.G = +v; gLabel(); }
+    });
+    $('#u-Gc').addEventListener('input', (e) => {
+      const x = parseFloat(e.target.value);
+      if (!isFinite(x)) return;
+      st.G = gFromPct(x); gLabel(); onChange();
+    });
     bind('u-power', (v) => (st.power = +v || 0));
   }
 
@@ -2813,7 +2833,18 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     const byNo = (v) => M.boss.find((r) => String(r[0]) === String(v));
     const c = byNo($('#fix-cl').value);
     if (!c) { msg.textContent = '클리어한 가장 어려운 보스를 선택해 주세요.'; return; }
-    const sc = Math.round(+$('#fix-sc').value) || 0, pcv = +$('#fix-pc').value || 0;
+    const scRaw = $('#fix-sc').value.trim(), pcRaw = $('#fix-pc').value.trim();
+    let sc = 0, pcv = 0;
+    if (scRaw !== '') {
+      sc = Math.round(+scRaw);
+      if (!isFinite(sc) || sc < 1 || sc > M.S0) { msg.textContent = '클리어 당시 싱크로는 1 ~ 현재 싱크로(' + M.S0 + ') 사이여야 합니다. 비워 두면 무시합니다.'; return; }
+    }
+    if (pcRaw !== '') {
+      pcv = +pcRaw;
+      if (!isFinite(pcv) || pcv <= 0) { msg.textContent = '클리어 당시 투력은 0보다 큰 숫자여야 합니다. 비워 두면 무시합니다.'; return; }
+      const cur = st.power > 0 ? st.power : TR.p0;
+      if (pcv > cur * (st.power > 0 ? 1.05 : 1.5)) { msg.textContent = '클리어 당시 투력(' + fmt(pcv) + ')이 현재 ' + (st.power > 0 ? '1군 전투력' : '예상 투력') + '(' + fmt(cur) + ')보다 지나치게 높습니다. 값을 확인해 주세요.'; return; }
+    }
     let P = TR.p0, extra = '';
     if (pcv > 0) {
       P = pcv;
@@ -2824,12 +2855,14 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
       }
     } else if (sc >= 1) P = M.fac * M.cpsAt(Math.min(1500, sc));
     const gHi = P / c[4] - 1;
-    const ps = []; for (let p = 0; p <= 45; p += 5) ps.push(-p / 100);
-    let g = ps.find((x) => x <= gHi + 1e-9), note = '';
-    if (g === undefined) { g = -0.45; note = ' 선택한 보스를 잡으려면 -45%보다 큰 차이가 필요합니다. 1군 전투력과 현재 싱크로를 확인해 주세요.'; }
-    const old = st.G, sel = $('#u-G'), opt = Array.from(sel.options).find((o) => Math.abs(+o.value - g) < 1e-9);
-    if (opt) { sel.value = opt.value; sel.dispatchEvent(new Event('input', { bubbles: true })); }
-    const pc = (x) => (x === 0 ? '0%' : Math.round(x * 100) + '%');
+    let g = Math.min(0, Math.max(-0.9, Math.floor(gHi * 1000) / 1000)), note = ''; // 0.1% 단위 커스텀 값(내림 → 해당 보스는 확실히 클리어)
+    if (gHi < -0.9) note = ' 선택한 보스를 잡으려면 -90%보다 큰 차이가 필요합니다. 1군 전투력과 현재 싱크로를 확인해 주세요.';
+    const old = st.G, sel = $('#u-G');
+    const opt = Array.from(sel.options).find((o) => o.value !== '__c' && Math.abs(+o.value - g) < 1e-9);
+    if (opt) { sel.value = opt.value; $('#u-Gc-w').hidden = true; }
+    else { sel.value = '__c'; $('#u-Gc-w').hidden = false; $('#u-Gc').value = Math.round(g * 1000) / 10; }
+    st.G = g; sel.dispatchEvent(new Event('input', { bubbles: true }));
+    const pc = (x) => (x === 0 ? '0%' : (Math.round(x * 1000) / 10) + '%');
     msg.textContent = '투력차를 ' + pc(old) + ' → ' + pc(g) + '(으)로 보정해 다시 계산했습니다.' + extra + note;
   });
   function renderBoss() {
