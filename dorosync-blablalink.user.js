@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         DOROSYNC 블라블라링크 연동
 // @namespace    dorosync
-// @version      2.0.0
+// @version      2.2.0
 // @description  도로싱크에서 요청하면, 로그인된 블라블라링크 세션의 싱크로·전초기지 레벨·니케 장비(오버로드)·최근 보스 클리어 기록을 도로싱크로 전달합니다.
 // @match        https://*.blablalink.com/*
 // @run-at       document-start
@@ -63,7 +63,9 @@
     return { mode: modeDigit === '7' ? 'hard' : 'normal', chapter: null, stageId: null, lv: 0, power: 0, clearedAt: 0, progress: progress };
   }
 
-  async function sync() {
+  async function sync(report) {
+    report = report || function () {};
+    report('info', '유저 정보를 확인하는 중…');
     var p = await post('ugc/direct/standalonesite/User/GetUserGamePlayerInfo', {});
     var d = (p && p.data) || {};
     var area = Number(d.area_id);
@@ -71,10 +73,12 @@
     var id = '';
 
     // 싱크로 · 전초기지 레벨
+    report('outpost', '싱크로·전초기지 레벨을 불러오는 중…');
     var o = await post('game/proxy/Game/GetUserProfileOutpostInfo', { intl_open_id: id, nikke_area_id: area });
     var oi = (o && o.data && o.data.outpost_info) || {};
 
     // 니케 목록 · 장비
+    report('chars', '니케 목록과 오버로드 장비를 불러오는 중…');
     var ch = await post('game/proxy/Game/GetUserCharacters', { intl_open_id: id, nikke_area_id: area });
     if (String(ch && ch.code) !== '0') throw new Error((ch && (ch.message || ch.msg)) || '니케 목록을 불러오지 못했습니다.');
     var codes = ((ch.data && ch.data.characters) || []).map(function (c) { return String(c.name_code); });
@@ -91,13 +95,23 @@
       slots.forEach(function (s) {
         parts[s] = [1, 2, 3].map(function (n) { return Number(c[s + '_equip_option' + n + '_id']) || 0; });
       });
-      return { code: String(c.name_code), name: '', combat: Number(c.combat) || 0, lv: Number(c.lv) || 0, parts: parts };
+      var n = function (k) { return Number(c[k]) || 0; };
+      return {
+        code: String(c.name_code), name: '', combat: n('combat'), lv: n('lv'),
+        core: n('core'), grade: n('grade'),
+        sk: [n('skill1_lv'), n('skill2_lv'), n('ulti_skill_lv')],
+        eq: { head: n('head_equip_lv'), torso: n('torso_equip_lv'), arm: n('arm_equip_lv'), leg: n('leg_equip_lv') },
+        fav: { tid: n('favorite_item_tid'), lv: n('favorite_item_lv') },
+        parts: parts
+      };
     });
     var top5 = nikkes.map(function (n) { return n.combat; }).sort(function (a, b) { return b - a; }).slice(0, 5)
       .reduce(function (a, b) { return a + b; }, 0);
 
     // 최근 보스 클리어 기록 (노멀 / 하드)
+    report('normal', '노멀 클리어 기록을 찾는 중…');
     var normal = await findClear('6', d.normal_progress, area);
+    report('hard', '하드 클리어 기록을 찾는 중…');
     var hard = await findClear('7', d.hard_progress, area);
 
     return {
@@ -119,7 +133,8 @@
     if (busy) return;
     busy = true;
     var src = e.source, origin = e.origin, token = String(d.token || '');
-    sync().then(function (r) {
+    var report = function (step, text) { try { src.postMessage({ type: 'DORO_BL_PROGRESS', token: token, step: step, text: text }, origin); } catch (e) { /* ignore */ } };
+    sync(report).then(function (r) {
       src.postMessage({ type: 'DORO_BL_RESULT', token: token, ok: true, area: r.area, me: r.me, clear: r.clear, nikkes: r.nikkes }, origin);
     }).catch(function (err) {
       src.postMessage({ type: 'DORO_BL_RESULT', token: token, ok: false, error: String((err && err.message) || err) }, origin);
