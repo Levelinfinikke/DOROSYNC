@@ -859,6 +859,7 @@ body.lvfs{overflow:hidden}
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 <style id="me-css">
+@media(max-width:520px){#btn-bl .bltx{display:none}#btn-bl{padding-left:12px;padding-right:12px}}
 #tab-me .me-status{margin:10px 0 0;font-size:13px;color:var(--muted,#8b93a5)}
 #tab-me .me-status.ok{color:#4fd18b}#tab-me .me-status.dirty{color:#ff7a7a}
 #tab-me .me-guide{margin-top:12px}#tab-me .me-guide summary{cursor:pointer;font-size:13px}
@@ -884,6 +885,7 @@ body.lvfs{overflow:hidden}
     </div>
     <div class="top-act">
       <div class="top-btns"><button type="button" class="ghost upl themebtn" id="btn-theme" aria-label="화면 모드 전환"></button>
+      <button type="button" class="ghost upl" id="btn-bl" aria-label="블라블라링크에서 불러오기" title="블라블라링크에서 내 정보 불러오기"><svg class="qri" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg><span class="bltx">블라블라링크</span></button>
       <label class="ghost upl" for="img-file"><svg class="qri" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h2.5v2.5H14zM19 14h2M18.5 18.5H21V21M14 20h2.5"/></svg>QR 업로드</label></div>
       <p class="upl-note">이전에 계산한 정보를 <br>불러올 수 있습니다.</p><input type="file" id="img-file" accept="image/png,image/*" hidden>
     </div>
@@ -3780,6 +3782,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
   const blSay = (t, cls) => {
     const el = $('#me-status'); if (el) { el.textContent = t; el.className = 'me-status ' + (cls || ''); }
     try { const w = $('#ol-frame').contentWindow; if (w && w.__blSay) w.__blSay(t, cls); } catch (e) { /* 오버로드 탭 미로드 */ }
+    if (cls) toast(t, 4000);
   };
   window.doroBLStart = function () {
     doroBL.tok = Math.random().toString(36).slice(2) + Date.now().toString(36);
@@ -3814,7 +3817,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
   function blPick() {
     const d = doroBL.data; if (!d || !d.clear) return { cand: [], best: null };
     const cand = ['normal', 'hard'].map((k) => { const c = d.clear[k], row = blBossRow(c); return c ? { k, c, row } : null; }).filter(Boolean);
-    const ok = cand.filter((x) => x.row && x.c.power > 0).sort((a, b) => b.row[5] - a.row[5]);
+    const ok = cand.filter((x) => x.row && x.c.power > 0).sort((a, b) => b.row[4] - a.row[4]);
     return { cand, best: ok[0] || null };
   }
   const blFill = (id, v) => { const el = $('#' + id); if (!el || !(v > 0)) return; el.value = Math.round(v); el.dispatchEvent(new Event('input', { bubbles: true })); };
@@ -3854,15 +3857,15 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     const m = d.me || {}, pk = blPick();
     const rows = pk.cand.map((x) => {
       const lab = x.c.chapter == null ? '기록 없음' : BL_MODE[x.k] + ' ' + (x.row ? x.row[2] : x.c.chapter + '챕터 보스');
-      return '<tr' + (pk.best && pk.best.k === x.k ? ' class="me-pick"' : '') + '><td>' + (pk.best && pk.best.k === x.k ? '✓ ' : '') + esc(lab) + '</td><td>' + (x.c.power ? fmt(x.c.power) : '-') + '</td><td>' + (x.c.lv || '-') + '</td><td>' + (x.row ? fmt(x.row[5]) : '-') + '</td><td>' + blDate(x.c.clearedAt) + '</td></tr>';
+      return '<tr' + (pk.best && pk.best.k === x.k ? ' class="me-pick"' : '') + '><td>' + (pk.best && pk.best.k === x.k ? '✓ ' : '') + esc(lab) + '</td><td>' + (x.c.power ? fmt(x.c.power) : '-') + '</td><td>' + (x.c.lv || '-') + '</td><td>' + (x.row ? fmt(x.row[4]) : '-') + '</td><td>' + blDate(x.c.clearedAt) + '</td></tr>';
     }).join('');
     const kp = (l, v, s) => '<div class="kpi"><div class="l">' + l + '</div><div class="v num">' + v + '</div>' + (s ? '<div class="s">' + s + '</div>' : '') + '</div>';
     let html = '<div class="card"><div class="row-ctl sp"><h2 class="inline">' + esc(m.role || '내 정보') + '</h2><button class="ghost sm" id="me-apply" type="button">계산기에 다시 적용</button></div>' +
       '<div class="mekpis">' + kp('현재 싱크로', fmt(m.synchro || 0)) + kp('전초기지 레벨', fmt(m.outpost || 0)) + kp('1군 전투력', fmt(m.top5 || 0), '전투력 상위 5명 합산') +
       kp('클리어 투력', pk.best ? fmt(pk.best.c.power) : '-', pk.best ? '클리어 당시 Lv ' + pk.best.c.lv : '') + '</div>' +
       '<p class="muted" id="me-fixnote"></p>' +
-      '<div class="tscroll"><table class="tbl compact"><thead><tr><th>최근 클리어 보스</th><th>클리어 투력</th><th>니케 Lv</th><th>보스 싱크로</th><th>클리어일</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
-      '<p class="note">노멀과 하드 중 보스 싱크로가 더 높은 기록을 보스 보정에 사용합니다.</p></div>';
+      '<div class="tscroll"><table class="tbl compact"><thead><tr><th>최근 클리어 보스</th><th>클리어 투력</th><th>니케 Lv</th><th>보스 판정 투력</th><th>클리어일</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+      '<p class="note">노멀과 하드 중 더 어려운 보스(판정 투력이 높은 쪽)의 기록을 보스 보정에 사용합니다.</p></div>';
     const only = !($('#me-oc') && !$('#me-oc').checked);
     const list = d.nikkes.filter((n) => !only || BLP.some(([p]) => (n.parts[p] || []).some((v) => v > 0))).sort((a, b) => b.combat - a.combat);
     html += '<div class="card"><div class="row-ctl sp"><h2 class="inline">내 니케 <span class="muted">' + list.length + '명</span></h2><label class="chk gtb"><input type="checkbox" id="me-oc"' + (only ? ' checked' : '') + '> 오버로드 장비 있는 니케만</label></div><div class="megrid">' +
@@ -3873,6 +3876,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     $('#me-oc').addEventListener('change', renderMe);
   }
   $('#me-btn').addEventListener('click', () => window.doroBLStart());
+  $('#btn-bl').addEventListener('click', () => window.doroBLStart());
   $('#me-code').value = $('#me-script').textContent.trim();
   $('#me-copy').addEventListener('click', () => {
     const t = $('#me-code'); t.select();
