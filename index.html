@@ -927,7 +927,7 @@ body.lvfs{overflow:hidden}
 #tab-me .mekpis{gap:12px;margin:14px 0 6px}
 #tab-me .mekpis .kpi{position:relative;overflow:hidden;border-radius:14px;padding:14px 16px 13px 20px;text-align:left;background:linear-gradient(135deg,rgba(127,127,127,.16),rgba(127,127,127,.05))!important;border:1px solid var(--line)!important;box-shadow:none!important}
 #tab-me .mekpis .kpi::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--kc,#5aa9ff)}
-#tab-me .mekpis .kpi:nth-child(1){--kc:#5aa9ff}#tab-me .mekpis .kpi:nth-child(2){--kc:#3fcf8e}#tab-me .mekpis .kpi:nth-child(3){--kc:#ff9a3d}#tab-me .mekpis .kpi:nth-child(4){--kc:#b07cff}
+#tab-me .mekpis .kpi:nth-child(1){--kc:#ff9a3d}#tab-me .mekpis .kpi:nth-child(2){--kc:#3fcf8e}#tab-me .mekpis .kpi:nth-child(3){--kc:#5aa9ff}#tab-me .mekpis .kpi:nth-child(4){--kc:#ef4444}
 #tab-me .mekpis .kpi .l{font-size:12px;color:var(--muted);letter-spacing:.02em}
 #tab-me .mekpis .kpi .v{font-size:26px;font-weight:800;line-height:1.25;color:var(--kc)}
 #tab-me .mekpis .kpi .s{font-size:11.5px;color:var(--muted);margin-top:2px}
@@ -937,6 +937,7 @@ body.lvfs{overflow:hidden}
 #tab-me tr.me-pick td{background:var(--accent-soft);color:var(--accent-text)}
 #tab-me .megrid{grid-template-columns:repeat(auto-fill,minmax(176px,1fr));gap:14px}
 #tab-me .nk{border-radius:16px;background:linear-gradient(180deg,rgba(127,127,127,.10),rgba(127,127,127,.03));border:1px solid var(--line);box-shadow:0 1px 0 rgba(255,255,255,.04) inset}
+#tab-me .nk{cursor:pointer}
 #tab-me .nk:hover{transform:translateY(-4px);box-shadow:0 12px 26px rgba(0,0,0,.22);border-color:var(--accent)}
 #tab-me .nk-pic{height:200px}
 #tab-me .nk-in{padding:10px 12px 12px;position:relative;gap:7px;border-top:1px solid var(--line)}
@@ -950,7 +951,31 @@ body.lvfs{overflow:hidden}
 .pk-t{border-radius:14px;background:none}
 .pk-t .pp{height:118px}
 .pk-t .pn{padding:2px 8px 9px}
-@media(max-width:600px){#tab-me .megrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}#tab-me .nk-pic{height:auto;aspect-ratio:3/4}#tab-me .nk-pic img{object-position:50% 6%}.pk-grid{grid-template-columns:repeat(auto-fill,minmax(98px,1fr))}.pk-t .pp{height:auto;aspect-ratio:3/4}.pk-t .pp img{object-position:50% 6%}}
+@media(max-width:600px){#tab-me .megrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}#tab-me .nk-pic{height:auto;aspect-ratio:3/4}#tab-me .nk-pic img{object-position:50% 6%}.pk-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.pk-t .pp{height:auto;aspect-ratio:3/4}.pk-t .pp img{object-position:50% 6%}}
+
+#tab-me .nk-bd,.pk-t .nk-bd{position:absolute;right:6px;bottom:6px;display:flex;align-items:center;gap:2px;padding:3px 5px;border-radius:99px;background:rgba(14,17,26,.55);backdrop-filter:blur(2px)}
+#tab-me .nk-bd .st,.pk-t .nk-bd .st{width:14px;height:14px;fill:#ffc531;filter:drop-shadow(0 0 3px rgba(255,197,49,.7))}
+#tab-me .nk-bd .st.off,.pk-t .nk-bd .st.off{fill:#8a8f9c;opacity:.35;filter:none}
+#tab-me .nk-bd .nk-core,.pk-t .nk-bd .nk-core{margin-left:3px;min-width:20px;height:20px;padding:0 2px;box-sizing:border-box;border-radius:50%;background:radial-gradient(circle at 35% 30%,#b57cff,#7a2fd0);color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.45);box-shadow:0 0 6px rgba(160,90,255,.7);text-shadow:none}
+#tab-me .nk-bd .nk-core.off,.pk-t .nk-bd .nk-core.off{background:rgba(138,143,156,.45);box-shadow:none;opacity:.6}
+.pk-t{display:flex;flex-direction:column}
+.pk-t .pp{flex:none}
+.pk-t .pn{flex:1;display:flex;flex-direction:column;gap:3px;padding:6px 12px 12px}
+.pk-t .pn b{min-height:2.5em}
+.pk-t .pcp{color:var(--muted);font-size:11.5px;white-space:nowrap}
+.pk-t .peq{display:flex;gap:3px}
+.pk-t .peq i{flex:1;font-style:normal;text-align:center;font-size:10.5px;font-weight:700;border-radius:99px;padding:0;background:rgba(239,68,68,.14);color:#e5484d;border:1px solid rgba(239,68,68,.35)}
+.pk-t .peq i.z{background:rgba(127,127,127,.12);color:var(--muted);border-color:var(--line)}
+.pk-t .psk{font-size:10.5px;color:var(--muted);white-space:nowrap}.pk-t .psk b{color:#8b5cf6}
+.pk-q{flex:1 1 150px;min-width:0;max-width:260px;padding:6px 10px;border-radius:8px;border:1px solid var(--input-line,var(--line));background:var(--input);color:var(--ink);font:inherit;font-size:13px}
+.fld{position:relative}
+.bl-bub{position:absolute;left:0;top:calc(100% - 4px);z-index:30;max-width:min(280px,92vw);padding:8px 12px;border-radius:10px;border:0;background:#1f2937;color:#fff;font:inherit;font-size:12.5px;font-weight:600;text-align:left;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.3);animation:blb .2s ease}
+.bl-bub::before{content:"";position:absolute;left:18px;top:-6px;border:6px solid transparent;border-top:0;border-bottom-color:#1f2937}
+@keyframes blb{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.fld.nudge input{border-color:#ff9a3d!important;box-shadow:0 0 0 3px rgba(255,154,61,.25);animation:ndg 1.6s ease-in-out 3}
+.fld.nudge .hint{color:#ff9a3d!important;font-weight:700}
+.nudge-tag{font-size:12px;font-weight:700;color:#ff9a3d;margin-left:auto;margin-right:8px}
+@keyframes ndg{50%{box-shadow:0 0 0 6px rgba(255,154,61,.05)}}
 </style>
 <style id="bl-css">
 .blm .me-status:empty{display:none}
@@ -1021,7 +1046,7 @@ body.lvfs{overflow:hidden}
     <button role="tab" data-grp="boss" data-tab="boss" hidden>보스 목록</button>
     <button role="tab" data-grp="boss" data-tab="data" hidden>데이터</button>
     <button role="tab" data-grp="ol" data-tab="ol" hidden>계산</button>
-    <button role="tab" data-grp="ol" data-tab="olrules" hidden>규칙</button>
+    <button role="tab" data-grp="ol" data-tab="olrules" hidden>계산 규칙</button>
   </nav>
 </div></div>
 
@@ -1171,7 +1196,7 @@ body.lvfs{overflow:hidden}
     <div class="bl-tabs" id="bl-tabs" role="tablist"><button type="button" data-v="pc" class="on" role="tab">PC</button><button type="button" data-v="mob" role="tab">모바일</button></div>
     <div id="bl-pc">
     <div class="row-ctl"><button class="primary pad" id="bl-go" type="button">연동 시작</button></div>
-    <ol class="bls" id="bl-steps" hidden><li data-s="open">블라블라링크 창 열기</li><li data-s="ready">연동 스크립트 응답</li><li data-s="info">유저 정보</li><li data-s="outpost">싱크로·전초기지 레벨</li><li data-s="chars">니케·오버로드 장비</li><li data-s="normal">노멀 클리어 기록</li><li data-s="hard">하드 클리어 기록</li></ol>
+    <ol class="bls" id="bl-steps" hidden><li data-s="open">블라블라링크 창 열기</li><li data-s="ready">연동 스크립트 응답</li><li data-s="info">유저 정보</li></ol>
     <details class="me-guide" id="bl-guide"><summary>처음 사용하시나요? 연동 스크립트 설치 방법</summary>
         <ol class="note" style="line-height:1.8;padding-left:20px"><li>Chrome에 확장 프로그램 <a href="https://www.tampermonkey.net/" target="_blank" rel="noopener"><b>Tampermonkey</b></a>를 설치합니다.<ul style="margin:4px 0 0;padding-left:18px"><li>설치 후 브라우저 오른쪽 위 Tampermonkey 아이콘을 우클릭 → <b>[확장 프로그램 관리]</b> → <b>[사용자 스크립트 허용]</b>을 체크합니다. (최신 Chrome에서는 이 설정을 켜야 스크립트가 동작합니다)</li></ul></li><li><a href="https://raw.githubusercontent.com/levelinfinikke/DOROSYNC/main/dorosync-blablalink.user.js" target="_blank" rel="noopener"><b>연동 스크립트 설치</b></a>를 눌러 Tampermonkey 설치 화면에서 [설치]를 누릅니다.<ul style="margin:4px 0 0;padding-left:18px"><li>설치 화면이 뜨지 않으면 Tampermonkey 대시보드 → <b>새 스크립트</b> → 내용을 모두 지우고 아래 코드를 붙여넣은 뒤 저장합니다.</li></ul></li><li>블라블라링크에 로그인한 상태에서 <b>연동 시작</b>을 누르면 새 창이 열리고 자동으로 정보가 전달됩니다.</li></ol>
         <p class="note">스크립트는 블라블라링크 안에서 로그인된 내 세션으로 위 정보만 읽어 이 페이지로 보냅니다. 아이디·비밀번호·토큰은 읽거나 전송하지 않습니다.</p>
@@ -1354,7 +1379,7 @@ body.lvfs{overflow:hidden}
 <div class="blm" id="nk-modal" hidden role="dialog" aria-modal="true" aria-label="니케 선택">
   <div class="blm-box">
     <div class="blm-hd"><h2>니케 선택</h2><button type="button" class="blm-x" id="pk-x" aria-label="닫기">×</button></div>
-    <div class="pk-bar"><span class="pk-seg" id="pk-seg"><button type="button" data-v="pic" class="on">초상화</button><button type="button" data-v="list">리스트</button></span>
+    <div class="pk-bar"><input type="search" id="pk-q" class="pk-q" placeholder="이름 검색 (초성 가능)" autocomplete="off" aria-label="니케 이름 검색"><span class="pk-seg" id="pk-seg"><button type="button" data-v="pic" class="on">초상화</button><button type="button" data-v="list">리스트</button></span>
       <label class="chk"><input type="checkbox" id="pk-oc" checked> 오버로드 장비 있는 니케만</label></div>
     <div id="pk-body"></div>
   </div>
@@ -2304,6 +2329,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     bind('u-T', (v) => { st.T = +v; RW_EDIT['u-T'] = true; rangeWarn(); });
     ['u-S0', 'u-T'].forEach((id) => ['change', 'blur'].forEach((n) => $('#' + id).addEventListener(n, () => { RW_EDIT[id] = false; rangeWarn(); })));
     rangeWarn();
+    $('#u-S0').addEventListener('focus', () => { if (window.blHint) window.blHint(); });
     bind('u-L0', (v) => (st.L0 = v === '' ? '' : +v));
     bind('u-sortie', (v) => { st.sortie = +v; shAuto(); });
     $$('[data-su]').forEach((b) => b.addEventListener('click', () => {
@@ -3864,13 +3890,41 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     b.setAttribute('aria-label', nm ? 'BlaBla연동: ' + nm : 'BlaBla연동');
   };
   const BLS = ['open', 'ready', 'info', 'outpost', 'chars', 'normal', 'hard'];
-  const blStep = (st, all) => { const i = BLS.indexOf(st); $$('#bl-steps li').forEach((li, k) => { li.className = all || (i >= 0 && k < i) ? 'done' : (k === i ? 'cur' : ''); }); };
+  const blStep = (st, all) => { const i = BLS.indexOf(st); $$('#bl-steps li').forEach((li) => { const k = BLS.indexOf(li.dataset.s); li.className = all || (i >= 0 && k < i) ? 'done' : (k === i ? 'cur' : ''); }); };
   const blSay = (t, cls) => {
     ['#me-status', '#bl-status'].forEach((q) => { const el = $(q); if (el) { el.textContent = t; el.className = 'me-status ' + (cls || ''); } });
     try { const w = $('#ol-frame').contentWindow; if (w && w.__blSay) w.__blSay(t, cls); } catch (e) { /* 오버로드 탭 미로드 */ }
     if (cls === 'dirty') toast(t, 4000);
   };
   const blRunning = (on) => { const b = $('#bl-go'); if (b) { b.disabled = on; b.textContent = on ? '연동 중…' : (doroBL.data ? '다시 연동' : '연동 시작'); } };
+  window.blHint = function () {
+    if (doroBL.data) return;
+    let seen = false; try { seen = !!localStorage.getItem('dorosync-bl-hint'); } catch (e) { /* 무시 */ }
+    if (seen) return;
+    try { localStorage.setItem('dorosync-bl-hint', '1'); } catch (e) { /* 무시 */ }
+    const f = $('#u-S0').closest('.fld'); if (!f || f.querySelector('.bl-bub')) return;
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'bl-bub'; b.textContent = 'BlaBla와 연동하면 즉시 기입됩니다.';
+    f.appendChild(b);
+    const kill = () => { b.remove(); document.removeEventListener('pointerdown', out, true); };
+    const out = (e) => { if (e.target !== b) kill(); };
+    b.addEventListener('click', () => { kill(); window.doroBLOpen(); });
+    setTimeout(() => document.addEventListener('pointerdown', out, true), 0);
+    setTimeout(kill, 6000);
+  };
+  /* 연동 직후: 연동으로 가져올 수 없는 항목(단기섬멸 횟수·보유 재화) 직접 입력 유도 */
+  function blNudge() {
+    const f = $('#u-sortie') && $('#u-sortie').closest('.fld');
+    if (f) { f.classList.add('nudge'); const h = $('#u-sortie-h'); if (h) h.textContent = '연동으로 가져올 수 없어요 · 직접 입력해 주세요'; }
+    const rc = $('#stock-toggle') && $('#stock-toggle').parentNode;
+    if (rc && !rc.querySelector('.nudge-tag')) { const t = document.createElement('span'); t.className = 'nudge-tag'; t.textContent = '연동으로 가져올 수 없어요 · 직접 입력해 주세요'; rc.insertBefore(t, $('#stock-toggle')); }
+  }
+  window.blNudge = blNudge;
+  function blUnnudge() {
+    const f = $('#u-sortie') && $('#u-sortie').closest('.fld'); if (f && f.classList.contains('nudge')) { f.classList.remove('nudge'); const h = $('#u-sortie-h'); if (h) h.textContent = '1~12 (1회는 무료)'; }
+    $$('.nudge-tag').forEach((e) => e.remove());
+  }
+  document.addEventListener('input', (e) => { if (e.target.closest && e.target.closest('#u-sortie,#t-stock')) blUnnudge(); });
+  document.addEventListener('click', (e) => { if (e.target.closest && e.target.closest('[data-su],#stock-toggle')) blUnnudge(); });
   function blLinked() {
     const d = doroBL.data, box = $('#bl-linked'); if (!box) return;
     box.hidden = !d;
@@ -3886,7 +3940,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
   function blUnlink() {
     const u = $('#bl-unlink');
     if (!u.classList.contains('warn')) { u.classList.add('warn'); u.textContent = '한 번 더 누르면 해제'; setTimeout(() => { if (u.classList.contains('warn')) { u.classList.remove('warn'); u.textContent = '연동 해제'; } }, 3000); return; }
-    try { localStorage.removeItem(BLK); localStorage.removeItem('dorosync-bl-ok'); } catch (e) { /* 무시 */ }
+    try { localStorage.removeItem(BLK); localStorage.removeItem('dorosync-bl-ok'); localStorage.removeItem('dorosync-bl-hint'); } catch (e) { /* 무시 */ }
     try { doroBL.win && doroBL.win.close(); } catch (e) { /* 무시 */ }
     clearTimeout(doroBL.timer); doroBL.data = null; doroBL.stage = ''; doroBL.fixPend = null;
     blNick(); renderMe(); blLinked();
@@ -3930,9 +3984,9 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
       try { doroBL.win.close(); } catch (err) { /* 무시 */ }
       blStep('', true);
       blSay('연동 완료 · 니케 ' + doroBL.data.nikkes.length + '명', 'ok');
-      blNick(); blLinked(); blApplyUser(); renderMe();
+      blNick(); blLinked(); blApplyUser(); blNudge(); renderMe();
       try { const w = $('#ol-frame').contentWindow; if (w && w.__blLoad) w.__blLoad(doroBL.data); } catch (err) { /* 오버로드 탭 미로드 */ }
-      toast('BlaBla 연동 완료 · 니케 ' + doroBL.data.nikkes.length + '명', 3000);
+      toast('BlaBla 연동 완료 · 니케 ' + doroBL.data.nikkes.length + '명 · 단기섬멸 횟수와 보유 재화는 직접 입력해 주세요', 5000);
       setTimeout(() => { if (doroBL.stage === 'done') $('#bl-modal').hidden = true; }, 1200);
     }
   });
@@ -4002,15 +4056,22 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     return Object.keys(acc).map((c) => acc[c]).map((a) => { const x = a.v / 4; let T = 0; while (T < 15 && a.vals[T] <= x) T++; let p = 1; for (let i = 0; i < T - 1; i++) p -= BL_TW[i]; a.p = T === 0 ? 1 : Math.max(0, p); a.k = a.p <= 0.05 ? 4 : a.p <= 0.2 ? 3 : a.p <= 0.4 ? 2 : 1; return a; }).sort((a, b) => a.p - b.p || b.v - a.v);
   }
   const blFav = (f) => { if (!f || !f.tid || !(f.lv > 0)) return ''; return (f.tid % 100 >= 2 ? 'SR' : 'R') + ' ' + f.lv; };
+  const BL_STAR = 'M12 2l2.6 7.4L22 12l-7.4 2.6L12 22l-2.6-7.4L2 12l7.4-2.6z';
+  function blBd(n) {
+    const g = Math.max(0, Math.min(3, n.grade || 0));
+    if (!(n.grade > 0 || n.core > 0)) return '';
+    let h = '';
+    for (let i = 1; i <= 3; i++) h += '<svg class="st' + (i <= g ? '' : ' off') + '" viewBox="0 0 24 24"><path d="' + BL_STAR + '"/></svg>';
+    return '<span class="nk-bd">' + h + '<span class="nk-core' + (n.core > 0 ? '' : ' off') + '">' + (n.core || 0) + '</span></span>';
+  }
   function blCard(n) {
     const mt = BLM[n.code] || [], el = BL_EL[mt[0]], bu = BL_BU[mt[1]];
     const ico = !(el || bu) ? '' : '<span class="nk-top">' + (el ? '<span class="nk-ic" style="color:' + el[0] + '"><svg viewBox="0 0 24 24"><path d="' + el[1] + '"/></svg></span>' : '') + (bu ? '<span class="nk-ic">' + bu + '</span>' : '') + '</span>';
-    const stars = n.grade > 0 ? '★'.repeat(Math.min(3, n.grade)) : '';
-    const bd = (stars || n.core > 0) ? '<span class="nk-bd">' + stars + (n.core > 0 ? '<span class="nk-core">' + n.core + '</span>' : '') + '</span>' : '';
+    const bd = blBd(n);
     const ov = blSum(n).slice(0, 4).map((a) => '<span class="t' + a.k + '" title="4부위 평균 ' + (a.v / 4).toFixed(1) + '% · 상위 ' + Math.round(a.p * 100) + '% 확률 구간"><em>' + a.name + '</em><b>' + a.v.toFixed(1) + '</b></span>').join('');
     const eq = n.eq ? ['head', 'torso', 'arm', 'leg'].map((p) => '<i class="' + (n.eq[p] > 0 ? '' : 'z') + '">+' + (n.eq[p] || 0) + '</i>').join('') : '';
     const sk = n.sk ? '스킬 ' + n.sk.join('·') : '';
-    return '<div class="nk"><div class="nk-pic"><img loading="lazy" alt="" src="' + BL_IMG(n.code) + '" onerror="this.remove()">' + ico + bd + '</div><div class="nk-in"><b class="nk-nm">' + esc(BL_NM(n)) + '</b>' +
+    return '<div class="nk" role="button" tabindex="0" data-go-nk="' + esc(n.code) + '" title="클릭하면 오버로드 계산으로 이동"><div class="nk-pic"><img loading="lazy" alt="" src="' + BL_IMG(n.code) + '" onerror="this.remove()">' + ico + bd + '</div><div class="nk-in"><b class="nk-nm">' + esc(BL_NM(n)) + '</b>' +
       '<div class="nk-cp"><i>전투력</i><b>' + fmt(n.combat) + '</b></div>' +
       (ov ? '<div class="nk-ov">' + ov + '</div>' : '') +
       (eq ? '<div class="nk-eq">장비' + eq + '</div>' : '') +
@@ -4022,7 +4083,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     { const lk = $('#me-link'); if (lk) lk.style.display = d ? 'none' : ''; }
     if (!d) { root.innerHTML = '<div class="card"><p class="muted">아직 불러온 정보가 없습니다. 위의 [BlaBla연동]을 눌러 주세요.</p></div>'; return; }
     const m = d.me || {}, pk = blPick();
-    const rows = pk.cand.map((x) => {
+    const rows = (pk.best ? pk.cand.filter((x) => x.k === pk.best.k) : pk.cand.slice(0, 1)).map((x) => {
       const lab = x.c.chapter == null ? '기록 없음' : BL_MODE[x.k] + ' ' + (x.row ? x.row[2] : x.c.chapter + '챕터 보스');
       return '<tr' + (pk.best && pk.best.k === x.k ? ' class="me-pick"' : '') + '><td>' + (pk.best && pk.best.k === x.k ? '✓ ' : '') + esc(lab) + '</td><td>' + (x.c.power ? fmt(x.c.power) : '-') + '</td><td>' + (x.c.lv || '-') + '</td><td>' + (x.row ? fmt(x.row[4]) : '-') + '</td><td>' + blDate(x.c.clearedAt) + '</td></tr>';
     }).join('');
@@ -4032,7 +4093,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
       kp('클리어 투력', pk.best ? fmt(pk.best.c.power) : '-', pk.best ? '클리어 당시 Lv ' + pk.best.c.lv : '') + '</div>' +
       '<p class="muted" id="me-fixnote"></p>' +
       '<div class="tscroll"><table class="tbl compact"><thead><tr><th>최근 클리어 보스</th><th>클리어 투력</th><th>니케 Lv</th><th>보스 판정 투력</th><th>클리어일</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
-      '<p class="note">노멀과 하드 중 더 어려운 보스(판정 투력이 높은 쪽)의 기록을 보스 보정에 사용합니다.</p></div>';
+      '</div>';
     const only = !($('#me-oc') && !$('#me-oc').checked);
     const list = d.nikkes.filter((n) => !only || BLP.some(([p]) => (n.parts[p] || []).some((v) => v > 0))).sort((a, b) => b.combat - a.combat);
     html += '<div class="card"><div class="row-ctl sp"><h2 class="inline">내 니케 <span class="muted">' + list.length + '명</span></h2><label class="chk gtb"><input type="checkbox" id="me-oc"' + (only ? ' checked' : '') + '> 오버로드 장비 있는 니케만</label></div><div class="megrid">' +
@@ -4041,6 +4102,26 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     $('#me-apply').addEventListener('click', () => { blApplyUser(); toast('계산기에 적용했습니다.'); });
     $('#me-oc').addEventListener('change', renderMe);
   }
+  function blGoNikke(n) {
+    showTab('ol'); window.scrollTo(0, 0);
+    let tries = 0;
+    const go = () => {
+      let w = null; try { w = $('#ol-frame').contentWindow; } catch (e) { /* 무시 */ }
+      if (w && w.__blApplyNikke && w.__blSel) {
+        try { if (w.__blLoad && doroBL.data) w.__blLoad(doroBL.data); } catch (e) { /* 무시 */ }
+        w.__blApplyNikke(n); w.__blSel({ img: window.doroBLImg(n.code), name: BL_NM(n) });
+        toast(BL_NM(n) + ' 오버로드 옵션을 불러왔습니다.', 2500); return;
+      }
+      if (++tries < 40) setTimeout(go, 200); else toast('오버로드 탭을 불러오지 못했습니다. 잠시 뒤 다시 눌러 주세요.', 3000);
+    };
+    go();
+  }
+  (() => {
+    const r = $('#me-body'); if (!r) return;
+    const act = (e) => { const c = e.target.closest('[data-go-nk]'); if (!c || !doroBL.data) return; const n = (doroBL.data.nikkes || []).find((x) => String(x.code) === c.dataset.goNk); if (n) blGoNikke(n); };
+    r.addEventListener('click', act);
+    r.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); act(e); } });
+  })();
   blNick(); blLinked();
   $('#me-btn').addEventListener('click', () => window.doroBLOpen());
   $('#btn-bl').addEventListener('click', () => window.doroBLOpen());
@@ -4067,7 +4148,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   function blStore(d) {
     doroBL.data = { area: d.area, me: d.me, clear: d.clear, nikkes: d.nikkes || [], at: Date.now() };
     try { localStorage.setItem(BLK, JSON.stringify(doroBL.data)); } catch (err) { /* 저장 불가 */ }
-    blNick(); blLinked(); blApplyUser(); renderMe();
+    blNick(); blLinked(); blApplyUser(); blNudge(); renderMe();
     try { const w = $('#ol-frame').contentWindow; if (w && w.__blLoad) w.__blLoad(doroBL.data); } catch (err) { /* 오버로드 탭 미로드 */ }
   }
   window.doroBLImport = async (code) => {
@@ -4110,24 +4191,30 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   function pkList() {
     const d = doroBL.data; if (!d) return [];
     const only = $('#pk-oc').checked;
-    return d.nikkes.filter((n) => !only || BLP.some(([p]) => (n.parts[p] || []).some((v) => v > 0))).sort((a, b) => b.combat - a.combat);
+    const q = (($('#pk-q') || {}).value || '').replace(/\s+/g, '').toLowerCase();
+    const CH = 'ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ';
+    const cho = (t) => t.replace(/[가-힣]/g, (c) => CH[Math.floor((c.charCodeAt(0) - 44032) / 588)]);
+    const isCho = q && /^[ㄱ-ㅎ]+$/.test(q);
+    const hit = (n) => { if (!q) return true; const nm = BL_NM(n).replace(/\s+/g, '').toLowerCase(); return isCho ? cho(nm).includes(q) : nm.includes(q); };
+    return d.nikkes.filter((n) => hit(n) && (!only || BLP.some(([p]) => (n.parts[p] || []).some((v) => v > 0)))).sort((a, b) => b.combat - a.combat);
   }
   function renderPick() {
     $$('#pk-seg button').forEach((b) => b.classList.toggle('on', b.dataset.v === pkView));
     const list = pkList(), root = $('#pk-body');
     if (!list.length) { root.innerHTML = '<p class="muted">표시할 니케가 없습니다.</p>'; return; }
     root.innerHTML = pkView === 'pic'
-      ? '<div class="pk-grid">' + list.map((n) => '<button type="button" class="pk-t" data-code="' + esc(n.code) + '"><span class="pp" style="display:block"><img loading="lazy" alt="" src="' + BL_IMG(n.code) + '" onerror="this.remove()"></span><span class="pn"><b>' + esc(BL_NM(n)) + '</b><span>' + fmt(n.combat) + '</span></span></button>').join('') + '</div>'
+      ? '<div class="pk-grid">' + list.map((n) => '<button type="button" class="pk-t" data-code="' + esc(n.code) + '"><span class="pp" style="display:block"><img loading="lazy" alt="" src="' + BL_IMG(n.code) + '" onerror="this.remove()">' + blBd(n) + '</span><span class="pn"><b>' + esc(BL_NM(n)) + '</b><span class="pcp">전투력: ' + fmt(n.combat) + '</span>' + (n.eq ? '<span class="peq">' + ['head', 'torso', 'arm', 'leg'].map((p) => '<i class="' + (n.eq[p] > 0 ? '' : 'z') + '">+' + (n.eq[p] || 0) + '</i>').join('') + '</span>' : '') + ((n.sk || blFav(n.fav)) ? '<span class="psk">' + (n.sk ? '스킬 ' + n.sk.join('·') : '') + (blFav(n.fav) ? ' <b>' + blFav(n.fav) + '</b>' : '') + '</span>' : '') + '</span></button>').join('') + '</div>'
       : '<div class="pk-list">' + list.map((n) => '<button type="button" class="pk-r" data-code="' + esc(n.code) + '"><span class="pi"><img loading="lazy" alt="" src="' + BL_IMG(n.code) + '" onerror="this.remove()"></span><span class="nm">' + esc(BL_NM(n)) + '</span><span class="ov">' + blSum(n).map((a) => a.name + ' ' + a.v.toFixed(1)).join(' · ') + '</span><span class="cp">' + fmt(n.combat) + '</span></button>').join('') + '</div>';
   }
   window.doroNikkePick = function () {
     if (!doroBL.data) { window.doroBLOpen(); return; }
-    renderPick(); $('#nk-modal').hidden = false;
+    $('#pk-q').value = ''; renderPick(); $('#nk-modal').hidden = false;
   };
   $('#pk-x').addEventListener('click', () => { $('#nk-modal').hidden = true; });
   $('#nk-modal').addEventListener('click', (e) => { if (e.target === e.currentTarget) e.currentTarget.hidden = true; });
   $('#pk-seg').addEventListener('click', (e) => { const b = e.target.closest('button[data-v]'); if (!b) return; pkView = b.dataset.v; try { localStorage.setItem('dorosync-pkview', pkView); } catch (err) { /* 무시 */ } renderPick(); });
   $('#pk-oc').addEventListener('change', renderPick);
+  $('#pk-q').addEventListener('input', renderPick);
   $('#pk-body').addEventListener('click', (e) => {
     const b = e.target.closest('[data-code]'); if (!b) return;
     const n = (doroBL.data.nikkes || []).find((x) => String(x.code) === b.dataset.code); if (!n) return;
