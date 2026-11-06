@@ -895,7 +895,7 @@ body.lvfs{overflow:hidden}
 #tab-me .nk-ov span{display:flex;flex-direction:column;align-items:center;line-height:1.15;padding:3px 2px;border-radius:7px;border:1px solid var(--line);background:rgba(127,127,127,.08)}
 #tab-me .nk-ov span em{font-style:normal;font-size:10.5px;color:var(--muted)}
 #tab-me .nk-ov span b{font-size:13px}
-#tab-me .nk-ov .t4 b{color:#a66bff}#tab-me .nk-ov .t3 b{color:#f59a0b}#tab-me .nk-ov .t2 b{color:#3b82f6}#tab-me .nk-ov .t1 b{color:var(--muted)}
+#tab-me .nk-ov .t4 b{color:#e0a100}#tab-me .nk-ov .t3 b{color:#a66bff}#tab-me .nk-ov .t2 b{color:#3b82f6}#tab-me .nk-ov .t1 b{color:var(--muted)}
 #tab-me .nk-eq{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--muted)}
 #tab-me .nk-eq i{font-style:normal;flex:1;text-align:center;padding:1px 0;border-radius:99px;font-weight:700;font-size:11px;background:rgba(239,68,68,.14);color:#e5484d;border:1px solid rgba(239,68,68,.35)}
 #tab-me .nk-eq i.z{background:rgba(127,127,127,.12);color:var(--muted);border-color:var(--line)}
@@ -940,19 +940,17 @@ body.lvfs{overflow:hidden}
 #tab-me .megrid{grid-template-columns:repeat(auto-fill,minmax(176px,1fr));gap:14px}
 #tab-me .nk{border-radius:16px;background:linear-gradient(180deg,rgba(127,127,127,.10),rgba(127,127,127,.03));border:1px solid var(--line);box-shadow:0 1px 0 rgba(255,255,255,.04) inset}
 #tab-me .nk:hover{transform:translateY(-4px);box-shadow:0 12px 26px rgba(0,0,0,.22);border-color:var(--accent)}
-#tab-me .nk-pic{height:172px}
-#tab-me .nk-pic img{-webkit-mask-image:linear-gradient(#000 62%,transparent);mask-image:linear-gradient(#000 62%,transparent)}
-#tab-me .nk-in{padding:0 12px 12px;margin-top:-20px;position:relative;gap:7px}
+#tab-me .nk-pic{height:200px}
+#tab-me .nk-in{padding:10px 12px 12px;position:relative;gap:7px;border-top:1px solid var(--line)}
 #tab-me .nk-nm{font-size:14px;font-weight:800}
 #tab-me .nk-cp i{border:0;background:var(--accent-soft);color:var(--accent-text);border-radius:99px;padding:1px 8px;font-weight:700}
 #tab-me .nk-cp b{font-size:15px}
 #tab-me .nk-ov span{border:0;border-radius:9px;background:rgba(127,127,127,.12);padding:4px 2px}
-#tab-me .nk-ov .t4{background:rgba(166,107,255,.14)}#tab-me .nk-ov .t3{background:rgba(245,154,11,.13)}#tab-me .nk-ov .t2{background:rgba(59,130,246,.13)}
+#tab-me .nk-ov .t4{background:rgba(245,179,1,.18)}#tab-me .nk-ov .t3{background:rgba(166,107,255,.14)}#tab-me .nk-ov .t2{background:rgba(59,130,246,.13)}
 #tab-me .nk-eq i{border-radius:99px}
 #tab-me .nk-ic{border-radius:8px}
 .pk-t{border-radius:14px;background:none}
 .pk-t .pp{height:118px}
-.pk-t .pp img{-webkit-mask-image:linear-gradient(#000 70%,transparent);mask-image:linear-gradient(#000 70%,transparent)}
 .pk-t .pn{padding:2px 8px 9px}
 </style>
 <style id="bl-css">
@@ -4064,14 +4062,15 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
   };
   const BL_BU = { Step1: 'I', Step2: 'II', Step3: 'III', AllStep: 'A' };
   const BL_NMAX = (e) => e[1][14];
+  const BL_TW = [12, 12, 12, 12, 12, 7, 7, 7, 7, 7, 1, 1, 1, 1, 1].map((x) => x / 100);
   function blSum(n) {
     const acc = {};
     BLP.forEach(([p]) => (n.parts[p] || []).forEach((id) => {
       if (!id) return; const c = Math.floor(id / 100) % 100, t = id % 100, e = BLE[c];
       if (!e || t < 1 || t > 15) return;
-      const a = acc[c] || (acc[c] = { name: e[0], v: 0, tier: 0, n: 0 }); a.v += e[1][t - 1]; a.tier += t; a.n++;
+      const a = acc[c] || (acc[c] = { name: e[0], vals: e[1], v: 0, tier: 0, n: 0 }); a.v += e[1][t - 1]; a.tier += t; a.n++;
     }));
-    return Object.keys(acc).map((c) => acc[c]).sort((a, b) => b.n - a.n || b.v - a.v);
+    return Object.keys(acc).map((c) => acc[c]).map((a) => { const x = a.v / 4; let T = 0; while (T < 15 && a.vals[T] <= x) T++; let p = 1; for (let i = 0; i < T - 1; i++) p -= BL_TW[i]; a.p = T === 0 ? 1 : Math.max(0, p); a.k = a.p <= 0.05 ? 4 : a.p <= 0.2 ? 3 : a.p <= 0.4 ? 2 : 1; return a; }).sort((a, b) => a.p - b.p || b.v - a.v);
   }
   const blFav = (f) => { if (!f || !f.tid || !(f.lv > 0)) return ''; return (f.tid % 100 >= 2 ? 'SR' : 'R') + ' ' + f.lv; };
   function blCard(n) {
@@ -4079,7 +4078,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     const ico = !(el || bu) ? '' : '<span class="nk-top">' + (el ? '<span class="nk-ic" style="color:' + el[0] + '"><svg viewBox="0 0 24 24"><path d="' + el[1] + '"/></svg></span>' : '') + (bu ? '<span class="nk-ic">' + bu + '</span>' : '') + '</span>';
     const stars = n.grade > 0 ? '★'.repeat(Math.min(3, n.grade)) : '';
     const bd = (stars || n.core > 0) ? '<span class="nk-bd">' + stars + (n.core > 0 ? '<span class="nk-core">' + n.core + '</span>' : '') + '</span>' : '';
-    const ov = blSum(n).map((a) => { const r = a.tier / a.n, k = r >= 12.5 ? 4 : r >= 10 ? 3 : r >= 7 ? 2 : 1; return '<span class="t' + k + '"><em>' + a.name + '</em><b>' + a.v.toFixed(1) + '</b></span>'; }).join('');
+    const ov = blSum(n).slice(0, 4).map((a) => '<span class="t' + a.k + '" title="4부위 평균 ' + (a.v / 4).toFixed(1) + '% · 상위 ' + Math.round(a.p * 100) + '% 확률 구간"><em>' + a.name + '</em><b>' + a.v.toFixed(1) + '</b></span>').join('');
     const eq = n.eq ? ['head', 'torso', 'arm', 'leg'].map((p) => '<i class="' + (n.eq[p] > 0 ? '' : 'z') + '">+' + (n.eq[p] || 0) + '</i>').join('') : '';
     const sk = n.sk ? '스킬 ' + n.sk.join('·') : '';
     return '<div class="nk"><div class="nk-pic"><img loading="lazy" alt="" src="' + BL_IMG(n.code) + '" onerror="this.remove()">' + ico + bd + '</div><div class="nk-in"><b class="nk-nm">' + esc(BL_NM(n)) + '</b>' +
