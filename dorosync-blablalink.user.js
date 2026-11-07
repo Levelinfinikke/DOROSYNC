@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         DOROSYNC 블라블라링크 연동
 // @namespace    dorosync
-// @version      2.2.0
+// @version      2.2.1
 // @description  도로싱크에서 요청하면, 로그인된 블라블라링크 세션의 싱크로·전초기지 레벨·니케 장비(오버로드)·최근 보스 클리어 기록을 도로싱크로 전달합니다.
 // @match        https://*.blablalink.com/*
 // @run-at       document-start
@@ -81,7 +81,9 @@
     report('chars', '니케 목록과 오버로드 장비를 불러오는 중…');
     var ch = await post('game/proxy/Game/GetUserCharacters', { intl_open_id: id, nikke_area_id: area });
     if (String(ch && ch.code) !== '0') throw new Error((ch && (ch.message || ch.msg)) || '니케 목록을 불러오지 못했습니다.');
-    var codes = ((ch.data && ch.data.characters) || []).map(function (c) { return String(c.name_code); });
+    var base = {};
+    ((ch.data && ch.data.characters) || []).forEach(function (c) { base[String(c.name_code)] = c; });
+    var codes = Object.keys(base);
     var list = [];
     for (var i = 0; i < codes.length; i += 40) {
       var j = await post('game/proxy/Game/GetUserCharacterDetails', { intl_open_id: id, nikke_area_id: area, name_codes: codes.slice(i, i + 40) });
@@ -95,7 +97,9 @@
       slots.forEach(function (s) {
         parts[s] = [1, 2, 3].map(function (n) { return Number(c[s + '_equip_option' + n + '_id']) || 0; });
       });
-      var n = function (k) { return Number(c[k]) || 0; };
+      // 돌파(grade)·코강(core)·전투력은 니케 목록(GetUserCharacters)에 있으므로 상세 정보에 없으면 목록 값을 사용
+      var b0 = base[String(c.name_code)] || {};
+      var n = function (k) { return Number(c[k]) || Number(b0[k]) || 0; };
       return {
         code: String(c.name_code), name: '', combat: n('combat'), lv: n('lv'),
         core: n('core'), grade: n('grade'),
