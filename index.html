@@ -987,7 +987,7 @@ body.lvfs{overflow:hidden}
 @media(max-width:600px){#tab-me .megrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}#tab-me .nk-pic{height:auto;aspect-ratio:3/4}#tab-me .nk-pic img{object-position:50% 6%}.pk-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.pk-t .pp{height:auto;aspect-ratio:3/4}.pk-t .pp img{object-position:50% 6%}}
 
 #tab-me .nk-bd,.pk-t .nk-bd{position:absolute;right:5px;bottom:5px;display:block;padding:0;background:none;backdrop-filter:none;border-radius:0;line-height:0;filter:drop-shadow(0 1px 2px rgba(0,0,0,.55))}
-#tab-me .nk-bd .nk-lb,.pk-t .nk-bd .nk-lb{display:block;height:18px}
+#tab-me .nk-pic .nk-bd img.nk-lb,.pk-t .pp .nk-bd img.nk-lb{display:block;position:static!important;inset:auto!important;width:auto!important;height:18px!important;max-width:none!important;object-fit:contain!important}
 .pk-t{display:flex;flex-direction:column}
 .pk-t .pp{flex:none}
 .pk-t .pn{flex:1;display:flex;flex-direction:column;gap:3px;padding:6px 12px 12px}
@@ -4147,13 +4147,27 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
   }
   const blFav = (f) => { if (!f || !f.tid || !(f.lv > 0)) return ''; return (f.tid % 100 >= 2 ? 'SR' : 'R') + ' ' + f.lv; };
   const BL_STAR = 'M12 2l2.6 7.4L22 12l-7.4 2.6L12 22l-2.6-7.4L2 12l7.4-2.6z';
-  const BL_SO = ['M0.5 11Q10.42 7.04 16 0Q21.58 7.04 31.5 11Q21.58 14.96 16 22Q10.42 14.96 0.5 11Z', 'M24.5 11Q34.42 7.04 40 0Q45.58 7.04 55.5 11Q45.58 14.96 40 22Q34.42 14.96 24.5 11Z', 'M48.5 11Q58.42 7.04 64 0Q69.58 7.04 79.5 11Q69.58 14.96 64 22Q58.42 14.96 48.5 11Z'], BL_SI = ['M8.25 11Q13.21 9.02 16 5.5Q18.79 9.02 23.75 11Q18.79 12.98 16 16.5Q13.21 12.98 8.25 11Z', 'M32.25 11Q37.21 9.02 40 5.5Q42.79 9.02 47.75 11Q42.79 12.98 40 16.5Q37.21 12.98 32.25 11Z', 'M56.25 11Q61.21 9.02 64 5.5Q66.79 9.02 71.75 11Q66.79 12.98 64 16.5Q61.21 12.98 56.25 11Z'], BL_SEAL = 'M12.0 0.0L14.3 1.9L17.2 1.2L18.5 3.9L21.4 4.5L21.4 7.5L23.7 9.3L22.4 12.0L23.7 14.7L21.4 16.5L21.4 19.5L18.5 20.1L17.2 22.8L14.3 22.1L12.0 24.0L9.7 22.1L6.8 22.8L5.5 20.1L2.6 19.5L2.6 16.5L0.3 14.7L1.6 12.0L0.3 9.3L2.6 7.5L2.6 4.5L5.5 3.9L6.8 1.2L9.7 1.9Z';
+  /* 돌파 아이콘: 독립 SVG 이미지(data URI)로 그려 숨은 탭·중복 id 문제 없이 항상 표시 */
+  const BL_LBC = {};
+  /* 직선 4각 별(가로세로 대칭): 네 귀퉁이 꼭짓점 + 각 변 가운데 V자 홈 (k: 홈 깊이) */
+  const blStar = (cx, cy, r, k) => { const x0 = cx - r, x1 = cx + r, y0 = cy - r, y1 = cy + r, d = 2 * r * k;
+    return 'M' + x0 + ' ' + y0 + 'L' + cx + ' ' + (y0 + d) + 'L' + x1 + ' ' + y0 + 'L' + (x1 - d) + ' ' + cy + 'L' + x1 + ' ' + y1 + 'L' + cx + ' ' + (y1 - d) + 'L' + x0 + ' ' + y1 + 'L' + (x0 + d) + ' ' + cy + 'Z'; };
+  function blLbImg(g, c) {
+    const k = g + ':' + c; if (BL_LBC[k]) return BL_LBC[k];
+    const w = c > 0 ? 106 : 78;
+    let h = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + w + ' 24" width="' + w + '" height="24"><defs>' +
+      '<linearGradient id="o" x1="0" y1="0" x2=".35" y2="1"><stop offset="0" stop-color="#f69a3e"/><stop offset="1" stop-color="#fbc72a"/></linearGradient>' +
+      '<linearGradient id="g" x1="0" y1="0" x2=".35" y2="1"><stop offset="0" stop-color="#4f5962"/><stop offset="1" stop-color="#b9bcbf"/></linearGradient>' +
+      '<linearGradient id="p" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d23fe0"/><stop offset="1" stop-color="#b21fc0"/></linearGradient></defs>';
+    for (let i = 0; i < 3; i++) h += '<path d="' + blStar(12 + i * 27, 12, 11, 0.22) + '" fill="url(#' + (i < g ? 'o' : 'g') + ')" stroke="#3a3a3a" stroke-width=".8" stroke-linejoin="miter"/>';
+    if (c > 0) { const t = String(c);
+      h += '<path d="' + blStar(92, 12, 12.5, 0.16) + '" fill="url(#p)"/><circle cx="92" cy="12" r="10.4" fill="#c42ed2"/><circle cx="92" cy="12" r="8.4" fill="#2b2731"/>' +
+        '<text x="92" y="' + (t.length > 1 ? 15.6 : 16.3) + '" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="900" font-size="' + (t.length > 1 ? 10 : 12) + '" fill="#fff">' + t + '</text>'; }
+    return (BL_LBC[k] = { src: 'data:image/svg+xml,' + encodeURIComponent(h + '</svg>'), w: w });
+  }
   function blBd(n) {
-    const g = Math.max(0, Math.min(3, n.grade || 0)), c = Math.max(0, n.core || 0), w = c > 0 ? 96 : 80;
-    let h = '<defs><linearGradient id="dsStO" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffbb4d"/><stop offset="1" stop-color="#f39a1e"/></linearGradient><linearGradient id="dsStG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7d7d7d"/><stop offset="1" stop-color="#555"/></linearGradient></defs>';
-    for (let i = 0; i < 3; i++) { const on = i < g; h += '<path d="' + BL_SO[i] + '" fill="url(#' + (on ? 'dsStO' : 'dsStG') + ')" stroke="#2a2a2a" stroke-width="1.3" stroke-linejoin="round"/><path d="' + BL_SI[i] + '" fill="' + (on ? '#ffc970' : '#a9a9a9') + '" opacity="' + (on ? '.55' : '.7') + '"/>'; }
-    if (c > 0) h += '<g transform="translate(72 -1)"><path d="' + BL_SEAL + '" fill="#a83cbc" stroke="#5a1466" stroke-width=".8"/><circle cx="12" cy="12" r="8.6" fill="#2d2d33" stroke="#fff" stroke-width="1"/><text x="12" y="15.6" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="900" font-size="10" fill="#fff">' + String(c).padStart(2, '0') + '</text></g>';
-    return '<span class="nk-bd"><svg class="nk-lb" viewBox="0 -1 ' + w + ' 24" style="width:' + (w * 0.75) + 'px" aria-label="' + g + '돌파' + (c > 0 ? ' · ' + c + '코강' : '') + '">' + h + '</svg></span>';
+    const g = Math.max(0, Math.min(3, n.grade || 0)), c = Math.max(0, n.core || 0), im = blLbImg(g, c);
+    return '<span class="nk-bd"><img class="nk-lb" alt="' + g + '돌파' + (c > 0 ? ' ' + c + '코강' : '') + '" src="' + im.src + '"></span>';
   }
   function blCard(n) {
     const mt = BLM[n.code] || [], el = BL_EL[mt[0]], bu = BL_BU[mt[1]];
