@@ -1014,6 +1014,7 @@ body.lvfs{overflow:hidden}
 .bl-linked[hidden]{display:none}.bl-linked b{font-size:15px}.bl-linked .muted{font-size:12px;color:var(--muted)}.bl-linked .ghost{margin-left:auto}
 .bl-linked .ghost.warn{border-color:var(--bad);color:var(--bad)}
 .subzone{position:relative;height:0;z-index:19}
+@media(max-width:700px){.top{transition:transform .25s ease;will-change:transform}.top.hd-hide{transform:translateY(calc(-1 * var(--tih,0px)))}}
 .subbar{position:absolute;left:0;right:0;top:0;background:var(--card);border-bottom:1px solid var(--line);box-shadow:0 8px 16px rgba(0,0,0,.14);opacity:0;visibility:hidden;transform:translateY(-8px);pointer-events:none;transition:opacity .2s ease,transform .2s ease,visibility 0s linear .2s}
 .subbar:not(:has(#subtabs.show)){display:none}
 .top:hover + .subzone .subbar,.subzone:hover .subbar,.top:has(:focus-visible) + .subzone .subbar,.subzone:has(:focus-visible) .subbar{opacity:1;visibility:visible;transform:none;pointer-events:auto;transition:opacity .2s ease,transform .2s ease,visibility 0s}
@@ -4467,6 +4468,27 @@ window.addEventListener('scroll',function(){tip.classList.remove('on');},{passiv
     later();
   }
   ['t-boss', 't-daily'].forEach((id) => { const t = document.getElementById(id); if (t) setup(t); });
+})();
+</script>
+<script>
+/* 모바일: 아래로 스크롤하면 제목·다크모드·연동 줄을 밀어 올리고 상위 탭만 남김, 위로 스크롤하면 다시 표시 */
+(function () {
+  var top = document.querySelector('.top'), tin = top && top.querySelector('.top-in'); if (!top || !tin) return;
+  var last = window.scrollY, hid = false, mq = window.matchMedia('(max-width:700px)');
+  var setH = function () { top.style.setProperty('--tih', tin.offsetHeight + 'px'); };
+  var nudge = function () { var t0 = performance.now(); (function f() { window.dispatchEvent(new Event('scroll')); if (performance.now() - t0 < 320) requestAnimationFrame(f); })(); };
+  var set = function (h) { if (h === hid) return; hid = h; setH(); top.classList.toggle('hd-hide', h); nudge(); };
+  window.addEventListener('scroll', function (e) {
+    if (!e.isTrusted) return;
+    var y = window.scrollY, dy = y - last;
+    if (!mq.matches) { last = y; set(false); return; }
+    if (y <= tin.offsetHeight) set(false);
+    else if (dy > 6) set(true);
+    else if (dy < -6) set(false);
+    if (Math.abs(dy) > 6 || y <= tin.offsetHeight) last = y;
+  }, { passive: true });
+  window.addEventListener('resize', function () { setH(); if (!mq.matches) set(false); });
+  setH();
 })();
 </script>
 </body>
