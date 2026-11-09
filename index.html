@@ -4956,6 +4956,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   })();
   (() => { const top = document.querySelector('.top'); if (!top) return; const f = () => document.documentElement.style.setProperty('--toph', top.offsetHeight + 'px'); f(); addEventListener('resize', f); if (window.ResizeObserver) new ResizeObserver(f).observe(top); })();
   function showTab(name) {
+    if ((GRP[name] || name) === 'gc') name = 'main'; // 임시 배포: 가챠 탭 잠금
     const grp = GRP[name] || name;
     if (lastGrp[grp]) lastGrp[grp] = name;
     $$('#tabs button').forEach((b) => b.classList.toggle('on', b.dataset.tab === grp));
@@ -5687,6 +5688,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   /* 실마 200 = 최신 애장품 니케 돌파용 스페어 바디 */
   const GC_SPARE = '최신 애장품 니케';
   { const tb = document.querySelector('#tabs button[data-tab="gc"]'); if (tb) { try { tb.innerHTML = '<img class="olic" alt="" src="' + jrIcon('pick') + '">가챠<span class="wipb">작업중</span>'; } catch (e) { /* 아이콘 없음 */ } } }
+  { const tb = document.querySelector('#tabs button[data-tab="gc"]'); if (tb) { tb.disabled = true; tb.setAttribute('aria-disabled', 'true'); tb.style.cssText += ';opacity:.45;pointer-events:none;cursor:not-allowed'; } }
   function gcWishRate() { const n = gcS().wt; return GC_POOL.pil.indexOf(n) >= 0 ? 0.001 : GC_POOL.std.indexOf(n) >= 0 ? 0.0023333 : 0; }
   function gcS() { if (!st.gc || typeof st.gc !== 'object') st.gc = {}; const g = st.gc; if (!(g.n >= 1)) g.n = 1; if (g.n > 11) g.n = 11; if (g.sel == null) g.sel = 'now'; if (g.b == null || g.b >= GC_BANNERS.length) { g.b = 0; g.bt = GC_BANNERS[0].bt; } if (g.bt == null) g.bt = 0; if (!(g.ct >= 0)) g.ct = 0; return g; }
   function gcRes() { // 고른 날짜 기준 재화
