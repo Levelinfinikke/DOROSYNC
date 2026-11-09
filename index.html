@@ -6133,7 +6133,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   $('#btn-help').addEventListener('click', () => welOpen(0));
   // 연동 창이 닫히면 1단계 표시를 새로 고침
   { const bm = $('#bl-modal'); if (bm) new MutationObserver(() => { const d = $('#wel'); if (d && !d.hidden && bm.hidden) welRender(); }).observe(bm, { attributes: true, attributeFilter: ['hidden'] }); }
-  { let seen = false; try { seen = !!localStorage.getItem(WEL_KEY); } catch (e) { seen = true; } if (!seen && !(typeof doroBL !== 'undefined' && doroBL && doroBL.data)) setTimeout(() => welOpen(0), 400); }
+  { let seen = false; try { seen = !!localStorage.getItem(WEL_KEY); } catch (e) { seen = true; } if (!seen) setTimeout(() => welOpen(typeof doroBL !== 'undefined' && doroBL && doroBL.data ? 1 : 0), 400); }
   function jwChanged(sync) { save(); if (sync) { buildUser(); buildInc(); onChange(); } renderJwOut(); }
   document.addEventListener('change', (e) => {
     const t = e.target; if (!t.closest || !(t.closest('#tab-jw') || t.closest('#wel'))) return;
