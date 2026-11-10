@@ -1380,7 +1380,7 @@ body.lvfs{overflow:hidden}
   <!-- 보스 -->
   <section id="tab-jw" class="tab"><div class="grid2 jwgrid"><div class="card" id="jw-in"></div><div class="card" id="jw-out"></div></div></section>
   <section id="tab-jwrules" class="tab"></section>
-  <section id="tab-gcm" class="tab"><div id="gm-root" style="--gm-top:170px"></div></section>
+  <section id="tab-gcm" class="tab"><div id="gm-root" style="--gm-top:210px"></div></section>
   <section id="tab-gc" class="tab"></section>
   <section id="tab-gccs" class="tab"></section>
   <section id="tab-gcco" class="tab"></section>
@@ -6547,19 +6547,13 @@ window.addEventListener('scroll',function(){tip.classList.remove('on');},{passiv
 .gm-stat{margin-top:8px}.gm-stat div{background:#0c1019}
 .gm-nav{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:8px;touch-action:pan-y;user-select:none;cursor:grab;color:inherit}
 .gm-nav b{font-size:15px;min-width:150px;text-align:center}.gm-nav button{appearance:none;width:34px;height:34px;border-radius:50%;border:1px solid #33405c;background:#171c28;color:#eef3fb;font-size:20px;line-height:1;cursor:pointer}
-.gm-multi{position:relative}html:has(.gm-multi){overflow-x:clip}
-.gm-slides{display:grid;touch-action:pan-y;user-select:none}.gm-slides.drag{cursor:grabbing}
-.gm-slide{grid-area:1/1;min-width:0;--s:1;transform:translateX(calc(var(--k,0)*(100% + 36px) + var(--dx,0px))) scale(var(--s));transform-origin:50% 35%;transition:transform .38s cubic-bezier(.2,.8,.2,1),opacity .3s,filter .3s}
-.gm-slides.drag .gm-slide{transition:none}
-.gm-slide:not(.cur){--s:.88;opacity:.5;filter:brightness(.75);cursor:pointer}.gm-slide:not(.cur)>*{pointer-events:none}
-.gm-dots{position:absolute;left:50%;top:1.8%;transform:translateX(-50%);z-index:6;display:flex;gap:9px;padding:6px 8px}.gm-dots i{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.35);cursor:pointer;border:1px solid rgba(0,0,0,.35)}.gm-dots i.on{background:#ffc21a;transform:scale(1.15)}
-.gm-left.clean .gm-dots{display:none}
-@media (min-width:1001px){.gm-right .gm-tray{order:-1}}
-.gm-multi:fullscreen{background:#0b0e14;padding:10px 16px;overflow-x:hidden;overflow-y:auto;display:flex;flex-direction:column;align-items:center;width:100vw;height:100vh}
-.gm-multi:fullscreen .gm-slides{margin:auto 0;width:100%}
-.gm-multi:fullscreen .gm-slide{display:flex;justify-content:center}
+.gm-dots{display:flex;gap:5px}.gm-dots i{width:7px;height:7px;border-radius:50%;background:#3a4560}.gm-dots i.on{background:#ffc21a}
+.gm-multi{position:relative}
+.gm-multi:fullscreen{background:#0b0e14;padding:10px 16px;overflow:auto;display:flex;flex-direction:column;align-items:center;width:100vw;height:100vh}
+.gm-multi:fullscreen .gm-nav{flex:none;margin-bottom:4px}.gm-multi:fullscreen .gm-slides{margin:auto 0;width:100%}
+.gm-multi:fullscreen .gm-slides>div:not([hidden]){display:flex;justify-content:center}
 .gm-multi:fullscreen .gm{grid-template-columns:auto 390px;align-items:center;justify-content:center;width:max-content;max-width:100%}
-.gm-multi:fullscreen .gm-left{width:min(calc((100vh - 24px) * 1.0042),calc(100vw - 450px));max-width:none;justify-self:center}
+.gm-multi:fullscreen .gm-left{width:min(calc((100vh - 84px) * 1.0042),calc(100vw - 450px));max-width:none;justify-self:center}
 .gm-sd{position:absolute;top:40%;z-index:5;appearance:none;width:36px;height:56px;border:1px solid rgba(255,255,255,.22);background:rgba(10,14,22,.62);color:#eef3fb;font-size:24px;line-height:1;cursor:pointer;padding:0;transition:background .15s}
 .gm-sd:hover{background:rgba(40,52,80,.92)}.gm-sd.l{left:0;border-radius:0 12px 12px 0;border-left:0}.gm-sd.r{right:0;border-radius:12px 0 0 12px;border-right:0}
 .gm-left.clean .gm-sd{display:none}
@@ -6571,7 +6565,7 @@ window.addEventListener('scroll',function(){tip.classList.remove('on');},{passiv
 .gm-rail{display:none}
 @media (max-width:1000px){.gm{grid-template-columns:1fr;position:relative}.gm-left{justify-self:center;max-width:none}
 .gm-rail{display:grid;gap:6px;position:absolute;right:0;top:60px;z-index:7}.gm-rail button{appearance:none;width:36px;height:40px;border-radius:10px 0 0 10px;border:1px solid #33405c;border-right:0;background:rgba(14,18,28,.92);color:#dfe7f5;font-size:15px;cursor:pointer}.gm-rail button.on{background:#3d8bff;color:#fff}
-.gm-right{position:absolute;right:40px;top:56px;width:min(calc(100% - 52px),360px);z-index:6;display:block;pointer-events:none}.gm-right>*{display:none;pointer-events:auto;box-shadow:0 12px 30px rgba(0,0,0,.6)}.gm-right>.open{display:block}.gm-sd{width:30px;height:46px;font-size:20px}.gm-sd.l{top:64%}.gm-sd.r{top:26%;right:0}.gm-multi:fullscreen .gm{grid-template-columns:1fr;width:100%}.gm-multi:fullscreen .gm-left{width:min(100%,calc((100vh - 20px) * 1.0042))}.gm-hud{left:auto;right:42px;width:19%;gap:4px}.gm-btn{font-size:10.5px;padding:6px 2px}.gm-lab{padding:4px 2px}.gm-lab img{width:26px}.gm-lab b{font-size:13px}.gm-ib{width:30px;height:30px}.gm-auto{height:30px;padding:0 9px;font-size:11.5px;right:calc(1.2% + 36px)}}
+.gm-right{position:absolute;right:40px;top:56px;width:min(calc(100% - 52px),360px);z-index:6;display:block;pointer-events:none}.gm-right>*{display:none;pointer-events:auto;box-shadow:0 12px 30px rgba(0,0,0,.6)}.gm-right>.open{display:block}.gm-sd{width:30px;height:46px;font-size:20px}.gm-sd.l{top:64%}.gm-sd.r{top:26%;right:0}.gm-multi:fullscreen .gm{grid-template-columns:1fr;width:100%}.gm-multi:fullscreen .gm-left{width:min(100%,calc((100vh - 84px) * 1.0042))}.gm-hud{left:auto;right:42px;width:19%;gap:4px}.gm-btn{font-size:10.5px;padding:6px 2px}.gm-lab{padding:4px 2px}.gm-lab img{width:26px}.gm-lab b{font-size:13px}.gm-ib{width:30px;height:30px}.gm-auto{height:30px;padding:0 9px;font-size:11.5px;right:calc(1.2% + 36px)}}
 `;
 
   function css() { if (!document.getElementById('gm-css')) { const st = document.createElement('style'); st.id = 'gm-css'; st.textContent = CSS; document.head.appendChild(st); } }
@@ -6589,7 +6583,7 @@ window.addEventListener('scroll',function(){tip.classList.remove('on');},{passiv
 
     root.innerHTML = '<div class="gm"><div class="gm-left"><canvas class="gm-cv"></canvas>'
       + '<div class="gm-tools">' + [['snd', '소리', '<path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 8.5a5 5 0 010 7"/>'], ['mode', '게임 모드', '<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M9 9h.01M15 15h.01M15 9h.01M9 15h.01M12 12h.01"/>'], ['open', '개봉 방식', '<path d="M5 10.5a7 7 0 0114 0z"/><path d="M5 13.5a7 7 0 0014 0z"/>'], ['help', '도움말', '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 114 2c-.9.6-1.5 1.1-1.5 2.2"/><path d="M12 17h.01"/>'], ['reset', '초기화', '<path d="M4 12a8 8 0 0113.7-5.7L20 8"/><path d="M20 4v4h-4"/><path d="M20 12a8 8 0 01-13.7 5.7L4 16"/><path d="M4 20v-4h4"/>'], ['hide', '화면 정리', '<path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.8"/><path d="M4 4l16 16"/>']].map((x) => '<button class="gm-ib" data-a="' + x[0] + '" title="' + x[1] + '" aria-label="' + x[1] + '"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + x[2] + '</svg></button>').join('') + '</div><div class="gm-pop" hidden></div><button class="gm-auto" data-a="auto">AUTO</button><button class="gm-ib gm-fs" data-a="fs" title="전체화면" aria-label="전체화면"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>'
-      + '<div class="gm-hud"><div class="gm-lab"><img alt=""><small>바디라벨</small><b>0</b></div><button class="gm-btn" data-a="exch">바디라벨 교환</button><button class="gm-btn blue" data-a="refill">캡슐 리필</button></div>'  + '</div>'
+      + '<div class="gm-hud"><div class="gm-lab"><img alt=""><small>바디라벨</small><b>0</b></div><button class="gm-btn" data-a="exch">바디라벨 교환</button><button class="gm-btn blue" data-a="refill">캡슐 리필</button></div>' + (o.multi ? '<button class="gm-sd l" data-sd="-1" aria-label="이전 머신">‹</button><button class="gm-sd r" data-sd="1" aria-label="다음 머신">›</button>' : '') + '</div>'
       + '<div class="gm-rail"><button data-r="wal" aria-label="보유 재화"><img alt="" src="' + A.icons.jw + '"></button><button data-r="graph" aria-label="실시간 수지"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18"/><path d="M4 15l5-5 4 3 7-8"/><path d="M15 5h5v5"/></svg></button><button data-r="tray" aria-label="SSR 보관함"><i class="gm-dot"></i></button></div><div class="gm-right"><div class="gm-wal"><canvas class="gm-wcv"></canvas><div class="gm-wt"></div><div class="gm-mode"></div></div><div class="gm-graph"><div class="gm-gh"><b>실시간 수지</b><span class="gm-seg"><button data-v="0">픽업</button><button data-v="1">보스티어</button><button data-v="2">PVP티어</button></span></div><canvas class="gm-gcv"></canvas><div class="gm-stat"></div></div><div class="gm-tray"><div class="gm-trh">SSR 보관함 <button class="gm-tb" data-a="all">구슬 모두 담기</button></div><div class="gm-pan"></div><div class="gm-name"></div></div></div></div>';
     const $ = (s) => root.querySelector(s);
     const cv = $('.gm-cv'), ctx = cv.getContext('2d'), walEl = $('.gm-wal'), wcv = $('.gm-wcv'), wctx = wcv.getContext('2d'), wtEl = $('.gm-wt'), modeEl = $('.gm-mode'), optEl = $('.gm-pop'), gcv = $('.gm-gcv'), panEl = $('.gm-pan'), statEl = $('.gm-stat'), labEl = $('.gm-lab');
@@ -6698,7 +6692,7 @@ window.addEventListener('scroll',function(){tip.classList.remove('on');},{passiv
     const domeN = () => { let n = 0; for (const b of S.dome) if (!b.exit) n++; return n; };
 
     /* ---------- 재화 상자(물리) ---------- */
-    const PSZ = { jw: { w: 19, h: 19, r: 8 }, pick: { w: 27, h: 16.65, r: 8.5 }, norm: { w: 27, h: 16.65, r: 8.5 } };
+    const PSZ = { jw: { w: 38, h: 38, r: 16 }, pick: { w: 54, h: 33.3, r: 17 }, norm: { w: 54, h: 33.3, r: 17 } };
     function pileItem(k, x, y, u) { const sc = u === 1 ? 0.62 : 1; return { k, u: u || 10, sc, x, y, vx: rnd(-30, 30), vy: 0, r: PSZ[k].r * sc, a: rnd(-0.6, 0.6), w: rnd(-2, 2), flat: true, sl: false, st: 0, gc: false }; }
     function pileSync() { ['jw', 'pick'].forEach((k) => { const st = Math.max(0, S.stock[k]); [[10, Math.floor(st / PER[k])], [1, Math.floor((st % PER[k]) / (PER[k] / 10))]].forEach(([u, want]) => { const have = S.pile.filter((b) => b.k === k && b.u === u); while (have.length > want) { const top = have.sort((a, b) => a.y - b.y).shift(); S.pile.splice(S.pile.indexOf(top), 1); } for (let i = have.length; i < want; i++) S.pile.push(pileItem(k, rnd(30, PW - 30), -rnd(20, S.fy || 500), u)); }); }); wake(S.pile); }
     function pileResize() { const r = walEl.getBoundingClientRect(), d = Math.min(2, window.devicePixelRatio || 1); if (!r.width) return; PW = r.width; PH = r.height; wcv.width = Math.round(PW * d); wcv.height = Math.round(PH * d); wake(S.pile); }
@@ -6710,12 +6704,12 @@ window.addEventListener('scroll',function(){tip.classList.remove('on');},{passiv
     function pull() { const c = S.cred[0]; if (!c) return; const b = domeTake(); if (!b) return; const res = b.res; c.n--; if (!c.n) S.cred.shift(); S.credN--;
       S.stats.n++; S.stats.gold++; if (res.kind === 'SSR') { S.stats.ssr++; if (res.nk.pu) S.stats.pu++; } S.log.push(0); gDirty = true; snd.tick(); uiStat(); }
     S.sup = { pick: 0, jw: 0, full: false, acc: 0, key: '' };
-    const feedCap = () => Math.max(20, Math.floor(PW * PH * 0.8 / 250));
+    const feedCap = () => Math.max(20, Math.floor(PW * PH * 0.8 / 1000));
     function feedLabel() { const u = S.sup, left = u.pick > 0 || u.jw > 0; return u.full ? ['full', '카드 가득 참', '공간 50% 확보 시 재개'] : left ? ['run', '보급 중…', '남은 ' + fmt(u.pick) + '뽑 · ' + fmt(u.jw) + '쥬얼'] : ['', '붓자 체험', '+500뽑 · 5만 쥬얼']; }
     function uiFeed() { const b = modeEl.querySelector('.gm-fb'); if (!b) return; const l = feedLabel(), key = l.join('|'); if (key === S.sup.key) return; S.sup.key = key; b.className = 'gm-fb ' + l[0]; b.innerHTML = l[1] + '<small>' + l[2] + '</small>'; }
     function feedTick(dt) { const u = S.sup; if (u.pick <= 0 && u.jw <= 0 && !u.full) return; const cap = feedCap(), n = S.pile.length;
       if (!u.full && n >= cap) { u.full = true; uiFeed(); return; } if (u.full) { if (n <= cap * 0.5) { u.full = false; uiFeed(); } else return; }
-      u.acc += dt; if (u.acc < 0.06) return; u.acc = 0; S.fy = 50;
+      u.acc += dt; if (u.acc < 0.09) return; u.acc = 0; S.fy = 50;
       ['pick', 'jw'].forEach((k) => { const d = Math.min(PER[k], u[k]); if (d > 0) { u[k] -= d; S.stock[k] += d; } }); pileSync(); S.fy = 0; snd.grab(); uiFeed(); }
     function credit(k, n) { S.cred.push({ k, n }); S.credN += n; S.led = 1; }
     function insert(k, items, x, y) { items.forEach((it, i) => { const u = it.u || 10; S.stock[k] -= PER[k] / 10 * u; const a = i * 2.4, r = i ? 10 + i * 5 : 0; S.ins.push({ k, u, x: x + Math.cos(a) * r, y: y + Math.sin(a) * r, t: -i * 0.3, snd: false }); }); uiWal(); }
@@ -6735,11 +6729,10 @@ window.addEventListener('scroll',function(){tip.classList.remove('on');},{passiv
       let method = S.openM === 'mix' ? pick(T >= 2 ? ['pull', 'tap', 'auto'] : ['tap', 'auto', 'pull']) : S.openM;
       if (rand) { for (let lv = 1; lv <= T; lv++) ev.push({ p: clamp(0.16 + 0.64 * lv / (T + 0.5) + rnd(-0.04, 0.04), 0.1, 0.9), lv }); if (T < 3 && Math.random() < [0.1, 0.14, 0.2][T]) { ev.push({ p: 0.8, lv: T + 1, fake: true }); ev.push({ p: 0.94, lv: T, fail: true }); } }
       else if (T === 3) ev.push({ p: Math.random() < 0.5 ? 0.9 : 0.42, lv: 3 }); else if (Math.random() < 0.2) { ev.push({ p: 0.6, lv: 3, fake: true }); ev.push({ p: 0.9, lv: 2, fail: true }); }
-      if (rand && res.dummy && kind !== 'SSR') { ev.length = 0; ev.push({ p: 0.18, lv: 1 }, { p: 0.38, lv: 2 }); if (Math.random() < 0.6) ev.push({ p: 0.58, lv: 3, fake: true }, { p: 0.7, lv: 2, fail: true }, { p: 0.83, lv: 3, fake: true }, { p: 0.95, lv: T, fail: true }); else ev.push({ p: 0.62, lv: 3, fake: true }, { p: 0.93, lv: T, fail: true }); }
       S.reveal = { res, nk, kind, T, skin: T === 3 ? (nk.pu ? 'rb' : 'ov') : pick(['rb', 'ov']), method, ev, ei: 0, shown: rand ? 0 : 2, fakeOn: false, prog: 0, t: 0, ph: 'in', x0: b.x, y0: b.y, a0: b.a % TAU, r0: b.r, lk: look(b), taps: 0, cracks: [], drag: null, punch: 0, shake: 0, rings: [], hb: 0, D: 1.25 + 0.55 * ev.length,
         pu: !!(nk && nk.pu), ovr: !!(nk && isOvr(nk)), isNew: !!nk && !S.tray.some((x) => x.nk.n === nk.n) }; }
     function lvCol(R, lv, al) { if (lv < 3) { const h = LVC[lv]; return 'rgba(' + parseInt(h.slice(1, 3), 16) + ',' + parseInt(h.slice(3, 5), 16) + ',' + parseInt(h.slice(5, 7), 16) + ',' + al + ')'; } return R.skin === 'ov' ? 'rgba(150,240,255,' + al + ')' : 'hsla(' + ((S.time * 200) % 360) + ',100%,70%,' + al + ')'; }
-    function revEvent(R, e) { R.shown = e.lv; R.fakeOn = !!e.fake; R.rings.push({ t: 0, lv: e.lv }); R.shake = 1; if (e.fail) { snd.fail(); S.flash = 0; R.failT = R.t; R.failTx = e.lv; R.shake = R.res.dummy ? 2 : 1; sparks(RV.x, RV.y, R.res.dummy ? 60 : 26, '#8a93a3', R.res.dummy ? 560 : 380, 500); } else if (e.fake) { snd.fakeUp(); S.flash = 0.2; } else { snd.up(e.lv); S.flash = 0.3; sparks(RV.x, RV.y, 30, () => lvCol(R, e.lv, 1), 520, 120); } }
+    function revEvent(R, e) { R.shown = e.lv; R.fakeOn = !!e.fake; R.rings.push({ t: 0, lv: e.lv }); R.shake = 1; if (e.fail) { snd.fail(); S.flash = 0; sparks(RV.x, RV.y, 26, '#8a93a3', 380, 500); } else if (e.fake) { snd.fakeUp(); S.flash = 0.2; } else { snd.up(e.lv); S.flash = 0.3; sparks(RV.x, RV.y, 30, () => lvCol(R, e.lv, 1), 520, 120); } }
     function revBurst(R) { while (R.ei < R.ev.length) { const e = R.ev[R.ei++]; R.shown = e.lv; R.fakeOn = false; } R.shown = R.T; R.ph = 'hit'; R.t = 0; R.drag = null; }
     function orbBody(nk, count, x, y) { const b = body('orb', x, y, { nk, count: count || 1 }); S.bask.push(b); return b; }
     function endReveal(toBasket) { const R = S.reveal; if (!R) return; S.reveal = null; if (toBasket && R.nk) orbBody(R.nk, 1, RV.x + rnd(-30, 30), BK.y0 - 60).vy = 100; }
@@ -6772,10 +6765,10 @@ window.addEventListener('scroll',function(){tip.classList.remove('on');},{passiv
     const slotPx = (k) => (k === 'jw' ? HOLE.s : SLIT.w * 0.94 * TKR) * cvRect().width / W;
     function curFloatHtml(f) { let h = ''; f.items.forEach((it, i) => { const a = i * 2.4, r = i ? 5 + i * 2.6 : 0; h += '<img alt="" src="' + SRC[f.k] + '" style="--dx:' + (Math.cos(a) * r).toFixed(1) + 'px;--dy:' + (Math.sin(a) * r).toFixed(1) + 'px;--rt:' + ((i % 2 ? 1 : -1) * Math.min(i, 5) * 4) + 'deg">'; }); f.el.innerHTML = h + '<b>' + f.items.reduce((n, it) => n + it.u, 0) + '뽑</b>'; }
     function curSize(f, big) { if (f.big === big) return; f.big = big; f.el.style.setProperty('--w', (big ? slotPx(f.k) : PSZ[f.k].w) * (f.items[0].sc || 1) + 'px'); f.el.style.setProperty('--k', big ? 2 : 1); S.hl = big ? (f.k === 'jw' ? 'coin' : 'bill') : null; if (big && S.closeWal) S.closeWal(); }
-    wcv.addEventListener('pointerdown', (e) => { const r = wcv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top; let hit = null; for (let i = S.pile.length - 1; i >= 0; i--) { const b = S.pile[i]; if (Math.hypot(x - b.x, y - b.y) <= b.r + 7) { hit = b; break; } } if (!hit) return; e.preventDefault();
+    wcv.addEventListener('pointerdown', (e) => { const r = wcv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top; let hit = null; for (let i = S.pile.length - 1; i >= 0; i--) { const b = S.pile[i]; if (Math.hypot(x - b.x, y - b.y) <= b.r + 5) { hit = b; break; } } if (!hit) return; e.preventDefault();
       S.pile.splice(S.pile.indexOf(hit), 1); fl = { ty: 'cur', k: hit.k, items: [hit], el: floatEl('cur', e), big: null, px: e.clientX, py: e.clientY }; curFloatHtml(fl); curSize(fl, false); wake(S.pile); snd.grab(); });
     function magnet(dt) { if (!fl || fl.ty !== 'cur' || !S.hand || fl.big || fl.items.length >= 10) return; const r = wcv.getBoundingClientRect(), x = fl.px - r.left, y = fl.py - r.top; let got = false;
-      for (let i = S.pile.length - 1; i >= 0; i--) { const b = S.pile[i]; if (b.k !== fl.k) { b.mag = false; continue; } const dx = x - b.x, dy = y - b.y, d = Math.hypot(dx, dy); if (d < 64) { b.mag = true; b.sl = false; b.st = 0; const f = 5200 * (1 - d / 80); b.vx += dx / (d || 1) * f * dt; b.vy += dy / (d || 1) * f * dt - GRAV * dt * 0.9; if (d < 14 && fl.items.length < 10) { S.pile.splice(i, 1); fl.items.push(b); got = true; } } else b.mag = false; }
+      for (let i = S.pile.length - 1; i >= 0; i--) { const b = S.pile[i]; if (b.k !== fl.k) { b.mag = false; continue; } const dx = x - b.x, dy = y - b.y, d = Math.hypot(dx, dy); if (d < 120) { b.mag = true; b.sl = false; b.st = 0; const f = 5200 * (1 - d / 150); b.vx += dx / (d || 1) * f * dt; b.vy += dy / (d || 1) * f * dt - GRAV * dt * 0.9; if (d < 26 && fl.items.length < 10) { S.pile.splice(i, 1); fl.items.push(b); got = true; } } else b.mag = false; }
       if (got) { curFloatHtml(fl); snd.grab(); } }
     function orbDrag(nk, e, from, count) { fl = { ty: 'orb', nk, from, count: count || 1, el: floatEl('orb', e) }; fl.el.style.cssText += ';' + orbBg(nk); orbBadge(); }
     function orbBadge() { fl.el.innerHTML = fl.count > 1 ? '<i>×' + fl.count + '</i>' : ''; }
@@ -7018,13 +7011,12 @@ window.addEventListener('scroll',function(){tip.classList.remove('on');},{passiv
           c.restore(); }
         if (Math.random() < 0.3 + pr * 0.5) { const a2 = rnd(0, TAU), d = rnd(180, 330); S.parts.push({ ty: 'spark', x: RV.x + Math.cos(a2) * d, y: RV.y + Math.sin(a2) * d, vx: -Math.cos(a2) * d * 1.6, vy: -Math.sin(a2) * d * 1.6, g: 0, life: 0, max: 0.55, col: lvCol(R, lv, 1), size: rnd(1.5, 3.5) }); }
         c.textAlign = 'center'; c.font = 'bold 15px sans-serif'; c.fillStyle = 'rgba(255,255,255,' + (0.6 + 0.3 * Math.sin(S.time * 5)) + ')'; c.fillText(R.method === 'pull' ? '위아래로 끌어당겨 열기' : R.method === 'tap' ? '탭해서 깨트리기  ' + Math.min(R.taps, TAPN) + ' / ' + TAPN : (R.t > 1 && !S.auto ? '클릭하면 바로 개봉' : ''), RV.x, RV.y + RV.r + 150);
-        if (R.failT != null && R.ph === 'open') { const u = (R.t - R.failT) / 0.7; if (u >= 0 && u < 1) { c.fillStyle = 'rgba(0,0,0,' + 0.6 * (1 - u) + ')'; c.fillRect(0, 0, W, H); if (R.res.dummy) { c.save(); c.textAlign = 'center'; c.font = '900 ' + Math.round(46 + 14 * u) + 'px sans-serif'; c.fillStyle = 'rgba(190,200,215,' + (1 - u) + ')'; c.lineWidth = 6; c.strokeStyle = 'rgba(0,0,0,' + 0.6 * (1 - u) + ')'; const tx = '…아니었다'; c.strokeText(tx, RV.x, RV.y - RV.r - 40 - 30 * u); c.fillText(tx, RV.x, RV.y - RV.r - 40 - 30 * u); c.restore(); } } }
         if (R.ph === 'hit') { c.fillStyle = 'rgba(255,255,255,' + (0.5 + 4 * t) + ')'; c.fillRect(0, 0, W, H); }
         return; }
       // 결과
       const gl = 1 - ease(t / 1.7); rays(c, R, R.T, 16, S.time * 0.35, R.T >= 2 ? 520 : 320, (R.T >= 2 ? 0.16 + 0.5 * gl : 0.3 * gl), 0.09); if (R.T === 3) rays(c, R, 3, 8, -S.time * 0.5, 700, 0.14 + 0.3 * gl, 0.04);
       if (t < 0.7) { const u = t / 0.7; c.save(); c.globalCompositeOperation = 'lighter'; c.strokeStyle = lvCol(R, R.T, 1 - u); c.lineWidth = 14 * (1 - u) + 1; c.beginPath(); c.arc(RV.x, RV.y, RV.r + 420 * eout(u), 0, TAU); c.stroke(); c.restore(); }
-      if (R.kind !== 'SSR') { const a = 1 - ease((t - 0.6) / 0.4); c.globalAlpha = a; c.textAlign = 'center'; c.font = '900 64px sans-serif'; c.fillStyle = LVC[R.T]; c.lineWidth = 6; c.strokeStyle = 'rgba(0,0,0,.6)'; c.strokeText(R.kind, RV.x, RV.y - 86); c.fillText(R.kind, RV.x, RV.y - 86); c.font = 'bold 18px sans-serif'; c.fillStyle = '#fff'; c.fillText('바디라벨 +' + LABEL[R.kind], RV.x, RV.y + 96); if (R.res.dummy && S.mode.random) { c.font = 'bold 17px sans-serif'; c.fillStyle = '#ffb4b4'; c.fillText('SSR인 줄 알았죠? 더미 캡슐!', RV.x, RV.y + 126); } c.globalAlpha = 1; return; }
+      if (R.kind !== 'SSR') { const a = 1 - ease((t - 0.6) / 0.4); c.globalAlpha = a; c.textAlign = 'center'; c.font = '900 64px sans-serif'; c.fillStyle = LVC[R.T]; c.lineWidth = 6; c.strokeStyle = 'rgba(0,0,0,.6)'; c.strokeText(R.kind, RV.x, RV.y - 86); c.fillText(R.kind, RV.x, RV.y - 86); c.font = 'bold 18px sans-serif'; c.fillStyle = '#fff'; c.fillText('바디라벨 +' + LABEL[R.kind], RV.x, RV.y + 96); c.globalAlpha = 1; return; }
       if (R.ovr && t > 0.3) { const u = t - 0.3; star4(c, 0.95 * ease(u / 0.25), 1 + 0.5 * (1 - ease(u / 0.6)));
         if (!R.bz || S.time - R.bzT > 0.09) { R.bzT = S.time; R.bz = []; const n = u < 1.3 ? 3 : (Math.random() < 0.2 ? 1 : 0); for (let k = 0; k < n; k++) { const a = rnd(0, TAU), len = rnd(250, 430), ca = Math.cos(a), sa = Math.sin(a), pts = []; for (let i = 0; i <= 9; i++) { const v = i / 9, j = Math.sin(v * Math.PI) * rnd(-22, 22); pts.push([RV.x + ca * (RV.r + len * v) - sa * j, RV.y + sa * (RV.r + len * v) + ca * j]); } R.bz.push(pts); const m = pts[4], a2 = a + rnd(-0.7, 0.7), br = [m]; for (let i = 1; i <= 4; i++) br.push([m[0] + Math.cos(a2) * i * 26 + rnd(-8, 8), m[1] + Math.sin(a2) * i * 26 + rnd(-8, 8)]); R.bz.push(br); } }
         c.save(); c.globalCompositeOperation = 'lighter'; c.lineJoin = 'round'; c.lineCap = 'round'; const fd = 1 - (S.time - R.bzT) / 0.09 * 0.6; for (const pts of R.bz) { c.beginPath(); pts.forEach((q, i) => (i ? c.lineTo(q[0], q[1]) : c.moveTo(q[0], q[1]))); c.strokeStyle = 'rgba(120,225,255,' + 0.28 * fd + ')'; c.lineWidth = 7; c.stroke(); c.strokeStyle = 'rgba(235,252,255,' + 0.95 * fd + ')'; c.lineWidth = 1.6; c.stroke(); } c.restore(); }
@@ -7081,16 +7073,12 @@ window.addEventListener('scroll',function(){tip.classList.remove('on');},{passiv
     raf = requestAnimationFrame(frame);
     return { state: S, sync() { pileSync(); uiWal(); gDirty = true; }, pools: P, body, insert, pull, update, draw, popStart, startReveal, endReveal, trayAdd, orbBody, refill, setMode, credit, setStock(s) { Object.assign(S.stock, s); pileSync(); uiWal(); } };
   }
-  function mountMulti(root, list) { // 여러 가챠 머신: 양옆에 이어 붙이고 드래그(또는 점·옆 머신 클릭)로 이동
-    css(); root.innerHTML = '<div class="gm-multi"><div class="gm-slides"></div></div>';
-    const slides = root.querySelector('.gm-slides'), M = list.map((o) => { const el = document.createElement('div'); el.className = 'gm-slide'; slides.appendChild(el); return { el, o, inst: null }; }); let cur = 0, dx = 0, drag = null;
-    function lay() { M.forEach((x, k) => { x.el.classList.toggle('cur', k === cur); x.el.style.setProperty('--k', k - cur); x.el.style.zIndex = k === cur ? 2 : 1; const d = x.el.querySelector('.gm-dots'); if (d) d.innerHTML = M.map((q, j) => '<i data-g="' + j + '" title="' + (q.o.title || '') + '"' + (j === cur ? ' class="on"' : '') + '></i>').join(''); }); slides.style.setProperty('--dx', dx + 'px'); }
-    function show(i) { cur = Math.max(0, Math.min(M.length - 1, i)); dx = 0; M.forEach((x) => { if (!x.inst) { x.inst = mount(x.el, x.o); const d = document.createElement('div'); d.className = 'gm-dots'; x.el.querySelector('.gm-left').appendChild(d); } }); M[cur].inst.sync(); lay(); }
-    slides.addEventListener('pointerdown', (e) => { if (e.button > 0) return; const t = e.target, sl = t.closest && t.closest('.gm-slide'); if (!sl || t.closest('.gm-dots')) return; const k = M.findIndex((x) => x.el === sl); if (k === cur && !(t === sl || t.classList.contains('gm'))) return; drag = { x: e.clientX, k, moved: false }; });
-    window.addEventListener('pointermove', (e) => { if (!drag) return; const d = e.clientX - drag.x; if (!drag.moved && Math.abs(d) > 8) { drag.moved = true; slides.classList.add('drag'); } if (drag.moved) { dx = d; if ((cur === 0 && dx > 0) || (cur === M.length - 1 && dx < 0)) dx *= 0.3; lay(); } });
-    const end = (e) => { if (!drag) return; const d = e.clientX - drag.x, g = drag; drag = null; slides.classList.remove('drag'); if (g.moved) show(Math.abs(d) > 70 ? cur + (d < 0 ? 1 : -1) : cur); else if (g.k !== cur) show(g.k); };
-    window.addEventListener('pointerup', end); window.addEventListener('pointercancel', () => { if (drag) { drag = null; slides.classList.remove('drag'); show(cur); } });
-    slides.addEventListener('click', (e) => { const g = e.target.closest('[data-g]'); if (g) show(+g.dataset.g); });
+  function mountMulti(root, list) { // 여러 가챠 머신: 양옆 화살표·좌우 드래그로 이동
+    css(); root.innerHTML = '<div class="gm-multi"><div class="gm-nav"><b></b><span class="gm-dots"></span></div><div class="gm-slides"></div></div>';
+    const nav = root.querySelector('.gm-nav'), slides = root.querySelector('.gm-slides'), M = list.map((o, i) => { const el = document.createElement('div'); el.hidden = true; slides.appendChild(el); return { el, o, inst: null }; }); let cur = 0; list.forEach((q) => { q.multi = true; });
+    function show(i) { cur = (i + M.length) % M.length; M.forEach((x, k) => { x.el.hidden = k !== cur; }); const x = M[cur]; if (!x.inst) x.inst = mount(x.el, x.o); else x.inst.sync(); nav.querySelector('b').textContent = x.o.title || ''; nav.querySelector('.gm-dots').innerHTML = M.map((q, k) => '<i' + (k === cur ? ' class="on"' : '') + '></i>').join(''); }
+    let x0 = null; nav.addEventListener('pointerdown', (e) => { x0 = e.clientX; }); window.addEventListener('pointerup', (e) => { if (x0 == null) return; const d = e.clientX - x0, b = e.target.closest && e.target.closest('[data-n]'); x0 = null; if (Math.abs(d) > 50) show(cur + (d < 0 ? 1 : -1)); else if (b && nav.contains(b)) show(cur + +b.dataset.n); });
+    slides.addEventListener('click', (e) => { const b = e.target.closest('[data-sd]'); if (b) show(cur + +b.dataset.sd); });
     show(0); return { M, show };
   }
   window.DoroGacha = { mount, mountMulti };
