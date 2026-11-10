@@ -6553,7 +6553,7 @@ window.addEventListener('scroll',function(){tip.classList.remove('on');},{passiv
 .gm-mode .gm-mg{width:36px;height:36px;padding:0;display:grid;place-items:center;border-radius:10px}.gm-mode .gm-mg svg{pointer-events:none}
 .gm-mode .gm-fb{appearance:none;border:1px solid #ffc21a;background:rgba(40,30,0,.78);color:#ffd24d;border-radius:10px;padding:6px 9px;font-weight:800;cursor:pointer;font-size:12.5px}
 .gm-mode .gm-fb.run{background:#ffc21a;color:#1b1400}.gm-mode .gm-fb.full{border-color:#ff8a5c;color:#ffb494;background:rgba(60,20,0,.8)}
-.gm-fold{display:none;appearance:none;width:100%;height:20px;border-radius:8px;border:1px solid rgba(255,255,255,.18);background:rgba(10,14,22,.78);color:#dfe7f5;cursor:pointer;padding:0;place-items:center}
+.gm-trt{display:none}.gm-fold{display:none;appearance:none;width:100%;height:20px;border-radius:8px;border:1px solid rgba(255,255,255,.18);background:rgba(10,14,22,.78);color:#dfe7f5;cursor:pointer;padding:0;place-items:center}
 .gm-hud.fold .gm-lab{display:none}.gm-hud.fold .gm-fold svg{transform:rotate(180deg)}
 .gm-multi{position:relative}.gm-btn{white-space:nowrap;font-size:11.5px;letter-spacing:-.4px;padding:8px 2px}
 .gm-slides{display:grid}.gm-slide{grid-area:1/1;min-width:0}.gm-slide:not(.cur){visibility:hidden;pointer-events:none}.gm-slide.peek .gm-left{visibility:visible}
@@ -6571,11 +6571,12 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
 }
 @media (max-width:1000px) and (orientation:portrait){
 .gm-multi.fs{padding:6px;align-items:stretch}.gm-multi.fs .gm-slides{grid-template-rows:minmax(0,1fr);grid-template-columns:minmax(0,1fr)}.gm-multi.fs .gm-slide{display:grid;grid-template-rows:minmax(0,1fr);min-height:0}
-.gm-multi.fs .gm-left{align-self:start}.gm-multi.fs .gm{align-items:stretch;min-height:0;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:150px auto minmax(0,1fr);gap:6px}
+.gm-multi.fs .gm{align-items:stretch;min-height:0;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:150px minmax(0,1fr) auto;gap:6px}
 .gm-multi.fs .gm-right{display:contents}
 .gm-multi.fs .gm-wal{grid-area:1/1}.gm-multi.fs .gm-graph{grid-area:1/2;padding:6px 7px}
-.gm-multi.fs .gm-left{grid-area:2/1/3/3;width:min(100%,calc((100vh - 150px - 130px) * 1.0042));justify-self:center}
-.gm-multi.fs .gm-tray{grid-area:3/1/4/3;padding:7px}.gm-multi.fs .gm-pan{padding:7px}.gm-multi.fs .gm-trh{margin-bottom:5px;font-size:12.5px}.gm-multi.fs .gm-name{display:none}
+.gm-multi.fs .gm-left{grid-area:2/1/3/3;align-self:center;width:min(100%,calc((100vh - 150px - 90px) * 1.0042));justify-self:center}
+.gm-multi.fs .gm-tray{grid-area:3/1/4/3;padding:7px;align-self:end}.gm-multi.fs .gm-trt{display:block}.gm-multi.fs .gm-tray .gm-pan{display:none}
+.gm-multi.fs .gm.topen .gm-left{visibility:hidden;pointer-events:none}.gm-multi.fs .gm.topen .gm-tray{grid-area:2/1/4/3;align-self:stretch}.gm-multi.fs .gm.topen .gm-tray .gm-pan{display:grid}.gm-multi.fs .gm-pan{padding:7px}.gm-multi.fs .gm-trh{margin-bottom:5px;font-size:12.5px}.gm-multi.fs .gm-name{display:none}
 .gm-multi.fs .gm-gh{gap:4px;margin-bottom:3px}.gm-multi.fs .gm-gh b{display:none}.gm-multi.fs .gm-seg button{padding:3px 6px;font-size:10.5px}
 .gm-multi.fs .gm-stat{margin-top:4px;gap:4px}.gm-multi.fs .gm-stat div{padding:2px;display:flex;justify-content:center;gap:5px;align-items:baseline}.gm-multi.fs .gm-stat b{font-size:12px;white-space:nowrap}.gm-multi.fs .gm-stat small{font-size:10px}
 .gm-multi.fs .gm-wt{padding:7px 9px}.gm-multi.fs .gm-wt small span{display:none}.gm-multi.fs .gm-jw{font-size:22px}.gm-multi.fs .gm-jw img{height:19px}.gm-multi.fs .gm-chip{font-size:12px}.gm-multi.fs .gm-pulls{font-size:11px;margin-top:3px}
@@ -6599,7 +6600,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     root.innerHTML = '<div class="gm"><div class="gm-left"><canvas class="gm-cv"></canvas>'
       + '<div class="gm-tools">' + [['snd', '소리', '<path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 8.5a5 5 0 010 7"/>'], ['open', '개봉 방식 · 게임 모드', '<path d="M5 10.5a7 7 0 0114 0z"/><path d="M5 13.5a7 7 0 0014 0z"/>'], ['help', '도움말', '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 114 2c-.9.6-1.5 1.1-1.5 2.2"/><path d="M12 17h.01"/>'], ['reset', '초기화', '<path d="M4 12a8 8 0 0113.7-5.7L20 8"/><path d="M20 4v4h-4"/><path d="M20 12a8 8 0 01-13.7 5.7L4 16"/><path d="M4 20v-4h4"/>'], ['hide', '화면 정리', '<path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.8"/><path d="M4 4l16 16"/>']].map((x) => '<button class="gm-ib" data-a="' + x[0] + '" title="' + x[1] + '" aria-label="' + x[1] + '"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + x[2] + '</svg></button>').join('') + '</div><div class="gm-pop" hidden></div><button class="gm-auto" data-a="auto">AUTO</button><button class="gm-ib gm-fs" data-a="fs" title="전체화면" aria-label="전체화면"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>'
       + '<div class="gm-hud"><button class="gm-fold" data-a="fold" aria-label="바디라벨 접기"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button><div class="gm-lab"><img alt=""><small>바디라벨</small><b>0</b></div><button class="gm-btn" data-a="exch">바디라벨 교환</button><button class="gm-btn blue" data-a="refill">캡슐 리필</button></div>' + '</div>'
-      + '<div class="gm-right"><div class="gm-wal"><canvas class="gm-wcv"></canvas><div class="gm-wt"></div><div class="gm-mode"></div></div><div class="gm-graph"><div class="gm-gh"><b>실시간 수지</b><span class="gm-seg"><button data-v="0">픽업</button><button data-v="1">보스티어</button><button data-v="2">PVP티어</button></span></div><canvas class="gm-gcv"></canvas><div class="gm-stat"></div></div><div class="gm-tray"><div class="gm-trh">SSR 보관함 <button class="gm-tb" data-a="all">구슬 모두 담기</button></div><div class="gm-pan"></div><div class="gm-name"></div></div></div></div>';
+      + '<div class="gm-right"><div class="gm-wal"><canvas class="gm-wcv"></canvas><div class="gm-wt"></div><div class="gm-mode"></div></div><div class="gm-graph"><div class="gm-gh"><b>실시간 수지</b><span class="gm-seg"><button data-v="0">픽업</button><button data-v="1">보스티어</button><button data-v="2">PVP티어</button></span></div><canvas class="gm-gcv"></canvas><div class="gm-stat"></div></div><div class="gm-tray"><div class="gm-trh">SSR 보관함 <button class="gm-tb gm-trt" data-a="tfold">펼치기</button></div><div class="gm-pan"></div><div class="gm-name"></div></div></div></div>';
     const $ = (s) => root.querySelector(s);
     const cv = $('.gm-cv'), ctx = cv.getContext('2d'), walEl = $('.gm-wal'), wcv = $('.gm-wcv'), wctx = wcv.getContext('2d'), wtEl = $('.gm-wt'), modeEl = $('.gm-mode'), optEl = $('.gm-pop'), gcv = $('.gm-gcv'), panEl = $('.gm-pan'), statEl = $('.gm-stat'), labEl = $('.gm-lab'), leftEl = $('.gm-left'), rightEl = $('.gm-right'); let txs = 1;
     const vib = (p) => { try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) { /* 미지원 */ } };
@@ -6802,6 +6803,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     root.addEventListener('click', (e) => { const a = e.target.closest('[data-a]'); if (!a) return; const k = a.dataset.a;
       if (k === 'snd') { S.mute = !S.mute; a.classList.toggle('off', S.mute); }
       else if (k === 'fold') { a.parentNode.classList.toggle('fold'); }
+      else if (k === 'tfold') { const on = $('.gm').classList.toggle('topen'); a.textContent = on ? '접기' : '펼치기'; requestAnimationFrame(() => { resize(); uiTray(); }); }
       else if (k === 'open' || k === 'help') { S.pop = S.pop === k ? null : k; uiOpt(); }
       else if (k === 'hide') { a.classList.toggle('on', $('.gm-left').classList.toggle('clean')); S.pop = null; uiOpt(); }
       else if (k === 'refill') refill();
@@ -6841,8 +6843,9 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
       if (R.ph === 'in') { if (R.t > 0.42) { R.ph = 'open'; R.t = 0; if (R.method === 'auto') snd.charge(R.D, R.T >= 2); } }
       else if (R.ph === 'open') {
         const nx = R.ev[R.ei];
+        if (R.bot) { if (R.method === 'hold') R.hold = true; else if (R.method === 'tap') { R.bt = (R.bt || 0) + dt; if (R.bt > R.D * 0.8 / TAPN && R.taps < TAPN) { R.bt = 0; R.taps++; R.punch = 1; R.shake = Math.max(R.shake, 0.6); addCracks(R); snd.crack(); sparks(RV.x + rnd(-40, 40), RV.y + rnd(-40, 40), 8, () => lvCol(R, R.shown, 1), 300); } } }
         if (R.method === 'auto') { if (R.prog < 1) R.prog = Math.min(1, R.prog + dt / R.D * (nx && nx.p - R.prog < 0.06 ? 0.3 : 1)); }
-        else if (R.method === 'pull') { const tg = R.drag ? clamp(R.drag.d / 170, 0, 1) : 0; R.prog += (tg - R.prog) * Math.min(1, dt * (R.drag ? 16 : 5)); }
+        else if (R.method === 'pull') { if (R.bot) R.prog = Math.min(1, R.prog + dt / (R.D * 0.8) * (nx && nx.p - R.prog < 0.06 ? 0.35 : 1)); else { const tg = R.drag ? clamp(R.drag.d / 170, 0, 1) : 0; R.prog += (tg - R.prog) * Math.min(1, dt * (R.drag ? 16 : 5)); } }
         else if (R.method === 'hold') { const fl0 = R.ei > 0 ? R.ev[R.ei - 1].p : 0; if (R.hold) { R.prog = Math.min(1, R.prog + dt / (R.D * 0.8) * (nx && nx.p - R.prog < 0.06 ? 0.35 : 1)); R.shake = Math.max(R.shake, 0.22 + 0.5 * R.prog); } else R.prog = Math.max(fl0, R.prog - dt * 0.3); }
         else R.prog += (Math.min(1, R.taps / TAPN) - R.prog) * Math.min(1, dt * 14);
         R.grow += (R.shown - R.grow) * Math.min(1, dt * 9);
@@ -6860,12 +6863,12 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
       const orb = S.bask.find((b) => b.kind === 'orb' && b.sl); if (orb) { S.bask.splice(S.bask.indexOf(orb), 1); wake(S.bask); flyOrb(orb.res.nk, orb.res.count, orb.x, orb.y); return; }
       const busy = S.lev.auto > 0 || S.emerg.length || S.cup.length || S.dome.some((b) => b.exit) || S.pops.length;
       if (!busy) { const keep = (b) => b.kind === 'SSR' || (S.mode.random && b.res.dummy && b.kind !== 'orb'); const junk = S.bask.filter((b) => (b.kind === 'R' || b.kind === 'SR') && !keep(b) && !b.pop); if (junk.length) { popStart(junk); S.at = 0.6; return; }
-        const y = S.bask.find((b) => keep(b) && !b.pop); if (y) { if (y.sl) { const m = S.openM; S.openM = 'auto'; startReveal(y); S.openM = m; } return; } }
+        const y = S.bask.find((b) => keep(b) && !b.pop); if (y) { if (y.sl) { startReveal(y); if (S.reveal) S.reveal.bot = true; } return; } }
       if (allowed() > 0) { if (!S.lev.auto && !S.lev.drag) { S.lev.an = Math.min(10, allowed()); S.lev.q = S.lev.an; S.lev.wait = 0; } return; }
       if (S.ins.length || busy) return;
       if (!domeN() && (S.credN || S.pile.length)) { refill(); return; }
       if (!S.credN && room() >= 10) { const it = S.pile.filter((b) => b.k === 'pick').sort((a, b) => b.u - a.u)[0] || S.pile.filter((b) => b.k === 'jw').sort((a, b) => b.u - a.u)[0]; if (it) { S.pile.splice(S.pile.indexOf(it), 1); wake(S.pile); insert(it.k, [it], it.k === 'jw' ? HOLE.x + 150 : SLIT.x + 150, 300); S.at = 0.5; return; } }
-      const left = S.bask.find((b) => (b.kind === 'SSR' || (S.mode.random && b.res.dummy && b.kind !== 'orb')) && !b.pop); if (left) { const m = S.openM; S.openM = 'auto'; startReveal(left); S.openM = m; } }
+      const left = S.bask.find((b) => (b.kind === 'SSR' || (S.mode.random && b.res.dummy && b.kind !== 'orb')) && !b.pop); if (left) { startReveal(left); if (S.reveal) S.reveal.bot = true; } }
     function update(dt) {
       if (S.auto) autoStep(dt);
       S.time += dt; const L = S.lev, stp = TAU / 10;
