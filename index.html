@@ -5685,7 +5685,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   const gcRnd = (L) => L[Math.floor(Math.random() * L.length)];
   /* 니케 초상화: BlaBla 연동과 같은 portraits/코드.webp 사용 */
   const nkNorm = (x) => String(x).replace(/[\s:·.()]/g, '');
-  const NK_CODE = (() => { const m = {}; Object.keys(BLN).forEach((k) => { m[nkNorm(BLN[k])] = k; }); Object.assign(m, { [nkNorm('아르카나 : 포츈 메이트')]: '5167', [nkNorm('솔져 E.G.')]: '1013', [nkNorm('솔져 F.A.')]: '1014', [nkNorm('솔져 O.W.')]: '1025', [nkNorm('맥스웰 : 오디너리 미케닉')]: '5178', [nkNorm('브래디')]: '5135', [nkNorm('iDoll 플라워')]: '1017', [nkNorm('iDoll 오션')]: '1018', [nkNorm('iDoll 썬')]: '1023' }); return m; })();
+  const NK_CODE = (() => { const m = {}; Object.keys(BLN).forEach((k) => { m[nkNorm(BLN[k])] = k; }); Object.assign(m, { [nkNorm('아르카나 : 포츈 메이트')]: '5167', [nkNorm('솔져 E.G.')]: '1013', [nkNorm('솔져 F.A.')]: '1014', [nkNorm('솔져 O.W.')]: '1025', [nkNorm('맥스웰 : 오디너리 미케닉')]: '5178', [nkNorm('브래디')]: '5135', [nkNorm('iDoll 플라워')]: '1017', [nkNorm('iDoll 오션')]: '1018', [nkNorm('iDoll 썬')]: '1023', [nkNorm('사쿠라')]: '1012' }); return m; })();
   const nkCode = (name) => NK_CODE[nkNorm(GC_AL[name] || name)] || NK_CODE[nkNorm(name)] || '';
   /* 가챠 머신: 독립 모듈(DoroGacha)을 실제 풀·보유 재화와 연결 */
   let gmInst = null; const gmStock = { jw: 0, pick: 0 };
