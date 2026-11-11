@@ -1385,3 +1385,6 @@ button:not(.tr-clr):not(.tabs button):not(.tr-f):not(.pk-t):not(.pk-r){border-ra
 .acct-pick button{display:flex;flex-direction:column;align-items:flex-start;gap:3px;text-align:left;border-radius:14px!important}
 .acct-f input{border-radius:999px!important}
 @media(max-width:480px){.top-btns{gap:4px!important}.top-btns>button{width:32px!important;height:32px!important;min-width:32px!important;padding:0!important}}
+.acct-pwin{width:150px;padding:6px 12px!important;font-size:13px;border-radius:999px!important}
+.acct-pwnote{margin:6px 0 0;text-align:right}
+.acct-box .acct-g+.acct-or{margin-top:16px}

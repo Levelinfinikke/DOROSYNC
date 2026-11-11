@@ -132,7 +132,9 @@ function render() {
     ttl.textContent = '내 계정';
     const m = meta();
     body.innerHTML =
-      '<div class="acct-row"><span class="acct-k">아이디</span><b>' + esc(profile.username) + '</b></div>' +
+      '<div class="acct-row"><span class="acct-k">닉네임</span><span>' + (profile.nickname ? '<b>' + esc(profile.nickname) + '</b>' : '<span class="muted sm">BlaBla 연동하면 인게임 닉네임으로 표시돼요</span>') + '</span></div>' +
+      '<div class="acct-row"><span class="acct-k">로그인 아이디</span><b>' + esc(profile.username) + '</b></div>' +
+      (hasPw(user) ? '' : '<div class="acct-row"><span class="acct-k">비밀번호</span><span><input type="password" id="acct-newpw" class="acct-pwin" placeholder="8자 이상" autocomplete="new-password"><button type="button" class="ghost sm" data-a="setpw">설정</button></span></div><p class="muted sm acct-pwnote">비밀번호를 설정하면 아이디로도 로그인할 수 있어요. 설정하지 않으면 구글로만 로그인합니다.</p>') +
       '<div class="acct-row"><span class="acct-k">복구 이메일</span><span>' + esc(user.email || profile.email || '-') + ' ' + (user.emailVerified ? '<span class="acct-ok">인증됨</span>' : '<span class="acct-no">미인증</span> <button type="button" class="ghost sm" data-a="verify">인증 메일 보내기</button>') + '</span></div>' +
       '<div class="acct-row"><span class="acct-k">구글 연동</span><span>' + (isGoogle(user) ? '<span class="acct-ok">연동됨</span> ' + (hasPw(user) ? '<button type="button" class="ghost sm" data-a="unlink">연동 해제</button>' : '') : '<button type="button" class="ghost sm acct-g" data-a="link">' + GLOGO + ' 구글 계정 연동</button>') + '</span></div>' +
       '<div class="acct-row"><span class="acct-k">클라우드 저장</span><span>' + (m.ts ? '마지막 저장 ' + new Date(m.ts).toLocaleString('ko-KR') : '아직 저장 안 됨') + ' <button type="button" class="ghost sm" data-a="sync">지금 저장</button></span></div>' +
@@ -144,7 +146,7 @@ function render() {
   ttl.textContent = view === 'signup' ? '회원가입' : view === 'reset' ? '비밀번호 재설정' : '로그인';
   const seg = '<div class="acct-seg"><button type="button" data-v="login" class="' + (view === 'login' ? 'on' : '') + '">로그인</button><button type="button" data-v="signup" class="' + (view === 'signup' ? 'on' : '') + '">회원가입</button></div>';
   if (view === 'signup') {
-    body.innerHTML = seg + '<form class="acct-f" data-f="signup" autocomplete="on">' +
+    body.innerHTML = seg + '<button type="button" class="ghost pad acct-g" data-a="google">' + GLOGO + ' 구글로 1초 만에 가입</button><div class="acct-or"><span>또는 아이디로 가입</span></div><form class="acct-f" data-f="signup" autocomplete="on">' +
       '<label>아이디<input name="id" required minlength="3" maxlength="16" pattern="[a-z0-9_]{3,16}" autocomplete="username" placeholder="영문 소문자·숫자·_ 3~16자" autocapitalize="off" spellcheck="false"></label>' +
       '<label>비밀번호<input name="pw" type="password" required minlength="8" autocomplete="new-password" placeholder="8자 이상"></label>' +
       '<label>비밀번호 확인<input name="pw2" type="password" required minlength="8" autocomplete="new-password"></label>' +
@@ -158,8 +160,8 @@ function render() {
       '<label>아이디 또는 이메일<input name="id" required autocomplete="username" autocapitalize="off" spellcheck="false"></label>' +
       '<label>비밀번호<input name="pw" type="password" required autocomplete="current-password"></label>' +
       '<button type="submit" class="primary pad">로그인</button></form>' +
-      '<div class="acct-or"><span>또는</span></div><button type="button" class="ghost pad acct-g" data-a="google">' + GLOGO + ' 구글로 로그인</button>' +
-      '<p class="muted sm acct-gnote">구글 로그인은 계정 설정에서 구글을 연동해 둔 경우에만 됩니다.</p>' +
+      '<div class="acct-or"><span>또는</span></div><button type="button" class="ghost pad acct-g" data-a="google">' + GLOGO + ' 구글로 시작하기</button>' +
+      '<p class="muted sm acct-gnote">처음이면 바로 가입되고, 이미 가입했다면 로그인됩니다.</p>' +
       '<p class="acct-sub"><button type="button" class="linkbtn" data-v="reset">비밀번호를 잊으셨나요?</button></p>';
   }
 }
@@ -167,7 +169,7 @@ function setBtn() {
   const b = $('#btn-acct'); if (!b) return;
   const on = !!(user && profile);
   b.classList.toggle('acct-on', on);
-  b.title = on ? '내 계정 (' + profile.username + ')' : '로그인'; b.setAttribute('aria-label', b.title);
+  b.title = on ? '내 계정 (' + shown() + ')' : '로그인'; b.setAttribute('aria-label', b.title);
 }
 
 /* ---------- 상태 변화 ---------- */
@@ -177,15 +179,12 @@ async function onUser(u) {
   try {
     const d = docFields(await rest('GET', '/users/' + u.uid, null, await u.getIdToken()));
     if (!d || !d.username) {
-      /* 구글로 처음 로그인한 새 계정(연동 안 된 구글) → 만들지 않고 정리 */
-      if (u.providerData.length === 1 && isGoogle(u) && Date.now() - new Date(u.metadata.creationTime).getTime() < 120000) {
-        try { await u.delete(); } catch (e) { await A.signOut(auth); }
-        msg('이 구글 계정에 연동된 DOROSYNC 계정이 없습니다. 아이디로 가입한 뒤 [내 계정 → 구글 계정 연동]을 해 주세요.', 1);
-        return;
-      }
-      return; /* 회원가입 진행 중: signup()이 프로필을 만든 뒤 다시 부름 */
+      /* 구글로 처음 들어온 계정 → 1클릭 자동 가입 (아이디 자동 지정, 닉네임은 BlaBla 연동 시 인게임 닉네임) */
+      if (isGoogle(u) && !hasPw(u)) { profile = await googleSignup(u); setBtn(); render(); msg('구글 계정으로 가입했습니다. 아이디: ' + profile.username); return; }
+      return; /* 아이디 회원가입 진행 중: signup()이 프로필을 만든 뒤 다시 부름 */
     }
     profile = d; setMeta(Object.assign(meta(), { uid: u.uid }));
+    syncNick();
     setBtn(); render();
     await reconcile(d);
   } catch (e) { msg('계정 정보를 불러오지 못했습니다: ' + errMsg(e), 1); }
@@ -235,6 +234,31 @@ async function reconcile(d) {
     '<button type="button" class="ghost pad" data-a="use-local"><b>이 기기 데이터</b><span class="muted sm">지금 화면의 입력값으로 클라우드를 덮어씁니다</span></button></div>';
   reconcile.cloud = { cloud, cts };
 }
+
+/* ---------- 구글 1클릭 가입 · 닉네임 ---------- */
+const blNickname = () => { try { const b = window.doroBL && window.doroBL.data; return (b && b.me && b.me.role) || ''; } catch (e) { return ''; } };
+async function googleSignup(u) {
+  const t = await u.getIdToken();
+  let base = (u.email || '').split('@')[0].toLowerCase().replace(/[^a-z0-9_]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '').slice(0, 11);
+  if (base.length < 3) base = (base + 'user').slice(0, 11);
+  let name = null;
+  for (let i = 0; i < 8 && !name; i++) {
+    const c = i === 0 ? base : base + '_' + Math.floor(1000 + Math.random() * 9000);
+    try { await rest('POST', '/usernames?documentId=' + c, { fields: fieldsOf({ uid: u.uid }) }, t); name = c; } catch (e) { if (e.status !== 409) throw e; }
+  }
+  if (!name) throw new Error('아이디를 자동으로 정하지 못했습니다. 다시 시도해 주세요.');
+  const now = Date.now(), snap = snapshot(), d = { username: name, email: u.email || '', nickname: blNickname(), createdAt: new Date(now), updatedAt: now, data: snap, wallet: {} };
+  await rest('PATCH', '/users/' + u.uid, { fields: fieldsOf(d) }, t);
+  setMeta({ uid: u.uid, ts: now, h: hashOf(snap) });
+  return d;
+}
+/* BlaBla 연동으로 인게임 닉네임이 생기거나 바뀌면 계정 닉네임에 반영 */
+async function syncNick() {
+  if (!user || !profile) return;
+  const nk = blNickname(); if (!nk || nk === profile.nickname) return;
+  try { await rest('PATCH', '/users/' + user.uid + '?updateMask.fieldPaths=nickname', { fields: fieldsOf({ nickname: nk }) }, await tok()); profile.nickname = nk; setBtn(); render(); } catch (e) { /* 다음 기회에 */ }
+}
+const shown = () => (profile && (profile.nickname || profile.username)) || '';
 
 /* ---------- 동작 ---------- */
 async function signup(f) {
@@ -286,6 +310,12 @@ async function onClick(e) {
     else if (act === 'link') { await A.linkWithPopup(user, new A.GoogleAuthProvider()); await user.reload(); msg('구글 계정을 연동했습니다. 이제 구글로도 로그인할 수 있어요.'); render(); }
     else if (act === 'unlink') { await A.unlink(user, 'google.com'); await user.reload(); msg('구글 연동을 해제했습니다.'); render(); }
     else if (act === 'verify') { await A.sendEmailVerification(user); msg('인증 메일을 보냈습니다. 메일의 링크를 누른 뒤 새로고침하면 반영됩니다.'); }
+    else if (act === 'setpw') {
+      const pw = ($('#acct-newpw') || {}).value || '';
+      if (pw.length < 8) throw new Error('비밀번호는 8자 이상으로 정해 주세요.');
+      await A.linkWithCredential(user, A.EmailAuthProvider.credential(user.email, pw)); await user.reload();
+      msg('비밀번호를 설정했습니다. 이제 아이디 ' + profile.username + ' + 비밀번호로도 로그인할 수 있어요.'); render();
+    }
     else if (act === 'pwreset') { await A.sendPasswordResetEmail(auth, user.email); msg(user.email + '로 비밀번호 변경 링크를 보냈습니다.'); }
     else if (act === 'sync') { await push(true); msg('클라우드에 저장했습니다.'); }
     else if (act === 'pull') { const d = docFields(await rest('GET', '/users/' + user.uid, null, await tok())); if (d && d.data) apply(d.data, d.updatedAt || Date.now()); }
@@ -308,7 +338,7 @@ async function onClick(e) {
   ui();
   /* 로컬 저장이 바뀌면 잠시 뒤 클라우드에 저장 */
   const set = Storage.prototype.setItem, del = Storage.prototype.removeItem;
-  Storage.prototype.setItem = function (k, v) { set.call(this, k, v); if (this === localStorage && /^dorosync/.test(k)) schedule(); };
+  Storage.prototype.setItem = function (k, v) { set.call(this, k, v); if (this === localStorage && /^dorosync/.test(k)) { schedule(); if (k === 'dorosync-bl-v1') setTimeout(syncNick, 500); } };
   Storage.prototype.removeItem = function (k) { del.call(this, k); if (this === localStorage && /^dorosync/.test(k)) schedule(); };
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') push(false); });
   /* 로그인한 적이 있는 기기만 바로 인증 모듈을 불러옴 (처음 방문자는 버튼을 누를 때) */
