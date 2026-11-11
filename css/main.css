@@ -1413,3 +1413,19 @@ button:not(.tr-clr):not(.tabs button):not(.tr-f):not(.pk-t):not(.pk-r){border-ra
 .cmt-x:hover{color:#fff;background:rgba(255,255,255,.12)!important}
 @keyframes cmtIn{from{opacity:0;transform:translate(-6px,-50%)}to{opacity:1;transform:translate(0,-50%)}}
 .pl-del{color:#e5484d!important}
+/* AUTO 매일 자동 기록 */
+.auto-wrap{position:relative;display:inline-flex}
+.auto-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px!important;border:1px solid var(--line)!important;background:var(--card)!important;color:var(--muted);font:inherit;font-size:12px;font-weight:800;cursor:pointer;letter-spacing:.02em}
+.auto-btn b{color:var(--ink)}
+.auto-btn span{min-width:24px;text-align:left}
+.auto-btn.on{border-color:#16a34a!important;color:#16a34a}
+.auto-btn.on span::before{content:'●';margin-right:3px;font-size:9px;vertical-align:1px}
+.auto-tip{position:absolute;right:calc(100% + 12px);top:50%;transform:translateY(-50%);z-index:30;width:max-content;max-width:240px;padding:9px 30px 9px 12px;border-radius:12px;background:#1d2130;color:#fff;font-size:12.5px;font-weight:600;line-height:1.45;box-shadow:0 8px 20px rgba(0,0,0,.3);animation:cmtIn .3s ease-out}
+.auto-tip::after{content:'';position:absolute;right:-6px;top:50%;margin-top:-6px;border:6px solid transparent;border-right:0;border-left-color:#1d2130}
+.auto-tip[hidden]{display:none}
+.auto-box{max-width:460px}
+.auto-badge{font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px;background:var(--accent);color:#fff;vertical-align:3px;margin-left:4px}
+.auto-acts{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
+.auto-agree{flex-direction:row!important;align-items:flex-start!important;gap:8px!important;font-weight:500!important;color:var(--ink)!important;line-height:1.5}
+.auto-agree input{width:18px!important;height:18px;flex:none;margin-top:2px}
+.auto-box select{width:100%;border-radius:999px!important;padding:9px 14px;font-size:14px}

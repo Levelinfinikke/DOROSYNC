@@ -2942,6 +2942,94 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
     t.hidden = !(show && !off && !plansGet().length);
   }
   { const x = $('#cmt-x'); if (x) x.addEventListener('click', (e) => { e.stopPropagation(); cmtTip(false, true); }); }
+  /* ---- AUTO: 매일 05~06시 서버가 싱크로 레벨을 대신 기록 (로그인 필요) ---- */
+  const AUTO_LINK = '<svg class="icb-i" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>';
+  const acct = () => window.doroAccount || null;
+  const autoOn = () => { const a = acct(), d = a && a.user && a.doc; return !!(d && d.auto && d.auto.on); };
+  function autoBtnHtml() {
+    const on = autoOn();
+    return '<span class="auto-wrap"><button type="button" class="auto-btn' + (on ? ' on' : '') + '" id="auto-btn" title="매일 자동 기록 ' + (on ? '켜짐' : '꺼짐') + '"><b>AUTO</b>' + AUTO_LINK + '<span>' + (on ? 'ON' : 'OFF') + '</span></button>' +
+      '<span class="auto-tip" id="auto-tip" hidden role="note">지휘관, 잠시 이쪽을 봐 주시겠습니까?<button type="button" class="cmt-x" id="auto-tip-x" aria-label="안내 닫기">×</button></span></span>';
+  }
+  function autoBind(box, hasData) {
+    const b = box.querySelector('#auto-btn'); if (b) b.addEventListener('click', () => { autoTipOff(); autoOpen(); });
+    const x = box.querySelector('#auto-tip-x'); if (x) x.addEventListener('click', (e) => { e.stopPropagation(); autoTipOff(); });
+    let off = false; try { off = localStorage.getItem('dorosync-auto-tip') === '1'; } catch (e) { /* 무시 */ }
+    const t = box.querySelector('#auto-tip'); if (t) t.hidden = off || autoOn() || !hasData;
+  }
+  function autoTipOff() { try { localStorage.setItem('dorosync-auto-tip', '1'); } catch (e) { /* 무시 */ } const t = $('#auto-tip'); if (t) t.hidden = true; }
+  const kstDate = (ms) => new Date(ms + 9 * 3600000).toISOString().slice(0, 10);
+  function autoOpen() {
+    let m = $('#auto-modal');
+    if (!m) {
+      m = document.createElement('div'); m.className = 'blm'; m.id = 'auto-modal'; m.setAttribute('role', 'dialog'); m.setAttribute('aria-modal', 'true'); m.setAttribute('aria-label', '매일 자동 기록');
+      m.innerHTML = '<div class="blm-box auto-box"><div class="blm-hd"><h2>매일 자동 기록 <span class="auto-badge">AUTO</span></h2><button type="button" class="blm-x" data-ax="x" aria-label="닫기">×</button></div><div id="auto-body"></div><p class="acct-msg" id="auto-msg" role="status" aria-live="polite"></p></div>';
+      document.body.appendChild(m);
+      m.addEventListener('click', (e) => { if (e.target === m || e.target.closest('[data-ax="x"]')) m.hidden = true; });
+      m.addEventListener('click', autoAct); m.addEventListener('change', (e) => { if (e.target.id === 'auto-agree') { const g = $('#auto-go'); if (g) g.disabled = !e.target.checked; } });
+      window.addEventListener('doroacct', () => { if (!m.hidden) autoRender(); renderProg(); });
+    }
+    m.hidden = false; autoRender();
+    const a = acct(); if (a && a.boot) a.boot().then(autoRender).catch(() => { /* 무시 */ });
+  }
+  const autoMsg = (t, bad) => { const e = $('#auto-msg'); if (e) { e.textContent = t || ''; e.classList.toggle('bad', !!bad); } };
+  function autoRender() {
+    const body = $('#auto-body'); if (!body) return;
+    const a = acct(), u = a && a.user, d = u && a.doc, au = (d && d.auto) || {};
+    const say = '<p class="rapisay">바쁘신 지휘관께서 매일 전초기지에 들르지 않으셔도, 제가 매일 싱크로 레벨을 대신 기록해 두겠습니다. 성장 플랜과 실제 레벨업 기록을 한눈에 비교하실 수 있습니다. 언제든 중지하실 수 있습니다.</p>';
+    if (!u) {
+      body.innerHTML = say + '<p class="rapisay">기록은 지휘관의 계정에 보관됩니다. 먼저 로그인해 주십시오. 구글 계정이라면 한 번이면 끝납니다.</p><div class="auto-acts"><button type="button" class="primary pad" data-ax="login">로그인 / 가입하기</button></div>';
+      return;
+    }
+    if (au.on) {
+      const l = au.last || {};
+      body.innerHTML = '<p class="rapisay">매일 <b>오전 5시~6시</b> 사이에 싱크로 레벨을 기록하고 있습니다, 지휘관.</p>' +
+        '<div class="acct-row"><span class="acct-k">상태</span><span><span class="acct-ok">● 기록 중</span></span></div>' +
+        '<div class="acct-row"><span class="acct-k">마지막 자동 기록</span><span>' + (l.at ? new Date(l.at).toLocaleString('ko-KR') + (l.ok ? ' · 싱크로 ' + l.s + ' · 전초기지 ' + l.o : ' · <span class="acct-no">실패</span>') : '아직 없음 (내일 오전 5~6시에 첫 기록)') + '</span></div>' +
+        (l.at && !l.ok ? '<p class="rapisay">기록에 실패했습니다. 블라블라링크 프로필 공개 설정과 서버를 확인해 주십시오. (' + esc(l.err || '') + ')</p>' : '') +
+        '<div class="auto-acts"><button type="button" class="ghost pad" data-ax="stop">자동 기록 중지</button></div>';
+      return;
+    }
+    let area = '83', raw = ''; try { area = localStorage.getItem('dorosync-bl-area') || '83'; raw = localStorage.getItem('dorosync-bl-purl') || ''; } catch (e) { /* 무시 */ }
+    const areas = ($('#bl-area') ? $('#bl-area').innerHTML : '<option value="83">한국</option>');
+    body.innerHTML = say +
+      '<div class="acct-f"><label>서버<select id="auto-area">' + areas + '</select></label>' +
+      '<label>블라블라링크 프로필 주소<input id="auto-url" type="url" placeholder="https://www.blablalink.com/shiftyspad/home?openid=…" value="' + esc(raw) + '" autocomplete="off"></label>' +
+      '<p class="muted sm">블라블라링크 프로필의 공유 링크를 넣어 주세요. 프로필이 <b>공개</b>로 되어 있어야 기록할 수 있습니다.</p>' +
+      '<label class="auto-agree"><input type="checkbox" id="auto-agree"> 프로필 주소·서버와 매일의 싱크로·전초기지 레벨을 제 계정에 저장하는 데 동의합니다. (중지하면 프로필 주소는 즉시 삭제됩니다)</label>' +
+      '<p class="muted sm">기록 시각: 매일 오전 5시~6시 사이 (이용자가 많으면 순서대로 처리합니다)</p>' +
+      '<button type="button" class="primary pad" id="auto-go" data-ax="start" disabled>자동 기록 시작</button></div>';
+    const sel = $('#auto-area'); if (sel) sel.value = area;
+  }
+  async function autoAct(e) {
+    const b = e.target.closest('[data-ax]'); if (!b || b.dataset.ax === 'x') return;
+    const a = acct(); autoMsg('');
+    try {
+      if (b.dataset.ax === 'login') { $('#auto-modal').hidden = true; if (a) a.open(); return; }
+      if (b.dataset.ax === 'start') {
+        const area = $('#auto-area').value, raw = $('#auto-url').value.trim();
+        if (!blOpenId(raw)) { autoMsg('프로필 주소를 다시 확인해 주십시오, 지휘관.', 1); return; }
+        if (!$('#auto-agree').checked) return;
+        b.disabled = true;
+        await a.patch({ auto: { on: true, area, openid: raw, since: Date.now() }, autoDue: kstDate(Date.now()) });
+        try { localStorage.setItem('dorosync-bl-area', area); localStorage.setItem('dorosync-bl-purl', raw); } catch (er) { /* 무시 */ }
+        autoMsg('설정을 마쳤습니다. 내일 오전 5시~6시부터 매일 기록하겠습니다, 지휘관.'); autoRender(); renderProg();
+      } else if (b.dataset.ax === 'stop') {
+        if (!confirm('매일 자동 기록을 중지할까요? 저장된 프로필 주소는 삭제되고, 지금까지의 기록은 남습니다.')) return;
+        await a.patch({ auto: { on: false }, autoDue: '' });
+        autoMsg('자동 기록을 중지했습니다. 언제든 다시 맡겨 주십시오, 지휘관.'); autoRender(); renderProg();
+      }
+    } catch (er) { autoMsg('저장하지 못했습니다. 잠시 후 다시 시도해 주십시오. (' + (er.message || er) + ')', 1); b.disabled = false; }
+  }
+  /* 서버 자동 기록(계정의 hist)을 이 기기의 성장 기록에 합치기 */
+  window.doroHistMerge = function (arr) {
+    const h = histGet(), have = new Set(h.map((x) => x.d)); let add = 0;
+    (arr || []).forEach((x) => { if (x && x.d && x.s > 0 && !have.has(x.d)) { h.push({ d: x.d, s: x.s, o: x.o || 0, p: x.p || 0 }); have.add(x.d); add++; } });
+    if (!add) return; h.sort((a, b) => (a.d < b.d ? -1 : 1));
+    try { localStorage.setItem(HIST_K, JSON.stringify(h.slice(-1000))); } catch (e) { /* 무시 */ }
+    renderProg();
+  };
+  window.addEventListener('doroacct', () => { try { renderProg(); } catch (e) { /* 무시 */ } });
   const planAt = (plan, t) => { let v = plan.S0; for (const p of plan.pts) { if (p[0] <= t) v = p[1]; else break; } return v; };
   const planDayOf = (plan, lv) => { for (const p of plan.pts) if (p[1] >= lv) return p[0]; return null; };
   function renderProg() {
@@ -2950,8 +3038,8 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
     { const iv = $('#me-inv'); if (!iv) return; if (box.nextElementSibling !== iv) iv.before(box); } /* 인벤토리 바로 위 */
     const h = histGet(), all = plansGet(), vis = all.filter((p) => !p.hidden);
     let ref = vis.find((p) => p.ref) || vis[vis.length - 1] || null;
-    let html = '<div class="row-ctl sp"><h2 class="inline">싱크로 성장 기록</h2></div>';
-    if (!h.length && !all.length) { box.innerHTML = html + '<p class="muted">BlaBla 연동을 할 때마다 그날의 싱크로 레벨이 기록되고, 여기에 성장 그래프로 그려집니다. [싱크로] 탭에서 계산한 플랜을 <b>확정</b>(깃발 버튼)하면 예상 그래프와 비교할 수 있어요.</p>'; return; }
+    let html = '<div class="row-ctl sp"><h2 class="inline">싱크로 성장 기록</h2>' + autoBtnHtml() + '</div>';
+    if (!h.length && !all.length) { box.innerHTML = html + '<p class="muted">BlaBla 연동을 할 때마다 그날의 싱크로 레벨이 기록되고, 여기에 성장 그래프로 그려집니다. [싱크로] 탭에서 계산한 플랜을 <b>확정</b>(깃발 버튼)하면 예상 그래프와 비교할 수 있어요.</p>'; autoBind(box, false); return; }
     /* 공통 기준일: 보이는 플랜 시작일·첫 기록 중 가장 이른 날 = 1일차 */
     const starts = vis.map((p) => ymdMs(p.start)).concat(h.length ? [ymdMs(h[0].d)] : []).filter((x) => !isNaN(x));
     const base = Math.min(...starts);
@@ -2994,6 +3082,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
       html += '<ul class="pl-list">' + shown.map(row).join('') + '</ul>' + (hid.length ? '<details class="pl-hid"><summary>숨긴 플랜 ' + hid.length + '개</summary><ul class="pl-list">' + hid.map(row).join('') + '</ul></details>' : '');
     }
     box.innerHTML = html;
+    autoBind(box, true);
     box.querySelectorAll('[data-pz]').forEach((b) => b.addEventListener('click', () => { renderProg.full = b.dataset.pz === '1'; renderProg(); }));
     box.querySelectorAll('[data-pref]').forEach((b) => b.addEventListener('click', () => { const a = plansGet(); a.forEach((p) => { p.ref = p.id === b.dataset.pref; }); plansSet(a); renderProg(); }));
     box.querySelectorAll('[data-pren]').forEach((b) => b.addEventListener('click', () => {
@@ -3016,7 +3105,8 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
     const span = series.reduce((m, x) => Math.max(m, ...x.pts.map((q) => q[0])), 0) - series.reduce((m, x) => Math.min(m, ...x.pts.map((q) => q[0])), Infinity);
     chart($('#ch-prog'), {
       label: '싱크로 성장 기록', xl: '날짜', series,
-      xf: (v) => { const z = dOf(Math.round(v)); return span > 300 ? z.slice(2, 7).replace('-', '.') : z.slice(5).replace('-', '/'); },
+      xf: (v) => { if (Math.abs(v - Math.round(v)) > 0.01) return ''; const z = dOf(Math.round(v)); return span > 300 ? z.slice(2, 7).replace('-', '.') : z.slice(5).replace('-', '/'); },
+      yf: (v) => (Math.abs(v - Math.round(v)) > 0.01 ? '' : String(Math.round(v))),
       tip: (i) => { const day = dOf(i), rec = h.find((x) => x.d === day); return day + vis.map((p) => { const t = i - off(p); return t >= 0 && t <= p.days ? '<br><span style="color:' + plCol(p) + '">' + plName(p) + '</span> 예상 Lv ' + planAt(p, t) : ''; }).join('') + (rec ? '<br><b>실제 Lv ' + rec.s + '</b> · 전초기지 ' + rec.o : ''); },
     });
   }

@@ -172,10 +172,11 @@ function setBtn() {
   b.title = on ? '내 계정 (' + shown() + ')' : '로그인'; b.setAttribute('aria-label', b.title);
 }
 
+const notify = () => { try { window.dispatchEvent(new CustomEvent('doroacct', { detail: { user: user && profile ? { uid: user.uid, username: profile.username } : null } })); } catch (e) { /* 무시 */ } };
 /* ---------- 상태 변화 ---------- */
 async function onUser(u) {
   profile = null;
-  if (!u) { const m = meta(); if (m.uid) setMeta({}); setBtn(); render(); return; }
+  if (!u) { const m = meta(); if (m.uid) setMeta({}); setBtn(); render(); notify(); return; }
   try {
     const d = docFields(await rest('GET', '/users/' + u.uid, null, await u.getIdToken()));
     if (!d || !d.username) {
@@ -184,7 +185,8 @@ async function onUser(u) {
       return; /* 아이디 회원가입 진행 중: signup()이 프로필을 만든 뒤 다시 부름 */
     }
     profile = d; setMeta(Object.assign(meta(), { uid: u.uid }));
-    syncNick();
+    syncNick(); notify();
+    if (Array.isArray(d.hist) && d.hist.length && window.doroHistMerge) window.doroHistMerge(d.hist); /* 서버 자동 기록 합치기 */
     setBtn(); render();
     await reconcile(d);
     if (window.doroBLAutoSync) window.doroBLAutoSync(); /* 로그인 상태: 하루 1번 BlaBla 자동 재연동 */
@@ -344,5 +346,17 @@ async function onClick(e) {
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') push(false); });
   /* 로그인한 적이 있는 기기만 바로 인증 모듈을 불러옴 (처음 방문자는 버튼을 누를 때) */
   if (meta().uid) boot().catch(() => { /* 오프라인 등 */ });
-  window.doroAccount = { open, get user() { return user && profile ? { uid: user.uid, username: profile.username } : null; } };
+  window.doroAccount = {
+    open, boot,
+    get user() { return user && profile ? { uid: user.uid, username: profile.username } : null; },
+    get doc() { return profile; },
+    /* 내 문서의 일부 필드 저장: patch({ auto: {...}, autoDue: '...' }) */
+    async patch(obj) {
+      if (!user || !profile) throw new Error('login');
+      const q = Object.keys(obj).map((k) => 'updateMask.fieldPaths=' + encodeURIComponent(k)).join('&');
+      await rest('PATCH', '/users/' + user.uid + '?' + q, { fields: fieldsOf(obj) }, await tok());
+      Object.assign(profile, obj); notify();
+    },
+    async reload() { if (!user) return null; const d = docFields(await rest('GET', '/users/' + user.uid, null, await tok())); if (d) { profile = Object.assign(profile || {}, d); notify(); } return profile; },
+  };
 })();
