@@ -2915,8 +2915,8 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   const planGet = () => { try { return JSON.parse(localStorage.getItem(PLAN_K) || 'null'); } catch (e) { return null; } };
   function histAdd(d) {
     const m = d && d.me; if (!m || !(m.synchro > 0)) return;
-    const day = ymd(d.at || Date.now()), h = histGet().filter((x) => x.d !== day);
-    h.push({ d: day, s: m.synchro, o: m.outpost || 0, p: m.top5 || 0 }); h.sort((a, b) => (a.d < b.d ? -1 : 1));
+    const day = ymd(d.at || Date.now()), all = histGet(), old = all.find((x) => x.d === day), h = all.filter((x) => x.d !== day);
+    h.push({ d: day, s: Math.max(m.synchro, (old && old.s) || 0), o: Math.max(m.outpost || 0, (old && old.o) || 0), p: Math.max(m.top5 || 0, (old && old.p) || 0) }); /* 하루 1점: 가장 높은 값 */ h.sort((a, b) => (a.d < b.d ? -1 : 1));
     try { localStorage.setItem(HIST_K, JSON.stringify(h.slice(-1000))); } catch (e) { /* 저장 불가 */ }
   }
   if (doroBL.data && doroBL.data.at && !histGet().length) histAdd(doroBL.data); /* 기존 연동 정보로 첫 기록 */
@@ -2959,7 +2959,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
       const tr = E.simulate(M, M.Pk.map(() => false), true), rows = tr.rows || [], lt = rows.length ? rows[rows.length - 1].t : 0;
       if (lt) out.push({ id: 'w0-' + Date.now().toString(36), np: true, bill: 0, days: lt, S0: st.S0, pts: trPts(tr, st.S0), pk: [] });
     } catch (e) { /* 무시 */ }
-    return out.sort((x, y) => x.bill - y.bill);
+    return out.sort((x, y) => y.bill - x.bill);
   }
   function commitPlan() {
     if (!TR || !M || !/^\d{4}-\d{2}-\d{2}$/.test(st.start)) { toast('먼저 시작 날짜와 목표를 입력하고 계산해 주세요.'); return; }
@@ -3081,8 +3081,10 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   }
   /* 서버 자동 기록(계정의 hist)을 이 기기의 성장 기록에 합치기 */
   window.doroHistMerge = function (arr) {
-    const h = histGet(), have = new Set(h.map((x) => x.d)); let add = 0;
-    (arr || []).forEach((x) => { if (x && x.d && x.s > 0 && !have.has(x.d)) { h.push({ d: x.d, s: x.s, o: x.o || 0, p: x.p || 0 }); have.add(x.d); add++; } });
+    const h = histGet(), by = new Map(h.map((x) => [x.d, x])); let add = 0;
+    (arr || []).forEach((x) => { if (!x || !x.d || !(x.s > 0)) return; const o = by.get(x.d);
+      if (!o) { const n = { d: x.d, s: x.s, o: x.o || 0, p: x.p || 0 }; h.push(n); by.set(x.d, n); add++; }
+      else if (x.s > o.s || (x.o || 0) > (o.o || 0)) { o.s = Math.max(o.s, x.s); o.o = Math.max(o.o || 0, x.o || 0); add++; } });
     if (!add) return; h.sort((a, b) => (a.d < b.d ? -1 : 1));
     try { localStorage.setItem(HIST_K, JSON.stringify(h.slice(-1000))); } catch (e) { /* 무시 */ }
     renderProg();
@@ -3092,11 +3094,20 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   const planDayOf = (plan, lv) => { for (const p of plan.pts) if (p[1] >= lv) return p[0]; return null; };
   const TRASH = '<svg class="icb-i" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/></svg>';
   /* 세계선: 플랜 확정 때 함께 저장한 다른 효율 조합들 */
+  const EYE = (off) => off
+    ? '<svg class="icb-i" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>'
+    : '<svg class="icb-i" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 5.1A10 10 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4M6.6 6.6A17 17 0 0 0 2 12s3.6 7 10 7a10 10 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
+  const NP_COL = '#9aa0aa', wlCol = (p) => 'color-mix(in srgb, ' + plCol(p) + ' 38%, transparent)';
+  const wIsNp = (w) => !!(w.np || !w.bill);
+  /* 세계선: 플랜 확정 때 함께 저장한 다른 효율 조합들 (비싼 순) */
   function altsHtml(p) {
-    const a = p.alts || []; if (!a.length) return '';
-    const dOf = (n) => { const t = ymdMs(p.start); return isNaN(t) ? '' : ymd(t + n * DAY + new Date().getTimezoneOffset() * 60000); };
-    return '<details class="pl-alts"' + (renderProg.openAlt === p.id ? ' open' : '') + ' data-palt="' + p.id + '"><summary>과금별 세계선 ' + a.length + '개' + (p.ref ? '<label class="pl-altsw" title="그래프에 세계선 표시"><input type="checkbox" data-paltv="' + p.id + '"' + (p.altOff ? '' : ' checked') + '> 그래프에 표시</label>' : '') + '</summary><ul>' +
-      a.map((w) => '<li><b>' + (w.np || !w.bill ? '무과금' : won(w.bill)) + '</b><span class="muted sm">' + w.days + '일 · ' + dOf(w.days) + ' 도달</span><button type="button" class="ghost sm" data-wapp="' + p.id + '|' + w.id + '" title="이 세계선을 새 플랜으로 만들어 기준으로 정합니다">적용</button><button type="button" class="ghost sm icb pl-del" data-wdel="' + p.id + '|' + w.id + '" title="삭제" aria-label="세계선 삭제">' + TRASH + '</button></li>').join('') + '</ul></details>';
+    const a = (p.alts || []).slice().sort((x, y) => y.bill - x.bill); if (!a.length) return '';
+    const dOf = (n) => { const t = ymdMs(p.start); return isNaN(t) ? '' : ymd(t + (n - 1) * DAY + new Date().getTimezoneOffset() * 60000); };
+    return '<details class="pl-alts"' + (renderProg.openAlt === p.id ? ' open' : '') + ' data-palt="' + p.id + '"><summary>과금별 세계선 ' + a.length + '개</summary><ul>' +
+      a.map((w) => '<li class="' + (w.hidden ? 'hid' : '') + '"><i class="pl-sw" style="background:' + (wIsNp(w) ? NP_COL : wlCol(p)) + '"></i><b>' + (wIsNp(w) ? '무과금' : won(w.bill)) + '</b><span class="muted sm">' + w.days + '일 · ' + dOf(w.days) + ' 도달</span>' +
+        '<button type="button" class="ghost sm" data-wapp="' + p.id + '|' + w.id + '" title="이 세계선을 새 플랜으로 만들어 기준으로 정합니다">적용</button>' +
+        '<button type="button" class="ghost sm icb" data-whide="' + p.id + '|' + w.id + '" title="' + (w.hidden ? '다시 보이기' : '숨기기') + '" aria-label="' + (w.hidden ? '다시 보이기' : '숨기기') + '">' + EYE(w.hidden) + '</button>' +
+        '<button type="button" class="ghost sm icb pl-del" data-wdel="' + p.id + '|' + w.id + '" title="삭제" aria-label="세계선 삭제">' + TRASH + '</button></li>').join('') + '</ul></details>';
   }
   function renderProg() {
     let box = $('#me-prog');
@@ -3122,15 +3133,16 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
     const lin = (q) => { const o = []; q.forEach((x, i) => { if (!i || x[1] !== o[o.length - 1][1]) o.push(x); }); const z = q[q.length - 1]; if (z && o[o.length - 1] !== z && z[0] > o[o.length - 1][0]) o.push(z); return o; };
     const linAt = (q, t) => { if (!q.length) return 0; if (t <= q[0][0]) return q[0][1]; for (let i = 1; i < q.length; i++) if (q[i][0] >= t) { const a = q[i - 1], b = q[i]; return a[1] + (b[1] - a[1]) * (t - a[0]) / ((b[0] - a[0]) || 1); } return q[q.length - 1][1]; };
     const fit = (raw, o, days) => {
-      const q = lin(raw), sh = q.map((x) => [x[0] + o, x[1]]); let pp = sh.filter((x) => x[0] >= x0 && x[0] <= tMax);
+      const q = lin(raw), sh = q.map((x) => [Math.max(1, x[0]) + o, x[1]]); /* 0일차(시작 전 상태)는 시작일에 표시 */ let pp = sh.filter((x) => x[0] >= x0 && x[0] <= tMax);
       if (zoom && x0 - o > 0 && (!pp.length || pp[0][0] > x0)) pp.unshift([x0, linAt(sh, x0)]);
       if (zoom && pp.length && pp[pp.length - 1][0] < tMax && tMax - o <= days) pp.push([tMax, linAt(sh, tMax)]);
       return pp;
     };
-    if (ref && ref.alts && ref.alts.length && !ref.altOff) ref.alts.forEach((w, k) => { const pp = fit(w.pts, off(ref), w.days); if (pp.length > 1) series.push({ name: '세계선', nolegend: k > 0, color: plCol(ref), w: 1.2, op: 0.32, pts: pp }); });
+    if (ref && ref.alts) { let lw = false, ln = false; ref.alts.forEach((w) => { if (w.hidden) return; const pp = fit(w.pts, off(ref), w.days); if (pp.length < 2) return; const np = wIsNp(w);
+      series.push({ name: np ? '무과금' : '세계선', nolegend: np ? ln : lw, color: np ? NP_COL : wlCol(ref), w: np ? 1.5 : 1.3, dash: np ? '2 4' : false, pts: pp }); if (np) ln = true; else lw = true; }); }
     vis.forEach((p) => {
       const pp = fit(p.pts, off(p), p.days);
-      if (pp.length) series.push(p === ref ? { name: plName(p) + ' (기준)', color: plCol(p), w: 2.4, pts: pp } : { name: plName(p), color: plCol(p), w: 1.6, dash: '5 4', pts: pp });
+      if (pp.length) series.push(p === ref ? { name: plName(p) + ' (기준)', color: plCol(p), w: 2.4, pts: pp } : { name: plName(p), color: p.bill ? plCol(p) : NP_COL, w: 1.6, dash: '5 4', pts: pp });
     });
     if (act.length) series.push({ name: '실제 (BlaBla 기록)', color: 'var(--ink)', dots: true, r: act.length > 40 ? 0 : act.length > 14 ? 2.2 : 3, w: 1.8, smooth: true, pts: act.length === 1 ? act.concat([[act[0][0] + 0.001, act[0][1]]]) : act });
     if (ref && act.length) {
@@ -3145,7 +3157,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
     html += series.length ? '<div class="chart" id="ch-prog"></div>' : '';
     /* 플랜 목록: 기준 지정 · 숨기기 */
     if (all.length) {
-      const row = (p) => '<li class="' + (p.hidden ? 'hid' : '') + '"><i class="pl-sw" style="background:' + plCol(p) + '"></i><b>' + plName(p) + '</b><span class="muted sm">' + p.start + ' 시작 · ' + p.S0 + '→' + p.T + ' · ' + p.days + '일 · ' + won(p.bill) + '</span>' +
+      const row = (p) => '<li class="' + (p.hidden ? 'hid' : '') + '"><i class="pl-sw" style="background:' + (p.bill || p === ref ? plCol(p) : NP_COL) + '"></i><b>' + plName(p) + '</b><span class="muted sm">' + p.start + ' 시작 · ' + p.S0 + '→' + p.T + ' · ' + p.days + '일 · ' + won(p.bill) + '</span>' +
         (p.hidden ? '' : p === ref ? '<span class="pl-ref">기준</span>' : '<button type="button" class="ghost sm" data-pref="' + p.id + '">기준으로</button>') +
         '<button type="button" class="ghost sm icb" data-pren="' + p.id + '" title="이름 바꾸기" aria-label="이름 바꾸기"><svg class="icb-i" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>' +
         '<button type="button" class="ghost sm icb" data-phide="' + p.id + '" title="' + (p.hidden ? '다시 보이기' : '숨기기') + '" aria-label="' + (p.hidden ? '다시 보이기' : '숨기기') + '">' + (p.hidden
@@ -3171,7 +3183,10 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
       plansSet(a); renderProg();
     }));
     box.querySelectorAll('[data-palt]').forEach((d) => d.addEventListener('toggle', () => { if (d.open) renderProg.openAlt = d.dataset.palt; else if (renderProg.openAlt === d.dataset.palt) renderProg.openAlt = null; }));
-    box.querySelectorAll('[data-paltv]').forEach((c) => { c.addEventListener('click', (e) => e.stopPropagation()); c.addEventListener('change', () => { const a = plansGet(), p = a.find((q) => q.id === c.dataset.paltv); if (!p) return; p.altOff = !c.checked; plansSet(a); renderProg(); }); });
+    box.querySelectorAll('[data-whide]').forEach((b) => b.addEventListener('click', () => {
+      const [pid, wid] = b.dataset.whide.split('|'), a = plansGet(), p = a.find((q) => q.id === pid), w = p && (p.alts || []).find((x) => x.id === wid); if (!w) return;
+      w.hidden = !w.hidden; renderProg.openAlt = pid; plansSet(a); renderProg();
+    }));
     box.querySelectorAll('[data-wdel]').forEach((b) => b.addEventListener('click', () => {
       const [pid, wid] = b.dataset.wdel.split('|'), a = plansGet(), p = a.find((q) => q.id === pid); if (!p || !p.alts) return;
       const w = p.alts.find((x) => x.id === wid); if (!w || !confirm((w.bill ? won(w.bill) : '무과금') + ' 세계선을 삭제할까요? 되돌릴 수 없습니다.')) return;

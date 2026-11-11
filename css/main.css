@@ -1470,3 +1470,4 @@ button:not(.tr-clr):not(.tabs button):not(.tr-f):not(.pk-t):not(.pk-r){border-ra
 .pl-alts ul{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:4px}
 .pl-alts li{border:0!important;flex-wrap:nowrap;display:flex;align-items:center;gap:8px;padding:4px 8px;border-radius:10px;background:var(--input,rgba(127,127,127,.06))}
 .pl-alts li b{min-width:74px;font-size:13px}.pl-alts li .muted{flex:1}
+.pl-alts li.hid{opacity:.5}.pl-alts li .pl-sw{flex:none}
