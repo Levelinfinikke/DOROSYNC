@@ -1450,3 +1450,23 @@ button:not(.tr-clr):not(.tabs button):not(.tr-f):not(.pk-t):not(.pk-r){border-ra
 .dm-gap{stroke:#e5484d;stroke-width:1.2;stroke-dasharray:2 2;opacity:.8}
 .dm-dot{fill:var(--ink)}
 @media(max-width:480px){.auto-demo{grid-template-columns:1fr}}
+/* 상단 원형 버튼 크기 통일 + 로그인 표시는 연동 버튼처럼 바깥 테두리 */
+@media(min-width:481px){.top-btns>button{width:37px!important;height:37px!important;min-width:37px!important;padding:0!important}}
+#btn-acct.acct-on{box-shadow:0 0 0 2px var(--accent)!important}
+#btn-acct svg{width:18px;height:18px}
+/* 동의 체크박스: 원형 */
+.auto-agree input[type=checkbox]{appearance:none;-webkit-appearance:none;width:20px!important;height:20px!important;border-radius:50%;border:2px solid var(--line);background:var(--card);display:inline-grid;place-content:center;cursor:pointer;transition:background .15s,border-color .15s;margin-top:1px}
+.auto-agree input[type=checkbox]::before{content:"";width:10px;height:10px;transform:scale(0);transition:transform .12s;background:#fff;clip-path:polygon(14% 44%,0 59%,40% 100%,100% 22%,86% 8%,40% 70%)}
+.auto-agree input[type=checkbox]:checked{background:var(--accent,#e88800);border-color:var(--accent,#e88800)}
+.auto-agree input[type=checkbox]:checked::before{transform:scale(1)}
+.auto-agree input[type=checkbox]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* 세계선 목록 */
+.pl-list>li{flex-wrap:wrap}
+.pl-alts{flex-basis:100%;margin:4px 0 2px 22px}
+.pl-alts summary{cursor:pointer;font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:10px;list-style:none}
+.pl-alts summary::before{content:"▸";transition:transform .15s}.pl-alts[open] summary::before{transform:rotate(90deg)}
+.pl-alts summary::-webkit-details-marker{display:none}
+.pl-altsw{display:inline-flex;align-items:center;gap:4px;margin-left:auto;font-size:12px;color:var(--ink)}
+.pl-alts ul{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:4px}
+.pl-alts li{border:0!important;flex-wrap:nowrap;display:flex;align-items:center;gap:8px;padding:4px 8px;border-radius:10px;background:var(--input,rgba(127,127,127,.06))}
+.pl-alts li b{min-width:74px;font-size:13px}.pl-alts li .muted{flex:1}

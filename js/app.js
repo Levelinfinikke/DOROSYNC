@@ -1179,6 +1179,16 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     return t;
   }
   /** opts: {series:[{name,color,pts:[[x,y]],dots?}], xl, yl, xf, yf, tip(i,s), onPick(i)} */
+  /* 단조 3차 곡선(Fritsch–Carlson): 점을 지나되 넘치지 않는 부드러운 선 */
+  function monoPath(P) {
+    const n = P.length, dx = [], m = [], t = new Array(n);
+    for (let i = 0; i < n - 1; i++) { dx[i] = P[i + 1][0] - P[i][0]; m[i] = dx[i] ? (P[i + 1][1] - P[i][1]) / dx[i] : 0; }
+    t[0] = m[0]; t[n - 1] = m[n - 2];
+    for (let i = 1; i < n - 1; i++) t[i] = m[i - 1] * m[i] <= 0 ? 0 : (3 * (dx[i - 1] + dx[i])) / ((2 * dx[i] + dx[i - 1]) / m[i - 1] + (dx[i] + 2 * dx[i - 1]) / m[i]);
+    let d = 'M' + P[0][0].toFixed(1) + ',' + P[0][1].toFixed(1);
+    for (let i = 0; i < n - 1; i++) { const h = dx[i] / 3; d += 'C' + (P[i][0] + h).toFixed(1) + ',' + (P[i][1] + t[i] * h).toFixed(1) + ' ' + (P[i + 1][0] - h).toFixed(1) + ',' + (P[i + 1][1] - t[i + 1] * h).toFixed(1) + ' ' + P[i + 1][0].toFixed(1) + ',' + P[i + 1][1].toFixed(1); }
+    return d;
+  }
   function chart(el, o) {
     el._o = o;
     const W = (el._fs && el._fs.W) || 560, H = (el._fs && el._fs.H) || 270, ml = 58, mr = 12, mt = 10, mb = 34;
@@ -1203,12 +1213,13 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     }
     o.series.forEach((s, si) => {
       let d = '';
-      s.pts.forEach((p, i) => {
+      if (s.smooth && s.pts.length > 2) d = monoPath(s.pts.map((p) => [X(p[0]), Y(p[1])]));
+      else s.pts.forEach((p, i) => {
         if (s.step && i) d += 'L' + X(p[0]).toFixed(1) + ',' + Y(s.pts[i - 1][1]).toFixed(1);
         d += (i ? 'L' : 'M') + X(p[0]).toFixed(1) + ',' + Y(p[1]).toFixed(1);
       });
-      if (!s.noline) g += '<path d="' + d + '" fill="none" stroke="' + s.color + '" stroke-width="' + (s.cid && o.hov && o.hov.anchor === s.cid ? 3.8 : 2) + '" stroke-linejoin="round"' + (s.dash ? ' stroke-dasharray="6 4"' : '') + '/>';
-      if (s.dots) s.pts.forEach((p, i) => { g += '<circle data-i="' + i + '" cx="' + X(p[0]).toFixed(1) + '" cy="' + Y(p[1]).toFixed(1) + '" r="' + (s.sel === i ? (s.selR || 6) : (s.dotColors && s.dotColors[i] ? 5 : 3.5)) + '" fill="' + (s.sel === i ? (s.selColor || 'var(--c2)') : (s.dotColors && s.dotColors[i]) || s.color) + '" stroke="var(--card)" stroke-width="1.5"/>'; });
+      if (!s.noline) g += '<path d="' + d + '" fill="none" stroke="' + s.color + '" stroke-width="' + (s.cid && o.hov && o.hov.anchor === s.cid ? 3.8 : (s.w || 2)) + '" stroke-linejoin="round" stroke-linecap="round"' + (s.op ? ' stroke-opacity="' + s.op + '"' : '') + (s.dash ? ' stroke-dasharray="' + (s.dash === true ? '6 4' : s.dash) + '"' : '') + '/>';
+      if (s.dots) s.pts.forEach((p, i) => { g += '<circle data-i="' + i + '" cx="' + X(p[0]).toFixed(1) + '" cy="' + Y(p[1]).toFixed(1) + '" r="' + (s.sel === i ? (s.selR || 6) : (s.dotColors && s.dotColors[i] ? 5 : (s.r || 3.5))) + '" fill="' + (s.sel === i ? (s.selColor || 'var(--c2)') : (s.dotColors && s.dotColors[i]) || s.color) + '" stroke="var(--card)" stroke-width="1.5"/>'; });
       if (s.selArrow && s.sel != null && s.sel >= 0 && s.pts[s.sel]) {
         const ax = X(s.pts[s.sel][0]).toFixed(1), py = Y(s.pts[s.sel][1]).toFixed(1);
         [0, 1.2].forEach((d) => {
@@ -1336,7 +1347,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
       hintReset();
       const i = near(ev), p = base[i];
       cx.setAttribute('x1', X(p[0])); cx.setAttribute('x2', X(p[0])); cx.style.display = '';
-      tip.innerHTML = o.tip(i) + rg; tip.style.left = (X(p[0]) / W) * r.width + 'px'; tip.style.top = (Y(p[1]) / H) * r.height + (lg ? 22 : 0) + 'px'; tip.classList.add('on'); cornerTip(mpx, mpy);
+      tip.innerHTML = o.tip(o.tipByX ? Math.round(p[0]) : i) + rg; tip.style.left = (X(p[0]) / W) * r.width + 'px'; tip.style.top = (Y(p[1]) / H) * r.height + (lg ? 22 : 0) + 'px'; tip.classList.add('on'); cornerTip(mpx, mpy);
     };
     svg.addEventListener('mousemove', hoverAt);
     ['pointerdown', 'pointermove'].forEach((n) => svg.addEventListener(n, (ev) => { if (ev.pointerType === 'touch') hoverAt(ev); }));
@@ -2702,7 +2713,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
   function renderMe() {
     const root = $('#me-body'); if (!root) return;
     try { renderProg(); } catch (e) { /* 그래프 실패해도 나머지는 표시 */ }
-    { const iv = $('#me-inv'); if (iv && root.contains(iv)) root.after(iv); }
+    { const iv = $('#me-inv'), pg = $('#me-prog'); if (iv && root.contains(iv)) root.after(iv); if (iv && pg && root.contains(pg)) iv.before(pg); } /* innerHTML로 지워지지 않게 밖으로 */
     const d = doroBL.data;
     { const lk = $('#me-link'); if (lk) lk.style.display = d ? 'none' : ''; }
     if (!d) { root.innerHTML = '<div class="card"><p class="muted">아직 불러온 정보가 없습니다. 위의 [BlaBla연동]을 눌러 주세요.</p></div>'; return; }
@@ -2734,7 +2745,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     html += '<div class="card" id="me-nk"><div class="row-ctl sp"><h2 class="inline">내 니케 <span class="muted">' + list.length + '명</span></h2><label class="chk gtb"><input type="checkbox" id="me-oc"' + (only ? ' checked' : '') + '> 오버로드 장비 있는 니케만</label></div><div class="megrid">' +
       list.map(blCard).join('') + '</div></div>';
     root.innerHTML = html;
-    { const iv = $('#me-inv'), nk = $('#me-nk'); if (iv && nk) nk.before(iv); }
+    { const iv = $('#me-inv'), nk = $('#me-nk'), pg = $('#me-prog'); if (iv && nk) nk.before(iv); if (iv && pg) iv.before(pg); }
     $('#me-apply').addEventListener('click', () => { blApplyUser(); toast('싱크로 탭에 적용했습니다.'); });
     $('#me-oc').addEventListener('change', renderMe);
     root.querySelectorAll('.me-in').forEach((el) => el.addEventListener('change', () => {
@@ -2919,18 +2930,42 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   function plansSet(a) { try { localStorage.setItem(PLANS_K, JSON.stringify(a)); return true; } catch (e) { toast('저장 공간이 부족해 플랜을 저장하지 못했습니다.'); return false; } }
   const plName = (p) => (p.label && String(p.label).trim()) || '플랜 ' + p.n;
   const plCol = (p) => PL_COL[(p.n - 1) % PL_COL.length];
+  /* 시뮬 결과 → 레벨이 바뀌는 지점만 [일차, 레벨] (그래프는 이 점들을 잇는 선) */
+  function trPts(tr, S0) {
+    const rows = (tr && tr.rows) || [], pts = [[0, S0]]; let prev = S0;
+    rows.forEach((r) => { if (r.S !== prev) { pts.push([r.t, r.S]); prev = r.S; } });
+    if (rows.length && pts[pts.length - 1][0] !== rows[rows.length - 1].t) pts.push([rows[rows.length - 1].t, rows[rows.length - 1].S]);
+    if (pts.length > 160) { const k = (pts.length - 1) / 159, o = []; for (let i = 0; i < 160; i++) o.push(pts[Math.round(i * k)]); return o; } /* 저장 용량 절약 */
+    return pts;
+  }
+  /* 플랜 확정 시 패키지 조합 목록의 효율 조합 전부를 '세계선'으로 함께 저장 */
+  function worldLines(bill0, days0) {
+    if (!OPT || !OPT.par || !OPT.op) return [];
+    const out = [];
+    OPT.par.forEach((r, i) => {
+      if (!OPT.good[i]) return;
+      try {
+        const list = OPT.op.decode(r[2]), s2 = JSON.parse(JSON.stringify(st)), use = new Array(s2.pk.length).fill(false);
+        list.forEach((x) => { use[x.j] = true; if (x.k >= 0) s2.pk[x.j].sel = RES[x.k]; });
+        s2.pk.forEach((p, j) => { p.use = use[j]; });
+        const tr = E.simulate(E.buildModel(s2, D), null, true), rows = tr.rows || [], lt = rows.length ? rows[rows.length - 1].t : 0;
+        if ((tr.bill || 0) === bill0 && lt === days0) return; /* 확정한 조합 자체는 제외 */
+        out.push({ id: 'w' + i + '-' + Date.now().toString(36), bill: tr.bill || 0, days: lt, S0: st.S0, pts: trPts(tr, st.S0), pk: list.map((x) => [x.j, x.k]) });
+      } catch (e) { /* 이 조합은 건너뜀 */ }
+    });
+    return out.sort((x, y) => x.bill - y.bill).slice(0, 24);
+  }
   function commitPlan() {
     if (!TR || !M || !/^\d{4}-\d{2}-\d{2}$/.test(st.start)) { toast('먼저 시작 날짜와 목표를 입력하고 계산해 주세요.'); return; }
-    const rows = TR.rows || [], pts = [[0, st.S0]]; let prev = st.S0;
-    rows.forEach((r) => { if (r.S !== prev) { pts.push([r.t - 1, prev]); pts.push([r.t, r.S]); prev = r.S; } });
-    if (rows.length) pts.push([rows[rows.length - 1].t, rows[rows.length - 1].S]);
+    const pts = trPts(TR, st.S0), rows = TR.rows || [];
     const last = rows[rows.length - 1], a = plansGet();
     const sig = st.start + '|' + JSON.stringify(pts);
     const dup = a.find((p) => p.start + '|' + JSON.stringify(p.pts) === sig);
     if (dup) { toast(plName(dup) + '과(와) 같은 플랜입니다.'); return; }
     a.forEach((p) => { p.ref = false; });
     const n = a.reduce((m, p) => Math.max(m, p.n || 0), 0) + 1;
-    a.push({ v: 2, id: 'p' + Date.now(), n, start: st.start, S0: st.S0, T: st.T, at: Date.now(), bill: TR.bill || 0, days: last ? last.t : 0, pts, hidden: false, ref: true });
+    const alts = worldLines(TR.bill || 0, last ? last.t : 0);
+    a.push({ v: 3, id: 'p' + Date.now(), n, start: st.start, S0: st.S0, T: st.T, at: Date.now(), bill: TR.bill || 0, days: last ? last.t : 0, pts, alts, hidden: false, ref: true });
     cmtTip(false, true);
     if (plansSet(a)) {
       toast(plName(a[a.length - 1]) + '을(를) 확정해 기준 플랜으로 정했습니다.', 3500); renderProg();
@@ -3049,6 +3084,14 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   window.addEventListener('doroacct', () => { try { renderProg(); } catch (e) { /* 무시 */ } });
   const planAt = (plan, t) => { let v = plan.S0; for (const p of plan.pts) { if (p[0] <= t) v = p[1]; else break; } return v; };
   const planDayOf = (plan, lv) => { for (const p of plan.pts) if (p[1] >= lv) return p[0]; return null; };
+  const TRASH = '<svg class="icb-i" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/></svg>';
+  /* 세계선: 플랜 확정 때 함께 저장한 다른 효율 조합들 */
+  function altsHtml(p) {
+    const a = p.alts || []; if (!a.length) return '';
+    const dOf = (n) => { const t = ymdMs(p.start); return isNaN(t) ? '' : ymd(t + n * DAY + new Date().getTimezoneOffset() * 60000); };
+    return '<details class="pl-alts"' + (renderProg.openAlt === p.id ? ' open' : '') + ' data-palt="' + p.id + '"><summary>과금별 세계선 ' + a.length + '개' + (p.ref ? '<label class="pl-altsw" title="그래프에 세계선 표시"><input type="checkbox" data-paltv="' + p.id + '"' + (p.altOff ? '' : ' checked') + '> 그래프에 표시</label>' : '') + '</summary><ul>' +
+      a.map((w) => '<li><b>' + won(w.bill) + '</b><span class="muted sm">' + w.days + '일 · ' + dOf(w.days) + ' 도달</span><button type="button" class="ghost sm" data-wapp="' + p.id + '|' + w.id + '" title="이 세계선을 새 플랜으로 만들어 기준으로 정합니다">적용</button><button type="button" class="ghost sm icb pl-del" data-wdel="' + p.id + '|' + w.id + '" title="삭제" aria-label="세계선 삭제">' + TRASH + '</button></li>').join('') + '</ul></details>';
+  }
   function renderProg() {
     let box = $('#me-prog');
     if (!box) { box = document.createElement('div'); box.className = 'card'; box.id = 'me-prog'; }
@@ -3069,13 +3112,21 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
     const x0 = zoom ? Math.min(off(ref), act[0][0] - 1) : -Infinity;
     const tMax = zoom ? lastT + Math.max(14, Math.ceil((lastT - x0) * 0.4)) : Infinity;
     const series = [];
+    /* 계단 대신 레벨이 바뀌는 점끼리 직선으로 (예전 형식의 계단 점도 정리) */
+    const lin = (q) => { const o = []; q.forEach((x, i) => { if (!i || x[1] !== o[o.length - 1][1]) o.push(x); }); const z = q[q.length - 1]; if (z && o[o.length - 1] !== z && z[0] > o[o.length - 1][0]) o.push(z); return o; };
+    const linAt = (q, t) => { if (!q.length) return 0; if (t <= q[0][0]) return q[0][1]; for (let i = 1; i < q.length; i++) if (q[i][0] >= t) { const a = q[i - 1], b = q[i]; return a[1] + (b[1] - a[1]) * (t - a[0]) / ((b[0] - a[0]) || 1); } return q[q.length - 1][1]; };
+    const fit = (raw, o, days) => {
+      const q = lin(raw), sh = q.map((x) => [x[0] + o, x[1]]); let pp = sh.filter((x) => x[0] >= x0 && x[0] <= tMax);
+      if (zoom && x0 - o > 0 && (!pp.length || pp[0][0] > x0)) pp.unshift([x0, linAt(sh, x0)]);
+      if (zoom && pp.length && pp[pp.length - 1][0] < tMax && tMax - o <= days) pp.push([tMax, linAt(sh, tMax)]);
+      return pp;
+    };
+    if (ref && ref.alts && ref.alts.length && !ref.altOff) ref.alts.forEach((w, k) => { const pp = fit(w.pts, off(ref), w.days); if (pp.length > 1) series.push({ name: '세계선', nolegend: k > 0, color: plCol(ref), w: 1.2, op: 0.32, pts: pp }); });
     vis.forEach((p) => {
-      const o = off(p); let pp = p.pts.map((q) => [q[0] + o, q[1]]).filter((q) => q[0] >= x0 && q[0] <= tMax);
-      if (zoom && x0 - o > 0 && (!pp.length || pp[0][0] > x0)) pp.unshift([x0, planAt(p, x0 - o)]);
-      if (zoom && pp.length && pp[pp.length - 1][0] < tMax && tMax - o <= p.days) pp.push([tMax, planAt(p, tMax - o)]);
-      if (pp.length) series.push({ name: plName(p) + (p === ref ? ' (기준)' : ''), color: plCol(p), dash: true, pts: pp });
+      const pp = fit(p.pts, off(p), p.days);
+      if (pp.length) series.push(p === ref ? { name: plName(p) + ' (기준)', color: plCol(p), w: 2.4, pts: pp } : { name: plName(p), color: plCol(p), w: 1.6, dash: '5 4', pts: pp });
     });
-    if (act.length) series.push({ name: '실제 (BlaBla 기록)', color: 'var(--ink)', dots: true, pts: act.length === 1 ? act.concat([[act[0][0] + 0.001, act[0][1]]]) : act });
+    if (act.length) series.push({ name: '실제 (BlaBla 기록)', color: 'var(--ink)', dots: true, r: act.length > 40 ? 0 : act.length > 14 ? 2.2 : 3, w: 1.8, smooth: true, pts: act.length === 1 ? act.concat([[act[0][0] + 0.001, act[0][1]]]) : act });
     if (ref && act.length) {
       const la = act[act.length - 1], lt = la[0] - off(ref), exp = planAt(ref, lt), dl = la[1] - exp, pd = planDayOf(ref, la[1]), dd = pd == null ? null : pd - lt;
       const cls = dl > 0 ? 'ok' : dl < 0 ? 'bad' : '';
@@ -3094,7 +3145,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
         '<button type="button" class="ghost sm icb" data-phide="' + p.id + '" title="' + (p.hidden ? '다시 보이기' : '숨기기') + '" aria-label="' + (p.hidden ? '다시 보이기' : '숨기기') + '">' + (p.hidden
           ? '<svg class="icb-i" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>'
           : '<svg class="icb-i" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 5.1A10 10 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4M6.6 6.6A17 17 0 0 0 2 12s3.6 7 10 7a10 10 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>') + '</button>' +
-        '<button type="button" class="ghost sm icb pl-del" data-pdel="' + p.id + '" title="영구 삭제" aria-label="영구 삭제"><svg class="icb-i" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/></svg></button></li>';
+        '<button type="button" class="ghost sm icb pl-del" data-pdel="' + p.id + '" title="영구 삭제" aria-label="영구 삭제">' + TRASH + '</button>' + altsHtml(p) + '</li>';
       const shown = all.filter((p) => !p.hidden).slice().reverse(), hid = all.filter((p) => p.hidden).slice().reverse();
       html += '<ul class="pl-list">' + shown.map(row).join('') + '</ul>' + (hid.length ? '<details class="pl-hid"><summary>숨긴 플랜 ' + hid.length + '개</summary><ul class="pl-list">' + hid.map(row).join('') + '</ul></details>' : '');
     }
@@ -3113,15 +3164,34 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
       const wasRef = a[i].ref; a.splice(i, 1); if (wasRef) { const v = a.filter((q) => !q.hidden); if (v.length) v[v.length - 1].ref = true; }
       plansSet(a); renderProg();
     }));
+    box.querySelectorAll('[data-palt]').forEach((d) => d.addEventListener('toggle', () => { if (d.open) renderProg.openAlt = d.dataset.palt; else if (renderProg.openAlt === d.dataset.palt) renderProg.openAlt = null; }));
+    box.querySelectorAll('[data-paltv]').forEach((c) => { c.addEventListener('click', (e) => e.stopPropagation()); c.addEventListener('change', () => { const a = plansGet(), p = a.find((q) => q.id === c.dataset.paltv); if (!p) return; p.altOff = !c.checked; plansSet(a); renderProg(); }); });
+    box.querySelectorAll('[data-wdel]').forEach((b) => b.addEventListener('click', () => {
+      const [pid, wid] = b.dataset.wdel.split('|'), a = plansGet(), p = a.find((q) => q.id === pid); if (!p || !p.alts) return;
+      const w = p.alts.find((x) => x.id === wid); if (!w || !confirm(won(w.bill) + ' 세계선을 삭제할까요? 되돌릴 수 없습니다.')) return;
+      p.alts = p.alts.filter((x) => x.id !== wid); renderProg.openAlt = pid; plansSet(a); renderProg();
+    }));
+    box.querySelectorAll('[data-wapp]').forEach((b) => b.addEventListener('click', () => {
+      const [pid, wid] = b.dataset.wapp.split('|'), a = plansGet(), p = a.find((q) => q.id === pid); if (!p || !p.alts) return;
+      const w = p.alts.find((x) => x.id === wid); if (!w) return;
+      a.forEach((q) => { q.ref = false; });
+      const n = a.reduce((m, q) => Math.max(m, q.n || 0), 0) + 1;
+      a.push({ v: 3, id: 'p' + Date.now(), n, label: (plName(p) + ' · ' + won(w.bill)).slice(0, 16), start: p.start, S0: w.S0 || p.S0, T: p.T, at: Date.now(), bill: w.bill, days: w.days, pts: w.pts, pk: w.pk, alts: [], hidden: false, ref: true });
+      if (plansSet(a)) { toast('세계선을 새 플랜으로 만들어 기준으로 정했습니다.', 3000); renderProg(); }
+    }));
     box.querySelectorAll('[data-phide]').forEach((b) => b.addEventListener('click', () => {
       const a = plansGet(), p = a.find((q) => q.id === b.dataset.phide); if (!p) return;
       p.hidden = !p.hidden; if (p.hidden && p.ref) { p.ref = false; const v = a.filter((q) => !q.hidden); if (v.length) v[v.length - 1].ref = true; }
       plansSet(a); renderProg();
     }));
     if (!series.length) return;
+    { /* 하루 단위로 정보창이 따라오도록 보이지 않는 기준 점(매일) */
+      const lo = Math.ceil(Math.min(...series.map((x) => x.pts[0][0]))), hi = Math.floor(Math.max(...series.map((x) => x.pts[x.pts.length - 1][0]))), g0 = series[series.length - 1].pts;
+      if (hi - lo < 4000) { const dn = []; for (let t = lo; t <= hi; t++) dn.push([t, linAt(g0, t)]); series.unshift({ name: '', noline: true, nolegend: true, pts: dn }); }
+    }
     const span = series.reduce((m, x) => Math.max(m, ...x.pts.map((q) => q[0])), 0) - series.reduce((m, x) => Math.min(m, ...x.pts.map((q) => q[0])), Infinity);
     chart($('#ch-prog'), {
-      label: '싱크로 성장 기록', xl: '날짜', series,
+      label: '싱크로 성장 기록', xl: '날짜', series, tipByX: true,
       xf: (v) => { if (Math.abs(v - Math.round(v)) > 0.01) return ''; const z = dOf(Math.round(v)); return span > 300 ? z.slice(2, 7).replace('-', '.') : z.slice(5).replace('-', '/'); },
       yf: (v) => (Math.abs(v - Math.round(v)) > 0.01 ? '' : String(Math.round(v))),
       tip: (i) => { const day = dOf(i), rec = h.find((x) => x.d === day); return day + vis.map((p) => { const t = i - off(p); return t >= 0 && t <= p.days ? '<br><span style="color:' + plCol(p) + '">' + plName(p) + '</span> 예상 Lv ' + planAt(p, t) : ''; }).join('') + (rec ? '<br><b>실제 Lv ' + rec.s + '</b> · 전초기지 ' + rec.o : ''); },
