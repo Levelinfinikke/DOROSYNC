@@ -2908,58 +2908,93 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
     try { localStorage.setItem(HIST_K, JSON.stringify(h.slice(-1000))); } catch (e) { /* 저장 불가 */ }
   }
   if (doroBL.data && doroBL.data.at && !histGet().length) histAdd(doroBL.data); /* 기존 연동 정보로 첫 기록 */
-  /* 시뮬레이션 결과를 '진행 중인 플랜'으로 확정 */
+  /* ---- 다중 플랜: 확정할 때마다 추가(삭제 대신 숨기기). '기준' 플랜과 실제 기록을 비교 ---- */
+  const PLANS_K = 'dorosync-plans-v2', PL_COL = ['var(--c1)', '#3b82f6', '#16a34a', '#a855f7', '#e11d48', '#0891b2', '#ca8a04', '#64748b'];
+  const plansGet = () => {
+    let a = null; try { a = JSON.parse(localStorage.getItem(PLANS_K) || 'null'); } catch (e) { a = null; }
+    if (!Array.isArray(a)) { a = []; const o = planGet(); if (o && o.pts) a.push(Object.assign({ id: 'p' + (o.at || Date.now()), n: 1, hidden: false }, o)); if (a.length) { a[0].ref = true; plansSet(a); } try { localStorage.removeItem(PLAN_K); } catch (e) { /* 무시 */ } }
+    return a;
+  };
+  function plansSet(a) { try { localStorage.setItem(PLANS_K, JSON.stringify(a)); return true; } catch (e) { toast('저장 공간이 부족해 플랜을 저장하지 못했습니다.'); return false; } }
+  const plName = (p) => '플랜 ' + p.n;
+  const plCol = (p) => PL_COL[(p.n - 1) % PL_COL.length];
   function commitPlan() {
     if (!TR || !M || !/^\d{4}-\d{2}-\d{2}$/.test(st.start)) { toast('먼저 시작 날짜와 목표를 입력하고 계산해 주세요.'); return; }
-    const old = planGet();
-    if (old && !confirm('이미 진행 중인 플랜(' + old.start + ' 시작, ' + old.S0 + '→' + old.T + ')이 있습니다. 지금 플랜으로 바꿀까요?')) return;
     const rows = TR.rows || [], pts = [[0, st.S0]]; let prev = st.S0;
     rows.forEach((r) => { if (r.S !== prev) { pts.push([r.t - 1, prev]); pts.push([r.t, r.S]); prev = r.S; } });
     if (rows.length) pts.push([rows[rows.length - 1].t, rows[rows.length - 1].S]);
-    const last = rows[rows.length - 1];
-    const plan = { v: 1, start: st.start, S0: st.S0, T: st.T, at: Date.now(), bill: TR.bill || 0, days: last ? last.t : 0, pts };
-    try { localStorage.setItem(PLAN_K, JSON.stringify(plan)); } catch (e) { toast('저장 공간이 부족해 플랜을 확정하지 못했습니다.'); return; }
-    toast('플랜을 확정했습니다. [전초기지] 탭에서 진행 상황을 볼 수 있어요.', 4000); renderProg();
+    const last = rows[rows.length - 1], a = plansGet();
+    const sig = st.start + '|' + JSON.stringify(pts);
+    const dup = a.find((p) => p.start + '|' + JSON.stringify(p.pts) === sig);
+    if (dup) { toast(plName(dup) + '과(와) 같은 플랜입니다.'); return; }
+    a.forEach((p) => { p.ref = false; });
+    const n = a.reduce((m, p) => Math.max(m, p.n || 0), 0) + 1;
+    a.push({ v: 2, id: 'p' + Date.now(), n, start: st.start, S0: st.S0, T: st.T, at: Date.now(), bill: TR.bill || 0, days: last ? last.t : 0, pts, hidden: false, ref: true });
+    if (plansSet(a)) { toast(plName(a[a.length - 1]) + '을(를) 확정해 기준 플랜으로 정했습니다. [전초기지] 탭에서 비교할 수 있어요.', 4500); renderProg(); }
   }
   const planAt = (plan, t) => { let v = plan.S0; for (const p of plan.pts) { if (p[0] <= t) v = p[1]; else break; } return v; };
   const planDayOf = (plan, lv) => { for (const p of plan.pts) if (p[1] >= lv) return p[0]; return null; };
   function renderProg() {
     let box = $('#me-prog');
     if (!box) { box = document.createElement('div'); box.className = 'card'; box.id = 'me-prog'; const iv = $('#me-inv'); if (iv) iv.before(box); else return; }
-    const h = histGet(), plan = planGet();
-    let html = '<div class="row-ctl sp"><h2 class="inline">싱크로 성장 기록</h2>' + (plan ? '<button type="button" class="ghost sm" id="prog-unplan" title="진행 중인 플랜 해제">플랜 해제</button>' : '') + '</div>';
-    if (!h.length && !plan) { box.innerHTML = html + '<p class="muted">BlaBla 연동을 할 때마다 그날의 싱크로 레벨이 기록되고, 여기에 성장 그래프로 그려집니다. [싱크로] 탭에서 계산한 플랜을 <b>확정</b>하면 예상 그래프와 비교할 수 있어요.</p>'; return; }
-    const base = plan ? ymdMs(plan.start) : ymdMs(h[0].d);
-    const tOf = (d) => Math.round((ymdMs(d) - base) / DAY) + 1; /* 시작일 = 1일차 */
-    const act = h.map((x) => [tOf(x.d), x.s]).filter((p) => p[0] >= (plan ? 0 : -1e9));
+    const h = histGet(), all = plansGet(), vis = all.filter((p) => !p.hidden);
+    let ref = vis.find((p) => p.ref) || vis[vis.length - 1] || null;
+    let html = '<div class="row-ctl sp"><h2 class="inline">싱크로 성장 기록</h2></div>';
+    if (!h.length && !all.length) { box.innerHTML = html + '<p class="muted">BlaBla 연동을 할 때마다 그날의 싱크로 레벨이 기록되고, 여기에 성장 그래프로 그려집니다. [싱크로] 탭에서 계산한 플랜을 <b>확정</b>(깃발 버튼)하면 예상 그래프와 비교할 수 있어요.</p>'; return; }
+    /* 공통 기준일: 보이는 플랜 시작일·첫 기록 중 가장 이른 날 = 1일차 */
+    const starts = vis.map((p) => ymdMs(p.start)).concat(h.length ? [ymdMs(h[0].d)] : []).filter((x) => !isNaN(x));
+    const base = Math.min(...starts);
+    const tOf = (d) => Math.round((ymdMs(d) - base) / DAY) + 1;
+    const off = (p) => tOf(p.start) - 1; /* 플랜의 0일차가 공통 축의 몇 일차인지 */
+    const act = h.map((x) => [tOf(x.d), x.s]);
     const dOf = (t) => ymd(base + (t - 1) * DAY + new Date().getTimezoneOffset() * 60000);
-    const series = [], lastT = act.length ? act[act.length - 1][0] : 0;
-    const zoom = plan && act.length && renderProg.full !== true;
-    const tMax = zoom ? Math.max(30, Math.ceil(lastT * 1.4), lastT + 14) : Infinity;
-    if (plan) {
-      const pp = plan.pts.filter((p) => p[0] <= tMax);
-      if (zoom && pp.length && pp[pp.length - 1][0] < tMax) pp.push([tMax, planAt(plan, tMax)]);
-      series.push({ name: '확정 플랜 예상', color: 'var(--c1)', dash: true, pts: pp });
-    }
-    if (act.length) series.push({ name: '실제 (BlaBla 기록)', color: 'var(--c2)', dots: true, pts: act.length === 1 ? act.concat([[act[0][0] + 0.001, act[0][1]]]) : act });
-    if (plan && act.length) {
-      const la = act[act.length - 1], exp = planAt(plan, la[0]), dl = la[1] - exp, pd = planDayOf(plan, la[1]), dd = pd == null ? null : pd - la[0];
-      const cls = dl > 0 ? 'ok' : dl < 0 ? 'bad' : '';
-      html += '<div class="prog-sum"><div class="kpi"><small>최근 기록 (' + h[h.length - 1].d + ' · ' + la[0] + '일차)</small><b>Lv ' + la[1] + '</b><span>예상 Lv ' + exp + '</span></div>' +
-        '<div class="kpi ' + cls + '"><small>플랜 대비</small><b>' + (dl === 0 ? '예정대로' : (dl > 0 ? '+' : '') + dl + ' Lv') + '</b><span>' + (dd == null ? '목표를 넘어섰습니다' : dd === 0 ? '일정과 같습니다' : Math.abs(dd) + '일 ' + (dd > 0 ? '빠름' : '늦음')) + '</span></div>' +
-        '<div class="kpi"><small>확정 플랜</small><b>' + plan.S0 + ' → ' + plan.T + '</b><span>' + plan.start + ' 시작 · ' + plan.days + '일 · ' + won(plan.bill) + '</span></div></div>';
-    } else if (plan) html += '<p class="muted sm">플랜을 확정했습니다. BlaBla 연동을 하면 실제 싱크로 레벨이 기록되어 예상과 비교됩니다.</p>';
-    else html += '<p class="muted sm">[싱크로] 탭 결과의 <b>플랜 확정</b> 버튼을 누르면 예상 그래프와 비교할 수 있어요.</p>';
-    if (plan && act.length) html += '<div class="prog-seg"><button type="button" data-pz="0" class="' + (zoom ? 'on' : '') + '">진행 구간</button><button type="button" data-pz="1" class="' + (zoom ? '' : 'on') + '">전체 기간</button></div>';
-    box.innerHTML = html + '<div class="chart" id="ch-prog"></div>';
-    box.querySelectorAll('[data-pz]').forEach((b) => b.addEventListener('click', () => { renderProg.full = b.dataset.pz === '1'; renderProg(); }));
-    const span = series.reduce((m, x) => Math.max(m, ...x.pts.map((p) => p[0])), 0);
-    chart($('#ch-prog'), {
-      label: '싱크로 성장 기록', xl: plan ? '플랜 일차' : '일차', series,
-      xf: (v) => { const z = dOf(Math.round(v)); return span > 300 ? z.slice(2, 7).replace('-', '.') : z.slice(5).replace('-', '/'); },
-      tip: (i) => { const day = dOf(i), rec = h.find((x) => x.d === day); return day + (plan ? ' · ' + i + '일차' : '') + (plan ? '<br>예상 Lv ' + planAt(plan, i) : '') + (rec ? '<br>실제 Lv ' + rec.s + ' · 전초기지 ' + rec.o : ''); },
+    const lastT = act.length ? act[act.length - 1][0] : 0;
+    const zoom = !!(ref && act.length) && renderProg.full !== true;
+    const x0 = zoom ? Math.min(off(ref), act[0][0] - 1) : -Infinity;
+    const tMax = zoom ? lastT + Math.max(14, Math.ceil((lastT - x0) * 0.4)) : Infinity;
+    const series = [];
+    vis.forEach((p) => {
+      const o = off(p); let pp = p.pts.map((q) => [q[0] + o, q[1]]).filter((q) => q[0] >= x0 && q[0] <= tMax);
+      if (zoom && x0 - o > 0 && (!pp.length || pp[0][0] > x0)) pp.unshift([x0, planAt(p, x0 - o)]);
+      if (zoom && pp.length && pp[pp.length - 1][0] < tMax && tMax - o <= p.days) pp.push([tMax, planAt(p, tMax - o)]);
+      if (pp.length) series.push({ name: plName(p) + (p === ref ? ' (기준)' : ''), color: plCol(p), dash: true, pts: pp });
     });
-    const u = $('#prog-unplan'); if (u) u.addEventListener('click', () => { if (confirm('진행 중인 플랜을 해제할까요? 성장 기록은 남습니다.')) { try { localStorage.removeItem(PLAN_K); } catch (e) { /* 무시 */ } renderProg(); } });
+    if (act.length) series.push({ name: '실제 (BlaBla 기록)', color: 'var(--ink)', dots: true, pts: act.length === 1 ? act.concat([[act[0][0] + 0.001, act[0][1]]]) : act });
+    if (ref && act.length) {
+      const la = act[act.length - 1], lt = la[0] - off(ref), exp = planAt(ref, lt), dl = la[1] - exp, pd = planDayOf(ref, la[1]), dd = pd == null ? null : pd - lt;
+      const cls = dl > 0 ? 'ok' : dl < 0 ? 'bad' : '';
+      html += '<div class="prog-sum"><div class="kpi"><small>최근 기록 (' + h[h.length - 1].d + ')</small><b>Lv ' + la[1] + '</b><span>' + plName(ref) + ' 예상 Lv ' + exp + (lt >= 0 ? ' · ' + lt + '일차' : ' · 시작 전') + '</span></div>' +
+        '<div class="kpi ' + cls + '"><small>기준 플랜 대비</small><b>' + (dl === 0 ? '예정대로' : (dl > 0 ? '+' : '') + dl + ' Lv') + '</b><span>' + (dd == null ? '목표를 넘어섰습니다' : dd === 0 ? '일정과 같습니다' : Math.abs(dd) + '일 ' + (dd > 0 ? '빠름' : '늦음')) + '</span></div>' +
+        '<div class="kpi"><small>기준 플랜 · ' + plName(ref) + '</small><b>' + ref.S0 + ' → ' + ref.T + '</b><span>' + ref.start + ' 시작 · ' + ref.days + '일 · ' + won(ref.bill) + '</span></div></div>';
+    } else if (all.length && !act.length) html += '<p class="muted sm">플랜을 확정했습니다. BlaBla 연동을 하면 실제 싱크로 레벨이 기록되어 예상과 비교됩니다.</p>';
+    else if (!all.length) html += '<p class="muted sm">[싱크로] 탭 결과의 <b>플랜 확정</b>(깃발 버튼)을 누르면 예상 그래프와 비교할 수 있어요. 과금 계획이 바뀌면 다시 확정해 새 플랜을 추가하면 됩니다.</p>';
+    if (ref && act.length) html += '<div class="prog-seg"><button type="button" data-pz="0" class="' + (zoom ? 'on' : '') + '">진행 구간</button><button type="button" data-pz="1" class="' + (zoom ? '' : 'on') + '">전체 기간</button></div>';
+    html += series.length ? '<div class="chart" id="ch-prog"></div>' : '';
+    /* 플랜 목록: 기준 지정 · 숨기기 */
+    if (all.length) {
+      const row = (p) => '<li class="' + (p.hidden ? 'hid' : '') + '"><i class="pl-sw" style="background:' + plCol(p) + '"></i><b>' + plName(p) + '</b><span class="muted sm">' + p.start + ' 시작 · ' + p.S0 + '→' + p.T + ' · ' + p.days + '일 · ' + won(p.bill) + '</span>' +
+        (p.hidden ? '' : p === ref ? '<span class="pl-ref">기준</span>' : '<button type="button" class="ghost sm" data-pref="' + p.id + '">기준으로</button>') +
+        '<button type="button" class="ghost sm icb" data-phide="' + p.id + '" title="' + (p.hidden ? '다시 보이기' : '숨기기') + '" aria-label="' + (p.hidden ? '다시 보이기' : '숨기기') + '">' + (p.hidden
+          ? '<svg class="icb-i" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>'
+          : '<svg class="icb-i" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 5.1A10 10 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4M6.6 6.6A17 17 0 0 0 2 12s3.6 7 10 7a10 10 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>') + '</button></li>';
+      const shown = all.filter((p) => !p.hidden).slice().reverse(), hid = all.filter((p) => p.hidden).slice().reverse();
+      html += '<ul class="pl-list">' + shown.map(row).join('') + '</ul>' + (hid.length ? '<details class="pl-hid"><summary>숨긴 플랜 ' + hid.length + '개</summary><ul class="pl-list">' + hid.map(row).join('') + '</ul></details>' : '');
+    }
+    box.innerHTML = html;
+    box.querySelectorAll('[data-pz]').forEach((b) => b.addEventListener('click', () => { renderProg.full = b.dataset.pz === '1'; renderProg(); }));
+    box.querySelectorAll('[data-pref]').forEach((b) => b.addEventListener('click', () => { const a = plansGet(); a.forEach((p) => { p.ref = p.id === b.dataset.pref; }); plansSet(a); renderProg(); }));
+    box.querySelectorAll('[data-phide]').forEach((b) => b.addEventListener('click', () => {
+      const a = plansGet(), p = a.find((q) => q.id === b.dataset.phide); if (!p) return;
+      p.hidden = !p.hidden; if (p.hidden && p.ref) { p.ref = false; const v = a.filter((q) => !q.hidden); if (v.length) v[v.length - 1].ref = true; }
+      plansSet(a); renderProg();
+    }));
+    if (!series.length) return;
+    const span = series.reduce((m, x) => Math.max(m, ...x.pts.map((q) => q[0])), 0) - series.reduce((m, x) => Math.min(m, ...x.pts.map((q) => q[0])), Infinity);
+    chart($('#ch-prog'), {
+      label: '싱크로 성장 기록', xl: '날짜', series,
+      xf: (v) => { const z = dOf(Math.round(v)); return span > 300 ? z.slice(2, 7).replace('-', '.') : z.slice(5).replace('-', '/'); },
+      tip: (i) => { const day = dOf(i), rec = h.find((x) => x.d === day); return day + vis.map((p) => { const t = i - off(p); return t >= 0 && t <= p.days ? '<br><span style="color:' + plCol(p) + '">' + plName(p) + '</span> 예상 Lv ' + planAt(p, t) : ''; }).join('') + (rec ? '<br><b>실제 Lv ' + rec.s + '</b> · 전초기지 ' + rec.o : ''); },
+    });
   }
   try { renderProg(); } catch (e) { /* 무시 */ }
   /* 로그인 상태에서 하루 1번 자동 재연동(프로필 주소 방식으로 연동해 둔 경우) — 직접 연동은 제한 없음 */
