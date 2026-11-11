@@ -1389,3 +1389,11 @@ button:not(.tr-clr):not(.tabs button):not(.tr-f):not(.pk-t):not(.pk-r){border-ra
 .acct-pwnote{margin:6px 0 0;text-align:right}
 .acct-box .acct-g+.acct-or{margin-top:16px}
 #btn-acct{width:36px;height:36px;min-width:36px;padding:0!important;border-radius:50%!important;display:inline-flex;align-items:center;justify-content:center}
+/* 싱크로 성장 기록 */
+.prog-sum{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:10px 0 12px}
+.prog-sum .kpi{padding:10px 12px}
+.prog-sum .kpi.ok b{color:#16a34a}.prog-sum .kpi.bad b{color:#e5484d}
+@media(max-width:560px){.prog-sum{grid-template-columns:1fr 1fr}.prog-sum .kpi:last-child{grid-column:1/-1}}
+.prog-seg{display:inline-flex;gap:4px;padding:3px;border-radius:999px;background:var(--input,rgba(127,127,127,.1));margin:0 0 6px}
+.prog-seg button{border:0;background:none;color:var(--muted);font:inherit;font-size:12.5px;font-weight:700;padding:5px 12px;cursor:pointer}
+.prog-seg button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.15)}

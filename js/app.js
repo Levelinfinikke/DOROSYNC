@@ -1478,6 +1478,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     if (ANCH && Date.now() - ANCH_T > 700 && !e.__keep && !e.target.closest('[data-cid]') && !e.target.closest('#pinrest')) { ANCH = null; clearTimeout(tmr); recalc(); }
     if (e.target.closest('#btn-lv-fs')) { lvFs(); return; }
     if (e.target.closest('#btn-pin')) { pinPlan(); return; }
+    if (e.target.closest('#btn-commit')) { commitPlan(); return; }
     if (e.target.closest('#btn-pin-restore')) { pinRestoreDlg(); return; }
     const en = e.target.closest('.pinen');
     if (en) { pinRenameDlg(en.dataset.pin); return; }
@@ -2585,6 +2586,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
       if (!d.ok) { blStep(''); blSay('연동에 실패했습니다. 원인: ' + d.error, 'dirty'); return; }
       doroBL.data = { area: d.area, me: d.me, clear: d.clear, nikkes: d.nikkes || [], at: Date.now() };
       try { localStorage.setItem(BLK, JSON.stringify(doroBL.data)); } catch (err) { /* 저장 불가 */ }
+      histAdd(doroBL.data);
       try { doroBL.win.close(); } catch (err) { /* 무시 */ }
       blStep('', true);
       blSay('지휘관, 니케들이 도착했습니다! (' + doroBL.data.nikkes.length + '명)', 'ok');
@@ -2698,6 +2700,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
   }
   function renderMe() {
     const root = $('#me-body'); if (!root) return;
+    try { renderProg(); } catch (e) { /* 그래프 실패해도 나머지는 표시 */ }
     { const iv = $('#me-inv'); if (iv && root.contains(iv)) root.after(iv); }
     const d = doroBL.data;
     { const lk = $('#me-link'); if (lk) lk.style.display = d ? 'none' : ''; }
@@ -2808,6 +2811,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
     }
     doroBL.data = { area: d.area, me: d.me, clear: d.clear, nikkes: d.nikkes || [], at: Date.now(), src: d.src || '' };
     try { localStorage.setItem(BLK, JSON.stringify(doroBL.data)); } catch (err) { /* 저장 불가 */ }
+    histAdd(doroBL.data);
     blNick(); blLinked(); blApplyUser(); blNudge(); renderMe();
     try { const w = $('#ol-frame').contentWindow; if (w && w.__blLoad) w.__blLoad(doroBL.data); } catch (err) { /* 오버로드 탭 미로드 */ }
   }
@@ -2890,6 +2894,88 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   }
   $('#bl-url-alt').addEventListener('click', () => { blUrlFail(''); blTab(BL_DEV); const m = $('#bl-modal .blm-box'); if (m) m.scrollTop = 0; });
   $('#bl-url-go').addEventListener('click', blUrlFetch);
+
+  /* ---------- 싱크로 성장 기록 · 확정 플랜 비교 ---------- */
+  const HIST_K = 'dorosync-hist-v1', PLAN_K = 'dorosync-plan-v1', DAY = 86400000;
+  const ymd = (t) => { const z = new Date(t), q = (x) => String(x).padStart(2, '0'); return z.getFullYear() + '-' + q(z.getMonth() + 1) + '-' + q(z.getDate()); };
+  const ymdMs = (s) => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || ''); return m ? Date.UTC(+m[1], +m[2] - 1, +m[3]) : NaN; };
+  const histGet = () => { try { const a = JSON.parse(localStorage.getItem(HIST_K) || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } };
+  const planGet = () => { try { return JSON.parse(localStorage.getItem(PLAN_K) || 'null'); } catch (e) { return null; } };
+  function histAdd(d) {
+    const m = d && d.me; if (!m || !(m.synchro > 0)) return;
+    const day = ymd(d.at || Date.now()), h = histGet().filter((x) => x.d !== day);
+    h.push({ d: day, s: m.synchro, o: m.outpost || 0, p: m.top5 || 0 }); h.sort((a, b) => (a.d < b.d ? -1 : 1));
+    try { localStorage.setItem(HIST_K, JSON.stringify(h.slice(-1000))); } catch (e) { /* 저장 불가 */ }
+  }
+  if (doroBL.data && doroBL.data.at && !histGet().length) histAdd(doroBL.data); /* 기존 연동 정보로 첫 기록 */
+  /* 시뮬레이션 결과를 '진행 중인 플랜'으로 확정 */
+  function commitPlan() {
+    if (!TR || !M || !/^\d{4}-\d{2}-\d{2}$/.test(st.start)) { toast('먼저 시작 날짜와 목표를 입력하고 계산해 주세요.'); return; }
+    const old = planGet();
+    if (old && !confirm('이미 진행 중인 플랜(' + old.start + ' 시작, ' + old.S0 + '→' + old.T + ')이 있습니다. 지금 플랜으로 바꿀까요?')) return;
+    const rows = TR.rows || [], pts = [[0, st.S0]]; let prev = st.S0;
+    rows.forEach((r) => { if (r.S !== prev) { pts.push([r.t - 1, prev]); pts.push([r.t, r.S]); prev = r.S; } });
+    if (rows.length) pts.push([rows[rows.length - 1].t, rows[rows.length - 1].S]);
+    const last = rows[rows.length - 1];
+    const plan = { v: 1, start: st.start, S0: st.S0, T: st.T, at: Date.now(), bill: TR.bill || 0, days: last ? last.t : 0, pts };
+    try { localStorage.setItem(PLAN_K, JSON.stringify(plan)); } catch (e) { toast('저장 공간이 부족해 플랜을 확정하지 못했습니다.'); return; }
+    toast('플랜을 확정했습니다. [전초기지] 탭에서 진행 상황을 볼 수 있어요.', 4000); renderProg();
+  }
+  const planAt = (plan, t) => { let v = plan.S0; for (const p of plan.pts) { if (p[0] <= t) v = p[1]; else break; } return v; };
+  const planDayOf = (plan, lv) => { for (const p of plan.pts) if (p[1] >= lv) return p[0]; return null; };
+  function renderProg() {
+    let box = $('#me-prog');
+    if (!box) { box = document.createElement('div'); box.className = 'card'; box.id = 'me-prog'; const iv = $('#me-inv'); if (iv) iv.before(box); else return; }
+    const h = histGet(), plan = planGet();
+    let html = '<div class="row-ctl sp"><h2 class="inline">싱크로 성장 기록</h2>' + (plan ? '<button type="button" class="ghost sm" id="prog-unplan" title="진행 중인 플랜 해제">플랜 해제</button>' : '') + '</div>';
+    if (!h.length && !plan) { box.innerHTML = html + '<p class="muted">BlaBla 연동을 할 때마다 그날의 싱크로 레벨이 기록되고, 여기에 성장 그래프로 그려집니다. [싱크로] 탭에서 계산한 플랜을 <b>확정</b>하면 예상 그래프와 비교할 수 있어요.</p>'; return; }
+    const base = plan ? ymdMs(plan.start) : ymdMs(h[0].d);
+    const tOf = (d) => Math.round((ymdMs(d) - base) / DAY) + 1; /* 시작일 = 1일차 */
+    const act = h.map((x) => [tOf(x.d), x.s]).filter((p) => p[0] >= (plan ? 0 : -1e9));
+    const dOf = (t) => ymd(base + (t - 1) * DAY + new Date().getTimezoneOffset() * 60000);
+    const series = [], lastT = act.length ? act[act.length - 1][0] : 0;
+    const zoom = plan && act.length && renderProg.full !== true;
+    const tMax = zoom ? Math.max(30, Math.ceil(lastT * 1.4), lastT + 14) : Infinity;
+    if (plan) {
+      const pp = plan.pts.filter((p) => p[0] <= tMax);
+      if (zoom && pp.length && pp[pp.length - 1][0] < tMax) pp.push([tMax, planAt(plan, tMax)]);
+      series.push({ name: '확정 플랜 예상', color: 'var(--c1)', dash: true, pts: pp });
+    }
+    if (act.length) series.push({ name: '실제 (BlaBla 기록)', color: 'var(--c2)', dots: true, pts: act.length === 1 ? act.concat([[act[0][0] + 0.001, act[0][1]]]) : act });
+    if (plan && act.length) {
+      const la = act[act.length - 1], exp = planAt(plan, la[0]), dl = la[1] - exp, pd = planDayOf(plan, la[1]), dd = pd == null ? null : pd - la[0];
+      const cls = dl > 0 ? 'ok' : dl < 0 ? 'bad' : '';
+      html += '<div class="prog-sum"><div class="kpi"><small>최근 기록 (' + h[h.length - 1].d + ' · ' + la[0] + '일차)</small><b>Lv ' + la[1] + '</b><span>예상 Lv ' + exp + '</span></div>' +
+        '<div class="kpi ' + cls + '"><small>플랜 대비</small><b>' + (dl === 0 ? '예정대로' : (dl > 0 ? '+' : '') + dl + ' Lv') + '</b><span>' + (dd == null ? '목표를 넘어섰습니다' : dd === 0 ? '일정과 같습니다' : Math.abs(dd) + '일 ' + (dd > 0 ? '빠름' : '늦음')) + '</span></div>' +
+        '<div class="kpi"><small>확정 플랜</small><b>' + plan.S0 + ' → ' + plan.T + '</b><span>' + plan.start + ' 시작 · ' + plan.days + '일 · ' + won(plan.bill) + '</span></div></div>';
+    } else if (plan) html += '<p class="muted sm">플랜을 확정했습니다. BlaBla 연동을 하면 실제 싱크로 레벨이 기록되어 예상과 비교됩니다.</p>';
+    else html += '<p class="muted sm">[싱크로] 탭 결과의 <b>플랜 확정</b> 버튼을 누르면 예상 그래프와 비교할 수 있어요.</p>';
+    if (plan && act.length) html += '<div class="prog-seg"><button type="button" data-pz="0" class="' + (zoom ? 'on' : '') + '">진행 구간</button><button type="button" data-pz="1" class="' + (zoom ? '' : 'on') + '">전체 기간</button></div>';
+    box.innerHTML = html + '<div class="chart" id="ch-prog"></div>';
+    box.querySelectorAll('[data-pz]').forEach((b) => b.addEventListener('click', () => { renderProg.full = b.dataset.pz === '1'; renderProg(); }));
+    const span = series.reduce((m, x) => Math.max(m, ...x.pts.map((p) => p[0])), 0);
+    chart($('#ch-prog'), {
+      label: '싱크로 성장 기록', xl: plan ? '플랜 일차' : '일차', series,
+      xf: (v) => { const z = dOf(Math.round(v)); return span > 300 ? z.slice(2, 7).replace('-', '.') : z.slice(5).replace('-', '/'); },
+      tip: (i) => { const day = dOf(i), rec = h.find((x) => x.d === day); return day + (plan ? ' · ' + i + '일차' : '') + (plan ? '<br>예상 Lv ' + planAt(plan, i) : '') + (rec ? '<br>실제 Lv ' + rec.s + ' · 전초기지 ' + rec.o : ''); },
+    });
+    const u = $('#prog-unplan'); if (u) u.addEventListener('click', () => { if (confirm('진행 중인 플랜을 해제할까요? 성장 기록은 남습니다.')) { try { localStorage.removeItem(PLAN_K); } catch (e) { /* 무시 */ } renderProg(); } });
+  }
+  try { renderProg(); } catch (e) { /* 무시 */ }
+  /* 로그인 상태에서 하루 1번 자동 재연동(프로필 주소 방식으로 연동해 둔 경우) — 직접 연동은 제한 없음 */
+  window.doroBLAutoSync = async function () {
+    const d = doroBL.data; let area, raw; try { area = localStorage.getItem('dorosync-bl-area'); raw = localStorage.getItem('dorosync-bl-purl'); } catch (e) { return; }
+    const oid = blOpenId(raw); if (!d || !area || !oid || Date.now() - (d.at || 0) < DAY) return;
+    try {
+      const r = await fetch(BL_WORKER + '/sync?area=' + area + '&openid=' + encodeURIComponent(oid)); const j = await r.json();
+      if (!r.ok || !j.ok) return;
+      const before = (d.me && d.me.synchro) || 0, pg = j.progress || {};
+      j.clear = { normal: blClearFromProg('6', pg.normal), hard: blClearFromProg('7', pg.hard) }; j.src = 'relay';
+      blStore(j);
+      const after = (j.me && j.me.synchro) || 0;
+      toast('BlaBla 정보를 자동으로 갱신했습니다' + (after && after !== before ? ' (싱크로 ' + before + ' → ' + after + ')' : '') + '.', 4000);
+    } catch (e) { /* 다음 접속 때 다시 시도 */ }
+  };
   $('#bl-purl').addEventListener('keydown', (e) => { if (e.key === 'Enter') blUrlFetch(); });
 
   blTab('url');

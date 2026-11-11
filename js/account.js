@@ -187,6 +187,7 @@ async function onUser(u) {
     syncNick();
     setBtn(); render();
     await reconcile(d);
+    if (window.doroBLAutoSync) window.doroBLAutoSync(); /* 로그인 상태: 하루 1번 BlaBla 자동 재연동 */
   } catch (e) { msg('계정 정보를 불러오지 못했습니다: ' + errMsg(e), 1); }
 }
 
