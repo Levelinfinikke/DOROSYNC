@@ -2570,7 +2570,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
   const chipCard = () => {
     const o = chipRaw(), tot = o.d;
     return '<div class="kpi chipk"><div class="l">도로칩</div><div class="chipv"><span title="도로칩 (실버칩 1 = 5, 골드칩 1 = 10)">' + window.doroChipSvg('b', 32) + '<b class="num">' + fmt(tot) + '</b></span><span title="무지개 도로칩">' + window.doroChipSvg('r', 32) + '<b class="num">' + fmt(o.r) + '</b></span></div>' +
-      '<div class="s">가챠에서 모은 도로칩 · 무지개 도로칩</div></div>';
+      '</div>';
   };
   window.addEventListener('dorochips', () => { const el = document.querySelector('#tab-me .chipk'); if (el) el.outerHTML = chipCard(); });
   const PFP_K = 'dorosync-pfp';
@@ -3653,6 +3653,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
     add(items, 'evatt', '이벤트 출석', { pick: JW_EV(10, 10, 15) }, { note: '특뽑 2주 10 · 3주 10 · 4주 15' });
     add(items, 'evshop', '이벤트 상점', { pick: JW_EV(10, 10, 15), norm: JW_EV(10, 10, 10) }, { note: '특뽑 10·10·15, 일뽑 10·10·10 (2주·3주·4주)' });
     add(items, 'evmini', '이벤트 미니게임', { pick: JW_EV(10, 10, 15) }, { note: '특뽑 2주 10 · 3주 10 · 4주 15' });
+    add(items, 'evstage', '이벤트 스테이지 입장', { jw: -JW_EV(900, 1400, 1400) }, { note: '입장용 재화 구매로 쥬얼 차감 · 2주 이벤트 900 · 3주·4주 이벤트 1,400' });
     add(items, 'evlost', '이벤트맵 유실물', { jw: JW_EV(0, 300, 300) }, { note: '300 · 3주·4주 이벤트만' });
     add(items, 'trail', '트레일 마커', { norm: 20 / 3 }, { note: '일뽑 20 · 3개월마다 (주년·0.5주년과 그 사이)', kind: 'sched', per: { norm: 20 }, dates: AS.trail });
     add(items, 'anniv', '다양한 주년 보상', { pick: 60 / 6, norm: 10 / 6 }, { note: '주년·0.5주년마다 특뽑 60 · 일뽑 10 (6개월 주기, 보수적 집계). 날짜별 표에는 실제 주년 날짜에 더함', kind: 'sched', per: { pick: 60, norm: 10 }, dates: AS.ann });
