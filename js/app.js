@@ -1373,9 +1373,9 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
   }
 
   /** 싱크로 부스트: 300/400/500/600 레벨 도달 지점 */
-  function boostHtml(t) {
+  function boostHtml(t, o) {
     const RW = {300: '오버클럭+50%', 400: '요격전 +1', 500: '오버클럭+100%', 600: '요격전 +1'};
-    const LV = [300, 400, 500, 600], MIN = 300, MAX = 600, S0 = st.S0;
+    const LV = [300, 400, 500, 600], MIN = 300, MAX = 600, S0 = o ? o.S0 : st.S0;
     const pct = (v) => Math.max(0, Math.min(100, (v - MIN) / (MAX - MIN) * 100));
     const nx = LV.find((l) => l > S0);
     let h = '<div class="sboost"><div class="sbtab"><span><b>SYNCHRO BOOST</b></span></div><div class="sbin"><div class="sbnext"><span>' + (nx ? '다음 부스트 까지' : '모든 부스트 달성') + '</span>' +
@@ -1386,8 +1386,8 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     LV.forEach((lv) => {
       let sub = '<strong>' + RW[lv] + '</strong>';
       if (S0 < lv) {
-        const r = t.rows.find((x) => x.S >= lv);
-        sub = r ? '<em>' + r.t + '일차</em><span>' + dstr(r.t, false).slice(2) + '</span>' : '<span>목표 이후</span>';
+        const r = o ? o.find(lv) : t.rows.find((x) => x.S >= lv);
+        sub = r ? '<em>' + r.t + '일차</em><span>' + (o ? r.d : dstr(r.t, false)).slice(2) + '</span>' : '<span>목표 이후</span>';
       }
       h += '<div class="sblab' + (S0 >= lv ? ' on' : '') + '" style="left:' + pct(lv).toFixed(2) + '%"><b>' + lv + '</b>' + sub + '</div>';
     });
@@ -2501,11 +2501,21 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
   const BL_UNL = '<svg class="icb-i" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 14.5l-1.8 1.8a3.5 3.5 0 0 1-5-5L5.5 8.5"/><path d="M14.5 9.5l1.8-1.8a3.5 3.5 0 0 1 5 5l-2.8 2.8"/><path d="M8 3v2.5M3 8h2.5M16 21v-2.5M21 16h-2.5"/></svg>';
   const doroBL = window.doroBL = { data: null, win: null, tok: '', timer: 0, fixPend: null, fixTimer: 0, fixTick: 0, sel: null };
   try { const sv = JSON.parse(localStorage.getItem(BLK) || 'null'); if (sv && sv.nikkes) doroBL.data = sv; } catch (e) { /* 저장된 정보 없음 */ }
+  const PFP_K = 'dorosync-pfp';
+  /* 프로필 니케: 고른 니케, 없으면 전투력 1위 */
+  const blPfp = () => {
+    const n = (doroBL.data && doroBL.data.nikkes) || []; if (!n.length) return null;
+    let c = ''; try { c = localStorage.getItem(PFP_K) || ''; } catch (e) { /* 무시 */ }
+    return n.find((x) => x.code === c) || n.slice().sort((a, b) => b.combat - a.combat)[0];
+  };
   const blNick = () => {
     const b = $('#btn-bl'); if (!b) return; const t = b.querySelector('.bltx');
     const nm = (doroBL.data && doroBL.data.me && doroBL.data.me.role) || '';
     if (t) { t.textContent = nm || 'BlaBla연동'; t.hidden = true; }
     b.classList.toggle('has-nick', !!nm);
+    { const pf = nm ? blPfp() : null; let im = b.querySelector('img.bl-pfp');
+      if (pf) { if (!im) { im = document.createElement('img'); im.className = 'bl-pfp'; im.alt = ''; im.onerror = () => { im.remove(); b.classList.remove('has-pfp'); }; b.prepend(im); } im.src = BL_IMG(pf.code); b.classList.add('has-pfp'); }
+      else { if (im) im.remove(); b.classList.remove('has-pfp'); } }
     b.title = nm ? nm + ' · BlaBla 연동 정보 (눌러서 다시 연동)' : '블라블라링크에서 내 정보 불러오기';
     b.setAttribute('aria-label', nm ? 'BlaBla연동: ' + nm : 'BlaBla연동');
   };
@@ -2733,12 +2743,13 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
       return '<tr' + (pk.best && pk.best.k === x.k ? ' class="me-pick"' : '') + '><td>' + (pk.best && pk.best.k === x.k ? '✓ ' : '') + esc(lab) + '</td><td>' + (x.c.power ? fmt(x.c.power) : '-') + '</td><td>' + (x.c.lv || '-') + '</td><td>' + (x.row ? fmt(x.row[4]) : '-') + '</td><td>' + blDate(x.c.clearedAt) + '</td></tr>';
     }).join('');
     const kp = (l, v, s) => '<div class="kpi"><div class="l">' + l + '</div><div class="v num">' + v + '</div>' + (s ? '<div class="s">' + s + '</div>' : '') + '</div>';
-    let html = '<div class="card"><div class="row-ctl sp"><h2 class="inline">' + esc(m.role || '전초기지') + '</h2><button class="ghost sm icb" id="me-apply" type="button" title="싱크로 탭에 다시 적용" aria-label="싱크로 탭에 다시 적용"><svg class="icb-i" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2.5" width="14" height="19" rx="2.5"/><rect x="8" y="5.5" width="8" height="3.5" rx=".8"/><path d="M8.5 13h.01M12 13h.01M15.5 13h.01M8.5 16.5h.01M12 16.5h.01M15.5 16.5h.01"/></svg></button></div>' +
+    const pf = blPfp(), cb = pk.best || (pk.cand || []).find((x) => x.c && x.c.chapter != null) || null;
+    let html = '<div class="card"><div class="row-ctl sp"><h2 class="inline me-who"><button type="button" class="me-pfp" id="me-pfp" title="프로필 니케 바꾸기" aria-label="프로필 니케 바꾸기" aria-expanded="' + !!renderMe.pick + '">' + (pf ? '<img src="' + BL_IMG(pf.code) + '" alt="" onerror="this.remove()">' : '') + '</button>' + esc(m.role || '전초기지') + '</h2><button class="ghost sm icb" id="me-apply" type="button" title="싱크로 탭에 다시 적용" aria-label="싱크로 탭에 다시 적용"><svg class="icb-i" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2.5" width="14" height="19" rx="2.5"/><rect x="8" y="5.5" width="8" height="3.5" rx=".8"/><path d="M8.5 13h.01M12 13h.01M15.5 13h.01M8.5 16.5h.01M12 16.5h.01M15.5 16.5h.01"/></svg></button></div>' +
       '<div class="mekpis">' + kp('현재 싱크로', fmt(m.synchro || 0)) + kp('전초기지 레벨', fmt(m.outpost || 0)) + kp('1군 전투력', fmt(m.top5 || 0), '전투력 상위 5명 합산') +
-      kp('클리어 투력', pk.best ? fmt(pk.best.c.power) : '-', pk.best ? '클리어 당시 Lv ' + pk.best.c.lv : '') + '</div>' +
+      kp('클리어 투력', cb && cb.c.power ? fmt(cb.c.power) : '-', cb ? esc(BL_MODE[cb.k] + ' ' + (cb.row ? cb.row[2] : cb.c.chapter + '챕터 보스')) + (cb.c.clearedAt ? ' · ' + blDate(cb.c.clearedAt) : '') : '') + '</div>' +
+      (renderMe.pick ? '<div class="pfp-pick" role="listbox" aria-label="프로필 니케 선택">' + d.nikkes.slice().sort((x, y) => y.combat - x.combat).map((n) => '<button type="button" role="option" data-pfp="' + n.code + '" class="' + (pf && pf.code === n.code ? 'on' : '') + '" title="' + esc(BL_NM(n)) + '" aria-selected="' + !!(pf && pf.code === n.code) + '"><img src="' + BL_IMG(n.code) + '" alt="' + esc(BL_NM(n)) + '" loading="lazy" onerror="this.parentNode.remove()"></button>').join('') + '</div>' : '') +
       '<p class="muted" id="me-fixnote"></p>' +
-      (man ? '<p class="note me-mannote">프로필 URL 연동은 클리어 당시 덱 정보를 가져올 수 없습니다. 마지막으로 클리어한 보스는 진행도로 자동 계산했으니, <b>클리어 투력·니케 Lv·클리어일</b>을 직접 입력해 주십시오. 입력하면 보스 보정에 바로 반영됩니다.</p>' : '') +
-      '<div class="tscroll"><table class="tbl compact"><thead><tr><th>최근 클리어 보스</th><th>클리어 투력</th><th>니케 Lv</th><th>보스 판정 투력</th><th>클리어일</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+      (man ? '<p class="note me-mannote">프로필 URL 연동은 클리어 당시 덱 정보를 가져올 수 없습니다. 최근에 잡은 보스는 <button type="button" class="linkbtn" id="me-fixgo">[작전날짜] 탭의 \'예측이 빗나갔나요?\'</button>에 기입해 주십시오.</p>' : '') +
       '</div>';
     const only = !($('#me-oc') && !$('#me-oc').checked);
     const list = d.nikkes.filter((n) => !only || BLP.some(([p]) => (n.parts[p] || []).some((v) => v > 0))).sort((a, b) => b.combat - a.combat);
@@ -2747,6 +2758,9 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     root.innerHTML = html;
     { const iv = $('#me-inv'), nk = $('#me-nk'), pg = $('#me-prog'); if (iv && nk) nk.before(iv); if (iv && pg) iv.before(pg); }
     $('#me-apply').addEventListener('click', () => { blApplyUser(); toast('싱크로 탭에 적용했습니다.'); });
+    $('#me-pfp').addEventListener('click', () => { renderMe.pick = !renderMe.pick; renderMe(); });
+    root.querySelectorAll('[data-pfp]').forEach((b) => b.addEventListener('click', () => { try { localStorage.setItem(PFP_K, b.dataset.pfp); } catch (e) { /* 무시 */ } renderMe.pick = false; blNick(); renderMe(); }));
+    { const g = $('#me-fixgo'); if (g) g.addEventListener('click', () => { const tb = document.querySelector('#tabs button[data-tab="boss"]'); if (tb) tb.click(); setTimeout(() => { const f = $('#btn-boss-fix'); if (f && f.getAttribute('aria-expanded') !== 'true') f.click(); if (f) f.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 150); }); }
     $('#me-oc').addEventListener('change', renderMe);
     root.querySelectorAll('.me-in').forEach((el) => el.addEventListener('change', () => {
       const c = d.clear && d.clear[el.dataset.mk]; if (!c) return;
@@ -2938,6 +2952,17 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
     if (pts.length > 160) { const k = (pts.length - 1) / 159, o = []; for (let i = 0; i < 160; i++) o.push(pts[Math.round(i * k)]); return o; } /* 저장 용량 절약 */
     return pts;
   }
+  /* 구매 내역: [이름, 주기, 고른 재화, 횟수, 총액] — 월정액·월간·주간·일일 순 */
+  const PER_ORD = ['월정액', '월간', '주간', '일일', '기간', '1회'];
+  function buysOf(m, tr, inPk) {
+    const out = [], cnt = (m.Pk || []).map(() => 0);
+    (tr.rows || []).forEach((r) => (r.flags || []).forEach((f, j) => { cnt[j] += f; }));
+    (m.Pk || []).forEach((p, j) => { if (cnt[j] > 0) out.push([p.name, p.per, (inPk && inPk[j] && inPk[j].sel) || '', cnt[j], (p.price || 0) * cnt[j]]); });
+    (m.Oth || []).forEach((o, i) => { const c = (tr.ocnt || [])[i] || 0; if (c > 0) out.push([o.name, o.per, '', c, (o.price || 0) * c]); });
+    (m.Pop || []).forEach((o, i) => { const c = (tr.pcnt || [])[i] || 0; if (c > 0) { const pp = POP.find((x) => x.k === o.k); out.push([(pp && pp.name) || '팝업 패키지', '팝업', '', c, (o.price || 0) * c]); } });
+    const ord = (x) => { const i = PER_ORD.indexOf(x[1]); return i < 0 ? 9 : i; };
+    return out.sort((a, b) => ord(a) - ord(b) || b[4] - a[4]);
+  }
   /* 플랜 확정 시 패키지 조합 목록의 효율 조합 전부를 '세계선'으로 함께 저장 */
   function worldLines(bill0, days0) {
     const out = [], ok = !!(OPT && OPT.par && OPT.op), gi = !ok ? [] : OPT.par.map((r, i) => i).filter((i) => OPT.good[i]).sort((x, y) => OPT.par[x][0] - OPT.par[y][0]);
@@ -2950,14 +2975,14 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
         const list = OPT.op.decode(r[2]), s2 = JSON.parse(JSON.stringify(st)), use = new Array(s2.pk.length).fill(false);
         list.forEach((x) => { use[x.j] = true; if (x.k >= 0) s2.pk[x.j].sel = RES[x.k]; });
         s2.pk.forEach((p, j) => { p.use = use[j]; });
-        const tr = E.simulate(E.buildModel(s2, D), null, true), rows = tr.rows || [], lt = rows.length ? rows[rows.length - 1].t : 0;
+        const m2 = E.buildModel(s2, D), tr = E.simulate(m2, null, true), rows = tr.rows || [], lt = rows.length ? rows[rows.length - 1].t : 0;
         if ((tr.bill || 0) === bill0 && lt === days0) return; /* 확정한 조합 자체는 제외 */
-        out.push({ id: 'w' + i + '-' + Date.now().toString(36), bill: tr.bill || 0, days: lt, S0: st.S0, pts: trPts(tr, st.S0), pk: list.map((x) => [x.j, x.k]) });
+        out.push({ id: 'w' + i + '-' + Date.now().toString(36), bill: tr.bill || 0, days: lt, S0: st.S0, pts: trPts(tr, st.S0), pk: list.map((x) => [x.j, x.k]), buys: buysOf(m2, tr, s2.pk) });
       } catch (e) { /* 이 조합은 건너뜀 */ }
     });
     if (bill0 > 0 && !out.some((w) => !w.bill)) try { /* 비교용 무과금 세계선 */
       const tr = E.simulate(M, M.Pk.map(() => false), true), rows = tr.rows || [], lt = rows.length ? rows[rows.length - 1].t : 0;
-      if (lt) out.push({ id: 'w0-' + Date.now().toString(36), np: true, bill: 0, days: lt, S0: st.S0, pts: trPts(tr, st.S0), pk: [] });
+      if (lt) out.push({ id: 'w0-' + Date.now().toString(36), np: true, bill: 0, days: lt, S0: st.S0, pts: trPts(tr, st.S0), pk: [], buys: [] });
     } catch (e) { /* 무시 */ }
     return out.sort((x, y) => y.bill - x.bill);
   }
@@ -2971,7 +2996,8 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
     a.forEach((p) => { p.ref = false; });
     const n = a.reduce((m, p) => Math.max(m, p.n || 0), 0) + 1;
     const alts = worldLines(TR.bill || 0, last ? last.t : 0);
-    a.push({ v: 3, id: 'p' + Date.now(), n, start: st.start, S0: st.S0, T: st.T, at: Date.now(), bill: TR.bill || 0, days: last ? last.t : 0, pts, alts, hidden: false, ref: true });
+    let buys = []; try { buys = buysOf(M, TR, st.pk); } catch (e) { /* 무시 */ }
+    a.push({ v: 3, id: 'p' + Date.now(), n, start: st.start, S0: st.S0, T: st.T, at: Date.now(), bill: TR.bill || 0, days: last ? last.t : 0, pts, alts, buys, hidden: false, ref: true });
     cmtTip(false, true);
     if (plansSet(a)) {
       toast(plName(a[a.length - 1]) + '을(를) 확정해 기준 플랜으로 정했습니다.', 3500); renderProg();
@@ -3097,7 +3123,24 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   const EYE = (off) => off
     ? '<svg class="icb-i" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>'
     : '<svg class="icb-i" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 5.1A10 10 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4M6.6 6.6A17 17 0 0 0 2 12s3.6 7 10 7a10 10 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
-  const NP_COL = '#9aa0aa', wlCol = (p) => 'color-mix(in srgb, ' + plCol(p) + ' 38%, transparent)';
+  const GIFT = '<svg class="icb-i" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5C10 3 12 8 12 8s2-5 4.5-5a2.5 2.5 0 0 1 0 5"/></svg>';
+  const giftBtn = (key) => '<button type="button" class="ghost sm icb pl-gift' + (renderProg.openBuy === key ? ' on' : '') + '" data-pbuy="' + key + '" title="구매 내역" aria-label="구매 내역" aria-expanded="' + (renderProg.openBuy === key) + '">' + GIFT + '</button>';
+  /* 구매 내역 펼침: 월간→주간→일일 세로 목록 */
+  function buysHtml(key, o) {
+    if (renderProg.openBuy !== key) return '';
+    const b = o.buys;
+    if (!b) return '<div class="pl-buys"><p class="muted sm">이 플랜은 구매 내역이 저장되기 전에 확정했습니다. 다시 확정하면 함께 저장됩니다.</p></div>';
+    if (!b.length) return '<div class="pl-buys"><p class="muted sm">구매 없음 · 매일 들어오는 재화만으로 진행합니다.</p></div>';
+    let h = '<div class="pl-buys"><ol>', last = null;
+    b.forEach((x) => {
+      const per = x[1] === '일일' ? '일간' : x[1];
+      if (per !== last) { h += '<li class="pb-h">' + esc(per) + '</li>'; last = per; }
+      const nm = String(x[0]).replace(/^\((월정액|기간|팝업)\)\s*/, '').replace(/^(일일|주간|월간)\s*/, '');
+      h += '<li><span class="pb-n">' + esc(nm) + (x[2] ? ' <em class="pb-r">' + esc(x[2]) + '</em>' : '') + '</span><span class="pb-c">' + x[3] + '회</span><b>' + won(x[4]) + '</b></li>';
+    });
+    return h + '</ol><p class="pb-sum">합계 <b>' + won(b.reduce((t, x) => t + x[4], 0)) + '</b></p></div>';
+  }
+  const ACT_COL = '#16a34a', NP_COL = '#9aa0aa', wlCol = (p) => 'color-mix(in srgb, ' + plCol(p) + ' 38%, transparent)';
   const wIsNp = (w) => !!(w.np || !w.bill);
   /* 세계선: 플랜 확정 때 함께 저장한 다른 효율 조합들 (비싼 순) */
   function altsHtml(p) {
@@ -3105,9 +3148,9 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
     const dOf = (n) => { const t = ymdMs(p.start); return isNaN(t) ? '' : ymd(t + (n - 1) * DAY + new Date().getTimezoneOffset() * 60000); };
     return '<details class="pl-alts"' + (renderProg.openAlt === p.id ? ' open' : '') + ' data-palt="' + p.id + '"><summary>과금별 세계선 ' + a.length + '개</summary><ul>' +
       a.map((w) => '<li class="' + (w.hidden ? 'hid' : '') + '"><i class="pl-sw" style="background:' + (wIsNp(w) ? NP_COL : wlCol(p)) + '"></i><b>' + (wIsNp(w) ? '무과금' : won(w.bill)) + '</b><span class="muted sm">' + w.days + '일 · ' + dOf(w.days) + ' 도달</span>' +
-        '<button type="button" class="ghost sm" data-wapp="' + p.id + '|' + w.id + '" title="이 세계선을 새 플랜으로 만들어 기준으로 정합니다">적용</button>' +
+        giftBtn(p.id + '|' + w.id) + '<button type="button" class="ghost sm" data-wapp="' + p.id + '|' + w.id + '" title="이 세계선을 새 플랜으로 만들어 기준으로 정합니다">적용</button>' +
         '<button type="button" class="ghost sm icb" data-whide="' + p.id + '|' + w.id + '" title="' + (w.hidden ? '다시 보이기' : '숨기기') + '" aria-label="' + (w.hidden ? '다시 보이기' : '숨기기') + '">' + EYE(w.hidden) + '</button>' +
-        '<button type="button" class="ghost sm icb pl-del" data-wdel="' + p.id + '|' + w.id + '" title="삭제" aria-label="세계선 삭제">' + TRASH + '</button></li>').join('') + '</ul></details>';
+        '<button type="button" class="ghost sm icb pl-del" data-wdel="' + p.id + '|' + w.id + '" title="삭제" aria-label="세계선 삭제">' + TRASH + '</button>' + buysHtml(p.id + '|' + w.id, w) + '</li>').join('') + '</ul></details>';
   }
   function renderProg() {
     let box = $('#me-prog');
@@ -3144,13 +3187,18 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
       const pp = fit(p.pts, off(p), p.days);
       if (pp.length) series.push(p === ref ? { name: plName(p) + ' (기준)', color: plCol(p), w: 2.4, pts: pp } : { name: plName(p), color: p.bill ? plCol(p) : NP_COL, w: 1.6, dash: '5 4', pts: pp });
     });
-    if (act.length) series.push({ name: '실제 (BlaBla 기록)', color: 'var(--ink)', dots: true, r: act.length > 40 ? 0 : act.length > 14 ? 2.2 : 3, w: 1.8, smooth: true, pts: act.length === 1 ? act.concat([[act[0][0] + 0.001, act[0][1]]]) : act });
+    if (act.length) { const ap = act.length === 1 ? act.concat([[act[0][0] + 0.001, act[0][1]]]) : act; series.push({ name: '실제 (BlaBla 기록)', color: ACT_COL, dots: true, r: act.length > 40 ? 0 : act.length > 14 ? 2.2 : 3, w: 1.8, smooth: true, sel: act.length - 1, selColor: '#22e070', selR: 5.5, selArrow: true, pts: ap }); }
     if (ref && act.length) {
       const la = act[act.length - 1], lt = la[0] - off(ref), exp = planAt(ref, lt), dl = la[1] - exp, pd = planDayOf(ref, la[1]), dd = pd == null ? null : pd - lt;
       const cls = dl > 0 ? 'ok' : dl < 0 ? 'bad' : '';
-      html += '<div class="prog-sum"><div class="kpi"><small>최근 기록 (' + h[h.length - 1].d + ')</small><b>Lv ' + la[1] + '</b><span>' + plName(ref) + ' 예상 Lv ' + exp + (lt >= 0 ? ' · ' + lt + '일차' : ' · 시작 전') + '</span></div>' +
-        '<div class="kpi ' + cls + '"><small>기준 플랜 대비</small><b>' + (dl === 0 ? '예정대로' : (dl > 0 ? '+' : '') + dl + ' Lv') + '</b><span>' + (dd == null ? '목표를 넘어섰습니다' : dd === 0 ? '일정과 같습니다' : Math.abs(dd) + '일 ' + (dd > 0 ? '빠름' : '늦음')) + '</span></div>' +
-        '<div class="kpi"><small>기준 플랜 · ' + plName(ref) + '</small><b>' + ref.S0 + ' → ' + ref.T + '</b><span>' + ref.start + ' 시작 · ' + ref.days + '일 · ' + won(ref.bill) + '</span></div></div>';
+      const rs = ymdMs(ref.start), dAt = (n) => ymd(rs + (n - 1) * DAY + new Date().getTimezoneOffset() * 60000);
+      const tNow = Math.max(0, Math.round((ymdMs(ymd(Date.now())) - rs) / DAY) + 1), span = Math.max(1, ref.T - ref.S0);
+      const pLv = planAt(ref, Math.min(tNow, ref.days)), pPct = Math.max(0, Math.min(100, (pLv - ref.S0) / span * 100)), aPct = Math.max(0, Math.min(100, (la[1] - ref.S0) / span * 100));
+      const bar = (cls2, lab, lv, pct, sub) => '<div class="pbar ' + cls2 + '"><div class="pbar-l"><b>' + lab + '</b><span>Lv ' + lv + ' · ' + sub + '</span><em>' + pct.toFixed(1) + '%</em></div><div class="pbar-t"><div class="pbar-f" style="width:' + pct.toFixed(2) + '%"><i class="pbar-a"></i></div></div></div>';
+      html += '<div class="prog-sum"><div class="pbars"><div class="pbar-ends"><span><b>' + ref.S0 + '</b> ' + ref.start.slice(2).replace(/-/g, '.') + '</span><span class="pbar-arr" aria-hidden="true"><u></u><u></u><u></u></span><span><b>' + ref.T + '</b> ' + dAt(ref.days).slice(2).replace(/-/g, '.') + '</span></div>' +
+        bar('pl', '플랜', pLv, pPct, (tNow > 0 ? Math.min(tNow, ref.days) + '일차' : '시작 전')) + bar('ac', '실제', la[1], aPct, h[h.length - 1].d.slice(5).replace('-', '/') + ' 기록') + '</div>' +
+        '<div class="kpi ' + cls + '"><small>기준 플랜 대비</small><b>' + (dl === 0 ? '예정대로' : (dl > 0 ? '+' : '') + dl + ' Lv') + '</b><span>' + (dd == null ? '목표를 넘어섰습니다' : dd === 0 ? '일정과 같습니다' : Math.abs(dd) + '일 ' + (dd > 0 ? '빠름' : '늦음')) + '</span><span class="muted">예상 Lv ' + exp + (lt >= 0 ? ' · ' + lt + '일차' : ' · 시작 전') + '</span></div>' +
+        '<div class="prog-boost">' + boostHtml(null, { S0: la[1], find: (lv) => { const q = ref.pts.find((x) => x[1] >= lv); return q ? { t: Math.max(1, q[0]), d: dAt(Math.max(1, q[0])) } : null; } }) + '</div></div>';
     } else if (all.length && !act.length) html += '<p class="muted sm">플랜을 확정했습니다. BlaBla 연동을 하면 실제 싱크로 레벨이 기록되어 예상과 비교됩니다.</p>';
     else if (!all.length) html += '<p class="muted sm">[싱크로] 탭 결과의 <b>플랜 확정</b>(깃발 버튼)을 누르면 예상 그래프와 비교할 수 있어요. 과금 계획이 바뀌면 다시 확정해 새 플랜을 추가하면 됩니다.</p>';
     if (ref && act.length) html += '<div class="prog-seg"><button type="button" data-pz="0" class="' + (zoom ? 'on' : '') + '">진행 구간</button><button type="button" data-pz="1" class="' + (zoom ? '' : 'on') + '">전체 기간</button></div>';
@@ -3159,11 +3207,12 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
     if (all.length) {
       const row = (p) => '<li class="' + (p.hidden ? 'hid' : '') + '"><i class="pl-sw" style="background:' + (p.bill || p === ref ? plCol(p) : NP_COL) + '"></i><b>' + plName(p) + '</b><span class="muted sm">' + p.start + ' 시작 · ' + p.S0 + '→' + p.T + ' · ' + p.days + '일 · ' + won(p.bill) + '</span>' +
         (p.hidden ? '' : p === ref ? '<span class="pl-ref">기준</span>' : '<button type="button" class="ghost sm" data-pref="' + p.id + '">기준으로</button>') +
+        giftBtn(p.id) +
         '<button type="button" class="ghost sm icb" data-pren="' + p.id + '" title="이름 바꾸기" aria-label="이름 바꾸기"><svg class="icb-i" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>' +
         '<button type="button" class="ghost sm icb" data-phide="' + p.id + '" title="' + (p.hidden ? '다시 보이기' : '숨기기') + '" aria-label="' + (p.hidden ? '다시 보이기' : '숨기기') + '">' + (p.hidden
           ? '<svg class="icb-i" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>'
           : '<svg class="icb-i" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 5.1A10 10 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4M6.6 6.6A17 17 0 0 0 2 12s3.6 7 10 7a10 10 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>') + '</button>' +
-        '<button type="button" class="ghost sm icb pl-del" data-pdel="' + p.id + '" title="영구 삭제" aria-label="영구 삭제">' + TRASH + '</button>' + altsHtml(p) + '</li>';
+        '<button type="button" class="ghost sm icb pl-del" data-pdel="' + p.id + '" title="영구 삭제" aria-label="영구 삭제">' + TRASH + '</button>' + buysHtml(p.id, p) + altsHtml(p) + '</li>';
       const shown = all.filter((p) => !p.hidden).slice().reverse(), hid = all.filter((p) => p.hidden).slice().reverse();
       html += '<ul class="pl-list">' + shown.map(row).join('') + '</ul>' + (hid.length ? '<details class="pl-hid"><summary>숨긴 플랜 ' + hid.length + '개</summary><ul class="pl-list">' + hid.map(row).join('') + '</ul></details>' : '');
     }
@@ -3183,6 +3232,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
       plansSet(a); renderProg();
     }));
     box.querySelectorAll('[data-palt]').forEach((d) => d.addEventListener('toggle', () => { if (d.open) renderProg.openAlt = d.dataset.palt; else if (renderProg.openAlt === d.dataset.palt) renderProg.openAlt = null; }));
+    box.querySelectorAll('[data-pbuy]').forEach((b) => b.addEventListener('click', () => { const k = b.dataset.pbuy; renderProg.openBuy = renderProg.openBuy === k ? null : k; if (k.includes('|')) renderProg.openAlt = k.split('|')[0]; renderProg(); }));
     box.querySelectorAll('[data-whide]').forEach((b) => b.addEventListener('click', () => {
       const [pid, wid] = b.dataset.whide.split('|'), a = plansGet(), p = a.find((q) => q.id === pid), w = p && (p.alts || []).find((x) => x.id === wid); if (!w) return;
       w.hidden = !w.hidden; renderProg.openAlt = pid; plansSet(a); renderProg();
@@ -3197,7 +3247,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
       const w = p.alts.find((x) => x.id === wid); if (!w) return;
       a.forEach((q) => { q.ref = false; });
       const n = a.reduce((m, q) => Math.max(m, q.n || 0), 0) + 1;
-      a.push({ v: 3, id: 'p' + Date.now(), n, label: (plName(p) + ' · ' + (w.bill ? won(w.bill) : '무과금')).slice(0, 16), start: p.start, S0: w.S0 || p.S0, T: p.T, at: Date.now(), bill: w.bill, days: w.days, pts: w.pts, pk: w.pk, alts: [], hidden: false, ref: true });
+      a.push({ v: 3, id: 'p' + Date.now(), n, label: (plName(p) + ' · ' + (w.bill ? won(w.bill) : '무과금')).slice(0, 16), start: p.start, S0: w.S0 || p.S0, T: p.T, at: Date.now(), bill: w.bill, days: w.days, pts: w.pts, pk: w.pk, buys: w.buys, alts: [], hidden: false, ref: true });
       if (plansSet(a)) { toast('세계선을 새 플랜으로 만들어 기준으로 정했습니다.', 3000); renderProg(); }
     }));
     box.querySelectorAll('[data-phide]').forEach((b) => b.addEventListener('click', () => {
