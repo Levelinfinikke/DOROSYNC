@@ -78,12 +78,13 @@
 .gm-cf,.gm-float.orb{background:center/cover no-repeat,radial-gradient(circle at 50% 30%,#fff6d8,#d9b35a)}
 .gm-orb{position:absolute;inset:5%;border-radius:50%;transform-style:preserve-3d;transition:transform .6s cubic-bezier(.35,1.35,.5,1);animation:gmIn .35s cubic-bezier(.2,1.6,.4,1);cursor:pointer;touch-action:none}
 .gm-orb.flip{transform:rotateX(var(--tx,0deg)) rotateY(calc(180deg + var(--ty,0deg)));animation:none}
-.gm-orb.sss{transition:transform 2.6s cubic-bezier(.42,0,.4,1);z-index:2}
-.gm-light{position:absolute;inset:-12%;border-radius:50%;pointer-events:none;z-index:0;opacity:0;transition:background .45s,box-shadow .45s}
-.gm-light.gold{background:radial-gradient(circle,rgba(255,246,200,1) 0%,rgba(255,215,90,.9) 30%,rgba(255,180,40,.45) 55%,rgba(255,170,30,0) 72%);box-shadow:0 0 26px 10px rgba(255,205,80,.55)}
-.gm-light.rain{background:radial-gradient(circle,#fff 0%,rgba(255,255,255,.9) 18%,transparent 62%),conic-gradient(#ff5d8f,#ffb84d,#f6f05a,#5ef0a0,#5ab8ff,#b47cff,#ff5d8f);box-shadow:0 0 30px 12px rgba(200,140,255,.6);animation:gmHue 1.2s linear infinite;-webkit-mask:radial-gradient(circle,#000 45%,transparent 72%);mask:radial-gradient(circle,#000 45%,transparent 72%)}
-@keyframes gmHue{to{filter:hue-rotate(360deg)}}
-.gm-orb{z-index:1}
+.gm-orb.sss{transition:none;z-index:2}
+.gm-orb.glow{animation:gmGlowG 1.1s ease-in-out infinite alternate}
+.gm-orb.glow .gm-ce{background:linear-gradient(90deg,#fff3b0,#ffd23f 40%,#fff8d6 60%,#f6b40e)}
+.gm-orb.glow.rain{animation:gmGlowR 1.2s linear infinite}
+.gm-orb.glow.rain .gm-ce{background:linear-gradient(90deg,#ff5d8f,#ffb84d,#f6f05a,#5ef0a0,#5ab8ff,#b47cff)}
+@keyframes gmGlowG{from{filter:drop-shadow(0 0 3px #ffe27a) drop-shadow(0 0 7px rgba(255,200,60,.8))}to{filter:drop-shadow(0 0 6px #fff1b0) drop-shadow(0 0 14px rgba(255,200,60,.95))}}
+@keyframes gmGlowR{0%{filter:drop-shadow(0 0 5px #ff5d8f) drop-shadow(0 0 13px #ffb84d)}25%{filter:drop-shadow(0 0 5px #f6f05a) drop-shadow(0 0 13px #5ef0a0)}50%{filter:drop-shadow(0 0 5px #5ef0a0) drop-shadow(0 0 13px #5ab8ff)}75%{filter:drop-shadow(0 0 5px #5ab8ff) drop-shadow(0 0 13px #b47cff)}100%{filter:drop-shadow(0 0 5px #ff5d8f) drop-shadow(0 0 13px #ffb84d)}}
 .gm-sssp{position:fixed;z-index:9999;pointer-events:none;border-radius:50%;box-shadow:0 0 6px currentColor}
 .gm-cf,.gm-cb{position:absolute;inset:0;border-radius:50%;backface-visibility:hidden;-webkit-backface-visibility:hidden}
 .gm-cf{transform:translateZ(1.2px);box-shadow:0 0 0 2.5px var(--gold),0 3px 8px rgba(0,0,0,.6)}
@@ -357,7 +358,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
       setTimeout(() => { el.remove(); trayAdd(nk, count); if (tbv) { tb.classList.add('pop'); setTimeout(() => tb.classList.remove('pop'), 180); } }, 520 / (S.auto || 1)); }
     /* ---------- 도로칩 ---------- */
     const CHIP_OF = { SSS: 'g', SS: 'g', S: 's' }, CHIP_VAL = { b: 1, s: 5, g: 10 }, CHIP_NM = { r: '무지개 도로칩', g: '골드칩', s: '실버칩', b: '도로칩' };
-    const isSSSn = (nk) => TIERS.boss[nk.n] === 'SSS', chipOf = (nk) => CHIP_OF[TIERS.boss[nk.n]] || 'b', chipE = (en) => { if (!en.ck) en.ck = isSSSn(en.nk) && Math.random() < 0.1 ? 'r' : chipOf(en.nk); return en.ck; } /* SSS: 10% 무지개, 90% 골드 */, chipSvg = (k, px, fx) => (window.doroChipSvg ? window.doroChipSvg(k, px, fx) : '');
+    const isSSSn = (nk) => TIERS.boss[nk.n] === 'SSS', chipOf = (nk) => CHIP_OF[TIERS.boss[nk.n]] || 'b', chipE = (en) => { if (!en.ck) en.ck = isSSSn(en.nk) && Math.random() < 0.05 ? 'r' : chipOf(en.nk); return en.ck; } /* SSS: 5% 무지개, 95% 골드 */, chipSvg = (k, px, fx) => (window.doroChipSvg ? window.doroChipSvg(k, px, fx) : '');
     GM_ALL.push({ S });
     const balEl = $('.gm-chipbal'); let chipPend = 0, chipPendR = 0, chipSeq = 0;
     function uiBal(bump) {
@@ -395,18 +396,21 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
         const an = big.animate([{ transform: 'scale(1)', opacity: 1 }, { transform: 'scale(.82)', opacity: 1, offset: 0.45 }, { transform: 'scale(1.5)', opacity: 0 }], { duration: 300, easing: 'ease-in' }); an.onfinish = () => { big.remove(); launch(); };
       } else launch();
     }
-    /* SSS 초상화 뒤집기: 천천히 뒤집히며 틈새로 금빛이 샘.
-       무지개 도로칩(10%)이면 빛이 무지개로 올라가고, 금색 중 일부(전체의 10%)는 무지개로 올라갔다가 절반 뒤집히기 직전에 금빛으로 내려옴 */
-    function sssFlip(orb, k, well) {
-      const rain = k === 'r', fake = !rain && Math.random() < 1 / 9, T = 2600;
-      orb.classList.add('sss'); setTimeout(() => orb.classList.remove('sss'), T + 200);
-      const lt = document.createElement('div'); lt.className = 'gm-light gold'; well.insertBefore(lt, well.firstChild);
-      lt.animate([{ opacity: 0, transform: 'scale(.6)' }, { opacity: 0.9, transform: 'scale(1)', offset: 0.25 }, { opacity: 1, transform: 'scale(1.25)', offset: 0.5 }, { opacity: 1, transform: 'scale(1.45)', offset: 0.85 }, { opacity: 0, transform: 'scale(1.9)' }], { duration: T + 500, easing: 'ease-in-out', fill: 'forwards' }).onfinish = () => lt.remove();
+    /* SSS 초상화 뒤집기: 천천히 세워 절반 직전(옆면이 보일락 말락)에서 멈추고, 틈새로 금빛이 샘.
+       그 사이 빛이 무지개로 오르면 무지개 도로칩(5%), 무지개로 올랐다가 다시 뒤집히기 직전에 금빛으로 내려오면 골드칩(가짜 연출).
+       무지개 빛이 오르는 경우는 SSS의 20%(진짜 5% + 가짜 15%) */
+    function sssFlip(orb, k) {
+      const rain = k === 'r', fake = !rain && Math.random() < 0.15 / 0.95, tx = orb.style.getPropertyValue('--tx') || '0deg', ty = parseFloat(orb.style.getPropertyValue('--ty')) || 0;
+      const A = 1100, H = 1500, B = 650, T = A + H + B, edge = 'rotateX(' + tx + ') rotateY(80deg)';
+      orb.classList.add('sss', 'glow');
+      const an = orb.animate([{ transform: 'rotateX(0deg) rotateY(0deg)', easing: 'cubic-bezier(.3,0,.25,1)' }, { transform: edge, offset: A / T }, { transform: 'rotateX(' + tx + ') rotateY(83deg)', offset: (A + H) / T, easing: 'cubic-bezier(.5,0,.3,1)' }, { transform: 'rotateX(' + tx + ') rotateY(' + (180 + ty) + 'deg)' }], { duration: T });
+      an.onfinish = () => { orb.classList.add('flip'); orb.classList.remove('sss'); };
       try { snd.flip(); } catch (e) { /* 무시 */ }
-      if (rain || fake) setTimeout(() => { lt.classList.add('rain'); try { snd.chipBurst(false); } catch (e) { /* 무시 */ } }, T * 0.24);
-      if (fake) setTimeout(() => { lt.classList.remove('rain'); try { snd.clunk(); } catch (e) { /* 무시 */ } }, T * 0.44);
-      setTimeout(() => { try { snd.flip(); } catch (e) { /* 무시 */ } }, T * 0.5);
+      if (rain || fake) setTimeout(() => { orb.classList.add('rain'); try { snd.chipBurst(false); } catch (e) { /* 무시 */ } }, A + 300);
+      if (fake) setTimeout(() => { orb.classList.remove('rain'); try { snd.clunk(); } catch (e) { /* 무시 */ } }, A + H - 250);
+      setTimeout(() => { try { snd.flip(); } catch (e) { /* 무시 */ } }, A + H);
       setTimeout(() => {
+        orb.classList.remove('glow', 'rain');
         try { snd.chipBurst(true); snd.chipPop(); } catch (e) { /* 무시 */ }
         const host = document.fullscreenElement || document.body, r = orb.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
         const N = rain ? 34 : 22, cols = rain ? ['#ff5d8f', '#ffb84d', '#f6f05a', '#5ef0a0', '#5ab8ff', '#b47cff'] : ['#fff6c2', '#f9d04a', '#ffe27a', '#fff'];
@@ -473,6 +477,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     window.addEventListener('pointerup', (e) => { if (!fl) return; const f = fl; fl = null; f.el.remove(); S.hl = null; S.pile.forEach((b) => { b.mag = false; });
       if (f.ty === 'cur') { const p = toCv(e); if (p.in) insert(f.k, f.items, p.x, p.y); else { const r = wcv.getBoundingClientRect(), out = e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom; f.items.forEach((it, i) => { it.x = out ? rnd(40, PW - 40) : clamp(e.clientX - r.left, it.r, PW - it.r) + rnd(-8, 8); it.y = out ? -30 - i * 20 : Math.min(e.clientY - r.top, PH - 60) - i * 6; it.vx = it.vy = 0; it.sl = false; it.st = 0; S.pile.push(it); }); wake(S.pile); } }
       else { panEl.querySelectorAll('.over').forEach((x) => x.classList.remove('over')); const w = document.elementFromPoint(e.clientX, e.clientY); if (w && w.closest && w.closest('.gm-tray')) { const dw = w.closest('.gm-well'); trayAdd(f.nk, f.count, dw ? +dw.dataset.i : null, f.ti, f.en && f.en.count === f.count ? f.en : null); if (f.from === 'reveal') endReveal(false); }
+        else if (f.from === 'tray') trayAdd(f.nk, f.count, f.ti, f.ti, f.en ? Object.assign(f.en, { count: f.count }) : null); /* 보관함 SSR은 바구니로 못 돌아감 */
         else if (f.from === 'reveal' && f.count === 1) { /* 개봉 화면에 그대로 둠 */ } else { if (f.from === 'reveal') endReveal(false); const p = toCv(e); orbBody(f.nk, f.count, p.in ? clamp(p.x, BK.x0 + OR, BK.x1 - OR) : CH.x + CH.w / 2, p.in ? clamp(p.y, 500, BK.y1 - OR) : BK.y0 - 40); } } });
     modeEl.addEventListener('click', (e) => { if (e.target.closest('[data-feed]')) { S.sup.pick += 500; S.sup.jw += 50000; S.sup.acc = 1; uiFeed(); return; } const m = e.target.closest('[data-m]'); if (m) { S.hand = !S.hand; uiWal(); } });
     optEl.addEventListener('click', (e) => { const g = e.target.closest('[data-g]'), op = e.target.closest('[data-op]'); if (op) { S.openM = op.dataset.op; uiOpt(); } if (!g) return; const k = g.dataset.g; if (k === 'corp') setMode('tier', false); else if (k === 'boss' || k === 'pvp') setMode('tier', k); else if (k === 'random') { S.mode.black = false; setMode('random', !S.mode.random); } else { const v = !S.mode.black; setMode('random', false); setMode('black', v); } uiTray(); });
@@ -481,7 +486,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     window.addEventListener('pointermove', (e) => { if (!tpd || fl) return; if (Math.hypot(e.clientX - tpd.x, e.clientY - tpd.y) < 7) return; const en = tpd.en, i = S.tray.indexOf(en); tpd = null; if (i < 0) return; S.tray[i] = null; uiTray(); orbDrag(en.nk, e, 'tray', en.count); fl.ti = i; fl.en = en; });
     window.addEventListener('pointercancel', () => { tpd = null; });
     window.addEventListener('pointerup', () => { if (!tpd) return; const en = tpd.en, well = tpd.well; tpd = null; const i = S.tray.indexOf(en), orb = well.querySelector('.gm-orb'); if (i < 0 || !orb) return;
-      if (!en.flip) { en.flip = true; { const a = rnd(0, TAU), m = rnd(2, 4); en.tilt = [Math.round(Math.cos(a) * m), Math.round(Math.sin(a) * m)]; orb.style.setProperty('--tx', en.tilt[0] + 'deg'); orb.style.setProperty('--ty', en.tilt[1] + 'deg'); } orb.classList.remove('merge'); if (isSSSn(en.nk)) sssFlip(orb, chipE(en), well); else snd.flip(); orb.classList.add('flip'); orb.title = CHIP_NM[chipE(en)] + ' · 누르면 잔고로'; }
+      if (!en.flip) { en.flip = true; { const a = rnd(0, TAU), m = rnd(2, 4); en.tilt = [Math.round(Math.cos(a) * m), Math.round(Math.sin(a) * m)]; orb.style.setProperty('--tx', en.tilt[0] + 'deg'); orb.style.setProperty('--ty', en.tilt[1] + 'deg'); } orb.classList.remove('merge'); if (isSSSn(en.nk)) sssFlip(orb, chipE(en)); else { snd.flip(); orb.classList.add('flip'); } orb.title = CHIP_NM[chipE(en)] + ' · 누르면 잔고로'; }
       else { const r = orb.getBoundingClientRect(); S.tray[i] = null; while (S.tray.length && !S.tray[S.tray.length - 1]) S.tray.pop(); uiTray(); chipAbsorb(chipE(en), en.count, r.left + r.width / 2, r.top + r.height / 2, r.width); } });
     root.addEventListener('click', (e) => { const a = e.target.closest('[data-a]'); if (!a) return; const k = a.dataset.a;
       if (k === 'snd') { S.mute = !S.mute; a.classList.toggle('off', S.mute); }
