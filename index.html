@@ -4988,7 +4988,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
       return '<tr' + (pk.best && pk.best.k === x.k ? ' class="me-pick"' : '') + '><td>' + (pk.best && pk.best.k === x.k ? '✓ ' : '') + esc(lab) + '</td><td>' + (x.c.power ? fmt(x.c.power) : '-') + '</td><td>' + (x.c.lv || '-') + '</td><td>' + (x.row ? fmt(x.row[4]) : '-') + '</td><td>' + blDate(x.c.clearedAt) + '</td></tr>';
     }).join('');
     const kp = (l, v, s) => '<div class="kpi"><div class="l">' + l + '</div><div class="v num">' + v + '</div>' + (s ? '<div class="s">' + s + '</div>' : '') + '</div>';
-    let html = '<div class="card"><div class="row-ctl sp"><h2 class="inline">' + esc(m.role || '전초기지') + '</h2><button class="ghost sm icb" id="me-apply" type="button" title="싱크로 탭에 다시 적용" aria-label="싱크로 탭에 다시 적용"><svg class="icb-i" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/><path d="M15 4h4a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-4"/></svg></button></div>' +
+    let html = '<div class="card"><div class="row-ctl sp"><h2 class="inline">' + esc(m.role || '전초기지') + '</h2><button class="ghost sm icb" id="me-apply" type="button" title="싱크로 탭에 다시 적용" aria-label="싱크로 탭에 다시 적용"><svg class="icb-i" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2.5" width="14" height="19" rx="2.5"/><rect x="8" y="5.5" width="8" height="3.5" rx=".8"/><path d="M8.5 13h.01M12 13h.01M15.5 13h.01M8.5 16.5h.01M12 16.5h.01M15.5 16.5h.01"/></svg></button></div>' +
       '<div class="mekpis">' + kp('현재 싱크로', fmt(m.synchro || 0)) + kp('전초기지 레벨', fmt(m.outpost || 0)) + kp('1군 전투력', fmt(m.top5 || 0), '전투력 상위 5명 합산') +
       kp('클리어 투력', pk.best ? fmt(pk.best.c.power) : '-', pk.best ? '클리어 당시 Lv ' + pk.best.c.lv : '') + '</div>' +
       '<p class="muted" id="me-fixnote"></p>' +
@@ -5962,7 +5962,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   const gcRnd = (L) => L[Math.floor(Math.random() * L.length)];
   /* 니케 초상화: BlaBla 연동과 같은 portraits/코드.webp 사용 */
   const nkNorm = (x) => String(x).replace(/[\s:·.()]/g, '');
-  const NK_CODE = (() => { const m = {}; Object.keys(BLN).forEach((k) => { m[nkNorm(BLN[k])] = k; }); Object.assign(m, { [nkNorm('아르카나 : 포츈 메이트')]: '5167', [nkNorm('솔져 E.G.')]: '1013', [nkNorm('솔져 F.A.')]: '1014', [nkNorm('솔져 O.W.')]: '1025', [nkNorm('맥스웰 : 오디너리 미케닉')]: '5178', [nkNorm('브래디')]: '5135', [nkNorm('iDoll 플라워')]: '1017', [nkNorm('iDoll 오션')]: '1018', [nkNorm('iDoll 썬')]: '1023', [nkNorm('사쿠라')]: '1012' }); return m; })();
+  const NK_CODE = (() => { const m = {}; Object.keys(BLN).forEach((k) => { m[nkNorm(BLN[k])] = k; }); Object.assign(m, { [nkNorm('메어리 : 베이 갓데스')]: '5064', [nkNorm('리틀 머메이드')]: '5137', [nkNorm('아르카나 : 포츈 메이트')]: '5167', [nkNorm('솔져 E.G.')]: '1013', [nkNorm('솔져 F.A.')]: '1014', [nkNorm('솔져 O.W.')]: '1025', [nkNorm('맥스웰 : 오디너리 미케닉')]: '5178', [nkNorm('브래디')]: '5135', [nkNorm('iDoll 플라워')]: '1017', [nkNorm('iDoll 오션')]: '1018', [nkNorm('iDoll 썬')]: '1023', [nkNorm('사쿠라')]: '1012' }); return m; })();
   const nkCode = (name) => NK_CODE[nkNorm(GC_AL[name] || name)] || NK_CODE[nkNorm(name)] || '';
   /* 가챠 머신: 독립 모듈(DoroGacha)을 실제 풀·보유 재화와 연결 */
   let gmInst = null; const gmStock = { jw: 0, pick: 0 };
