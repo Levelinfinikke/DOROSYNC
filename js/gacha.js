@@ -76,7 +76,7 @@
 .gm-well.over{box-shadow:inset 0 5px 9px rgba(0,0,0,.85),0 0 0 3px var(--gold)}
 .gm-cf,.gm-float.orb{background:center/cover no-repeat,radial-gradient(circle at 50% 30%,#fff6d8,#d9b35a)}
 .gm-orb{position:absolute;inset:5%;border-radius:50%;transform-style:preserve-3d;transition:transform .6s cubic-bezier(.35,1.35,.5,1);animation:gmIn .35s cubic-bezier(.2,1.6,.4,1);cursor:pointer;touch-action:none}
-.gm-orb.flip{transform:rotateY(180deg);animation:none}
+.gm-orb.flip{transform:rotateY(180deg);animation:none}.gm-orb.flip .gm-ce{opacity:0;transition:opacity .12s .5s}
 .gm-cf,.gm-cb{position:absolute;inset:0;border-radius:50%;backface-visibility:hidden;-webkit-backface-visibility:hidden}
 .gm-cf{transform:translateZ(3.5px);box-shadow:0 0 0 2.5px var(--gold),0 3px 8px rgba(0,0,0,.6)}
 .gm-cb{transform:rotateY(180deg) translateZ(3.5px);display:grid;place-items:center}.gm-cb svg{width:108%;height:108%;flex:none}
@@ -327,7 +327,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     function popStart(L) { if (!L.length) return; const gap = Math.min(0.03, 2.2 / L.length); L.sort((a, b) => a.y - b.y).forEach((b, i) => { if (!b.pop) { b.pop = 1; S.pops.push({ b, t: -i * gap, hop: false }); } }); }
     function shells(x, y, r, a, col, up) { for (let h = 0; h < 2; h++) S.parts.push({ ty: 'shell', x, y, vx: (h ? 1 : -1) * rnd(120, 300), vy: rnd(-520, -300) * (up || 1), a, w: (h ? 1 : -1) * rnd(6, 14), r, col: col[h ? 1 : 0], top: !h }); }
     function popBurst(b) { const i = S.bask.indexOf(b); if (i < 0) return; S.bask.splice(i, 1); wake(S.bask); snd.pop(); const col = COL[look(b)[0]];
-      shells(b.x, b.y, b.r, b.a, col); sparks(b.x, b.y, 5, COL[b.kind][0]); S.parts.push({ ty: 'lab', x: b.x, y: b.y, sx: b.x, sy: b.y, t: 0, val: LABEL[b.kind] }); seqDone(b.res); }
+      shells(b.x, b.y, b.r, b.a, col); sparks(b.x, b.y, 5, COL[b.kind][0]); S.parts.push({ ty: 'lab', x: b.x, y: b.y, sx: b.x, sy: b.y, t: 0, val: LABEL[b.kind] }); capChip(b.x, b.y); seqDone(b.res); }
     function sparks(x, y, n, col, v0, g) { for (let k = 0; k < n; k++) { const a = rnd(0, TAU), v = rnd(80, v0 || 320); S.parts.push({ ty: 'spark', x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, g: g == null ? 220 : g, life: 0, max: rnd(0.3, 0.9), col: typeof col === 'function' ? col() : (col || '#ffe08a'), size: rnd(2, 5) }); } }
     /* 개봉 연출: 단계(0 파랑 → 1 보라 → 2 금 → 3 특별)가 진행도에 따라 고지됨. 가짜 승급(fake) 후 실패(fail)도 섞임 */
     function startReveal(b) { const i = S.bask.indexOf(b); if (i < 0) return; S.bask.splice(i, 1); wake(S.bask);
@@ -348,17 +348,17 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
       let i = S.tray.findIndex((e) => e.nk.n === nk.n); if (i < 0) i = S.tray.length; const well = panEl.children[i] || panEl.lastElementChild; let w = well.getBoundingClientRect(); const tb = leftEl.querySelector('.gm-trbtn'), tbv = tb && tb.offsetParent && !$('.gm').classList.contains('topen'); if (tbv) w = tb.getBoundingClientRect(); else if (!w.width) w = cv.getBoundingClientRect(); void el.offsetWidth; el.style.left = (w.left + w.width / 2) + 'px'; el.style.top = (w.top + w.height / 2) + 'px'; el.style.transform = 'translate(-50%,-50%) scale(' + (w.width / 78) + ')';
       setTimeout(() => { el.remove(); trayAdd(nk, count); if (tbv) { tb.classList.add('pop'); setTimeout(() => tb.classList.remove('pop'), 180); } }, 520 / (S.auto || 1)); }
     /* ---------- 도로칩 ---------- */
-    const CHIP_OF = { SSS: 'r', SS: 'g', S: 's' }, CHIP_VAL = { b: 1, s: 10, g: 100 }, CHIP_NM = { r: '무지개 도로칩', g: '골드칩', s: '실버칩', b: '도로칩' };
+    const CHIP_OF = { SSS: 'r', SS: 'g', S: 's' }, CHIP_VAL = { b: 1, s: 5, g: 10 }, CHIP_NM = { r: '무지개 도로칩', g: '골드칩', s: '실버칩', b: '도로칩' };
     const chipOf = (nk) => CHIP_OF[TIERS.boss[nk.n]] || 'b', chipSvg = (k, px, fx) => (window.doroChipSvg ? window.doroChipSvg(k, px, fx) : '');
     const balEl = $('.gm-chipbal'); let chipPend = 0, chipPendR = 0, chipSeq = 0;
     function uiBal(bump) {
-      if (!balEl) return; const w = window.doroChips, o = w ? w.get() : { b: 0, s: 0, g: 0, r: 0 }, tot = o.b + o.s * 10 + o.g * 100;
+      if (!balEl) return; const w = window.doroChips, o = w ? w.get() : { b: 0, s: 0, g: 0, r: 0 }, tot = o.b + o.s * 5 + o.g * 10;
       balEl.querySelector('.gm-cbn').textContent = Math.max(0, tot - chipPend).toLocaleString('ko-KR');
       const rr = balEl.querySelector('.gm-cbr'), rv = Math.max(0, o.r - chipPendR); rr.hidden = !(o.r > 0 || chipPendR > 0); rr.querySelector('b').textContent = rv.toLocaleString('ko-KR');
       if (bump) { const t = bump === 'r' ? rr : balEl; t.classList.remove('bump'); void t.offsetWidth; t.classList.add('bump'); }
     }
     window.addEventListener('dorochips', () => uiBal()); uiBal();
-    /* 칩이 잔고 숫자로 빨려 들어감. 실버칩은 도로칩 10개, 골드칩은 100개로 쪼개진 뒤 들어감 */
+    /* 칩이 잔고 숫자로 빨려 들어감. 실버칩은 도로칩 5개, 골드칩은 10개로 쪼개진 뒤 들어감 */
     function chipAbsorb(k, n, cx, cy, size) {
       if (!window.doroChips) { say('도로칩을 불러오지 못했습니다.'); return; }
       n = n || 1; const host = document.fullscreenElement || document.body, isR = k === 'r', unit = CHIP_VAL[k] || 0, total = isR ? n : unit * n;
@@ -366,14 +366,14 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
       window.doroChips.add({ [k]: n });
       let br = balEl ? (isR ? balEl.querySelector('.gm-cbr') : balEl).getBoundingClientRect() : null; if (!br || !br.width) { if (isR && balEl) br = balEl.getBoundingClientRect(); if (!br || !br.width) { const r0 = root.getBoundingClientRect(); br = { left: r0.right - 60, top: r0.top + 10, width: 20, height: 20 }; } }
       const tx = br.left + Math.min(14, br.width / 2), ty = br.top + br.height / 2;
-      const P = Math.min(total, isR ? 12 : 120), per = total / P, split = !isR && unit > 1, ps = split ? Math.max(13, size * (unit >= 100 ? 0.34 : 0.5)) : size, rad = split ? (unit >= 100 ? Math.max(90, size * 2.2) : Math.max(54, size * 1.3)) * Math.min(1.6, 1 + (n - 1) * 0.15) : 0;
+      const P = Math.min(total, isR ? 12 : 60), per = total / P, split = !isR && unit > 1, ps = split ? Math.max(14, size * (unit >= 10 ? 0.42 : 0.5)) : size, rad = split ? (unit >= 10 ? Math.max(70, size * 1.7) : Math.max(50, size * 1.2)) * Math.min(1.6, 1 + (n - 1) * 0.15) : 0;
       const seq = ++chipSeq; let arrived = 0, acc = 0;
       const launch = () => {
-        if (split) { try { snd.chipBurst(unit >= 100); } catch (e) { /* 무시 */ } }
+        if (split) { try { snd.chipBurst(unit >= 10); } catch (e) { /* 무시 */ } }
         for (let i = 0; i < P; i++) {
           const d = document.createElement('div'); d.className = 'gm-chipfly'; d.innerHTML = chipSvg(isR ? 'r' : 'b', Math.round(ps), isR); d.style.left = (cx - ps / 2) + 'px'; d.style.top = (cy - ps / 2) + 'px'; host.appendChild(d);
           const a = rnd(0, TAU), rr = split ? rad * Math.sqrt(rnd(0.08, 1)) : 0, sx = Math.cos(a) * rr, sy = Math.sin(a) * rr * 0.85, ex = tx - cx, ey = ty - cy;
-          const stag = split ? (unit >= 100 ? i * 9 : i * 34) : i * 60, T = split ? 980 : 520;
+          const stag = split ? (unit >= 10 ? i * 22 : i * 40) : i * 60, T = split ? 980 : 520;
           const kf = split
             ? [{ transform: 'translate(0,0) scale(.3) rotate(0deg)', opacity: 1, easing: 'cubic-bezier(.1,.8,.2,1)' }, { transform: 'translate(' + sx + 'px,' + sy + 'px) scale(1) rotate(' + rnd(-90, 90) + 'deg)', opacity: 1, offset: 0.36 }, { transform: 'translate(' + sx + 'px,' + (sy + 4) + 'px) scale(1) rotate(0deg)', opacity: 1, offset: 0.5, easing: 'cubic-bezier(.6,0,.9,.4)' }, { transform: 'translate(' + ex + 'px,' + ey + 'px) scale(.35) rotate(180deg)', opacity: 0.9 }]
             : [{ transform: 'translate(0,0) scale(1)', opacity: 1, easing: 'cubic-bezier(.3,-0.4,.8,.5)' }, { transform: 'translate(' + ex + 'px,' + ey + 'px) scale(.3) rotate(200deg)', opacity: 0.9 }];
@@ -387,16 +387,18 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
       } else launch();
     }
     /* 캔버스 위의 도로칩(바디라벨 10k 보상) */
-    function chipSprite(k) { const key = 'chip' + k; if (spr[key]) return spr[key]; const q = 2, R = OR + 3, c = mkc(R * 2 * q, R * 2 * q), x = c.getContext('2d'), u = OR / 72, col = k === 's' ? ['#c3c9d2', '#6f7782'] : ['#f0a020', '#a86405']; x.scale(q, q); x.translate(R, R); x.scale(u, u);
-      x.fillStyle = '#d5d8dd'; x.strokeStyle = '#8b9097'; x.lineWidth = 3; x.beginPath(); x.arc(0, 0, 72, 0, TAU); x.fill(); x.stroke(); x.fillStyle = '#3b3e44'; x.beginPath(); x.arc(0, 0, 61, 0, TAU); x.fill();
+    function chipSprite(k) { const key = 'chip' + k; if (spr[key]) return spr[key]; const q = 2, R = OR + 3, c = mkc(R * 2 * q, R * 2 * q), x = c.getContext('2d'), u = OR / 72, col = k === 's' ? ['#c3c9d2', '#6f7782'] : k === 'g' ? ['#f6c431', '#8a6508'] : ['#f0a020', '#a86405']; x.scale(q, q); x.translate(R, R); x.scale(u, u);
+      x.fillStyle = k === 'g' ? '#f3e3a6' : '#d5d8dd'; x.strokeStyle = k === 'g' ? '#a8830f' : '#8b9097'; x.lineWidth = 3; x.beginPath(); x.arc(0, 0, 72, 0, TAU); x.fill(); x.stroke(); x.fillStyle = '#3b3e44'; x.beginPath(); x.arc(0, 0, 61, 0, TAU); x.fill();
       x.strokeStyle = col[0]; x.lineWidth = 11; x.setLineDash([44, 10.45]); x.beginPath(); x.arc(0, 0, 52, 0, TAU); x.stroke(); x.setLineDash([]); x.fillStyle = '#26282c'; x.beginPath(); x.arc(0, 0, 44, 0, TAU); x.fill();
       x.fillStyle = col[0]; for (let i = 0; i < 6; i++) { x.beginPath(); x.arc(40 * Math.sin(i * TAU / 6), -40 * Math.cos(i * TAU / 6), 2.4, 0, TAU); x.fill(); }
       x.fillStyle = col[1]; x.beginPath(); x.arc(0, 0, 34, 0, TAU); x.fill(); x.fillStyle = col[0]; x.beginPath(); x.arc(0, 0, 30, 0, TAU); x.fill(); x.fillStyle = 'rgba(255,255,255,.22)'; x.beginPath(); x.ellipse(-8, -12, 14, 7, -0.5, 0, TAU); x.fill();
       return (spr[key] = { c, R }); }
     function drawChip(c, k, x, y, a) { const sp = chipSprite(k), s = sp.R * 2; c.save(); c.translate(x, y); c.rotate(a || 0); c.drawImage(sp.c, -s / 2, -s / 2, s, s); c.restore(); }
+    /* R·SR 캡슐: 낮은 확률로 도로칩(5%), 더 낮게 실버칩(1.2%), 매우 낮게 골드칩(0.3%) */
+    function capChip(x, y) { const r = Math.random(), k = r < 0.003 ? 'g' : r < 0.015 ? 's' : r < 0.065 ? 'b' : ''; if (!k) return; const b = body('chip', clamp(x, BK.x0 + OR, BK.x1 - OR), clamp(y, BK.y0 + OR, BK.y1 - OR), { chip: k, count: 1 }); b.vx = rnd(-160, 160); b.vy = rnd(-620, -420); b.w = rnd(-9, 9); S.bask.push(b); wake(S.bask); sparks(b.x, b.y, k === 'b' ? 14 : 30, k === 'g' ? '#ffe27a' : k === 's' ? '#e9eef5' : '#ffc45a', 380); try { snd.chipPop(); if (k !== 'b') setTimeout(() => snd.chipPop(), 90); } catch (e) { /* 무시 */ } if (k !== 'b') say((k === 'g' ? '골드칩' : '실버칩') + '이 나왔습니다!'); }
     function chipSpawn() { const b = body('chip', HUDP.x, HUDP.y - 10, { chip: 'b', count: 1 }); b.vx = rnd(-520, -180); b.vy = rnd(-760, -520); b.w = rnd(-9, 9); S.bask.push(b); wake(S.bask); sparks(HUDP.x, HUDP.y, 16, '#ffc45a', 360); try { snd.chipPop(); } catch (e) { /* 무시 */ } }
     function chipTake(b) { const i = S.bask.indexOf(b); if (i < 0) return; S.bask.splice(i, 1); wake(S.bask); const r = cvRect(), sc = r.width / W; chipAbsorb(b.res.chip, b.res.count, r.left + b.x * sc, r.top + b.y * sc, Math.max(22, OR * 2 * sc)); }
-    if (location.hostname === 'localhost') (window.__gms = window.__gms || []).push({ S, root, trayAdd: (n, c) => trayAdd(n, c), P, chipSpawn, addLab: (v) => { S.lab += v; labChips(); uiLab(true); } });
+    if (location.hostname === 'localhost') (window.__gms = window.__gms || []).push({ S, root, trayAdd: (n, c) => trayAdd(n, c), P, chipSpawn, capChip: (x, y) => capChip(x, y), addLab: (v) => { S.lab += v; labChips(); uiLab(true); } });
     function labChips() { let n = 0; while (S.lab >= 10000 && n < 20) { S.lab -= 10000; n++; setTimeout(chipSpawn, (n - 1) * 140); } }
     function trayAdd(nk, count, at) { const e = S.tray.find((x) => x.nk.n === nk.n); if (e) { e.count += count || 1; e.merge = true; snd.merge(); } else { const en = { nk, count: count || 1 }; if (at != null && at >= 0 && at < S.tray.length) S.tray.splice(at, 0, en); else S.tray.push(en); snd.collect(); } uiTray(); }
 
@@ -501,7 +503,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
         R.hb -= dt; if (R.prog > 0.04 && R.hb <= 0) { snd.heart(); R.hb = 0.95 - 0.62 * R.prog; }
         if (R.prog >= (R.method === 'pull' ? 0.97 : 0.995)) revBurst(R);
       } else if (R.ph === 'hit') { if (R.t > 0.11) { R.ph = 'show'; R.t = 0; S.flash = R.T >= 2 ? 1 : 0.5; snd.burst(R.T); seqDone(R.res); if (R.T >= 2) vib(R.pu ? [70, 50, 70, 50, 220] : R.T === 3 ? [70, 40, 140] : [60, 40, 90], true); if (R.kind === 'SSR') { S.gl.push({ at: S.log.length, pu: R.pu, n: R.nk.n }); gDirty = true; } const n = [18, 30, 60, 120][R.T]; sparks(RV.x, RV.y, n, R.T >= 2 ? () => (R.T === 3 ? lvCol(R, 3, 1) : pick(['#fff3b0', '#ffd24d', '#ffffff'])) : LVC[R.T], [380, 480, 650, 900][R.T], 260); shells(RV.x, RV.y, RV.r, 0, COL[R.lk[0]], 1.5);
-          if (R.kind !== 'SSR') S.parts.push({ ty: 'lab', x: RV.x, y: RV.y, sx: RV.x, sy: RV.y, t: -0.55, val: LABEL[R.kind], big: 1 }); else if (R.ovr) setTimeout(() => { if (S.reveal === R) { vib([30, 30, 30, 30, 160], true); snd.zap(); S.flash = 0.6; R.shake = 1; sparks(RV.x, RV.y, 70, '#bff8ff', 900, 0); } }, 420); } }
+          if (R.kind !== 'SSR') { S.parts.push({ ty: 'lab', x: RV.x, y: RV.y, sx: RV.x, sy: RV.y, t: -0.55, val: LABEL[R.kind], big: 1 }); capChip(RV.x, BK.y0 + 30); } else if (R.ovr) setTimeout(() => { if (S.reveal === R) { vib([30, 30, 30, 30, 160], true); snd.zap(); S.flash = 0.6; R.shake = 1; sparks(RV.x, RV.y, 70, '#bff8ff', 900, 0); } }, 420); } }
       else if (R.kind !== 'SSR' && R.t > 1.0) S.reveal = null;
     }
     function autoStep(dt) { // AUTO: 투입 → 레버 → 꺼내기 → 교환·개봉 → 보관 → 리필

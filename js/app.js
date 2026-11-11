@@ -2501,7 +2501,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
   const BL_UNL = '<svg class="icb-i" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 14.5l-1.8 1.8a3.5 3.5 0 0 1-5-5L5.5 8.5"/><path d="M14.5 9.5l1.8-1.8a3.5 3.5 0 0 1 5 5l-2.8 2.8"/><path d="M8 3v2.5M3 8h2.5M16 21v-2.5M21 16h-2.5"/></svg>';
   const doroBL = window.doroBL = { data: null, win: null, tok: '', timer: 0, fixPend: null, fixTimer: 0, fixTick: 0, sel: null };
   try { const sv = JSON.parse(localStorage.getItem(BLK) || 'null'); if (sv && sv.nikkes) doroBL.data = sv; } catch (e) { /* 저장된 정보 없음 */ }
-  /* ---- 도로칩: 사이트 게임으로 얻는 재화. 도로칩 100 = 실버칩 10 = 골드칩 1, 무지개 도로칩은 별도 ---- */
+  /* ---- 도로칩: 사이트 게임으로 얻는 재화. 도로칩 10 = 실버칩 2 = 골드칩 1, 무지개 도로칩은 별도 ---- */
   const CHIP_K = 'dorosync-chips', CHIP_COL = { b: ['#f0a020', '#a86405'], s: ['#c3c9d2', '#6f7782'], g: ['#f6c431', '#8a6508'], r: ['#b47cff', '#4a3d8a'] };
   let chipN = 0;
   /* k: b 도로칩(주황) · s 실버칩 · g 골드칩(반짝임) · r 무지개(프리미엄). fx=false면 애니메이션 없는 가벼운 버전 */
@@ -2528,19 +2528,19 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
   const chipGet = () => { let o = null; try { o = JSON.parse(localStorage.getItem(CHIP_K) || 'null'); } catch (e) { o = null; } return Object.assign({ b: 0, s: 0, g: 0, r: 0 }, o || {}); };
   window.doroChips = {
     get: chipGet,
-    total() { const o = chipGet(); return o.b + o.s * 10 + o.g * 100; },
+    total() { const o = chipGet(); return o.b + o.s * 5 + o.g * 10; },
     add(d) {
       const o = chipGet(); ['b', 's', 'g', 'r'].forEach((k) => { o[k] += +(d && d[k]) || 0; });
-      o.s += Math.floor(o.b / 10); o.b %= 10; o.g += Math.floor(o.s / 10); o.s %= 10; /* 올림: 도로칩→실버칩→골드칩 */
+      o.s += Math.floor(o.b / 5); o.b %= 5; o.g += Math.floor(o.s / 2); o.s %= 2; /* 올림: 도로칩 5→실버칩, 실버칩 2→골드칩 */
       try { localStorage.setItem(CHIP_K, JSON.stringify(o)); } catch (e) { /* 저장 불가 */ }
       try { window.dispatchEvent(new CustomEvent('dorochips', { detail: o })); } catch (e) { /* 무시 */ }
       return o;
     },
   };
   const chipCard = () => {
-    const o = chipGet();
-    return '<div class="kpi chipk"><div class="l">도로칩</div><div class="chipv"><span title="골드칩 (도로칩 100개)">' + window.doroChipSvg('g', 32) + '<b class="num">' + fmt(o.g) + '</b></span><span title="무지개 도로칩">' + window.doroChipSvg('r', 32) + '<b class="num">' + fmt(o.r) + '</b></span></div>' +
-      '<div class="s">' + window.doroChipSvg('s', 14) + ' 실버칩 ' + o.s + ' · ' + window.doroChipSvg('b', 14) + ' 도로칩 ' + o.b + '</div></div>';
+    const o = chipGet(), tot = o.b + o.s * 5 + o.g * 10;
+    return '<div class="kpi chipk"><div class="l">도로칩</div><div class="chipv"><span title="도로칩 (실버칩 1 = 5, 골드칩 1 = 10)">' + window.doroChipSvg('b', 32) + '<b class="num">' + fmt(tot) + '</b></span><span title="무지개 도로칩">' + window.doroChipSvg('r', 32) + '<b class="num">' + fmt(o.r) + '</b></span></div>' +
+      '<div class="s">가챠에서 모은 도로칩 · 무지개 도로칩</div></div>';
   };
   window.addEventListener('dorochips', () => { const el = document.querySelector('#tab-me .chipk'); if (el) el.outerHTML = chipCard(); });
   const PFP_K = 'dorosync-pfp';
