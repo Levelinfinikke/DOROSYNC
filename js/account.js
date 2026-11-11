@@ -108,7 +108,7 @@ function ui() {
   if ($('#acct-modal')) return;
   const b = document.createElement('button');
   b.type = 'button'; b.className = 'ghost upl'; b.id = 'btn-acct'; b.title = '로그인'; b.setAttribute('aria-label', '로그인'); b.innerHTML = ICON;
-  const tb = document.querySelector('.top-btns'); if (tb) tb.insertBefore(b, tb.firstChild);
+  const tb = document.querySelector('.top-btns'), bl = document.getElementById('btn-bl'); if (bl && bl.parentNode) bl.parentNode.insertBefore(b, bl.nextSibling); else if (tb) tb.appendChild(b);
   b.addEventListener('click', open);
   const m = document.createElement('div');
   m.className = 'blm'; m.id = 'acct-modal'; m.hidden = true; m.setAttribute('role', 'dialog'); m.setAttribute('aria-modal', 'true'); m.setAttribute('aria-label', '계정');

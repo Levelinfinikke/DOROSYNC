@@ -1388,3 +1388,4 @@ button:not(.tr-clr):not(.tabs button):not(.tr-f):not(.pk-t):not(.pk-r){border-ra
 .acct-pwin{width:150px;padding:6px 12px!important;font-size:13px;border-radius:999px!important}
 .acct-pwnote{margin:6px 0 0;text-align:right}
 .acct-box .acct-g+.acct-or{margin-top:16px}
+#btn-acct{width:36px;height:36px;min-width:36px;padding:0!important;border-radius:50%!important;display:inline-flex;align-items:center;justify-content:center}
