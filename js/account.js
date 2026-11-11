@@ -138,7 +138,7 @@ function render() {
       '<div class="acct-row"><span class="acct-k">복구 이메일</span><span>' + esc(user.email || profile.email || '-') + ' ' + (user.emailVerified ? '<span class="acct-ok">인증됨</span>' : '<span class="acct-no">미인증</span> <button type="button" class="ghost sm" data-a="verify">인증 메일 보내기</button>') + '</span></div>' +
       '<div class="acct-row"><span class="acct-k">구글 연동</span><span>' + (isGoogle(user) ? '<span class="acct-ok">연동됨</span> ' + (hasPw(user) ? '<button type="button" class="ghost sm" data-a="unlink">연동 해제</button>' : '') : '<button type="button" class="ghost sm acct-g" data-a="link">' + GLOGO + ' 구글 계정 연동</button>') + '</span></div>' +
       '<div class="acct-row"><span class="acct-k">클라우드 저장</span><span>' + (m.ts ? '마지막 저장 ' + new Date(m.ts).toLocaleString('ko-KR') : '아직 저장 안 됨') + ' <button type="button" class="ghost sm" data-a="sync">지금 저장</button></span></div>' +
-      '<div class="acct-acts">' + (hasPw(user) ? '<button type="button" class="ghost sm" data-a="pwreset">비밀번호 변경 메일</button>' : '') + '<button type="button" class="ghost sm" data-a="pull">클라우드에서 다시 불러오기</button><button type="button" class="primary sm" data-a="logout">로그아웃</button></div>' +
+      '<div class="acct-acts">' + (hasPw(user) ? '<button type="button" class="ghost sm" data-a="pwreset">비밀번호 변경 메일</button>' : '') + (undoGet() ? '<button type="button" class="ghost sm" data-a="undo-pick">데이터 선택 되돌리기</button>' : '') + '<button type="button" class="ghost sm" data-a="pull">클라우드에서 다시 불러오기</button><button type="button" class="primary sm" data-a="logout">로그아웃</button></div>' +
       '<details class="acct-danger"><summary>계정 삭제</summary><p class="muted sm">아이디·이메일·저장된 모든 데이터가 서버에서 지워지고 되돌릴 수 없습니다. 이 기기에 있는 데이터는 남습니다.</p><button type="button" class="ghost sm acct-del" data-a="delete">계정 영구 삭제</button></details>';
     return;
   }
@@ -189,6 +189,7 @@ async function onUser(u) {
     if (Array.isArray(d.hist) && d.hist.length && window.doroHistMerge) window.doroHistMerge(d.hist); /* 서버 자동 기록 합치기 */
     setBtn(); render();
     await reconcile(d);
+    undoBar();
     if (window.doroBLAutoSync) window.doroBLAutoSync(); /* 로그인 상태: 하루 1번 BlaBla 자동 재연동 */
   } catch (e) { msg('계정 정보를 불러오지 못했습니다: ' + errMsg(e), 1); }
 }
@@ -218,6 +219,29 @@ function apply(data, ts) {
   Object.entries(data || {}).forEach(([k, v]) => { if (/^dorosync/.test(k) && typeof v === 'string') localStorage.setItem(k, v); });
   setMeta(Object.assign(meta(), { uid: user.uid, ts, h: hashOf(data || {}) }));
   location.reload();
+}
+/* ---------- 데이터 선택 되돌리기 ----------
+   '어느 데이터를 쓸까요?'에서 버린 쪽을 24시간 보관 → 되돌리면 그 데이터를 이 기기와 클라우드에 다시 씀 */
+const UNDO_K = 'dsacct-undo', UNDO_MS = 24 * 3600 * 1000;
+function undoSave(kind, data) { try { localStorage.setItem(UNDO_K, JSON.stringify({ at: Date.now(), kind, uid: user && user.uid, data: data || {} })); } catch (e) { /* 용량 초과 등 */ } }
+function undoGet() { try { const u = JSON.parse(localStorage.getItem(UNDO_K) || 'null'); if (!u || Date.now() - u.at > UNDO_MS || (user && u.uid !== user.uid)) return null; return u; } catch (e) { return null; } }
+function undoClear() { try { localStorage.removeItem(UNDO_K); } catch (e) { /* 무시 */ } const b = document.getElementById('acct-undo'); if (b) b.remove(); }
+async function undoRun() {
+  const u = undoGet(); if (!u) { undoClear(); return; }
+  if (!confirm((u.kind === 'cloud' ? '클라우드 데이터를 고르기 전의 이 기기 데이터' : '덮어쓰기 전의 클라우드 데이터') + '로 되돌릴까요?\n지금 데이터는 그 데이터로 바뀌고, 클라우드에도 저장됩니다.')) return;
+  Object.keys(snapshot()).forEach((k) => localStorage.removeItem(k));
+  Object.entries(u.data || {}).forEach(([k, v]) => { if (/^dorosync/.test(k) && typeof v === 'string') localStorage.setItem(k, v); });
+  undoClear(); await push(true); location.reload();
+}
+function undoBar() {
+  const u = undoGet(); let b = document.getElementById('acct-undo'); if (!u) { if (b) b.remove(); return; }
+  if (u.seen && Date.now() - u.seen > 60000) return; /* 안내 바는 처음 1분만, 이후엔 계정 창의 버튼으로 */
+  if (!u.seen) { u.seen = Date.now(); try { localStorage.setItem(UNDO_K, JSON.stringify(u)); } catch (e) { /* 무시 */ } }
+  if (!b) { b = document.createElement('div'); b.id = 'acct-undo'; b.className = 'acct-undo'; document.body.appendChild(b); }
+  b.innerHTML = '<span>' + (u.kind === 'cloud' ? '클라우드 데이터로 바꿨습니다.' : '이 기기 데이터로 클라우드를 덮어썼습니다.') + '</span><button type="button" class="ghost sm" data-u="go">되돌리기</button><button type="button" class="icb sm" data-u="x" aria-label="닫기">×</button>';
+  b.querySelector('[data-u="go"]').onclick = () => undoRun();
+  b.querySelector('[data-u="x"]').onclick = () => b.remove();
+  clearTimeout(undoBar.t); undoBar.t = setTimeout(() => { if (b.isConnected) b.remove(); }, 60000);
 }
 async function reconcile(d) {
   const cloud = d.data || {}, cts = d.updatedAt || 0, ch = hashOf(cloud);
@@ -322,8 +346,9 @@ async function onClick(e) {
     else if (act === 'pwreset') { await A.sendPasswordResetEmail(auth, user.email); msg(user.email + '로 비밀번호 변경 링크를 보냈습니다.'); }
     else if (act === 'sync') { await push(true); msg('클라우드에 저장했습니다.'); }
     else if (act === 'pull') { const d = docFields(await rest('GET', '/users/' + user.uid, null, await tok())); if (d && d.data) apply(d.data, d.updatedAt || Date.now()); }
-    else if (act === 'use-cloud') { const c = reconcile.cloud; if (c) apply(c.cloud, c.cts); }
-    else if (act === 'use-local') { await push(true); close(); }
+    else if (act === 'use-cloud') { const c = reconcile.cloud; if (c) { undoSave('cloud', snapshot()); apply(c.cloud, c.cts); } }
+    else if (act === 'use-local') { const c = reconcile.cloud; if (c) undoSave('local', c.cloud); await push(true); close(); undoBar(); }
+    else if (act === 'undo-pick') await undoRun();
     else if (act === 'logout') { await push(false); await A.signOut(auth); view = 'login'; msg('로그아웃했습니다. 이 기기의 데이터는 그대로 남아 있습니다.'); }
     else if (act === 'delete') {
       if (!confirm('정말 계정을 삭제할까요? 서버의 모든 정보가 지워지고 되돌릴 수 없습니다.')) return;

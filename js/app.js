@@ -3239,6 +3239,9 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
         '<button type="button" class="ghost sm icb" data-whide="' + p.id + '|' + w.id + '" title="' + (w.hidden ? '다시 보이기' : '숨기기') + '" aria-label="' + (w.hidden ? '다시 보이기' : '숨기기') + '">' + EYE(w.hidden) + '</button>' +
         '<button type="button" class="ghost sm icb pl-del" data-wdel="' + p.id + '|' + w.id + '" title="삭제" aria-label="세계선 삭제">' + TRASH + '</button>' + buysHtml(p.id + '|' + w.id, w) + '</li>').join('') + '</ul></details>';
   }
+  /* 한 줄 맞춤: 글자가 칸을 넘치면 넘치지 않을 때까지 줄임 */
+  function fitOne(scope) { (scope || document).querySelectorAll('.fit1').forEach((el) => { el.style.fontSize = ''; let f = parseFloat(getComputedStyle(el).fontSize) || 40, n = 0; while (el.scrollWidth > el.clientWidth + 1 && f > 12 && n++ < 40) { f -= 1.5; el.style.fontSize = f + 'px'; } }); }
+  window.addEventListener('resize', () => { clearTimeout(fitOne.t); fitOne.t = setTimeout(() => fitOne($('#me-prog')), 150); });
   function renderProg() {
     let box = $('#me-prog');
     if (!box) { box = document.createElement('div'); box.className = 'card'; box.id = 'me-prog'; }
@@ -3284,7 +3287,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
       const bar = (cls2, lab, lv, pct, sub) => '<div class="pbar ' + cls2 + '"><div class="pbar-l"><b>' + lab + '</b><span>Lv ' + lv + ' · ' + sub + '</span><em>' + pct.toFixed(1) + '%</em></div><div class="pbar-t"><div class="pbar-f" style="width:' + pct.toFixed(2) + '%"><i class="pbar-a"></i></div></div></div>';
       html += '<div class="prog-sum"><div class="pbars"><div class="pbar-ends"><span><b>' + ref.S0 + '</b><small>' + ref.start.slice(2).replace(/-/g, '.') + '</small></span><span class="pbar-arr" aria-hidden="true"><u></u><u></u><u></u></span><span><b>' + ref.T + '</b><small>' + dAt(ref.days).slice(2).replace(/-/g, '.') + '</small></span></div>' +
         bar('pl', '플랜', pLv, pPct, (tNow > 0 ? Math.min(tNow, ref.days) + '일차' : '시작 전')) + bar('ac', '실제', la[1], aPct, h[h.length - 1].d.slice(5).replace('-', '/') + ' 기록') + '</div>' +
-        '<div class="kpi pvs ' + cls + '"><small>기준 플랜 대비</small><b>' + (dl === 0 ? '예정대로' : (dl > 0 ? '+' : '') + dl + ' Lv') + '</b><span>' + (dd == null ? '목표를 넘어섰습니다' : dd === 0 ? '일정과 같습니다' : Math.abs(dd) + '일 ' + (dd > 0 ? '빠름' : '늦음')) + '</span><span class="muted">예상 Lv ' + exp + (lt >= 0 ? ' · ' + lt + '일차' : ' · 시작 전') + '</span></div>' +
+        '<div class="kpi pvs ' + cls + '"><small>기준 플랜 대비</small><b class="fit1">' + (dl === 0 ? '예정대로 진행중' : (dl > 0 ? '+' : '') + dl + ' Lv') + '</b><span>' + (dd == null ? '목표를 넘어섰습니다' : dd === 0 ? '일정과 같습니다' : Math.abs(dd) + '일 ' + (dd > 0 ? '빠름' : '늦음')) + '</span><span class="muted">예상 Lv ' + exp + (lt >= 0 ? ' · ' + lt + '일차' : ' · 시작 전') + '</span></div>' +
         '<div class="prog-boost">' + boostHtml(null, { S0: la[1], find: (lv) => { const q = ref.pts.find((x) => x[1] >= lv); return q ? { t: Math.max(1, q[0]), d: dAt(Math.max(1, q[0])) } : null; } }) + '</div></div>';
     } else if (all.length && !act.length) html += '<p class="muted sm">플랜을 확정했습니다. BlaBla 연동을 하면 실제 싱크로 레벨이 기록되어 예상과 비교됩니다.</p>';
     else if (!all.length) html += '<p class="muted sm">[싱크로] 탭 결과의 <b>플랜 확정</b>(깃발 버튼)을 누르면 예상 그래프와 비교할 수 있어요. 과금 계획이 바뀌면 다시 확정해 새 플랜을 추가하면 됩니다.</p>';
@@ -3303,7 +3306,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
       const shown = all.filter((p) => !p.hidden).slice().reverse(), hid = all.filter((p) => p.hidden).slice().reverse();
       html += '<ul class="pl-list">' + shown.map(row).join('') + '</ul>' + (hid.length ? '<details class="pl-hid"><summary>숨긴 플랜 ' + hid.length + '개</summary><ul class="pl-list">' + hid.map(row).join('') + '</ul></details>' : '');
     }
-    box.innerHTML = html;
+    box.innerHTML = html; fitOne(box);
     autoBind(box, true);
     box.querySelectorAll('[data-pz]').forEach((b) => b.addEventListener('click', () => { renderProg.full = b.dataset.pz === '1'; renderProg(); }));
     box.querySelectorAll('[data-pref]').forEach((b) => b.addEventListener('click', () => { const a = plansGet(); a.forEach((p) => { p.ref = p.id === b.dataset.pref; }); plansSet(a); renderProg(); }));
@@ -4181,7 +4184,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
     if (gmInst) return; if (!window.DoroGacha) { /* 가챠 엔진은 가챠 탭을 처음 열 때 불러옴 */ if (!gmMount.w) { gmMount.w = 1; const sc = document.createElement('script'); sc.src = 'js/gacha.js'; sc.onload = () => { gmMount.w = 0; const go = () => { if (curGrp === 'gc') gmMount(); }; if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go(); }; sc.onerror = () => { gmMount.w = 0; const r = document.getElementById('gm-root'); if (r) r.innerHTML = '<p class="muted" style="padding:20px">가챠 머신을 불러오지 못했습니다. 새로고침해 주세요.</p>'; }; document.head.appendChild(sc); } return; } let D; try { D = window.GM_ASSETS; if (!D) throw 0; } catch (e) { return; }
     const corp = {}; GC_NK.forEach((r) => { if (r[2] === 'SSR') corp[r[0]] = r[1]; });
     const mk = (L, p, cp) => L.map((n) => { const k = nkCode(n) || nkCode({ '리틀 머메이드': '세이렌' }[n] || ''); return { n, c: corp[n] || cp || '', k, p, img: k ? BL_IMG(k) : '', tall: 1 }; });
-    gmStockSync(); const std = mk(GC_POOL.std, 0), pil = mk(GC_POOL.pil, 1), M = (name, cover) => ({ assets: Object.assign({}, D.assets, { cover }), tiers: tierData(), pools: { std, pil, pickup: mk([name], 1, '필그림')[0] }, stock: gmStock, shared: true, title: name + ' 픽업' });
+    gmStockSync(); const std = mk(GC_POOL.std, 0), pil = mk(GC_POOL.pil, 1), M = (name, cover) => ({ assets: Object.assign({}, D.assets, { cover }), tiers: tierData(), chipTiers: chipTierData(), pools: { std, pil, pickup: mk([name], 1, '필그림')[0] }, stock: gmStock, shared: true, title: name + ' 픽업' });
     gmInst = window.DoroGacha.mountMulti(document.getElementById('gm-root'), [M('마리안 : 퀸', D.assets.cover), M('홍련 : 신살', D.assets.cover2)]);
   }
   /* ---------- 가챠 > 티어표 (솔레 / PvP) ---------- */
@@ -4194,6 +4197,12 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   const TR_ADD = {"라이": ["F", "D"], "네온 : 블루 오션": ["E", "E"], "헬름 : 아쿠아마린": ["A", "D"], "메이든 : 아이스 로즈": ["S", "S"], "길로틴 : 윈터 슬레이어": ["A", "E"], "디젤 : 윈터 스위츠": ["SS", "B"], "브리드 : 사일런트 트랙": ["S", "B"], "아비스타": ["C", "D"], "마르차나 : 마린 스터디": ["A", "B"], "길티": ["B", "D"], "신": ["E", "D"], "퀀시": ["D", "E"], "앤 : 미라클 페어리": ["D", "A"], "킬로": ["F", "B"], "모리": ["E", "E"], "일레그 : 붐 앤 쇼크": ["S", "C"], "루피 : 윈터 쇼퍼": ["E", "D"], "메어리 : 베이 갓데스": ["C", "D"], "아니스 : 스파클링 서머": ["S", "A"], "루드밀라 : 윈터 오너": ["S", "D"], "미카 : 스노우 버디": ["B", "B"], "로산나 : 시크 오션": ["A", "B"], "사쿠라 : 블룸 인 서머": ["B", "B"], "니힐리스타": ["E", "B"], "스노우 화이트 : 이노센트 데이즈": ["C", "E"], "라푼젤 : 퓨어 그레이스": ["D", "D"], "도로시 : 세렌디피티": ["SS", "B"], "차임": ["B", "E"], "신데렐라 : 크리스탈 웨이브": ["SSS", "B"], "라푼젤 : 생츄어리": ["A", "B"], "마키마": ["E", "A"], "파워": ["D", "C"], "2B": ["C", "B"], "A2": ["C", "B"], "렘": ["B", "E"], "에밀리아": ["C", "SS"], "아스카": ["B", "D"], "레이": ["A", "B"], "마리": ["A", "B"], "아스카 : WILLE": ["S", "E"], "레이 (가칭)": ["A", "A"], "이브": ["A", "C"], "레이븐": ["S", "C"], "에이다": ["S", "S"], "질": ["B", "D"], "치사토": ["A", "B"], "타키나": ["A", "C"], "퀸(마코토)": ["A", "B"], "유키코": ["S", "C"]}; /* 기존 티어 데이터에 없던 니케: [솔레, PvP] */
   let trDef = null, trSt = null;
   /* 기본 티어 + 사용자 편집본. window.doroTiers는 가챠 머신이 그대로 참조하는 살아 있는 객체 */
+  /* 도로칩 판정용 기본 티어표(유저 편집 무관) */
+  function chipTierData() {
+    let D = {}; try { D = (window.GM_ASSETS && window.GM_ASSETS.tiers) || {}; } catch (e) { /* 무시 */ }
+    const b = Object.assign({}, D.boss || {}); Object.keys(TR_ADD).forEach((n) => { const v = TR_ADD[n]; if (!b[n] && v[0]) b[n] = v[0]; });
+    return { boss: b };
+  }
   function tierData() {
     if (window.doroTiers) return window.doroTiers;
     if (!window.GM_ASSETS) return null; /* 아직 문서 로딩 중 */

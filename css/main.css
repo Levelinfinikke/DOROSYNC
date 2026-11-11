@@ -1545,3 +1545,7 @@ button:not(.tr-clr):not(.tabs button):not(.tr-f):not(.pk-t):not(.pk-r){border-ra
 .dchip{flex:none;vertical-align:middle}
 .dchip{overflow:visible}
 .chipk .chipv b{color:var(--ink)}
+.prog-sum .kpi.pvs b.fit1{display:block;width:100%;white-space:nowrap;overflow:hidden;text-align:center}
+/* 데이터 선택 되돌리기 안내 */
+.acct-undo{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:9000;display:flex;align-items:center;gap:10px;padding:10px 10px 10px 16px;border-radius:999px;background:var(--ink);color:var(--card);box-shadow:0 8px 24px rgba(0,0,0,.25);font-size:13.5px;max-width:calc(100vw - 24px)}
+.acct-undo .ghost{color:inherit;border-color:rgba(255,255,255,.35);border-radius:999px}.acct-undo .icb{background:none;border:0;color:inherit;font-size:18px;cursor:pointer;padding:0 6px}
