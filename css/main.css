@@ -1549,3 +1549,7 @@ button:not(.tr-clr):not(.tabs button):not(.tr-f):not(.pk-t):not(.pk-r){border-ra
 /* 데이터 선택 되돌리기 안내 */
 .acct-undo{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:9000;display:flex;align-items:center;gap:10px;padding:10px 10px 10px 16px;border-radius:999px;background:var(--ink);color:var(--card);box-shadow:0 8px 24px rgba(0,0,0,.25);font-size:13.5px;max-width:calc(100vw - 24px)}
 .acct-undo .ghost{color:inherit;border-color:rgba(255,255,255,.35);border-radius:999px}.acct-undo .icb{background:none;border:0;color:inherit;font-size:18px;cursor:pointer;padding:0 6px}
+/* 말풍선: 더 옅은 빨강 */
+.cmt-tip,.auto-tip{background:#f2626c!important;box-shadow:0 6px 16px rgba(242,98,108,.3)!important}
+.cmt-tip::after,.auto-tip::after{border-left-color:#f2626c!important}
+.cmt-tip .cmt-x,.auto-tip .cmt-x{color:#fff0f1!important}

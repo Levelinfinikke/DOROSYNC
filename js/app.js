@@ -1604,7 +1604,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
       tip: (i) => (i === 0 ? '시작' : i + '일차 · ' + dstr(i)) + '<br>싱크로 ' + at(days, i, 'S', st.S0) + ' · 무과금 ' + at(np, i, 'S', st.S0) + '<br>전초기지 ' + at(days, i, 'L', M.L0) + PINS.map((p) => '<br><span style="color:' + p.color + '">' + p.short + ' 싱크로 ' + (p.S[Math.min(i, p.S.length - 1)] || [0, 0])[1] + '</span>').join(''),
     });
     updatePinBtn();
-    try { cmtTip(!!TR); } catch (e) { /* 초기화 전 */ }
+    try { cmtTip(!!TR && !!cmtTip.armed); } catch (e) { /* 초기화 전 */ }
     renderOut();
   }
 
@@ -2070,6 +2070,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
 
   /** 곡선/목록에서 조합을 고르면 패키지 설정에 적용 */
   function selectOpt(i) {
+    cmtTip.armed = true; setTimeout(() => { try { cmtTip(!!TR); } catch (e) { /* 무시 */ } }, 0); /* 플랜 확정 안내: 패키지 조합을 고를 때만 */
     if (!OPT) return;
     { const stt = $('#opt-status'); if (stt && stt.querySelector('.ovb')) stt.innerHTML = ''; }
     if (OPT.sel === i) { toggleDrop(i); return; }
@@ -3095,9 +3096,10 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   /* '이 플랜으로 진행할까요?' 안내: 확정한 플랜이 없을 때 결과 옆에 표시, ×로 닫으면 다시 안 띄움 */
   function cmtTip(show, done) {
     const t = $('#cmt-tip'); if (!t) return;
-    if (done) { try { localStorage.setItem('dorosync-cmt-tip', '1'); } catch (e) { /* 무시 */ } t.hidden = true; return; }
+    if (done) { cmtTip.live = false; try { localStorage.setItem('dorosync-cmt-tip', '1'); } catch (e) { /* 무시 */ } t.hidden = true; return; }
     let off = false; try { off = localStorage.getItem('dorosync-cmt-tip') === '1'; } catch (e) { /* 무시 */ }
-    t.hidden = !(show && !off && !plansGet().length);
+    t.hidden = !(show && (!off || cmtTip.live) && !plansGet().length);
+    if (!t.hidden && !cmtTip.live) { cmtTip.live = true; try { localStorage.setItem('dorosync-cmt-tip', '1'); } catch (e) { /* 무시 */ } } /* 1회성: 이번에 한 번 보여 주고, 다음 방문부턴 안 뜸 */
   }
   { const x = $('#cmt-x'); if (x) x.addEventListener('click', (e) => { e.stopPropagation(); cmtTip(false, true); }); }
   /* ---- AUTO: 매일 05~06시 서버가 싱크로 레벨을 대신 기록 (로그인 필요) ---- */
@@ -3107,7 +3109,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   function autoBtnHtml() {
     const on = autoOn();
     return '<span class="auto-wrap"><button type="button" class="auto-btn' + (on ? ' on' : '') + '" id="auto-btn" title="매일 자동 기록 ' + (on ? '켜짐' : '꺼짐') + '"><b>AUTO</b>' + AUTO_LINK + '<span>' + (on ? 'ON' : 'OFF') + '</span></button>' +
-      '<span class="auto-tip" id="auto-tip" hidden role="note">지휘관, 잠시 이쪽을 봐 주시겠습니까?<button type="button" class="cmt-x" id="auto-tip-x" aria-label="안내 닫기">×</button></span></span>';
+      '<span class="auto-tip" id="auto-tip" hidden role="note">먼저 여기를 눌러봐 주십시오<button type="button" class="cmt-x" id="auto-tip-x" aria-label="안내 닫기">×</button></span></span>';
   }
   function autoBind(box, hasData) {
     const b = box.querySelector('#auto-btn'); if (b) b.addEventListener('click', () => { autoTipOff(); autoOpen(); });
