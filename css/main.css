@@ -1517,3 +1517,10 @@ button:not(.tr-clr):not(.tabs button):not(.tr-f):not(.pk-t):not(.pk-r){border-ra
 #btn-acct.has-pfp{overflow:hidden}#btn-acct.has-pfp>svg{display:none}
 #btn-acct .bl-pfp{width:100%;height:100%;object-fit:cover;object-position:50% 15%;border-radius:50%;display:block}
 .linkbtn{background:none;border:0;padding:0;color:var(--accent-text,var(--c1));font:inherit;font-weight:700;text-decoration:underline;cursor:pointer}
+/* 성장 기록 요약: 막대 · 대비 · 부스트 한 줄 (2:1:2) */
+.prog-sum{grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(0,2fr)!important}
+.prog-sum .prog-boost{grid-column:auto!important;display:flex;align-items:flex-end}
+.prog-sum .prog-boost .sboost{width:100%;margin:22px 0 0}
+@media(max-width:860px){.prog-sum{grid-template-columns:minmax(0,1.4fr) minmax(0,1fr)!important}.prog-sum .prog-boost{grid-column:1/-1!important}}
+@media(max-width:560px){.prog-sum{grid-template-columns:1fr!important}}
+.prog-sum .prog-boost{padding-top:26px}.prog-sum .prog-boost .sboost{margin:0!important}
