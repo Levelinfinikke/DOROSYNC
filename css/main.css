@@ -1534,3 +1534,16 @@ button:not(.tr-clr):not(.tabs button):not(.tr-f):not(.pk-t):not(.pk-r){border-ra
 /* 기준 플랜 대비: 큰 숫자, 세로 가운데 */
 .prog-sum .kpi.pvs{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}
 .prog-sum .kpi.pvs b{font-size:40px!important;line-height:1.05;margin:6px 0 4px}
+/* 도로칩 카드 · 동전 */
+#tab-me .mekpis{grid-template-columns:repeat(5,minmax(0,1fr))!important}
+@media(max-width:900px){#tab-me .mekpis{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
+@media(max-width:560px){#tab-me .mekpis{grid-template-columns:1fr 1fr!important}}
+.chipk .chipv{display:flex;gap:12px;align-items:center;margin:4px 0 2px}
+.chipk .chipv span{display:inline-flex;align-items:center;gap:5px}
+.chipk .chipv b{font-size:22px;font-weight:800}
+.chipk .s{display:flex;align-items:center;gap:3px;flex-wrap:wrap}
+.dchip{flex:none;vertical-align:middle}
+.dchip-r{animation:dchipPoly 3s linear infinite}
+@keyframes dchipPoly{to{filter:hue-rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.dchip-r{animation:none}}
+.chipk .chipv b{color:var(--ink)}

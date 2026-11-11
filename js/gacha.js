@@ -65,6 +65,11 @@
 .gm-stat small{display:block;font-size:11px;color:#9eaac0}.gm-stat b{font-size:15px;font-variant-numeric:tabular-nums}
 .gm-tray{border-radius:14px;padding:11px;background:linear-gradient(#2b2f38,#1b1e25);border:1px solid #3a404d;box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}
 .gm-trh{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-weight:800;font-size:14px}
+.gm-trr{display:inline-flex;gap:6px;align-items:center}.gm-chipx{display:inline-flex;align-items:center;gap:5px}.gm-chipx.gm-chipin{animation:gmChipIn .25s ease-out}
+@keyframes gmChipIn{0%{transform:scale(1)}40%{transform:scale(1.18);box-shadow:0 0 0 3px rgba(255,194,26,.6)}100%{transform:scale(1)}}
+.gm-orb.gm-flip{animation:gmFlip .42s ease-in-out forwards}@keyframes gmFlip{0%{transform:rotateY(0)}50%{transform:rotateY(90deg)}100%{transform:rotateY(0)}}
+.gm-chipface{position:absolute;inset:0;display:grid;place-items:center}.gm-chipface svg{width:100%;height:100%}
+.gm-chipfly{position:fixed;z-index:9999;pointer-events:none}.gm-chipfly svg{display:block}
 .gm-pan{display:grid;grid-template-columns:repeat(var(--cols,4),1fr);align-content:start;flex:1 1 0;min-height:0;overflow-y:auto;gap:8px;padding:10px;border-radius:12px;background:#15171c;box-shadow:inset 0 2px 8px rgba(0,0,0,.7)}
 .gm-well{position:relative;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 50% 35%,#0c0d10 0%,#1d2027 70%,#30343e 100%);box-shadow:inset 0 5px 9px rgba(0,0,0,.85),0 1px 0 rgba(255,255,255,.1)}
 .gm-well.over{box-shadow:inset 0 5px 9px rgba(0,0,0,.85),0 0 0 3px var(--gold)}
@@ -158,7 +163,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     root.innerHTML = '<div class="gm"><div class="gm-left"><canvas class="gm-cv"></canvas>'
       + '<div class="gm-tools">' + [['open', '개봉 방식 · 게임 모드', '<path d="M5 10.5a7 7 0 0114 0z"/><path d="M5 13.5a7 7 0 0014 0z"/>'], ['snd', '소리', '<path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 8.5a5 5 0 010 7"/>'], ['reset', '초기화', '<path d="M4 12a8 8 0 0113.7-5.7L20 8"/><path d="M20 4v4h-4"/><path d="M20 12a8 8 0 01-13.7 5.7L4 16"/><path d="M4 20v-4h4"/>'], ['hide', '화면 정리', '<path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.8"/><path d="M4 4l16 16"/>']].map((x) => '<button class="gm-ib" data-a="' + x[0] + '" title="' + x[1] + '" aria-label="' + x[1] + '"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + x[2] + '</svg></button>').join('') + '</div><button class="gm-ib gm-trbtn" data-a="topen" aria-label="SSR 보관함 열기" title="SSR 보관함"><img alt="" src="' + TRICO + '"><span>0</span></button><div class="gm-pop" hidden></div><button class="gm-auto" data-a="auto">AUTO</button><button class="gm-ib gm-fs" data-a="fs" title="전체화면" aria-label="전체화면"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>'
       + '<div class="gm-hud"><div class="gm-lab"><img alt=""><b>0</b></div><button class="gm-btn" data-a="exch">라벨 교환</button></div>' + '</div>'
-      + '<div class="gm-right"><div class="gm-wal"><canvas class="gm-wcv"></canvas><div class="gm-wt"></div><div class="gm-mode"></div></div><div class="gm-graph"><div class="gm-gh"><b>실시간 수지</b><span class="gm-seg"><button data-v="0">픽업</button><button data-v="1">솔레티어</button><button data-v="2">PVP티어</button></span></div><canvas class="gm-gcv"></canvas><div class="gm-stat"></div></div><div class="gm-tray"><div class="gm-trh">SSR 보관함 <button class="gm-tb gm-trt" data-a="tfold">접기</button></div><div class="gm-pan"></div><div class="gm-name"></div></div></div></div>';
+      + '<div class="gm-right"><div class="gm-wal"><canvas class="gm-wcv"></canvas><div class="gm-wt"></div><div class="gm-mode"></div></div><div class="gm-graph"><div class="gm-gh"><b>실시간 수지</b><span class="gm-seg"><button data-v="0">픽업</button><button data-v="1">솔레티어</button><button data-v="2">PVP티어</button></span></div><canvas class="gm-gcv"></canvas><div class="gm-stat"></div></div><div class="gm-tray"><div class="gm-trh">SSR 보관함 <span class="gm-trr"><button class="gm-tb gm-chipx" data-a="chipx" title="보관한 SSR을 도로칩으로 교환 (솔레 티어 SSS=무지개, SS=금, S=은, 그 아래=동)">' + (window.doroChipSvg ? window.doroChipSvg('g', 16) : '') + '<span>교환</span></button><button class="gm-tb gm-trt" data-a="tfold">접기</button></span></div><div class="gm-pan"></div><div class="gm-name"></div></div></div></div>';
     const $ = (s) => root.querySelector(s);
     const cv = $('.gm-cv'), ctx = cv.getContext('2d'), walEl = $('.gm-wal'), wcv = $('.gm-wcv'), wctx = wcv.getContext('2d'), wtEl = $('.gm-wt'), modeEl = $('.gm-mode'), optEl = $('.gm-pop'), gcv = $('.gm-gcv'), panEl = $('.gm-pan'), statEl = $('.gm-stat'), labEl = $('.gm-lab'), leftEl = $('.gm-left'), rightEl = $('.gm-right'); let txs = 1;
     const vib = (p, force) => { try { if (!navigator.vibrate) return; if (!force && typeof S !== 'undefined' && S.auto) return; navigator.vibrate(p); } catch (e) { /* 미지원(iOS 등) */ } }; /* 햅틱: 안드로이드 크롬 계열만 동작. AUTO 중에는 확정 진동만 */
@@ -331,6 +336,40 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
       const r = cvRect(), el = document.createElement('div'); el.className = 'gm-float orb'; el.style.cssText = 'left:' + (r.left + x * r.width / W) + 'px;top:' + (r.top + y * r.height / H) + 'px;transition:left .5s cubic-bezier(.3,.1,.2,1),top .5s cubic-bezier(.5,-.4,.3,1),transform .5s;' + orbBg(nk); (document.fullscreenElement || document.body).appendChild(el);
       let i = S.tray.findIndex((e) => e.nk.n === nk.n); if (i < 0) i = S.tray.length; const well = panEl.children[i] || panEl.lastElementChild; let w = well.getBoundingClientRect(); const tb = leftEl.querySelector('.gm-trbtn'), tbv = tb && tb.offsetParent && !$('.gm').classList.contains('topen'); if (tbv) w = tb.getBoundingClientRect(); else if (!w.width) w = cv.getBoundingClientRect(); void el.offsetWidth; el.style.left = (w.left + w.width / 2) + 'px'; el.style.top = (w.top + w.height / 2) + 'px'; el.style.transform = 'translate(-50%,-50%) scale(' + (w.width / 78) + ')';
       setTimeout(() => { el.remove(); trayAdd(nk, count); if (tbv) { tb.classList.add('pop'); setTimeout(() => tb.classList.remove('pop'), 180); } }, 520 / (S.auto || 1)); }
+    /* SSR → 도로칩: 초상화가 차례로 뒤집혀 도로칩이 되고 교환 버튼으로 날아감 */
+    const CHIP_OF = { SSS: 'r', SS: 'g', S: 's' }, CHIP_NM = { r: '무지개', g: '금', s: '은', b: '동' };
+    if (location.hostname === 'localhost') (window.__gms = window.__gms || []).push({ S, root, trayAdd: (n, c) => trayAdd(n, c), P });
+    function chipExchange(btn) {
+      if (S.chipBusy) return;
+      if (!S.tray.length) { say('교환할 SSR이 없습니다.'); return; }
+      if (!window.doroChips || !window.doroChipSvg) { say('도로칩을 불러오지 못했습니다.'); return; }
+      S.chipBusy = true;
+      const list = S.tray.slice(), got = { b: 0, s: 0, g: 0, r: 0 }, br = btn.getBoundingClientRect(), wells = [...panEl.querySelectorAll('.gm-well')];
+      const step = Math.max(45, Math.min(160, 1800 / list.length));
+      list.forEach((e, i) => {
+        const k = CHIP_OF[TIERS.boss[e.nk.n]] || 'b'; got[k] += e.count;
+        setTimeout(() => {
+          const orb = wells[i] && wells[i].querySelector('.gm-orb'); if (!orb) return;
+          orb.classList.add('gm-flip');
+          setTimeout(() => {
+            orb.style.backgroundImage = 'none'; orb.innerHTML = '<span class="gm-chipface">' + window.doroChipSvg(k, 64) + '</span>';
+            const r = orb.getBoundingClientRect(), fly = document.createElement('div');
+            fly.className = 'gm-chipfly'; fly.innerHTML = window.doroChipSvg(k, Math.round(r.width)); fly.style.left = r.left + 'px'; fly.style.top = r.top + 'px'; document.body.appendChild(fly);
+            const dx = br.left + br.width / 2 - (r.left + r.width / 2), dy = br.top + br.height / 2 - (r.top + r.height / 2);
+            setTimeout(() => {
+              orb.style.visibility = 'hidden';
+              const an = fly.animate([{ transform: 'translate(0,0) scale(1)', opacity: 1 }, { transform: 'translate(' + dx * 0.5 + 'px,' + (dy * 0.5 - 40) + 'px) scale(.75)', opacity: 1, offset: 0.55 }, { transform: 'translate(' + dx + 'px,' + dy + 'px) scale(.25)', opacity: 0.4 }], { duration: 520, easing: 'cubic-bezier(.5,0,.6,1)' });
+              an.onfinish = () => { fly.remove(); btn.classList.remove('gm-chipin'); void btn.offsetWidth; btn.classList.add('gm-chipin'); try { snd.collect(); } catch (er) { /* 무시 */ } };
+            }, 140);
+          }, 210);
+        }, i * step);
+      });
+      setTimeout(() => {
+        S.tray = []; uiTray(); window.doroChips.add(got); S.chipBusy = false;
+        const t = ['r', 'g', 's', 'b'].filter((k) => got[k]).map((k) => CHIP_NM[k] + ' ' + got[k]).join(' · ');
+        say('도로칩 획득: ' + t);
+      }, (list.length - 1) * step + 1000);
+    }
     function trayAdd(nk, count) { const e = S.tray.find((x) => x.nk.n === nk.n); if (e) { e.count += count || 1; e.merge = true; snd.merge(); } else { S.tray.push({ nk, count: count || 1 }); snd.collect(); } uiTray(); }
 
     /* ---------- UI(DOM) ---------- */
@@ -382,6 +421,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
       else if (k === 'open' || k === 'help') { S.pop = S.pop === k ? null : k; uiOpt(); }
       else if (k === 'hide') { a.classList.toggle('on', $('.gm-left').classList.toggle('clean')); S.pop = null; uiOpt(); }
       else if (k === 'refill') refill();
+      else if (k === 'chipx') chipExchange(a);
       else if (k === 'fs') { if (o.fs) o.fs(); else if (document.fullscreenElement) document.exitFullscreen(); else if (root.requestFullscreen) root.requestFullscreen().catch(() => {}); }
       else if (k === 'auto') { S.auto = S.auto === 0 ? 1 : S.auto === 1 ? 2 : S.auto === 2 ? 4 : 0; S.autoLid = false; a.textContent = S.auto ? 'AUTO ×' + S.auto : 'AUTO'; a.classList.toggle('on', !!S.auto); }
       else if (k === 'exch') { const L = S.bask.filter((b) => (b.kind === 'R' || b.kind === 'SR') && !(S.mode.random && b.res.dummy)); if (!L.length) say('교환할 R·SR 캡슐이 없습니다.'); popStart(L); }

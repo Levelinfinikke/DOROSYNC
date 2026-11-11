@@ -2501,6 +2501,35 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
   const BL_UNL = '<svg class="icb-i" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 14.5l-1.8 1.8a3.5 3.5 0 0 1-5-5L5.5 8.5"/><path d="M14.5 9.5l1.8-1.8a3.5 3.5 0 0 1 5 5l-2.8 2.8"/><path d="M8 3v2.5M3 8h2.5M16 21v-2.5M21 16h-2.5"/></svg>';
   const doroBL = window.doroBL = { data: null, win: null, tok: '', timer: 0, fixPend: null, fixTimer: 0, fixTick: 0, sel: null };
   try { const sv = JSON.parse(localStorage.getItem(BLK) || 'null'); if (sv && sv.nikkes) doroBL.data = sv; } catch (e) { /* 저장된 정보 없음 */ }
+  /* ---- 도로칩: 사이트 게임으로 얻는 재화. 동 10 = 은 1, 은 10 = 금 1, 무지개는 별도 ---- */
+  const CHIP_K = 'dorosync-chips', CHIP_COL = { b: ['#c27a3e', '#7f4a1f'], s: ['#c3c9d2', '#6f7782'], g: ['#f0a020', '#a86405'], r: ['url(#dcR)', '#5b4a9e'] };
+  let chipN = 0;
+  window.doroChipSvg = function (k, px) {
+    const c = CHIP_COL[k] || CHIP_COL.g, id = 'dcR' + (++chipN), f = k === 'r' ? 'url(#' + id + ')' : c[0];
+    const dots = [0, 60, 120, 180, 240, 300].map((a) => '<circle cx="' + (40 * Math.sin(a * Math.PI / 180)).toFixed(1) + '" cy="' + (-40 * Math.cos(a * Math.PI / 180)).toFixed(1) + '" r="2.4" fill="' + f + '"/>').join('');
+    return '<svg class="dchip dchip-' + k + '" viewBox="-74 -74 148 148" width="' + (px || 24) + '" height="' + (px || 24) + '" aria-hidden="true">' +
+      (k === 'r' ? '<defs><linearGradient id="' + id + '" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff5d8f"/><stop offset=".2" stop-color="#ffb84d"/><stop offset=".4" stop-color="#f6f05a"/><stop offset=".6" stop-color="#5ef0a0"/><stop offset=".8" stop-color="#5ab8ff"/><stop offset="1" stop-color="#b47cff"/></linearGradient></defs>' : '') +
+      '<circle r="72" fill="#d5d8dd" stroke="#8b9097" stroke-width="3"/><circle r="61" fill="#3b3e44"/>' +
+      '<circle r="52" fill="none" stroke="' + f + '" stroke-width="11" stroke-dasharray="44 10.45"/><circle r="44" fill="#26282c"/>' + dots +
+      '<circle r="34" fill="' + c[1] + '"/><circle r="30" fill="' + f + '"/></svg>';
+  };
+  const chipGet = () => { let o = null; try { o = JSON.parse(localStorage.getItem(CHIP_K) || 'null'); } catch (e) { o = null; } return Object.assign({ b: 0, s: 0, g: 0, r: 0 }, o || {}); };
+  window.doroChips = {
+    get: chipGet,
+    add(d) {
+      const o = chipGet(); ['b', 's', 'g', 'r'].forEach((k) => { o[k] += +(d && d[k]) || 0; });
+      o.s += Math.floor(o.b / 10); o.b %= 10; o.g += Math.floor(o.s / 10); o.s %= 10; /* 올림: 동→은→금 */
+      try { localStorage.setItem(CHIP_K, JSON.stringify(o)); } catch (e) { /* 저장 불가 */ }
+      try { window.dispatchEvent(new CustomEvent('dorochips', { detail: o })); } catch (e) { /* 무시 */ }
+      return o;
+    },
+  };
+  const chipCard = () => {
+    const o = chipGet();
+    return '<div class="kpi chipk"><div class="l">도로칩</div><div class="chipv"><span title="금색 도로칩">' + window.doroChipSvg('g', 30) + '<b class="num">' + fmt(o.g) + '</b></span><span title="무지개 도로칩">' + window.doroChipSvg('r', 30) + '<b class="num">' + fmt(o.r) + '</b></span></div>' +
+      '<div class="s">' + window.doroChipSvg('s', 14) + ' 은 ' + o.s + ' · ' + window.doroChipSvg('b', 14) + ' 동 ' + o.b + ' · 가챠에서 교환</div></div>';
+  };
+  window.addEventListener('dorochips', () => { const el = document.querySelector('#tab-me .chipk'); if (el) el.outerHTML = chipCard(); });
   const PFP_K = 'dorosync-pfp';
   /* 프로필 니케: 고른 니케, 없으면 전투력 1위 */
   const blPfp = () => {
@@ -2761,7 +2790,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     const pf = blPfp(), cb = pk.best || (pk.cand || []).find((x) => x.c && x.c.chapter != null) || null;
     let html = '<div class="card"><div class="row-ctl sp"><h2 class="inline me-who"><button type="button" class="me-pfp" id="me-pfp" title="프로필 니케 바꾸기" aria-label="프로필 니케 바꾸기" aria-expanded="' + !!renderMe.pick + '">' + (pf ? '<img src="' + BL_IMG(pf.code) + '" alt="" onerror="this.remove()">' : '') + '</button>' + esc(m.role || '전초기지') + '</h2><button class="ghost sm icb" id="me-apply" type="button" title="싱크로 탭에 다시 적용" aria-label="싱크로 탭에 다시 적용"><svg class="icb-i" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2.5" width="14" height="19" rx="2.5"/><rect x="8" y="5.5" width="8" height="3.5" rx=".8"/><path d="M8.5 13h.01M12 13h.01M15.5 13h.01M8.5 16.5h.01M12 16.5h.01M15.5 16.5h.01"/></svg></button></div>' +
       '<div class="mekpis">' + kp('현재 싱크로', fmt(m.synchro || 0)) + kp('전초기지 레벨', fmt(m.outpost || 0), peer.l) + kp('1군 전투력', fmt(m.top5 || 0), peer.p) +
-      kp('클리어 투력', cb && cb.c.power ? fmt(cb.c.power) : '-', cb ? esc(BL_MODE[cb.k] + ' ' + (cb.row ? cb.row[2] : cb.c.chapter + '챕터 보스')) + (cb.c.clearedAt ? ' · ' + blDate(cb.c.clearedAt) : '') : '') + '</div>' +
+      kp('클리어 투력', cb && cb.c.power ? fmt(cb.c.power) : '-', cb ? esc(BL_MODE[cb.k] + ' ' + (cb.row ? cb.row[2] : cb.c.chapter + '챕터 보스')) + (cb.c.clearedAt ? ' · ' + blDate(cb.c.clearedAt) : '') : '') + chipCard() + '</div>' +
       (renderMe.pick ? '<div class="pfp-pick" role="listbox" aria-label="프로필 니케 선택">' + d.nikkes.slice().sort((x, y) => y.combat - x.combat).map((n) => '<button type="button" role="option" data-pfp="' + n.code + '" class="' + (pf && pf.code === n.code ? 'on' : '') + '" title="' + esc(BL_NM(n)) + '" aria-selected="' + !!(pf && pf.code === n.code) + '"><img src="' + BL_IMG(n.code) + '" alt="' + esc(BL_NM(n)) + '" loading="lazy" onerror="this.parentNode.remove()"></button>').join('') + '</div>' : '') +
       '<p class="muted" id="me-fixnote"></p>' +
       (man ? '<p class="note me-mannote">프로필 URL 연동은 클리어 당시 덱 정보를 가져올 수 없습니다. 최근에 잡은 보스는 <button type="button" class="linkbtn" id="me-fixgo">[작전날짜] 탭의 \'예측이 빗나갔나요?\'</button>에 기입해 주십시오.</p>' : '') +
