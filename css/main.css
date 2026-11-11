@@ -1543,7 +1543,5 @@ button:not(.tr-clr):not(.tabs button):not(.tr-f):not(.pk-t):not(.pk-r){border-ra
 .chipk .chipv b{font-size:22px;font-weight:800}
 .chipk .s{display:flex;align-items:center;gap:3px;flex-wrap:wrap}
 .dchip{flex:none;vertical-align:middle}
-.dchip-r{animation:dchipPoly 3s linear infinite}
-@keyframes dchipPoly{to{filter:hue-rotate(360deg)}}
-@media(prefers-reduced-motion:reduce){.dchip-r{animation:none}}
+.dchip{overflow:visible}
 .chipk .chipv b{color:var(--ink)}

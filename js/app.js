@@ -2501,24 +2501,37 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
   const BL_UNL = '<svg class="icb-i" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 14.5l-1.8 1.8a3.5 3.5 0 0 1-5-5L5.5 8.5"/><path d="M14.5 9.5l1.8-1.8a3.5 3.5 0 0 1 5 5l-2.8 2.8"/><path d="M8 3v2.5M3 8h2.5M16 21v-2.5M21 16h-2.5"/></svg>';
   const doroBL = window.doroBL = { data: null, win: null, tok: '', timer: 0, fixPend: null, fixTimer: 0, fixTick: 0, sel: null };
   try { const sv = JSON.parse(localStorage.getItem(BLK) || 'null'); if (sv && sv.nikkes) doroBL.data = sv; } catch (e) { /* 저장된 정보 없음 */ }
-  /* ---- 도로칩: 사이트 게임으로 얻는 재화. 동 10 = 은 1, 은 10 = 금 1, 무지개는 별도 ---- */
-  const CHIP_K = 'dorosync-chips', CHIP_COL = { b: ['#c27a3e', '#7f4a1f'], s: ['#c3c9d2', '#6f7782'], g: ['#f0a020', '#a86405'], r: ['url(#dcR)', '#5b4a9e'] };
+  /* ---- 도로칩: 사이트 게임으로 얻는 재화. 도로칩 100 = 실버칩 10 = 골드칩 1, 무지개 도로칩은 별도 ---- */
+  const CHIP_K = 'dorosync-chips', CHIP_COL = { b: ['#f0a020', '#a86405'], s: ['#c3c9d2', '#6f7782'], g: ['#f6c431', '#8a6508'], r: ['#b47cff', '#4a3d8a'] };
   let chipN = 0;
-  window.doroChipSvg = function (k, px) {
-    const c = CHIP_COL[k] || CHIP_COL.g, id = 'dcR' + (++chipN), f = k === 'r' ? 'url(#' + id + ')' : c[0];
+  /* k: b 도로칩(주황) · s 실버칩 · g 골드칩(반짝임) · r 무지개(프리미엄). fx=false면 애니메이션 없는 가벼운 버전 */
+  window.doroChipSvg = function (k, px, fx) {
+    const c = CHIP_COL[k] || CHIP_COL.b, id = 'dc' + (++chipN), grad = k === 'g' || k === 'r', f = grad ? 'url(#' + id + ')' : c[0], anim = grad && fx !== false;
     const dots = [0, 60, 120, 180, 240, 300].map((a) => '<circle cx="' + (40 * Math.sin(a * Math.PI / 180)).toFixed(1) + '" cy="' + (-40 * Math.cos(a * Math.PI / 180)).toFixed(1) + '" r="2.4" fill="' + f + '"/>').join('');
-    return '<svg class="dchip dchip-' + k + '" viewBox="-74 -74 148 148" width="' + (px || 24) + '" height="' + (px || 24) + '" aria-hidden="true">' +
-      (k === 'r' ? '<defs><linearGradient id="' + id + '" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff5d8f"/><stop offset=".2" stop-color="#ffb84d"/><stop offset=".4" stop-color="#f6f05a"/><stop offset=".6" stop-color="#5ef0a0"/><stop offset=".8" stop-color="#5ab8ff"/><stop offset="1" stop-color="#b47cff"/></linearGradient></defs>' : '') +
-      '<circle r="72" fill="#d5d8dd" stroke="#8b9097" stroke-width="3"/><circle r="61" fill="#3b3e44"/>' +
+    const star = (x, y, r, col, dur, bg) => '<path d="M0 ' + -r + 'L' + r * 0.22 + ' ' + -r * 0.22 + 'L' + r + ' 0L' + r * 0.22 + ' ' + r * 0.22 + 'L0 ' + r + 'L' + -r * 0.22 + ' ' + r * 0.22 + 'L' + -r + ' 0L' + -r * 0.22 + ' ' + -r * 0.22 + 'Z" fill="' + col + '" transform="translate(' + x + ' ' + y + ')" opacity="0"><animate attributeName="opacity" values="0;1;0" keyTimes="0;.5;1" dur="' + dur + 's" begin="' + bg + 's" repeatCount="indefinite"/></path>';
+    let defs = '', fxs = '';
+    if (k === 'g') defs = '<linearGradient id="' + id + '" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff6c2"/><stop offset=".35" stop-color="#f9d04a"/><stop offset=".7" stop-color="#e2a60f"/><stop offset="1" stop-color="#fbe08a"/></linearGradient>';
+    if (k === 'r') defs = '<linearGradient id="' + id + '" gradientUnits="userSpaceOnUse" x1="-72" y1="-72" x2="72" y2="72"><stop offset="0" stop-color="#ff5d8f"/><stop offset=".2" stop-color="#ffb84d"/><stop offset=".4" stop-color="#f6f05a"/><stop offset=".6" stop-color="#5ef0a0"/><stop offset=".8" stop-color="#5ab8ff"/><stop offset="1" stop-color="#b47cff"/>' + (anim ? '<animateTransform attributeName="gradientTransform" type="rotate" from="0" to="360" dur="3.2s" repeatCount="indefinite"/>' : '') + '</linearGradient>';
+    if (anim) {
+      defs += '<clipPath id="' + id + 'c"><circle r="72"/></clipPath>';
+      const band = (w, op, dur, bg) => '<rect x="' + -w / 2 + '" y="-110" width="' + w + '" height="220" fill="#fff" opacity="' + op + '" transform="rotate(24)"><animateTransform attributeName="transform" type="translate" values="-150 0;150 0;150 0" keyTimes="0;.45;1" dur="' + dur + 's" begin="' + bg + 's" repeatCount="indefinite" additive="sum"/></rect>';
+      fxs = '<g clip-path="url(#' + id + 'c)">' + band(26, 0.55, k === 'r' ? 1.8 : 2.6, 0) + (k === 'r' ? band(10, 0.4, 1.8, 0.25) : '') + '</g>' +
+        (k === 'g' ? star(-34, -40, 15, '#fffbe0', 2.2, 0.3) + star(42, 30, 11, '#fffbe0', 2.2, 1.3)
+          : star(-36, -42, 17, '#fff', 1.6, 0) + star(44, -20, 12, '#ffe9fb', 1.6, 0.5) + star(30, 46, 14, '#e6fbff', 1.6, 1) + star(-44, 28, 10, '#fff7d6', 1.6, 1.3) +
+            '<circle r="70" fill="none" stroke="' + f + '" stroke-width="3" opacity=".9"><animate attributeName="r" values="66;76;66" dur="1.6s" repeatCount="indefinite"/><animate attributeName="opacity" values=".9;.15;.9" dur="1.6s" repeatCount="indefinite"/></circle>');
+    }
+    return '<svg class="dchip dchip-' + k + (anim ? ' fx' : '') + '" viewBox="-80 -80 160 160" width="' + (px || 24) + '" height="' + (px || 24) + '" aria-hidden="true">' + (defs ? '<defs>' + defs + '</defs>' : '') +
+      '<circle r="72" fill="' + (k === 'g' ? '#f3e3a6' : '#d5d8dd') + '" stroke="' + (k === 'g' ? '#a8830f' : '#8b9097') + '" stroke-width="3"/><circle r="61" fill="#3b3e44"/>' +
       '<circle r="52" fill="none" stroke="' + f + '" stroke-width="11" stroke-dasharray="44 10.45"/><circle r="44" fill="#26282c"/>' + dots +
-      '<circle r="34" fill="' + c[1] + '"/><circle r="30" fill="' + f + '"/></svg>';
+      '<circle r="34" fill="' + c[1] + '"/><circle r="30" fill="' + f + '"/>' + fxs + '</svg>';
   };
   const chipGet = () => { let o = null; try { o = JSON.parse(localStorage.getItem(CHIP_K) || 'null'); } catch (e) { o = null; } return Object.assign({ b: 0, s: 0, g: 0, r: 0 }, o || {}); };
   window.doroChips = {
     get: chipGet,
+    total() { const o = chipGet(); return o.b + o.s * 10 + o.g * 100; },
     add(d) {
       const o = chipGet(); ['b', 's', 'g', 'r'].forEach((k) => { o[k] += +(d && d[k]) || 0; });
-      o.s += Math.floor(o.b / 10); o.b %= 10; o.g += Math.floor(o.s / 10); o.s %= 10; /* 올림: 동→은→금 */
+      o.s += Math.floor(o.b / 10); o.b %= 10; o.g += Math.floor(o.s / 10); o.s %= 10; /* 올림: 도로칩→실버칩→골드칩 */
       try { localStorage.setItem(CHIP_K, JSON.stringify(o)); } catch (e) { /* 저장 불가 */ }
       try { window.dispatchEvent(new CustomEvent('dorochips', { detail: o })); } catch (e) { /* 무시 */ }
       return o;
@@ -2526,8 +2539,8 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
   };
   const chipCard = () => {
     const o = chipGet();
-    return '<div class="kpi chipk"><div class="l">도로칩</div><div class="chipv"><span title="금색 도로칩">' + window.doroChipSvg('g', 30) + '<b class="num">' + fmt(o.g) + '</b></span><span title="무지개 도로칩">' + window.doroChipSvg('r', 30) + '<b class="num">' + fmt(o.r) + '</b></span></div>' +
-      '<div class="s">' + window.doroChipSvg('s', 14) + ' 은 ' + o.s + ' · ' + window.doroChipSvg('b', 14) + ' 동 ' + o.b + ' · 가챠에서 교환</div></div>';
+    return '<div class="kpi chipk"><div class="l">도로칩</div><div class="chipv"><span title="골드칩 (도로칩 100개)">' + window.doroChipSvg('g', 32) + '<b class="num">' + fmt(o.g) + '</b></span><span title="무지개 도로칩">' + window.doroChipSvg('r', 32) + '<b class="num">' + fmt(o.r) + '</b></span></div>' +
+      '<div class="s">' + window.doroChipSvg('s', 14) + ' 실버칩 ' + o.s + ' · ' + window.doroChipSvg('b', 14) + ' 도로칩 ' + o.b + '</div></div>';
   };
   window.addEventListener('dorochips', () => { const el = document.querySelector('#tab-me .chipk'); if (el) el.outerHTML = chipCard(); });
   const PFP_K = 'dorosync-pfp';
