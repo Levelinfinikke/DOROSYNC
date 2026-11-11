@@ -79,12 +79,12 @@
 .gm-orb{position:absolute;inset:5%;border-radius:50%;transform-style:preserve-3d;transition:transform .6s cubic-bezier(.35,1.35,.5,1);animation:gmIn .35s cubic-bezier(.2,1.6,.4,1);cursor:pointer;touch-action:none}
 .gm-orb.flip{transform:rotateX(var(--tx,0deg)) rotateY(calc(180deg + var(--ty,0deg)));animation:none}
 .gm-orb.sss{transition:none;z-index:2}
-.gm-orb.glow{animation:gmGlowG 1.1s ease-in-out infinite alternate}
+.gm-orb.glow .gm-ce,.gm-orb.glow .gm-cf,.gm-orb.glow .gm-cb{animation:gmGlowG 1.1s ease-in-out infinite alternate}
 .gm-orb.glow .gm-ce{background:linear-gradient(90deg,#fff3b0,#ffd23f 40%,#fff8d6 60%,#f6b40e)}
-.gm-orb.glow.rain{animation:gmGlowR 1.2s linear infinite}
+.gm-orb.glow.rain .gm-ce,.gm-orb.glow.rain .gm-cf,.gm-orb.glow.rain .gm-cb{animation:gmGlowR 1.2s linear infinite}
 .gm-orb.glow.rain .gm-ce{background:linear-gradient(90deg,#ff5d8f,#ffb84d,#f6f05a,#5ef0a0,#5ab8ff,#b47cff)}
-@keyframes gmGlowG{from{filter:drop-shadow(0 0 3px #ffe27a) drop-shadow(0 0 7px rgba(255,200,60,.8))}to{filter:drop-shadow(0 0 6px #fff1b0) drop-shadow(0 0 14px rgba(255,200,60,.95))}}
-@keyframes gmGlowR{0%{filter:drop-shadow(0 0 5px #ff5d8f) drop-shadow(0 0 13px #ffb84d)}25%{filter:drop-shadow(0 0 5px #f6f05a) drop-shadow(0 0 13px #5ef0a0)}50%{filter:drop-shadow(0 0 5px #5ef0a0) drop-shadow(0 0 13px #5ab8ff)}75%{filter:drop-shadow(0 0 5px #5ab8ff) drop-shadow(0 0 13px #b47cff)}100%{filter:drop-shadow(0 0 5px #ff5d8f) drop-shadow(0 0 13px #ffb84d)}}
+@keyframes gmGlowG{from{box-shadow:0 0 4px 1px #ffe27a,0 0 10px 3px rgba(255,200,60,.7)}to{box-shadow:0 0 7px 2px #fff1b0,0 0 18px 6px rgba(255,200,60,.9)}}
+@keyframes gmGlowR{0%{box-shadow:0 0 6px 2px #ff5d8f,0 0 16px 5px #ffb84d}25%{box-shadow:0 0 6px 2px #f6f05a,0 0 16px 5px #5ef0a0}50%{box-shadow:0 0 6px 2px #5ef0a0,0 0 16px 5px #5ab8ff}75%{box-shadow:0 0 6px 2px #5ab8ff,0 0 16px 5px #b47cff}100%{box-shadow:0 0 6px 2px #ff5d8f,0 0 16px 5px #ffb84d}}
 .gm-sssp{position:fixed;z-index:9999;pointer-events:none;border-radius:50%;box-shadow:0 0 6px currentColor}
 .gm-cf,.gm-cb{position:absolute;inset:0;border-radius:50%;backface-visibility:hidden;-webkit-backface-visibility:hidden}
 .gm-cf{transform:translateZ(1.2px);box-shadow:0 0 0 2.5px var(--gold),0 3px 8px rgba(0,0,0,.6)}
