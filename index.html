@@ -1320,8 +1320,8 @@ button:not(.tr-clr):not(.tabs button):not(.tr-f){border-radius:999px!important}
 .bl-bub{position:absolute;left:0;top:calc(100% - 4px);z-index:30;max-width:min(280px,92vw);padding:8px 12px;border-radius:10px;border:0;background:#1f2937;color:#fff;font:inherit;font-size:12.5px;font-weight:600;text-align:left;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.3);animation:blb .2s ease}
 .bl-bub::before{content:"";position:absolute;left:18px;top:-6px;border:6px solid transparent;border-top:0;border-bottom-color:#1f2937}
 @keyframes blb{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
-.fld.nudge input{border-color:#ff9a3d!important;box-shadow:0 0 0 3px rgba(255,154,61,.25);animation:ndg 1.6s ease-in-out 3}
-.fld.nudge .hint{color:#ff9a3d!important;font-weight:700}
+
+
 .nudge-tag{font-size:12px;font-weight:700;color:#ff9a3d;margin-left:auto;margin-right:8px}
 @keyframes ndg{50%{box-shadow:0 0 0 6px rgba(255,154,61,.05)}}
 </style>
@@ -2885,7 +2885,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
   let stockOpen = false;
   function updateStockBtn() {
     const any = st.boxes.some((r) => r.slice(0, 5).some((v) => v > 0));
-    { const b = $('#stock-toggle'), t = (stockOpen ? '숨기기' : '펼치기') + (!stockOpen && any ? ' (입력됨)' : ''); b.innerHTML = stockOpen ? '<svg class="icb-i" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg>' : '<svg class="icb-i" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>'; b.title = t; b.setAttribute('aria-label', t); b.classList.toggle('has-in', !stockOpen && any); }
+    { const b = $('#stock-toggle'), t = (stockOpen ? '숨기기' : '펼치기') + (!stockOpen && any ? ' (입력됨)' : ''); b.innerHTML = stockOpen ? '<svg class="icb-i" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg>' : '<svg class="icb-i" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>'; b.title = t; b.setAttribute('aria-label', t); b.classList.remove('has-in'); }
   }
   function buildStock() {
     let h = '<thead><tr><th>항목</th><th><i class="ri ri0" title="코어더스트" aria-label="코어더스트"></i></th><th><i class="ri ri1" title="배틀데이터" aria-label="배틀데이터"></i></th><th><i class="ri ri2" title="크레딧" aria-label="크레딧"></i></th></tr></thead><tbody id="stock-hid"' + (stockOpen ? '' : ' hidden') + '>';
@@ -4786,10 +4786,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     setTimeout(kill, 6000);
   };
   /* 연동 직후: 연동으로 가져올 수 없는 항목(단기섬멸 횟수·보유 재화) 직접 입력 유도 */
-  function blNudge() {
-    const f = $('#u-sortie') && $('#u-sortie').closest('.fld');
-    if (f) f.classList.add('nudge');
-  }
+  function blNudge() { /* 연동 후 단기섬멸 강조 효과 제거 */ }
   window.blNudge = blNudge;
   function blUnnudge() {
     const f = $('#u-sortie') && $('#u-sortie').closest('.fld'); if (f && f.classList.contains('nudge')) f.classList.remove('nudge');
