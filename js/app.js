@@ -2940,10 +2940,12 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   }
   /* 플랜 확정 시 패키지 조합 목록의 효율 조합 전부를 '세계선'으로 함께 저장 */
   function worldLines(bill0, days0) {
-    if (!OPT || !OPT.par || !OPT.op) return [];
-    const out = [];
-    OPT.par.forEach((r, i) => {
-      if (!OPT.good[i]) return;
+    const out = [], ok = !!(OPT && OPT.par && OPT.op), gi = !ok ? [] : OPT.par.map((r, i) => i).filter((i) => OPT.good[i]).sort((x, y) => OPT.par[x][0] - OPT.par[y][0]);
+    /* 확정한 조합의 바로 아래(더 싼)·바로 위(더 비싼) 효율 조합만 */
+    const lo = gi.filter((i) => OPT.par[i][0] < bill0), hi = gi.filter((i) => OPT.par[i][0] > bill0);
+    const pick = new Set([lo[lo.length - 1], hi[0]].filter((i) => i != null));
+    if (ok) OPT.par.forEach((r, i) => {
+      if (!pick.has(i)) return;
       try {
         const list = OPT.op.decode(r[2]), s2 = JSON.parse(JSON.stringify(st)), use = new Array(s2.pk.length).fill(false);
         list.forEach((x) => { use[x.j] = true; if (x.k >= 0) s2.pk[x.j].sel = RES[x.k]; });
@@ -2953,7 +2955,11 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
         out.push({ id: 'w' + i + '-' + Date.now().toString(36), bill: tr.bill || 0, days: lt, S0: st.S0, pts: trPts(tr, st.S0), pk: list.map((x) => [x.j, x.k]) });
       } catch (e) { /* 이 조합은 건너뜀 */ }
     });
-    return out.sort((x, y) => x.bill - y.bill).slice(0, 24);
+    if (bill0 > 0 && !out.some((w) => !w.bill)) try { /* 비교용 무과금 세계선 */
+      const tr = E.simulate(M, M.Pk.map(() => false), true), rows = tr.rows || [], lt = rows.length ? rows[rows.length - 1].t : 0;
+      if (lt) out.push({ id: 'w0-' + Date.now().toString(36), np: true, bill: 0, days: lt, S0: st.S0, pts: trPts(tr, st.S0), pk: [] });
+    } catch (e) { /* 무시 */ }
+    return out.sort((x, y) => x.bill - y.bill);
   }
   function commitPlan() {
     if (!TR || !M || !/^\d{4}-\d{2}-\d{2}$/.test(st.start)) { toast('먼저 시작 날짜와 목표를 입력하고 계산해 주세요.'); return; }
@@ -3090,7 +3096,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
     const a = p.alts || []; if (!a.length) return '';
     const dOf = (n) => { const t = ymdMs(p.start); return isNaN(t) ? '' : ymd(t + n * DAY + new Date().getTimezoneOffset() * 60000); };
     return '<details class="pl-alts"' + (renderProg.openAlt === p.id ? ' open' : '') + ' data-palt="' + p.id + '"><summary>과금별 세계선 ' + a.length + '개' + (p.ref ? '<label class="pl-altsw" title="그래프에 세계선 표시"><input type="checkbox" data-paltv="' + p.id + '"' + (p.altOff ? '' : ' checked') + '> 그래프에 표시</label>' : '') + '</summary><ul>' +
-      a.map((w) => '<li><b>' + won(w.bill) + '</b><span class="muted sm">' + w.days + '일 · ' + dOf(w.days) + ' 도달</span><button type="button" class="ghost sm" data-wapp="' + p.id + '|' + w.id + '" title="이 세계선을 새 플랜으로 만들어 기준으로 정합니다">적용</button><button type="button" class="ghost sm icb pl-del" data-wdel="' + p.id + '|' + w.id + '" title="삭제" aria-label="세계선 삭제">' + TRASH + '</button></li>').join('') + '</ul></details>';
+      a.map((w) => '<li><b>' + (w.np || !w.bill ? '무과금' : won(w.bill)) + '</b><span class="muted sm">' + w.days + '일 · ' + dOf(w.days) + ' 도달</span><button type="button" class="ghost sm" data-wapp="' + p.id + '|' + w.id + '" title="이 세계선을 새 플랜으로 만들어 기준으로 정합니다">적용</button><button type="button" class="ghost sm icb pl-del" data-wdel="' + p.id + '|' + w.id + '" title="삭제" aria-label="세계선 삭제">' + TRASH + '</button></li>').join('') + '</ul></details>';
   }
   function renderProg() {
     let box = $('#me-prog');
@@ -3168,7 +3174,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
     box.querySelectorAll('[data-paltv]').forEach((c) => { c.addEventListener('click', (e) => e.stopPropagation()); c.addEventListener('change', () => { const a = plansGet(), p = a.find((q) => q.id === c.dataset.paltv); if (!p) return; p.altOff = !c.checked; plansSet(a); renderProg(); }); });
     box.querySelectorAll('[data-wdel]').forEach((b) => b.addEventListener('click', () => {
       const [pid, wid] = b.dataset.wdel.split('|'), a = plansGet(), p = a.find((q) => q.id === pid); if (!p || !p.alts) return;
-      const w = p.alts.find((x) => x.id === wid); if (!w || !confirm(won(w.bill) + ' 세계선을 삭제할까요? 되돌릴 수 없습니다.')) return;
+      const w = p.alts.find((x) => x.id === wid); if (!w || !confirm((w.bill ? won(w.bill) : '무과금') + ' 세계선을 삭제할까요? 되돌릴 수 없습니다.')) return;
       p.alts = p.alts.filter((x) => x.id !== wid); renderProg.openAlt = pid; plansSet(a); renderProg();
     }));
     box.querySelectorAll('[data-wapp]').forEach((b) => b.addEventListener('click', () => {
@@ -3176,7 +3182,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
       const w = p.alts.find((x) => x.id === wid); if (!w) return;
       a.forEach((q) => { q.ref = false; });
       const n = a.reduce((m, q) => Math.max(m, q.n || 0), 0) + 1;
-      a.push({ v: 3, id: 'p' + Date.now(), n, label: (plName(p) + ' · ' + won(w.bill)).slice(0, 16), start: p.start, S0: w.S0 || p.S0, T: p.T, at: Date.now(), bill: w.bill, days: w.days, pts: w.pts, pk: w.pk, alts: [], hidden: false, ref: true });
+      a.push({ v: 3, id: 'p' + Date.now(), n, label: (plName(p) + ' · ' + (w.bill ? won(w.bill) : '무과금')).slice(0, 16), start: p.start, S0: w.S0 || p.S0, T: p.T, at: Date.now(), bill: w.bill, days: w.days, pts: w.pts, pk: w.pk, alts: [], hidden: false, ref: true });
       if (plansSet(a)) { toast('세계선을 새 플랜으로 만들어 기준으로 정했습니다.', 3000); renderProg(); }
     }));
     box.querySelectorAll('[data-phide]').forEach((b) => b.addEventListener('click', () => {
