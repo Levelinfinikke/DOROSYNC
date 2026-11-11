@@ -1,6 +1,7 @@
 /* DOROSYNC 가챠 머신 v3 — 독립 모듈. DoroGacha.mount(root, {assets, pools, stock, tiers}) */
 (function () {
   'use strict';
+  const GM_ALL = []; /* 열린 가챠 머신들(보관함 확인용) */
   const W = 960, H = 956, TAU = Math.PI * 2;
   const TRICO = 'assets/img/f2b148d53e13.png';
   const CT = { x: 150, y: 78, w: 660, h: 384, r: 44 }, IN = { x0: 158, x1: 802, y0: 88, y1: 454, r: 40 };  // 볼록한 사각 통
@@ -76,7 +77,13 @@
 .gm-well.over{box-shadow:inset 0 5px 9px rgba(0,0,0,.85),0 0 0 3px var(--gold)}
 .gm-cf,.gm-float.orb{background:center/cover no-repeat,radial-gradient(circle at 50% 30%,#fff6d8,#d9b35a)}
 .gm-orb{position:absolute;inset:5%;border-radius:50%;transform-style:preserve-3d;transition:transform .6s cubic-bezier(.35,1.35,.5,1);animation:gmIn .35s cubic-bezier(.2,1.6,.4,1);cursor:pointer;touch-action:none}
-.gm-orb.flip{transform:rotateX(var(--tx,0deg)) rotateY(calc(180deg + var(--ty,0deg)));animation:none}
+.gm-orb.flip{transform:rotateX(var(--tx,0deg)) rotateY(calc(180deg + var(--spin,0deg) + var(--ty,0deg)));animation:none}
+.gm-orb.sss{transition:transform 1.05s cubic-bezier(.2,.6,.25,1);z-index:3;filter:drop-shadow(0 0 10px rgba(255,220,110,.9))}
+.gm-sssring{position:fixed;z-index:9998;pointer-events:none;width:var(--d);height:var(--d);border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 0 0 3px #ffe27a,0 0 26px 8px rgba(255,214,90,.75);animation:gmSssR 1.6s ease-out forwards}
+.gm-sssring.rain{box-shadow:0 0 0 3px #fff,0 0 30px 10px rgba(255,140,220,.7),0 0 60px 18px rgba(110,190,255,.5);animation:gmSssR 1.6s ease-out forwards,gmHue 1.6s linear}
+@keyframes gmSssR{0%{opacity:0;transform:translate(-50%,-50%) scale(.6)}20%{opacity:1}55%{opacity:1;transform:translate(-50%,-50%) scale(1.05)}100%{opacity:0;transform:translate(-50%,-50%) scale(2.4)}}
+@keyframes gmHue{to{filter:hue-rotate(360deg)}}
+.gm-sssp{position:fixed;z-index:9999;pointer-events:none;border-radius:50%;box-shadow:0 0 6px currentColor}
 .gm-cf,.gm-cb{position:absolute;inset:0;border-radius:50%;backface-visibility:hidden;-webkit-backface-visibility:hidden}
 .gm-cf{transform:translateZ(1.2px);box-shadow:0 0 0 2.5px var(--gold),0 3px 8px rgba(0,0,0,.6)}
 .gm-cb{transform:rotateY(180deg) translateZ(1.2px);display:grid;place-items:center}.gm-cb svg{width:108%;height:108%;flex:none}
@@ -348,8 +355,9 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
       let i = S.tray.findIndex((e) => e && e.nk.n === nk.n); if (i < 0) i = trayFree(); const well = panEl.children[i] || panEl.lastElementChild; let w = well.getBoundingClientRect(); const tb = leftEl.querySelector('.gm-trbtn'), tbv = tb && tb.offsetParent && !$('.gm').classList.contains('topen'); if (tbv) w = tb.getBoundingClientRect(); else if (!w.width) w = cv.getBoundingClientRect(); void el.offsetWidth; el.style.left = (w.left + w.width / 2) + 'px'; el.style.top = (w.top + w.height / 2) + 'px'; el.style.transform = 'translate(-50%,-50%) scale(' + (w.width / 78) + ')';
       setTimeout(() => { el.remove(); trayAdd(nk, count); if (tbv) { tb.classList.add('pop'); setTimeout(() => tb.classList.remove('pop'), 180); } }, 520 / (S.auto || 1)); }
     /* ---------- 도로칩 ---------- */
-    const CHIP_OF = { SSS: 'r', SS: 'g', S: 's' }, CHIP_VAL = { b: 1, s: 5, g: 10 }, CHIP_NM = { r: '무지개 도로칩', g: '골드칩', s: '실버칩', b: '도로칩' };
-    const chipOf = (nk) => CHIP_OF[TIERS.boss[nk.n]] || 'b', chipSvg = (k, px, fx) => (window.doroChipSvg ? window.doroChipSvg(k, px, fx) : '');
+    const CHIP_OF = { SSS: 'g', SS: 'g', S: 's' }, CHIP_VAL = { b: 1, s: 5, g: 10 }, CHIP_NM = { r: '무지개 도로칩', g: '골드칩', s: '실버칩', b: '도로칩' };
+    const isSSSn = (nk) => TIERS.boss[nk.n] === 'SSS', chipOf = (nk) => CHIP_OF[TIERS.boss[nk.n]] || 'b', chipE = (en) => { if (!en.ck) en.ck = isSSSn(en.nk) && Math.random() < 0.1 ? 'r' : chipOf(en.nk); return en.ck; } /* SSS: 10% 무지개, 90% 골드 */, chipSvg = (k, px, fx) => (window.doroChipSvg ? window.doroChipSvg(k, px, fx) : '');
+    GM_ALL.push({ S });
     const balEl = $('.gm-chipbal'); let chipPend = 0, chipPendR = 0, chipSeq = 0;
     function uiBal(bump) {
       if (!balEl) return; const w = window.doroChips, o = w ? w.get() : { b: 0, s: 0, g: 0, r: 0 }, tot = o.b + o.s * 5 + o.g * 10;
@@ -386,6 +394,19 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
         const an = big.animate([{ transform: 'scale(1)', opacity: 1 }, { transform: 'scale(.82)', opacity: 1, offset: 0.45 }, { transform: 'scale(1.5)', opacity: 0 }], { duration: 300, easing: 'ease-in' }); an.onfinish = () => { big.remove(); launch(); };
       } else launch();
     }
+    /* SSS 초상화 뒤집기: 빠르게 여러 바퀴 돌며 빛기둥·파편이 터지고, 무지개면 더 크게 */
+    function sssFlip(orb, k) {
+      const host = document.fullscreenElement || document.body, r = orb.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2, rain = k === 'r';
+      orb.classList.add('sss'); setTimeout(() => orb.classList.remove('sss'), 1500);
+      try { snd.flip(); setTimeout(() => snd.flip(), 160); setTimeout(() => snd.flip(), 320); setTimeout(() => { snd.chipBurst(true); snd.chipPop(); if (rain) setTimeout(() => snd.chipBurst(true), 140); }, 950); } catch (e) { /* 무시 */ }
+      const ring = document.createElement('div'); ring.className = 'gm-sssring' + (rain ? ' rain' : ''); ring.style.left = cx + 'px'; ring.style.top = cy + 'px'; ring.style.setProperty('--d', r.width + 'px'); host.appendChild(ring); setTimeout(() => ring.remove(), 1700);
+      setTimeout(() => {
+        const N = rain ? 40 : 26, cols = rain ? ['#ff5d8f', '#ffb84d', '#f6f05a', '#5ef0a0', '#5ab8ff', '#b47cff'] : ['#fff6c2', '#f9d04a', '#ffe27a', '#fff'];
+        for (let i = 0; i < N; i++) { const p = document.createElement('i'); p.className = 'gm-sssp'; const a = (i / N) * TAU + rnd(-0.15, 0.15), d = rnd(r.width * 0.8, r.width * (rain ? 2.4 : 1.8)), sz = rnd(4, rain ? 9 : 7); p.style.cssText = 'left:' + cx + 'px;top:' + cy + 'px;width:' + sz + 'px;height:' + sz + 'px;background:' + cols[i % cols.length]; host.appendChild(p);
+          p.animate([{ transform: 'translate(-50%,-50%) scale(1)', opacity: 1 }, { transform: 'translate(calc(-50% + ' + Math.cos(a) * d + 'px),calc(-50% + ' + Math.sin(a) * d + 'px)) scale(.2)', opacity: 0 }], { duration: rnd(600, 1000), easing: 'cubic-bezier(.1,.7,.3,1)' }).onfinish = () => p.remove(); }
+        if (rain) say('무지개 도로칩!!');
+      }, 900);
+    }
     /* 캔버스 위의 도로칩(바디라벨 10k 보상) */
     function chipSprite(k) { const key = 'chip' + k; if (spr[key]) return spr[key]; const q = 2, R = OR + 3, c = mkc(R * 2 * q, R * 2 * q), x = c.getContext('2d'), u = OR / 72, col = k === 's' ? ['#c3c9d2', '#6f7782'] : k === 'g' ? ['#f6c431', '#8a6508'] : ['#f0a020', '#a86405']; x.scale(q, q); x.translate(R, R); x.scale(u, u);
       x.fillStyle = k === 'g' ? '#f3e3a6' : '#d5d8dd'; x.strokeStyle = k === 'g' ? '#a8830f' : '#8b9097'; x.lineWidth = 3; x.beginPath(); x.arc(0, 0, 72, 0, TAU); x.fill(); x.stroke(); x.fillStyle = '#3b3e44'; x.beginPath(); x.arc(0, 0, 61, 0, TAU); x.fill();
@@ -418,7 +439,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
         + '<small>개봉 방식</small><div class="gm-seg">' + [['mix', '랜덤'], ['pull', '당겨 열기'], ['tap', '깨트리기'], ['hold', '꾹 누르기'], ['auto', '자동']].map((x) => '<button data-op="' + x[0] + '"' + on(S.openM === x[0]) + '>' + x[1] + '</button>').join('') + '</div>'
         : '<small>도움말</small><ol class="gm-help"><li>오른쪽 상자의 재화를 끌어 기계 위에 놓기 (큰 것 10뽑 · 작은 것 1뽑)</li><li>레버 클릭 = 10연속, 드래그 = 한 칸씩</li><li>사출구 뚜껑을 위로 끌어 캡슐 꺼내기</li><li>캡슐을 눌렀다 떼면 개봉, 구슬 클릭 = 보관함</li><li>통이 비면 자동 리필</li><li>빈 곳을 옆으로 끌면 다른 픽업 머신</li></ol>'; }
     function uiStat() { const t = S.stats; statEl.innerHTML = [['뽑은 횟수', t.n], ['SSR', t.ssr + (t.pu ? ' <em>픽업 ' + t.pu + '</em>' : '')], ].map((x) => '<div><small>' + x[0] + '</small><b>' + x[1] + '</b></div>').join(''); }
-    function uiTray() { const pw = panEl.clientWidth - 20, ph = panEl.clientHeight - 20, cols = pw > 60 ? Math.max(3, Math.min(12, Math.floor((pw + 8) / 62))) : 5, cell = pw > 60 ? (pw - (cols - 1) * 8) / cols : 50, n = cols * Math.max(Math.ceil((S.tray.length + 1) / cols), pw > 60 ? Math.floor((ph + 8) / (cell + 8)) : 3, 2); panEl.style.setProperty('--cols', cols); const tb = leftEl.querySelector('.gm-trbtn span'); if (tb) tb.textContent = S.tray.filter(Boolean).length; let h = ''; for (let i = 0; i < n; i++) { const e = S.tray[i], tr = e ? (TIERS[S.val.mode === 2 ? 'pvp' : 'boss'][e.nk.n] || '-') : ''; const ck = e ? chipOf(e.nk) : '', cn = e && e.count > 1 ? '<i>×' + e.count + '</i>' : ''; h += '<div class="gm-well" data-i="' + i + '">' + (e ? '<div class="gm-orb' + (e.nk.pu ? ' pu' : '') + (e.merge ? ' merge' : '') + (e.flip ? ' flip' : '') + '"' + (e.tilt ? ' style="--tx:' + e.tilt[0] + 'deg;--ty:' + e.tilt[1] + 'deg"' : '') + ' title="' + (e.flip ? CHIP_NM[ck] + ' · 누르면 잔고로' : e.nk.n + ' · 누르면 ' + CHIP_NM[ck] + '(으)로') + '"><span class="gm-ce"></span><span class="gm-ce"></span><span class="gm-ce"></span><span class="gm-ce"></span><span class="gm-ce"></span><div class="gm-cf" style="' + orbBg(e.nk) + '">' + (tr ? '<u style="color:' + (TIERC[tr] || '#fff') + '">' + tr + '</u>' : '') + cn + '</div><div class="gm-cb">' + chipSvg(ck, 64) + cn + '</div></div>' : '') + '</div>'; if (e) e.merge = false; }
+    function uiTray() { const pw = panEl.clientWidth - 20, ph = panEl.clientHeight - 20, cols = pw > 60 ? Math.max(3, Math.min(12, Math.floor((pw + 8) / 62))) : 5, cell = pw > 60 ? (pw - (cols - 1) * 8) / cols : 50, n = cols * Math.max(Math.ceil((S.tray.length + 1) / cols), pw > 60 ? Math.floor((ph + 8) / (cell + 8)) : 3, 2); panEl.style.setProperty('--cols', cols); const tb = leftEl.querySelector('.gm-trbtn span'); if (tb) tb.textContent = S.tray.filter(Boolean).length; let h = ''; for (let i = 0; i < n; i++) { const e = S.tray[i], tr = e ? (TIERS[S.val.mode === 2 ? 'pvp' : 'boss'][e.nk.n] || '-') : ''; const ck = e ? chipE(e) : '', cn = e && e.count > 1 ? '<i>×' + e.count + '</i>' : ''; h += '<div class="gm-well" data-i="' + i + '">' + (e ? '<div class="gm-orb' + (e.nk.pu ? ' pu' : '') + (e.merge ? ' merge' : '') + (e.flip ? ' flip' : '') + '"' + (e.tilt ? ' style="--tx:' + e.tilt[0] + 'deg;--ty:' + e.tilt[1] + 'deg;--spin:' + (e.spin || 0) + 'deg"' : '') + ' title="' + (e.flip ? CHIP_NM[ck] + ' · 누르면 잔고로' : e.nk.n + ' · 누르면 ' + CHIP_NM[ck] + '(으)로') + '"><span class="gm-ce"></span><span class="gm-ce"></span><span class="gm-ce"></span><span class="gm-ce"></span><span class="gm-ce"></span><div class="gm-cf" style="' + orbBg(e.nk) + '">' + (tr ? '<u style="color:' + (TIERC[tr] || '#fff') + '">' + tr + '</u>' : '') + cn + '</div><div class="gm-cb">' + chipSvg(ck, 64) + cn + '</div></div>' : '') + '</div>'; if (e) e.merge = false; }
       panEl.innerHTML = h; const tl = S.tray.filter(Boolean); $('.gm-name').textContent = tl.length ? tl.map((e) => e.nk.n + (e.count > 1 ? ' ×' + e.count : '')).join(' · ') : '구슬을 여기에 끌어다 놓으세요.'; }
     const shortN = (n) => (n >= 1e6 ? +(n / 1e6).toFixed(2) + 'M' : n >= 1e4 ? +(n / 1e3).toFixed(1) + 'k' : fmt(n));
     function uiLab(bump) { labEl.querySelector('b').textContent = shortN(S.lab); if (bump) { labEl.classList.add('bump'); clearTimeout(uiLab.t); uiLab.t = setTimeout(() => labEl.classList.remove('bump'), 120); } }
@@ -453,8 +474,8 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     window.addEventListener('pointermove', (e) => { if (!tpd || fl) return; if (Math.hypot(e.clientX - tpd.x, e.clientY - tpd.y) < 7) return; const en = tpd.en, i = S.tray.indexOf(en); tpd = null; if (i < 0) return; S.tray[i] = null; uiTray(); orbDrag(en.nk, e, 'tray', en.count); fl.ti = i; fl.en = en; });
     window.addEventListener('pointercancel', () => { tpd = null; });
     window.addEventListener('pointerup', () => { if (!tpd) return; const en = tpd.en, well = tpd.well; tpd = null; const i = S.tray.indexOf(en), orb = well.querySelector('.gm-orb'); if (i < 0 || !orb) return;
-      if (!en.flip) { en.flip = true; { const a = rnd(0, TAU), m = rnd(2, 4); en.tilt = [Math.round(Math.cos(a) * m), Math.round(Math.sin(a) * m)]; orb.style.setProperty('--tx', en.tilt[0] + 'deg'); orb.style.setProperty('--ty', en.tilt[1] + 'deg'); } orb.classList.remove('merge'); orb.classList.add('flip'); orb.title = CHIP_NM[chipOf(en.nk)] + ' · 누르면 잔고로'; snd.flip(); }
-      else { const r = orb.getBoundingClientRect(); S.tray[i] = null; while (S.tray.length && !S.tray[S.tray.length - 1]) S.tray.pop(); uiTray(); chipAbsorb(chipOf(en.nk), en.count, r.left + r.width / 2, r.top + r.height / 2, r.width); } });
+      if (!en.flip) { en.flip = true; { const a = rnd(0, TAU), m = rnd(2, 4); en.tilt = [Math.round(Math.cos(a) * m), Math.round(Math.sin(a) * m)]; orb.style.setProperty('--tx', en.tilt[0] + 'deg'); orb.style.setProperty('--ty', en.tilt[1] + 'deg'); } orb.classList.remove('merge'); if (isSSSn(en.nk)) { en.spin = 1080; orb.style.setProperty('--spin', '1080deg'); sssFlip(orb, chipE(en)); } else snd.flip(); orb.classList.add('flip'); orb.title = CHIP_NM[chipE(en)] + ' · 누르면 잔고로'; }
+      else { const r = orb.getBoundingClientRect(); S.tray[i] = null; while (S.tray.length && !S.tray[S.tray.length - 1]) S.tray.pop(); uiTray(); chipAbsorb(chipE(en), en.count, r.left + r.width / 2, r.top + r.height / 2, r.width); } });
     root.addEventListener('click', (e) => { const a = e.target.closest('[data-a]'); if (!a) return; const k = a.dataset.a;
       if (k === 'snd') { S.mute = !S.mute; a.classList.toggle('off', S.mute); }
       else if (k === 'fold') { a.parentNode.classList.toggle('fold'); }
@@ -462,7 +483,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
       else if (k === 'open' || k === 'help') { S.pop = S.pop === k ? null : k; uiOpt(); }
       else if (k === 'hide') { a.classList.toggle('on', $('.gm-left').classList.toggle('clean')); S.pop = null; uiOpt(); }
       else if (k === 'refill') refill();
-      else if (k === 'fs') { if (o.fs) o.fs(); else if (document.fullscreenElement) document.exitFullscreen(); else if (root.requestFullscreen) root.requestFullscreen().catch(() => {}); }
+      else if (k === 'fs') { const inFs = !!(document.fullscreenElement || root.closest('.gm-multi.fs')); if (inFs && GM_ALL.some((x) => x.S.tray.some(Boolean)) && !(S.fsWarn && performance.now() - S.fsWarn < 4000)) { S.fsWarn = performance.now(); S.msg = { t: '잠깐, 아직 교환하지 않은 SSR이 있습니다!', life: 3.6 }; snd.clunk(); const g = $('.gm'); if (g && !g.classList.contains('topen')) { g.classList.add('topen'); requestAnimationFrame(() => { resize(); uiTray(); }); } return; } if (o.fs) o.fs(); else if (document.fullscreenElement) document.exitFullscreen(); else if (root.requestFullscreen) root.requestFullscreen().catch(() => {}); }
       else if (k === 'auto') { S.auto = S.auto === 0 ? 1 : S.auto === 1 ? 2 : S.auto === 2 ? 4 : 0; S.autoLid = false; a.textContent = S.auto ? 'AUTO ×' + S.auto : 'AUTO'; a.classList.toggle('on', !!S.auto); }
       else if (k === 'exch') { const L = S.bask.filter((b) => (b.kind === 'R' || b.kind === 'SR') && !(S.mode.random && b.res.dummy)); if (!L.length) say('교환할 R·SR 캡슐이 없습니다.'); popStart(L); }
       else if (k === 'all') { const L = S.bask.filter((b) => b.kind === 'orb'); L.forEach((b) => { S.bask.splice(S.bask.indexOf(b), 1); trayAdd(b.res.nk, b.res.count); }); wake(S.bask); const R = S.reveal; if (R && R.ph === 'show' && R.nk && R.t > 0.5) { trayAdd(R.nk, 1); endReveal(false); } }
