@@ -2749,9 +2749,18 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
       return '<tr' + (pk.best && pk.best.k === x.k ? ' class="me-pick"' : '') + '><td>' + (pk.best && pk.best.k === x.k ? '✓ ' : '') + esc(lab) + '</td><td>' + (x.c.power ? fmt(x.c.power) : '-') + '</td><td>' + (x.c.lv || '-') + '</td><td>' + (x.row ? fmt(x.row[4]) : '-') + '</td><td>' + blDate(x.c.clearedAt) + '</td></tr>';
     }).join('');
     const kp = (l, v, s) => '<div class="kpi"><div class="l">' + l + '</div><div class="v num">' + v + '</div>' + (s ? '<div class="s">' + s + '</div>' : '') + '</div>';
+    /* 같은 싱크로 레벨의 평균 유저(동기)와 비교 */
+    const peer = { l: '', p: '' };
+    try {
+      if (m.synchro > 0) {
+        const mm = E.buildModel(Object.assign(JSON.parse(JSON.stringify(st)), { S0: m.synchro, T: Math.max(m.synchro + 1, st.T || 0), L0: 0, power: 0 }), D);
+        if (m.outpost > 0) { const dl = m.outpost - mm.avgL; peer.l = dl === 0 ? '동기와 같습니다' : '동기보다 ' + Math.abs(dl) + 'Lv. ' + (dl > 0 ? '높습니다' : '낮습니다'); }
+        if (m.top5 > 0) { const dp = (m.top5 / mm.cpsAt(m.synchro) - 1) * 100; peer.p = '동기보다 ' + Math.abs(dp).toFixed(1) + '% ' + (dp >= 0 ? '강합니다' : '약합니다'); }
+      }
+    } catch (e) { /* 비교 생략 */ }
     const pf = blPfp(), cb = pk.best || (pk.cand || []).find((x) => x.c && x.c.chapter != null) || null;
     let html = '<div class="card"><div class="row-ctl sp"><h2 class="inline me-who"><button type="button" class="me-pfp" id="me-pfp" title="프로필 니케 바꾸기" aria-label="프로필 니케 바꾸기" aria-expanded="' + !!renderMe.pick + '">' + (pf ? '<img src="' + BL_IMG(pf.code) + '" alt="" onerror="this.remove()">' : '') + '</button>' + esc(m.role || '전초기지') + '</h2><button class="ghost sm icb" id="me-apply" type="button" title="싱크로 탭에 다시 적용" aria-label="싱크로 탭에 다시 적용"><svg class="icb-i" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2.5" width="14" height="19" rx="2.5"/><rect x="8" y="5.5" width="8" height="3.5" rx=".8"/><path d="M8.5 13h.01M12 13h.01M15.5 13h.01M8.5 16.5h.01M12 16.5h.01M15.5 16.5h.01"/></svg></button></div>' +
-      '<div class="mekpis">' + kp('현재 싱크로', fmt(m.synchro || 0)) + kp('전초기지 레벨', fmt(m.outpost || 0)) + kp('1군 전투력', fmt(m.top5 || 0), '전투력 상위 5명 합산') +
+      '<div class="mekpis">' + kp('현재 싱크로', fmt(m.synchro || 0)) + kp('전초기지 레벨', fmt(m.outpost || 0), peer.l) + kp('1군 전투력', fmt(m.top5 || 0), peer.p) +
       kp('클리어 투력', cb && cb.c.power ? fmt(cb.c.power) : '-', cb ? esc(BL_MODE[cb.k] + ' ' + (cb.row ? cb.row[2] : cb.c.chapter + '챕터 보스')) + (cb.c.clearedAt ? ' · ' + blDate(cb.c.clearedAt) : '') : '') + '</div>' +
       (renderMe.pick ? '<div class="pfp-pick" role="listbox" aria-label="프로필 니케 선택">' + d.nikkes.slice().sort((x, y) => y.combat - x.combat).map((n) => '<button type="button" role="option" data-pfp="' + n.code + '" class="' + (pf && pf.code === n.code ? 'on' : '') + '" title="' + esc(BL_NM(n)) + '" aria-selected="' + !!(pf && pf.code === n.code) + '"><img src="' + BL_IMG(n.code) + '" alt="' + esc(BL_NM(n)) + '" loading="lazy" onerror="this.parentNode.remove()"></button>').join('') + '</div>' : '') +
       '<p class="muted" id="me-fixnote"></p>' +
@@ -3201,9 +3210,9 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
       const tNow = Math.max(0, Math.round((ymdMs(ymd(Date.now())) - rs) / DAY) + 1), span = Math.max(1, ref.T - ref.S0);
       const pLv = planAt(ref, Math.min(tNow, ref.days)), pPct = Math.max(0, Math.min(100, (pLv - ref.S0) / span * 100)), aPct = Math.max(0, Math.min(100, (la[1] - ref.S0) / span * 100));
       const bar = (cls2, lab, lv, pct, sub) => '<div class="pbar ' + cls2 + '"><div class="pbar-l"><b>' + lab + '</b><span>Lv ' + lv + ' · ' + sub + '</span><em>' + pct.toFixed(1) + '%</em></div><div class="pbar-t"><div class="pbar-f" style="width:' + pct.toFixed(2) + '%"><i class="pbar-a"></i></div></div></div>';
-      html += '<div class="prog-sum"><div class="pbars"><div class="pbar-ends"><span><b>' + ref.S0 + '</b> ' + ref.start.slice(2).replace(/-/g, '.') + '</span><span class="pbar-arr" aria-hidden="true"><u></u><u></u><u></u></span><span><b>' + ref.T + '</b> ' + dAt(ref.days).slice(2).replace(/-/g, '.') + '</span></div>' +
+      html += '<div class="prog-sum"><div class="pbars"><div class="pbar-ends"><span><b>' + ref.S0 + '</b><small>' + ref.start.slice(2).replace(/-/g, '.') + '</small></span><span class="pbar-arr" aria-hidden="true"><u></u><u></u><u></u></span><span><b>' + ref.T + '</b><small>' + dAt(ref.days).slice(2).replace(/-/g, '.') + '</small></span></div>' +
         bar('pl', '플랜', pLv, pPct, (tNow > 0 ? Math.min(tNow, ref.days) + '일차' : '시작 전')) + bar('ac', '실제', la[1], aPct, h[h.length - 1].d.slice(5).replace('-', '/') + ' 기록') + '</div>' +
-        '<div class="kpi ' + cls + '"><small>기준 플랜 대비</small><b>' + (dl === 0 ? '예정대로' : (dl > 0 ? '+' : '') + dl + ' Lv') + '</b><span>' + (dd == null ? '목표를 넘어섰습니다' : dd === 0 ? '일정과 같습니다' : Math.abs(dd) + '일 ' + (dd > 0 ? '빠름' : '늦음')) + '</span><span class="muted">예상 Lv ' + exp + (lt >= 0 ? ' · ' + lt + '일차' : ' · 시작 전') + '</span></div>' +
+        '<div class="kpi pvs ' + cls + '"><small>기준 플랜 대비</small><b>' + (dl === 0 ? '예정대로' : (dl > 0 ? '+' : '') + dl + ' Lv') + '</b><span>' + (dd == null ? '목표를 넘어섰습니다' : dd === 0 ? '일정과 같습니다' : Math.abs(dd) + '일 ' + (dd > 0 ? '빠름' : '늦음')) + '</span><span class="muted">예상 Lv ' + exp + (lt >= 0 ? ' · ' + lt + '일차' : ' · 시작 전') + '</span></div>' +
         '<div class="prog-boost">' + boostHtml(null, { S0: la[1], find: (lv) => { const q = ref.pts.find((x) => x[1] >= lv); return q ? { t: Math.max(1, q[0]), d: dAt(Math.max(1, q[0])) } : null; } }) + '</div></div>';
     } else if (all.length && !act.length) html += '<p class="muted sm">플랜을 확정했습니다. BlaBla 연동을 하면 실제 싱크로 레벨이 기록되어 예상과 비교됩니다.</p>';
     else if (!all.length) html += '<p class="muted sm">[싱크로] 탭 결과의 <b>플랜 확정</b>(깃발 버튼)을 누르면 예상 그래프와 비교할 수 있어요. 과금 계획이 바뀌면 다시 확정해 새 플랜을 추가하면 됩니다.</p>';
@@ -3812,7 +3821,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   /* 인식 결과 확인 창 */
   const INV_ITEMS = [['gold', '골마'], ['silver', '실마'], ['mod', '모듈'], ['sk1', '스킬 1'], ['sk2', '스킬 2'], ['sk3', '스킬 3'], ['bu1', '버스트 1'], ['bu2', '버스트 2'], ['bu3', '버스트 3'], ['kit1', '관리키트 1'], ['kit2', '관리키트 2'], ['kit3', '관리키트 3'], ['lock', '락키'], ['selc', '코드매뉴얼 선택상자'], ['grow1', '그로우 세트 1h'], ['sup1', '중앙정부 보급 물자1'], ['mdhb', '모듈 더블 하이 부스트'], ['t9', 'T9장비 기업 선택 상자'], ['d30', '30DAY 성장 보급 상자']];
   const INV_RES = ['코어더스트', '배틀데이터', '크레딧'], INV_BOXH = [24, 12, 8, 4, 2, 1];
-  const INV_IMG = { grow1: PK_IMG.grow, sup1: PK_IMG.sup, d30: 'assets/img/7d0897feca9f.webp', selc: 'assets/img/a0c4f6bf0262.webp' };
+  const INV_IMG = { grow1: PK_IMG.grow, sup1: PK_IMG.sup, d30: 'assets/img/d30-box.webp', selc: 'assets/img/selc-box.webp' };
   const invIco = (k) => (k === 'gold' || k === 'silver' ? jrIcon(k) : PK_IMG[k] || INV_IMG[k]);
   const invGet = (k) => (k === 'gold' || k === 'silver' ? +(jwS().have[k] || 0) : +((st.inv || {})[k] || 0));
   function invSet(k, v) { if (k === 'gold' || k === 'silver') jwS().have[k] = v; else { if (!st.inv || typeof st.inv !== 'object') st.inv = {}; st.inv[k] = v; } }

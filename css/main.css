@@ -1524,3 +1524,13 @@ button:not(.tr-clr):not(.tabs button):not(.tr-f):not(.pk-t):not(.pk-r){border-ra
 @media(max-width:860px){.prog-sum{grid-template-columns:minmax(0,1.4fr) minmax(0,1fr)!important}.prog-sum .prog-boost{grid-column:1/-1!important}}
 @media(max-width:560px){.prog-sum{grid-template-columns:1fr!important}}
 .prog-sum .prog-boost{padding-top:26px}.prog-sum .prog-boost .sboost{margin:0!important}
+/* 진행 막대: 시작·목표 숫자를 가운데로 모으고 날짜는 아래, 막대는 세로 가운데 */
+.pbars{justify-content:center}
+.pbar-ends{justify-content:center;gap:14px;align-items:flex-start}
+.pbar-ends>span:not(.pbar-arr){display:flex;flex-direction:column;align-items:center;line-height:1.15}
+.pbar-ends b{font-size:17px!important;margin:0!important}
+.pbar-ends small{font-size:11px;color:var(--muted)}
+.pbar-ends .pbar-arr{flex:none;align-self:center;margin-top:-12px}
+/* 기준 플랜 대비: 큰 숫자, 세로 가운데 */
+.prog-sum .kpi.pvs{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}
+.prog-sum .kpi.pvs b{font-size:40px!important;line-height:1.05;margin:6px 0 4px}
