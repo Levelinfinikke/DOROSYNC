@@ -228,7 +228,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
       for (let j = 0; j < np; j++) {
         const pk = m.Pk[j];
         let f = 0;
-        if (use[j] && cnt[j] < pk.cap) {
+        if (t >= 2 && use[j] && cnt[j] < pk.cap) { /* 과금은 시작 날짜 다음 날부터 */
           let any = false;
           for (let k = 0; k < 3; k++) {
             if (pk.H[k] + pk.Fl[k] > 0 && done[k] === 0) any = true;
@@ -238,10 +238,10 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
               case '일일': f = 1; break;
               case '주간': if (m.Wd[t] === cfg.wk) f = 1; break;
               case '월간': if (m.Dm[t] === cfg.mday) f = 1; break;
-              case '기간': if ((t - 1) % cfg.per === 0) f = 1; break;
-          case '3주': if ((t - 1) % 21 === 0) f = 1; break;
-              case '1회': if (t === 1) f = isFinite(pk.cap) ? pk.cap : 1; break;
-              case '월정액': if ((t - 1) % cfg.mlen === 0) f = 1; break;
+              case '기간': if ((t - 2) % cfg.per === 0) f = 1; break;
+          case '3주': if ((t - 2) % 21 === 0) f = 1; break;
+              case '1회': if (t === 2) f = isFinite(pk.cap) ? pk.cap : 1; break;
+              case '월정액': if ((t - 2) % cfg.mlen === 0) f = 1; break;
             }
           }
         }
@@ -257,14 +257,14 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
       const fo = tr && nO ? [] : null;
       for (let i = 0; i < nO; i++) { // 기타 패키지(싱크 재화 없음): 주기마다 필수 구매
         const o = m.Oth[i]; let f = 0;
-        switch (o.per) {
+        if (t >= 2) switch (o.per) {
           case '일일': f = 1; break;
           case '주간': if (m.Wd[t] === cfg.wk) f = 1; break;
           case '월간': if (m.Dm[t] === cfg.mday) f = 1; break;
-          case '기간': if ((t - 1) % cfg.per === 0) f = 1; break;
-          case '3주': if ((t - 1) % 21 === 0) f = 1; break;
-          case '1회': if (t === 1) f = o.cap > 0 ? o.cap : 1; break;
-          case '월정액': if ((t - 1) % cfg.mlen === 0) f = 1; break;
+          case '기간': if ((t - 2) % cfg.per === 0) f = 1; break;
+          case '3주': if ((t - 2) % 21 === 0) f = 1; break;
+          case '1회': if (t === 2) f = o.cap > 0 ? o.cap : 1; break;
+          case '월정액': if ((t - 2) % cfg.mlen === 0) f = 1; break;
         }
         if (f && o.cap > 0 && oc[i] + f > o.cap) f = Math.max(0, o.cap - oc[i]);
         oc[i] += f; dayBill += f * o.price; if (fo) fo.push(f);
@@ -1593,6 +1593,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
       tip: (i) => (i === 0 ? '시작' : i + '일차 · ' + dstr(i)) + '<br>싱크로 ' + at(days, i, 'S', st.S0) + ' · 무과금 ' + at(np, i, 'S', st.S0) + '<br>전초기지 ' + at(days, i, 'L', M.L0) + PINS.map((p) => '<br><span style="color:' + p.color + '">' + p.short + ' 싱크로 ' + (p.S[Math.min(i, p.S.length - 1)] || [0, 0])[1] + '</span>').join(''),
     });
     updatePinBtn();
+    try { cmtTip(!!TR); } catch (e) { /* 초기화 전 */ }
     renderOut();
   }
 
@@ -2916,7 +2917,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
     return a;
   };
   function plansSet(a) { try { localStorage.setItem(PLANS_K, JSON.stringify(a)); return true; } catch (e) { toast('저장 공간이 부족해 플랜을 저장하지 못했습니다.'); return false; } }
-  const plName = (p) => '플랜 ' + p.n;
+  const plName = (p) => (p.label && String(p.label).trim()) || '플랜 ' + p.n;
   const plCol = (p) => PL_COL[(p.n - 1) % PL_COL.length];
   function commitPlan() {
     if (!TR || !M || !/^\d{4}-\d{2}-\d{2}$/.test(st.start)) { toast('먼저 시작 날짜와 목표를 입력하고 계산해 주세요.'); return; }
@@ -2930,13 +2931,23 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
     a.forEach((p) => { p.ref = false; });
     const n = a.reduce((m, p) => Math.max(m, p.n || 0), 0) + 1;
     a.push({ v: 2, id: 'p' + Date.now(), n, start: st.start, S0: st.S0, T: st.T, at: Date.now(), bill: TR.bill || 0, days: last ? last.t : 0, pts, hidden: false, ref: true });
+    cmtTip(false, true);
     if (plansSet(a)) { toast(plName(a[a.length - 1]) + '을(를) 확정해 기준 플랜으로 정했습니다. [전초기지] 탭에서 비교할 수 있어요.', 4500); renderProg(); }
   }
+  /* '이 플랜으로 진행할까요?' 안내: 확정한 플랜이 없을 때 결과 옆에 표시, ×로 닫으면 다시 안 띄움 */
+  function cmtTip(show, done) {
+    const t = $('#cmt-tip'); if (!t) return;
+    if (done) { try { localStorage.setItem('dorosync-cmt-tip', '1'); } catch (e) { /* 무시 */ } t.hidden = true; return; }
+    let off = false; try { off = localStorage.getItem('dorosync-cmt-tip') === '1'; } catch (e) { /* 무시 */ }
+    t.hidden = !(show && !off && !plansGet().length);
+  }
+  { const x = $('#cmt-x'); if (x) x.addEventListener('click', (e) => { e.stopPropagation(); cmtTip(false, true); }); }
   const planAt = (plan, t) => { let v = plan.S0; for (const p of plan.pts) { if (p[0] <= t) v = p[1]; else break; } return v; };
   const planDayOf = (plan, lv) => { for (const p of plan.pts) if (p[1] >= lv) return p[0]; return null; };
   function renderProg() {
     let box = $('#me-prog');
-    if (!box) { box = document.createElement('div'); box.className = 'card'; box.id = 'me-prog'; const iv = $('#me-inv'); if (iv) iv.before(box); else return; }
+    if (!box) { box = document.createElement('div'); box.className = 'card'; box.id = 'me-prog'; }
+    { const iv = $('#me-inv'); if (!iv) return; if (box.nextElementSibling !== iv) iv.before(box); } /* 인벤토리 바로 위 */
     const h = histGet(), all = plansGet(), vis = all.filter((p) => !p.hidden);
     let ref = vis.find((p) => p.ref) || vis[vis.length - 1] || null;
     let html = '<div class="row-ctl sp"><h2 class="inline">싱크로 성장 기록</h2></div>';
@@ -2974,15 +2985,28 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
     if (all.length) {
       const row = (p) => '<li class="' + (p.hidden ? 'hid' : '') + '"><i class="pl-sw" style="background:' + plCol(p) + '"></i><b>' + plName(p) + '</b><span class="muted sm">' + p.start + ' 시작 · ' + p.S0 + '→' + p.T + ' · ' + p.days + '일 · ' + won(p.bill) + '</span>' +
         (p.hidden ? '' : p === ref ? '<span class="pl-ref">기준</span>' : '<button type="button" class="ghost sm" data-pref="' + p.id + '">기준으로</button>') +
+        '<button type="button" class="ghost sm icb" data-pren="' + p.id + '" title="이름 바꾸기" aria-label="이름 바꾸기"><svg class="icb-i" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>' +
         '<button type="button" class="ghost sm icb" data-phide="' + p.id + '" title="' + (p.hidden ? '다시 보이기' : '숨기기') + '" aria-label="' + (p.hidden ? '다시 보이기' : '숨기기') + '">' + (p.hidden
           ? '<svg class="icb-i" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>'
-          : '<svg class="icb-i" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 5.1A10 10 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4M6.6 6.6A17 17 0 0 0 2 12s3.6 7 10 7a10 10 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>') + '</button></li>';
+          : '<svg class="icb-i" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 5.1A10 10 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4M6.6 6.6A17 17 0 0 0 2 12s3.6 7 10 7a10 10 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>') + '</button>' +
+        '<button type="button" class="ghost sm icb pl-del" data-pdel="' + p.id + '" title="영구 삭제" aria-label="영구 삭제"><svg class="icb-i" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/></svg></button></li>';
       const shown = all.filter((p) => !p.hidden).slice().reverse(), hid = all.filter((p) => p.hidden).slice().reverse();
       html += '<ul class="pl-list">' + shown.map(row).join('') + '</ul>' + (hid.length ? '<details class="pl-hid"><summary>숨긴 플랜 ' + hid.length + '개</summary><ul class="pl-list">' + hid.map(row).join('') + '</ul></details>' : '');
     }
     box.innerHTML = html;
     box.querySelectorAll('[data-pz]').forEach((b) => b.addEventListener('click', () => { renderProg.full = b.dataset.pz === '1'; renderProg(); }));
     box.querySelectorAll('[data-pref]').forEach((b) => b.addEventListener('click', () => { const a = plansGet(); a.forEach((p) => { p.ref = p.id === b.dataset.pref; }); plansSet(a); renderProg(); }));
+    box.querySelectorAll('[data-pren]').forEach((b) => b.addEventListener('click', () => {
+      const a = plansGet(), p = a.find((q) => q.id === b.dataset.pren); if (!p) return;
+      const v = prompt('플랜 이름 (최대 16자, 비우면 기본 이름)', p.label || plName(p)); if (v === null) return;
+      p.label = v.trim().slice(0, 16); if (p.label === '플랜 ' + p.n) p.label = ''; plansSet(a); renderProg();
+    }));
+    box.querySelectorAll('[data-pdel]').forEach((b) => b.addEventListener('click', () => {
+      const a = plansGet(), i = a.findIndex((q) => q.id === b.dataset.pdel); if (i < 0) return;
+      if (!confirm('[' + plName(a[i]) + '] 플랜을 영구 삭제할까요?\n삭제하면 되돌릴 수 없습니다. 잠깐 안 보이게만 하려면 숨기기(눈 아이콘)를 쓰세요.')) return;
+      const wasRef = a[i].ref; a.splice(i, 1); if (wasRef) { const v = a.filter((q) => !q.hidden); if (v.length) v[v.length - 1].ref = true; }
+      plansSet(a); renderProg();
+    }));
     box.querySelectorAll('[data-phide]').forEach((b) => b.addEventListener('click', () => {
       const a = plansGet(), p = a.find((q) => q.id === b.dataset.phide); if (!p) return;
       p.hidden = !p.hidden; if (p.hidden && p.ref) { p.ref = false; const v = a.filter((q) => !q.hidden); if (v.length) v[v.length - 1].ref = true; }

@@ -1405,3 +1405,11 @@ button:not(.tr-clr):not(.tabs button):not(.tr-f):not(.pk-t):not(.pk-r){border-ra
 .pl-ref{font-size:12px;font-weight:800;color:var(--accent);padding:3px 10px;border-radius:999px;background:var(--accent-soft,rgba(232,136,0,.12))}
 .pl-list .icb{width:30px;height:30px;min-width:30px;padding:0!important;border-radius:50%!important;display:inline-flex;align-items:center;justify-content:center}
 .pl-hid{margin-top:8px;font-size:13px}.pl-hid summary{cursor:pointer;color:var(--muted)}
+.cmt-wrap{position:relative;display:inline-flex}
+.cmt-tip{position:absolute;right:calc(100% + 12px);top:50%;transform:translateY(-50%);z-index:30;width:max-content;max-width:230px;padding:9px 30px 9px 12px;border-radius:12px;background:#1d2130;color:#fff;font-size:12.5px;font-weight:600;line-height:1.45;box-shadow:0 8px 20px rgba(0,0,0,.3);animation:cmtIn .3s ease-out}
+.cmt-tip::after{content:'';position:absolute;right:-6px;top:50%;margin-top:-6px;border:6px solid transparent;border-right:0;border-left-color:#1d2130}
+.cmt-tip[hidden]{display:none}
+.cmt-x{position:absolute;right:4px;top:4px;width:22px;height:22px;padding:0!important;border:0!important;background:none!important;color:#aab;font-size:15px;line-height:1;cursor:pointer;border-radius:50%!important}
+.cmt-x:hover{color:#fff;background:rgba(255,255,255,.12)!important}
+@keyframes cmtIn{from{opacity:0;transform:translate(-6px,-50%)}to{opacity:1;transform:translate(0,-50%)}}
+.pl-del{color:#e5484d!important}

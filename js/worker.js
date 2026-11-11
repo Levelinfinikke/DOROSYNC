@@ -227,7 +227,7 @@ self.DATA={"boxes":[[20.24,6437.98,3456],[21.93,9221.99,3935.98],[23.39,12353.99
       for (let j = 0; j < np; j++) {
         const pk = m.Pk[j];
         let f = 0;
-        if (use[j] && cnt[j] < pk.cap) {
+        if (t >= 2 && use[j] && cnt[j] < pk.cap) { /* 과금은 시작 날짜 다음 날부터 */
           let any = false;
           for (let k = 0; k < 3; k++) {
             if (pk.H[k] + pk.Fl[k] > 0 && done[k] === 0) any = true;
@@ -237,10 +237,10 @@ self.DATA={"boxes":[[20.24,6437.98,3456],[21.93,9221.99,3935.98],[23.39,12353.99
               case '일일': f = 1; break;
               case '주간': if (m.Wd[t] === cfg.wk) f = 1; break;
               case '월간': if (m.Dm[t] === cfg.mday) f = 1; break;
-              case '기간': if ((t - 1) % cfg.per === 0) f = 1; break;
-          case '3주': if ((t - 1) % 21 === 0) f = 1; break;
-              case '1회': if (t === 1) f = isFinite(pk.cap) ? pk.cap : 1; break;
-              case '월정액': if ((t - 1) % cfg.mlen === 0) f = 1; break;
+              case '기간': if ((t - 2) % cfg.per === 0) f = 1; break;
+          case '3주': if ((t - 2) % 21 === 0) f = 1; break;
+              case '1회': if (t === 2) f = isFinite(pk.cap) ? pk.cap : 1; break;
+              case '월정액': if ((t - 2) % cfg.mlen === 0) f = 1; break;
             }
           }
         }
@@ -256,14 +256,14 @@ self.DATA={"boxes":[[20.24,6437.98,3456],[21.93,9221.99,3935.98],[23.39,12353.99
       const fo = tr && nO ? [] : null;
       for (let i = 0; i < nO; i++) { // 기타 패키지(싱크 재화 없음): 주기마다 필수 구매
         const o = m.Oth[i]; let f = 0;
-        switch (o.per) {
+        if (t >= 2) switch (o.per) {
           case '일일': f = 1; break;
           case '주간': if (m.Wd[t] === cfg.wk) f = 1; break;
           case '월간': if (m.Dm[t] === cfg.mday) f = 1; break;
-          case '기간': if ((t - 1) % cfg.per === 0) f = 1; break;
-          case '3주': if ((t - 1) % 21 === 0) f = 1; break;
-          case '1회': if (t === 1) f = o.cap > 0 ? o.cap : 1; break;
-          case '월정액': if ((t - 1) % cfg.mlen === 0) f = 1; break;
+          case '기간': if ((t - 2) % cfg.per === 0) f = 1; break;
+          case '3주': if ((t - 2) % 21 === 0) f = 1; break;
+          case '1회': if (t === 2) f = o.cap > 0 ? o.cap : 1; break;
+          case '월정액': if ((t - 2) % cfg.mlen === 0) f = 1; break;
         }
         if (f && o.cap > 0 && oc[i] + f > o.cap) f = Math.max(0, o.cap - oc[i]);
         oc[i] += f; dayBill += f * o.price; if (fo) fo.push(f);
