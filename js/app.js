@@ -2508,14 +2508,20 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     let c = ''; try { c = localStorage.getItem(PFP_K) || ''; } catch (e) { /* 무시 */ }
     return n.find((x) => x.code === c) || n.slice().sort((a, b) => b.combat - a.combat)[0];
   };
+  /* 계정(사람 모양) 버튼: 로그인 중이면 프로필 니케 초상화로 표시 */
+  const acctPfp = () => {
+    const b = $('#btn-acct'); if (!b) return;
+    const a = window.doroAccount, on = !!(a && a.user), pf = on ? blPfp() : null; let im = b.querySelector('img.bl-pfp');
+    if (pf) { if (!im) { im = document.createElement('img'); im.className = 'bl-pfp'; im.alt = ''; im.onerror = () => { im.remove(); b.classList.remove('has-pfp'); }; b.prepend(im); } im.src = BL_IMG(pf.code); b.classList.add('has-pfp'); }
+    else { if (im) im.remove(); b.classList.remove('has-pfp'); }
+  };
+  window.addEventListener('doroacct', () => setTimeout(acctPfp, 0));
   const blNick = () => {
     const b = $('#btn-bl'); if (!b) return; const t = b.querySelector('.bltx');
     const nm = (doroBL.data && doroBL.data.me && doroBL.data.me.role) || '';
     if (t) { t.textContent = nm || 'BlaBla연동'; t.hidden = true; }
     b.classList.toggle('has-nick', !!nm);
-    { const pf = nm ? blPfp() : null; let im = b.querySelector('img.bl-pfp');
-      if (pf) { if (!im) { im = document.createElement('img'); im.className = 'bl-pfp'; im.alt = ''; im.onerror = () => { im.remove(); b.classList.remove('has-pfp'); }; b.prepend(im); } im.src = BL_IMG(pf.code); b.classList.add('has-pfp'); }
-      else { if (im) im.remove(); b.classList.remove('has-pfp'); } }
+    acctPfp();
     b.title = nm ? nm + ' · BlaBla 연동 정보 (눌러서 다시 연동)' : '블라블라링크에서 내 정보 불러오기';
     b.setAttribute('aria-label', nm ? 'BlaBla연동: ' + nm : 'BlaBla연동');
   };
