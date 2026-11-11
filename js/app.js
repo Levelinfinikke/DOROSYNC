@@ -2932,7 +2932,11 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
     const n = a.reduce((m, p) => Math.max(m, p.n || 0), 0) + 1;
     a.push({ v: 2, id: 'p' + Date.now(), n, start: st.start, S0: st.S0, T: st.T, at: Date.now(), bill: TR.bill || 0, days: last ? last.t : 0, pts, hidden: false, ref: true });
     cmtTip(false, true);
-    if (plansSet(a)) { toast(plName(a[a.length - 1]) + '을(를) 확정해 기준 플랜으로 정했습니다. [전초기지] 탭에서 비교할 수 있어요.', 4500); renderProg(); }
+    if (plansSet(a)) {
+      toast(plName(a[a.length - 1]) + '을(를) 확정해 기준 플랜으로 정했습니다.', 3500); renderProg();
+      const tb = document.querySelector('#tabs button[data-tab="me"]'); if (tb) tb.click(); /* 전초기지 탭 → 성장 기록으로 */
+      setTimeout(() => { const b = $('#me-prog'); if (b) { const y = b.getBoundingClientRect().top + window.scrollY - (($('.top') || {}).offsetHeight || 0) - 12; window.scrollTo({ top: y, behavior: 'smooth' }); b.classList.add('flash'); setTimeout(() => b.classList.remove('flash'), 1600); } }, 120);
+    }
   }
   /* '이 플랜으로 진행할까요?' 안내: 확정한 플랜이 없을 때 결과 옆에 표시, ×로 닫으면 다시 안 띄움 */
   function cmtTip(show, done) {
@@ -2972,11 +2976,24 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
     m.hidden = false; autoRender();
     const a = acct(); if (a && a.boot) a.boot().then(autoRender).catch(() => { /* 무시 */ });
   }
+  /* 예시 그래프: AUTO OFF(띄엄띄엄·직선·플랜과 들쭉날쭉) vs ON(매일·곡선·플랜에 붙음) */
+  function autoDemo() {
+    const W = 220, H = 120, P = 14, X = (t) => P + t / 40 * (W - 2 * P), Y = (v) => H - P - v / 100 * (H - 2 * P);
+    const plan = (t) => 8 + 80 * (1 - Math.exp(-t / 22));
+    const pl = Array.from({ length: 41 }, (_, t) => (t ? 'L' : 'M') + X(t).toFixed(1) + ' ' + Y(plan(t)).toFixed(1)).join(' ');
+    const off = [[0, 8], [9, 22], [10, 33], [23, 52], [24, 66], [37, 70]], on = Array.from({ length: 41 }, (_, t) => [t, plan(t) + Math.sin(t / 3) * 1.6 - 0.8]);
+    const path = (a) => a.map((p, i) => (i ? 'L' : 'M') + X(p[0]).toFixed(1) + ' ' + Y(p[1]).toFixed(1)).join(' ');
+    const dots = (a, r) => a.map((p) => '<circle cx="' + X(p[0]).toFixed(1) + '" cy="' + Y(p[1]).toFixed(1) + '" r="' + r + '"/>').join('');
+    const svg = (a, r, gap) => '<svg viewBox="0 0 ' + W + ' ' + H + '" aria-hidden="true"><path d="' + pl + '" class="dm-plan"/>' + (gap ? '<path d="' + a.map((p) => 'M' + X(p[0]).toFixed(1) + ' ' + Y(p[1]).toFixed(1) + ' L' + X(p[0]).toFixed(1) + ' ' + Y(plan(p[0])).toFixed(1)).join(' ') + '" class="dm-gap"/>' : '') + '<path d="' + path(a) + '" class="dm-act"/><g class="dm-dot">' + dots(a, r) + '</g></svg>';
+    return '<div class="auto-demo"><figure><figcaption><span class="auto-tag off">AUTO OFF</span>가끔 들를 때만 기록</figcaption>' + svg(off, 3.4, true) + '<p>기록 간격이 들쭉날쭉하고, 그 사이는 직선으로 이어져 플랜과 차이가 크게 벌어져 보입니다.</p></figure>' +
+      '<figure><figcaption><span class="auto-tag on">AUTO ON</span>매일 기록</figcaption>' + svg(on, 1.8, false) + '<p>매일 한 점씩 쌓여 부드러운 곡선이 되고, 플랜과 얼마나 붙어 가는지 한눈에 보입니다.</p></figure></div>';
+  }
   const autoMsg = (t, bad) => { const e = $('#auto-msg'); if (e) { e.textContent = t || ''; e.classList.toggle('bad', !!bad); } };
   function autoRender() {
     const body = $('#auto-body'); if (!body) return;
     const a = acct(), u = a && a.user, d = u && a.doc, au = (d && d.auto) || {};
-    const say = '<p class="rapisay">바쁘신 지휘관께서 매일 전초기지에 들르지 않으셔도, 제가 매일 싱크로 레벨을 대신 기록해 두겠습니다. 성장 플랜과 실제 레벨업 기록을 한눈에 비교하실 수 있습니다. 언제든 중지하실 수 있습니다.</p>';
+    const say0 = autoDemo();
+    const say = say0 + '<p class="rapisay">바쁘신 지휘관께서 매일 전초기지에 들르지 않으셔도, 제가 매일 싱크로 레벨을 대신 기록해 두겠습니다. 성장 플랜과 실제 레벨업 기록을 한눈에 비교하실 수 있습니다. 언제든 중지하실 수 있습니다.</p>';
     if (!u) {
       body.innerHTML = say + '<p class="rapisay">기록은 지휘관의 계정에 보관됩니다. 먼저 로그인해 주십시오. 구글 계정이라면 한 번이면 끝납니다.</p><div class="auto-acts"><button type="button" class="primary pad" data-ax="login">로그인 / 가입하기</button></div>';
       return;
