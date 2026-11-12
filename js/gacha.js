@@ -79,7 +79,7 @@
 .gm-well{position:relative;perspective:340px;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 50% 35%,#0c0d10 0%,#1d2027 70%,#30343e 100%);box-shadow:inset 0 5px 9px rgba(0,0,0,.85),0 1px 0 rgba(255,255,255,.1)}
 .gm-well.over{box-shadow:inset 0 5px 9px rgba(0,0,0,.85),0 0 0 3px var(--gold)}
 .gm-cf,.gm-float.orb{background:center/cover no-repeat,radial-gradient(circle at 50% 30%,#fff6d8,#d9b35a)}
-.gm-orb{position:absolute;inset:5%;border-radius:50%;transform-style:preserve-3d;transition:transform .9s cubic-bezier(.4,0,.3,1.2);animation:gmIn .35s cubic-bezier(.2,1.6,.4,1);cursor:pointer;touch-action:none}
+.gm-orb{position:absolute;inset:5%;border-radius:50%;transform-style:preserve-3d;transition:transform .9s cubic-bezier(.4,0,.3,1.2);cursor:pointer;touch-action:none}.gm-orb.pop{animation:gmIn .35s cubic-bezier(.2,1.6,.4,1)}
 .gm-orb.under{top:11%;bottom:-1%;cursor:default}.gm-orb.under .gm-cf{filter:brightness(.62)}.gm-orb.lift{top:0;bottom:10%}.gm-orb.lift .gm-cf{box-shadow:0 0 0 2.5px var(--gold),0 7px 10px rgba(0,0,0,.7)}
 .gm-orb.top{animation:none;transform:rotateX(0deg) rotateY(0deg)}.gm-orb.top.lift{animation:none}
 .gm-orb.flip.shine{animation:gmShine .5s ease-out forwards}
@@ -88,8 +88,6 @@
 .gm-orb.flip{transform:rotateX(var(--tx,0deg)) rotateY(calc(180deg + var(--ty,0deg)));animation:none}
 .gm-orb.sss{transition:none;z-index:2}
 .gm-orb.glow .gm-ce,.gm-orb.glow .gm-cf,.gm-orb.glow .gm-cb{transition:box-shadow .25s}
-.gm-orb.glow.st-b .gm-ce,.gm-orb.glow.st-b .gm-cf,.gm-orb.glow.st-b .gm-cb{box-shadow:0 0 6px 2px #ffb24a,0 0 14px 4px rgba(255,138,0,.75)}
-.gm-orb.glow.st-b .gm-ce{background:linear-gradient(90deg,#ffd08a,#ff9a1a 45%,#ffe0b0 60%,#e07800)}
 .gm-orb.glow.st-s .gm-ce,.gm-orb.glow.st-s .gm-cf,.gm-orb.glow.st-s .gm-cb{box-shadow:0 0 7px 2px #fff,0 0 16px 5px rgba(205,220,240,.9)}
 .gm-orb.glow.st-s .gm-ce{background:linear-gradient(90deg,#fff,#d8e0ec 40%,#fff 60%,#aab4c2)}
 .gm-orb.glow.st-g .gm-ce,.gm-orb.glow.st-g .gm-cf,.gm-orb.glow.st-g .gm-cb{animation:gmGlowG 1.1s ease-in-out infinite alternate}
@@ -117,7 +115,7 @@
 .gm-float.cur b{position:absolute;left:calc(var(--w)*.4);top:calc(var(--w)*.25);font-size:14px;font-weight:800;color:#fff;background:rgba(10,14,22,.85);border:1px solid rgba(255,255,255,.3);border-radius:9px;padding:1px 7px;white-space:nowrap}
 .gm-float.orb{width:70px;height:70px;border-radius:50%;box-shadow:0 0 0 3px #ffc21a,0 8px 18px rgba(0,0,0,.6)}
 .gm-float.orb.mg{animation:gmMerge .35s}
-.gm-name{font-size:11px;color:#9eaac0;margin-top:8px;min-height:15px;line-height:1.5}
+.gm-name{display:none!important}
 .gm-tools{display:flex;gap:5px;width:auto}
 .gm-ib{appearance:none;width:34px;height:34px;display:grid;place-items:center;border:1px solid rgba(255,255,255,.18);background:rgba(10,14,22,.72);color:#dfe7f5;border-radius:10px;cursor:pointer;padding:0}
 .gm-ib:hover{background:rgba(40,52,80,.9)}.gm-ib.on{background:#3d8bff;border-color:#3d8bff;color:#fff}.gm-ib.off{opacity:.45}
@@ -439,6 +437,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     const SLOW_P = { b: 0.03, s: 0.12, g: 0.35, r: 1 };
     const wantSlow = (t, k) => isSSSn(t.nk) || Math.random() < SLOW_P[k];
     function stageBurst(orb, st, big) {
+      if (st === 'b') return; /* 도로칩은 가장 낮은 단계라 빛나지 않음 */
       const host = document.fullscreenElement || document.body, r = orb.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2, cols = STG_COL[st];
       const N = big ? (st === 'r' ? 34 : 24) : (st === 'r' ? 18 : 12);
       for (let i = 0; i < N; i++) { const p = document.createElement('i'); p.className = 'gm-sssp'; const a = (i / N) * TAU + rnd(-0.2, 0.2), d = rnd(r.width * 0.5, r.width * (big ? (st === 'r' ? 2 : 1.5) : 1.1)), sz = rnd(3, st === 'r' ? 8 : 6); p.style.cssText = 'left:' + cx + 'px;top:' + cy + 'px;width:' + sz + 'px;height:' + sz + 'px;background:' + cols[i % cols.length]; host.appendChild(p);
@@ -446,10 +445,10 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     }
     function slowFlip(orb, k, en) {
       const path = stagePath(k), STEP = 520, tx = orb.style.getPropertyValue('--tx') || '0deg', ty = parseFloat(orb.style.getPropertyValue('--ty')) || 0;
-      const A = 1000, H = 300 + (path.length - 1) * STEP + 350, B = 650, T = A + H + B, edge = 'rotateX(' + tx + ') rotateY(80deg)';
+      const A = 1700, S0 = 750, H = Math.max(250, S0 + (path.length - 1) * STEP + 250 - A), B = 750, T = A + H + B, edge = 'rotateX(' + tx + ') rotateY(80deg)'; /* 천천히 세우는 동안 단계가 바뀌고, 멈춤은 짧게 */
       const setSt = (st) => { STG.forEach((x) => orb.classList.remove('st-' + x)); orb.classList.add('st-' + st); };
       orb.classList.add('sss', 'glow'); setSt(path[0]);
-      const an = orb.animate([{ transform: 'rotateX(0deg) rotateY(0deg)', easing: 'cubic-bezier(.3,0,.25,1)' }, { transform: edge, offset: A / T }, { transform: 'rotateX(' + tx + ') rotateY(83deg)', offset: (A + H) / T, easing: 'cubic-bezier(.5,0,.3,1)' }, { transform: 'rotateX(' + tx + ') rotateY(' + (180 + ty) + 'deg)' }], { duration: T });
+      const an = orb.animate([{ transform: 'rotateX(0deg) rotateY(0deg)', easing: 'cubic-bezier(.25,.1,.35,1)' }, { transform: edge, offset: A / T }, { transform: 'rotateX(' + tx + ') rotateY(83deg)', offset: (A + H) / T, easing: 'cubic-bezier(.5,0,.3,1)' }, { transform: 'rotateX(' + tx + ') rotateY(' + (180 + ty) + 'deg)' }], { duration: T });
       const done = () => { orb.style.transition = 'none'; orb.classList.add('flip'); orb.classList.remove('sss'); void orb.offsetWidth; orb.style.transition = ''; if (en) { en.busy = false; en.anim = false; en._el = null; en.skip = null; if (en.owner) autoAbsorb(en.owner, en, 0); } };
       an.onfinish = done;
       const tm = [], at = (fn, ms) => tm.push(setTimeout(fn, ms));
@@ -457,7 +456,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
       try { snd.flip(); } catch (e) { /* 무시 */ }
       for (let i = 1; i < path.length; i++) {
         const up = STG.indexOf(path[i]) > STG.indexOf(path[i - 1]);
-        at(() => { setSt(path[i]); stageBurst(orb, path[i], false); try { if (up) snd.chipBurst(path[i] === 'r'); else snd.clunk(); } catch (e) { /* 무시 */ } }, A + 300 + (i - 1) * STEP);
+        at(() => { setSt(path[i]); stageBurst(orb, path[i], false); try { if (up) snd.chipBurst(path[i] === 'r'); else snd.clunk(); } catch (e) { /* 무시 */ } }, S0 + (i - 1) * STEP);
       }
       at(() => { try { snd.flip(); } catch (e) { /* 무시 */ } }, A + H);
       const burst = () => { orb.classList.remove('glow'); STG.forEach((x) => orb.classList.remove('st-' + x)); try { snd.chipBurst(k === 'r' || k === 'g'); snd.chipPop(); } catch (e) { /* 무시 */ } stageBurst(orb, k, true); };
@@ -491,7 +490,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     function labChips() { let n = 0; while (S.lab >= 10000 && n < 20) { S.lab -= 10000; n++; setTimeout(chipSpawn, (n - 1) * 140); } }
     /* 보관함은 빈칸을 그대로 둠(배열에 null). 끌어서 다른 니케 위에 놓으면 그 니케가 원래 칸으로 자리 바꿈 */
     const trayFree = () => { const i = S.tray.findIndex((x) => !x); return i < 0 ? S.tray.length : i; };
-    function trayAdd(nk, count, at, from, ent) { const e = ent ? null : S.tray.find((x) => x && x.nk.n === nk.n && !x.top); /* 도로칩으로 뒤집힌 칸에는 쌓지 않고 새 칸 */ if (e) { e.count += count || 1; e.merge = true; snd.merge(); } else { const en = ent || { nk, count: count || 1 };
+    function trayAdd(nk, count, at, from, ent) { const e = ent ? null : S.tray.find((x) => x && x.nk.n === nk.n && !x.top); /* 도로칩으로 뒤집힌 칸에는 쌓지 않고 새 칸 */ if (e) { e.count += count || 1; e.merge = true; snd.merge(); } else { const en = ent || { nk, count: count || 1, fresh: true };
         if (at != null && at >= 0) { const occ = S.tray[at]; if (occ) { const back = from != null && from >= 0 && !S.tray[from] ? from : trayFree(); S.tray[back] = occ; } S.tray[at] = en; } else S.tray[trayFree()] = en; snd.collect(); }
       while (S.tray.length && !S.tray[S.tray.length - 1]) S.tray.pop(); uiTray(); }
 
@@ -515,7 +514,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     }
     function trayOrbs(e, tr) {
       const t = e.top, rest = e.count - (t ? 1 : 0);
-      if (!t) return orbHtml(e, e.merge ? ' merge' : '', e.count > 1 ? '<i>×' + e.count + '</i>' : '', tr);
+      if (!t) { const pp = e.fresh ? ' pop' : ''; e.fresh = false; return orbHtml(e, (e.merge ? ' merge' : '') + pp, e.count > 1 ? '<i>×' + e.count + '</i>' : '', tr); }
       return (rest > 0 ? orbHtml({ nk: e.nk, ck: 'x' }, ' under', rest > 1 ? '<i>×' + rest + '</i>' : '', tr) : '') + orbHtml(t, ' top' + (rest > 0 ? ' lift' : ''), '', rest > 0 ? '' : tr);
     }
     function uiTray() { uiTray0(); S.tray.forEach((e, i) => { const t = e && e.top; if (!t || !t.anim || !t._el) return; const w = panEl.children[i], o = w && w.querySelector('.gm-orb.top'); if (o && o !== t._el) o.replaceWith(t._el); }); }
@@ -525,7 +524,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     function traySave() { try { localStorage.setItem(TRAY_K, JSON.stringify(S.tray.map((e) => (e ? [e.nk.n, e.count] : 0)))); } catch (er) { /* 무시 */ } }
     function trayLoad() { try { const a = JSON.parse(localStorage.getItem(TRAY_K) || '[]'); if (!Array.isArray(a)) return; S.tray = a.map((x) => { if (!x) return null; const nk = trayFind(x[0]); return nk ? { nk, count: Math.max(1, x[1] | 0) } : null; }); while (S.tray.length && !S.tray[S.tray.length - 1]) S.tray.pop(); } catch (er) { /* 무시 */ } }
     function uiTray0() { traySave(); const pw = panEl.clientWidth - 20, ph = panEl.clientHeight - 20, cols = pw > 60 ? Math.max(3, Math.min(12, Math.floor((pw + 8) / 62))) : 5, cell = pw > 60 ? (pw - (cols - 1) * 8) / cols : 50, n = cols * Math.max(Math.ceil((S.tray.length + 1) / cols), pw > 60 ? Math.floor((ph + 8) / (cell + 8)) : 3, 2); panEl.style.setProperty('--cols', cols); const tb = leftEl.querySelector('.gm-trbtn span'); if (tb) tb.textContent = S.tray.filter(Boolean).length; let h = ''; for (let i = 0; i < n; i++) { const e = S.tray[i], tr = e ? (TIERS[S.val.mode === 2 ? 'pvp' : 'boss'][e.nk.n] || '-') : ''; h += '<div class="gm-well" data-i="' + i + '">' + (e ? trayOrbs(e, tr) : '') + '</div>'; if (e) e.merge = false; }
-      panEl.innerHTML = h; const tl = S.tray.filter(Boolean); $('.gm-name').textContent = tl.length ? tl.map((e) => e.nk.n + (e.count > 1 ? ' ×' + e.count : '')).join(' · ') : '구슬을 여기에 끌어다 놓으세요.'; }
+      panEl.innerHTML = h;  }
     const shortN = (n) => (n >= 1e6 ? +(n / 1e6).toFixed(2) + 'M' : n >= 1e4 ? +(n / 1e3).toFixed(1) + 'k' : fmt(n));
     function uiLab(bump) { labEl.querySelector('b').textContent = shortN(S.lab); if (bump) { labEl.classList.add('bump'); clearTimeout(uiLab.t); uiLab.t = setTimeout(() => labEl.classList.remove('bump'), 120); } }
 
@@ -579,13 +578,19 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     window.addEventListener('pointercancel', () => { tpd = null; });
     window.addEventListener('pointerup', () => { if (!tpd) return; const en = tpd.en; tpd = null; const i = S.tray.indexOf(en); if (i < 0 || busyE(en)) return;
       if (en.top && en.top.anim) { if (en.top.skip) en.top.skip(); return; }
-      if (!en.top) { en.top = { nk: en.nk }; uiTray(); } /* 도로칩 종류는 뒤집는 순간 정함 */
-      const t = en.top, well = panEl.children[i], orb = well && well.querySelector('.gm-orb.top'); if (!orb) return;
-      if (!t.flip) {
+      if (!en.top || !en.top.flip) { if (en.count > 1) en.all = true; flipTop(en); return; } /* 겹친 칸은 한 번 누르면 전부 차례로 */
+      absorbTop(en); if (en.all && en.count > 0) setTimeout(() => { if (!en.top && S.tray.includes(en)) flipTop(en); }, 260); });
+    /* 맨 위 한 장을 들어 뒤집기 (도로칩 종류는 뒤집는 순간 정함) */
+    function flipTop(en) {
+      const i = S.tray.indexOf(en); if (i < 0) return;
+      if (!en.top) { en.top = { nk: en.nk }; uiTray(); }
+      const t = en.top, well = panEl.children[i], orb = well && well.querySelector('.gm-orb.top'); if (!orb || t.flip) return;
+      {
         t.flip = true; { const a = rnd(0, TAU), m = rnd(2, 4); t.tilt = [Math.round(Math.cos(a) * m), Math.round(Math.sin(a) * m)]; orb.style.setProperty('--tx', t.tilt[0] + 'deg'); orb.style.setProperty('--ty', t.tilt[1] + 'deg'); }
         orb.title = CHIP_NM[chipE(t)] + ' · 누르면 잔고로';
         if (wantSlow(t, chipE(t))) { t.busy = true; t.anim = true; t._el = orb; t.owner = en; slowFlip(orb, chipE(t), t); setTimeout(() => { t.busy = false; }, 1000); /* 클릭 막는 시간 1초 */ } else { snd.flip(); void orb.offsetWidth; requestAnimationFrame(() => orb.classList.add('flip')); autoAbsorb(en, t, 900); }
-      } else absorbTop(en); });
+      }
+    }
     /* 도로칩 잔고를 누르면: 어디서 어떤 칩이 몇 %로 나오는지 */
     function chipOdds() {
       const tr = $('.gm-tray'); let box = tr.querySelector('.gm-odds'); if (box) { box.remove(); return; }
@@ -619,7 +624,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
         if (en.top !== t || !t.flip || t.anim) return;
         const k = chipE(t), i = S.tray.indexOf(en), o = i >= 0 && panEl.children[i] && panEl.children[i].querySelector('.gm-orb.top');
         if (o && k !== 'b') o.classList.add('shine', 'shine-' + k);
-        setTimeout(() => absorbTop(en), 500);
+        setTimeout(() => { absorbTop(en); if (en.all && en.count > 0 && S.tray.includes(en)) setTimeout(() => { if (!en.top && S.tray.includes(en)) flipTop(en); }, 260); else en.all = false; }, 500);
       }, wait || 0);
     }
     root.addEventListener('click', (e) => { const a = e.target.closest('[data-a]'); if (!a) return; const k = a.dataset.a;
