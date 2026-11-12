@@ -4331,7 +4331,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
       Object.keys(TR_EL).map((e) => fb('el', e, '<img alt="" src="' + TR_ICO[e] + '">', trV.el.has(e), TR_EL[e][0])).join('') + '</div></div>' +
       '<div class="tr-pool-h" data-html2canvas-ignore>미배치 <span class="muted" id="tr-pn">' + pool.length + '명</span></div>' +
       '<div class="tr-pool tr-dz" data-t="" data-html2canvas-ignore>' + pool.map(trCard).join('') + '</div>' +
-      '<p class="muted tr-help">초상화를 드래그하거나 클릭해서 편집하세요. 편집한 티어는 가챠 머신 티어에 즉시 반영합니다.</p>' +
+      '<p class="muted tr-help">초상화를 드래그하거나 클릭해서 편집하세요. 편집한 티어는 가챠 머신 티어에 즉시 반영합니다.(DORO칩 확률은 기존 티어와 동일)</p>' +
       '<p class="muted tr-src">해당 티어표는 <a href="https://www.prydwen.gg/nikke/tier-list" target="_blank" rel="noopener">Prydwen</a>을 참고했으며, 개인 의견과 다소 상이할 수 있습니다.</p>' +
       '<div class="tr-pop" id="tr-pop" hidden></div></div>';
     const q = $('#tr-q'); q.addEventListener('input', () => { trV.q = q.value; trApply(); });
