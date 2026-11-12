@@ -179,10 +179,9 @@
   <section id="tab-boss" class="tab">
     <div class="card">
       <div class="row-ctl sp"><h2 class="inline">작전날짜</h2><span class="bossctl" data-html2canvas-ignore><span class="bossbtns"><button class="ghost sm" id="btn-boss-fix" type="button" aria-expanded="false" data-html2canvas-ignore>예측이 빗나갔나요?</button><button class="ghost sm icb" id="btn-boss-img" type="button" data-html2canvas-ignore title="이미지 저장" aria-label="이미지 저장"><svg class="icb-i" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.5 9H5v12h14V9h-3.5"/><path d="M12 15V2.5"/><path d="M7.5 7l4.5-4.5L16.5 7"/></svg></button></span><span class="bossopts"><label class="gtb"><input type="checkbox" id="boss-all"> 전체보기</label><label class="gtb"><input type="checkbox" id="boss-nofut"> 미출시 챕터 제외</label></span></span></div>
-      <p class="rapisay" id="rapi-boss" data-html2canvas-ignore><button type="button" class="rapix" id="rapi-boss-x" aria-label="안내 닫기">×</button>매일 보스에 도전하실 필요는 없습니다, 지휘관. 출격할 날짜는 제가 계산해 두겠습니다. 그날, 명령만 내려 주십시오.</p>
+      <p class="rapisay" id="rapi-boss" data-html2canvas-ignore><button type="button" class="rapix" id="rapi-boss-x" aria-label="안내 닫기">×</button>매일 보스에 도전할 필요는 없습니다. 출격할 날짜는 제가 계산해 두겠습니다. 그날에 명령만 내려 주십시오, 지휘관.</p>
       <div class="bossfix" id="boss-fix" hidden data-html2canvas-ignore>
-        <p class="fixsay">죄송합니다, 지휘관. 돌파/모듈작에 따라 ±6% 오차가 발생할 수 있습니다. 실제 기록을 알려 주시면 즉시 바로잡겠습니다.</p>
-        <p class="note">실제 클리어 기록을 입력하면 투력차를 보정해 예상을 다시 계산합니다. 과거 클리어 기록은 <a href="https://www.blablalink.com/shiftyspad/home" target="_blank" rel="noopener noreferrer">블라블라링크</a>에서 확인할 수 있습니다.</p>
+        <p class="fixsay">죄송합니다, 지휘관. 돌파/모듈작에 따라 ±6% 오차가 발생할 수 있습니다. <a href="https://www.blablalink.com/shiftyspad/home" target="_blank" rel="noopener noreferrer">실제 기록</a>을 알려 주시면 즉시 바로잡겠습니다.</p>
         <div class="fixrow"><label for="fix-cl">내가 클리어한 가장 어려운 보스</label><select id="fix-cl"></select></div>
         <div id="fix-extra" hidden>
           <div class="fixrow"><label for="fix-sc">클리어 당시 싱크로 <small class="muted">(선택)</small></label><input type="number" id="fix-sc" min="1" max="1500" step="1" inputmode="numeric" placeholder="예: 215"></div>
