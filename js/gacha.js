@@ -72,7 +72,7 @@
 @keyframes gmSpIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
 .gm-spg{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;width:100%;max-width:330px;padding:0 6px}
 .gm-spc{position:relative;aspect-ratio:1;perspective:340px}.gm-spc .gm-orb{inset:4%}
-.gm-spn{font-size:12px;color:#9eaac0;min-height:16px}.gm-skip{position:absolute;right:10px;bottom:10px;display:inline-flex;align-items:center;gap:5px;font-weight:800;letter-spacing:.04em}.gm-odds{position:absolute;z-index:8;top:44px;right:8px;left:8px;padding:10px 12px;border-radius:14px;background:rgba(12,16,26,.97);border:1px solid rgba(240,160,32,.5);box-shadow:0 10px 30px rgba(0,0,0,.6);color:#e9edf5;font-size:12px}
+.gm-spn{font-size:12px;color:#9eaac0;min-height:16px}.gm-skip{position:absolute;right:10px;top:10px;display:inline-flex;align-items:center;gap:5px;font-weight:800;letter-spacing:.04em}.gm-odds{position:absolute;z-index:8;top:44px;right:8px;left:8px;padding:10px 12px;border-radius:14px;background:rgba(12,16,26,.97);border:1px solid rgba(240,160,32,.5);box-shadow:0 10px 30px rgba(0,0,0,.6);color:#e9edf5;font-size:12px}
 .gm-oddh{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}.gm-odds table{width:100%;border-collapse:collapse}.gm-odds th,.gm-odds td{padding:4px 3px;text-align:right;border-bottom:1px solid rgba(255,255,255,.07);font-variant-numeric:tabular-nums}
 .gm-odds tbody th{text-align:left;font-weight:700;white-space:nowrap}.gm-odds th small{display:block;font-weight:400;opacity:.6;font-size:10px}.gm-odds thead th{text-align:right}.gm-odds thead th svg{display:inline-block}.gm-odds td.z{opacity:.35}.gm-odds p{margin:8px 0 0;opacity:.7;font-size:11px;line-height:1.5}.gm-flipall{white-space:nowrap}
 .gm-chipbal{display:inline-flex;align-items:center;gap:5px;padding:3px 10px 3px 5px;border-radius:999px;background:rgba(10,14,22,.75);border:1px solid rgba(240,160,32,.55);font-size:13.5px;font-variant-numeric:tabular-nums;color:#ffd58a}
@@ -528,6 +528,13 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     const trayFind = (n) => { for (const k of Object.keys(P)) { const a = P[k]; if (Array.isArray(a)) { const x = a.find((y) => y && y.n === n); if (x) return x; } else if (a && a.n === n) return a; } return null; };
     function traySave() { try { localStorage.setItem(TRAY_K, JSON.stringify(S.tray.map((e) => (e ? [e.nk.n, e.count] : 0)))); } catch (er) { /* 무시 */ } }
     function trayLoad() { try { const a = JSON.parse(localStorage.getItem(TRAY_K) || '[]'); if (!Array.isArray(a)) return; S.tray = a.map((x) => { if (!x) return null; const nk = trayFind(x[0]); return nk ? { nk, count: Math.max(1, x[1] | 0) } : null; }); while (S.tray.length && !S.tray[S.tray.length - 1]) S.tray.pop(); } catch (er) { /* 무시 */ } }
+    /* 한 칸만 다시 그림(다른 칸의 뒤집기·빛남이 끊기지 않게) */
+    function renderWell(i) {
+      const w = panEl.children[i]; if (!w) { uiTray(); return; }
+      const e = S.tray[i], tr = e ? (TIERS[S.val.mode === 2 ? 'pvp' : 'boss'][e.nk.n] || '-') : '';
+      w.innerHTML = e ? trayOrbs(e, tr) : ''; if (e) e.merge = false; traySave();
+      const tb = leftEl.querySelector('.gm-trbtn span'); if (tb) tb.textContent = S.tray.filter(Boolean).length;
+    }
     function uiTray0() { traySave(); const pw = panEl.clientWidth - 20, ph = panEl.clientHeight - 20, cols = pw > 60 ? Math.max(3, Math.min(12, Math.floor((pw + 8) / 62))) : 5, cell = pw > 60 ? (pw - (cols - 1) * 8) / cols : 50, n = cols * Math.max(Math.ceil((S.tray.length + 1) / cols), pw > 60 ? Math.floor((ph + 8) / (cell + 8)) : 3, 2); panEl.style.setProperty('--cols', cols); const tb = leftEl.querySelector('.gm-trbtn span'); if (tb) tb.textContent = S.tray.filter(Boolean).length; let h = ''; for (let i = 0; i < n; i++) { const e = S.tray[i], tr = e ? (TIERS[S.val.mode === 2 ? 'pvp' : 'boss'][e.nk.n] || '-') : ''; h += '<div class="gm-well" data-i="' + i + '">' + (e ? trayOrbs(e, tr) : '') + '</div>'; if (e) e.merge = false; }
       panEl.innerHTML = h;  }
     const shortN = (n) => (n >= 1e6 ? +(n / 1e6).toFixed(2) + 'M' : n >= 1e4 ? +(n / 1e3).toFixed(1) + 'k' : fmt(n));
@@ -590,14 +597,18 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     function spreadOpen(en) {
       if (S.spread) return; const tr = $('.gm-tray'); if (!tr) return;
       const box = document.createElement('div'); box.className = 'gm-spread'; tr.appendChild(box); S.spread = { en, box };
-      box.addEventListener('pointerdown', (e) => { const c = e.target.closest('.gm-spc'); if (!c) return; const t = c._t; if (t && t.anim && !t.busy && t.skip) t.skip(); });
+      box.addEventListener('pointerdown', (e) => {
+        if (e.target.closest('.gm-skip')) return;
+        if (!isSSSn(en.nk) && S.spread && S.spread.cur && !S.spread.cur.hasR) { S.spread.skip = true; S.spread.cur.skip(); return; } /* SS 이하: 화면을 눌러도 바로 건너뜀 */
+        const c = e.target.closest('.gm-spc'); if (!c) return; const t = c._t; if (t && t.anim && !t.busy && t.skip) t.skip(); });
       const batch = () => {
         if (!S.tray.includes(en) || en.count <= 0) { box.remove(); S.spread = null; return; }
-        const n = Math.min(10, en.count), cards = [];
+        const n = Math.min(10, en.count), cards = [], pre = Array.from({ length: n }, () => ({ nk: en.nk })), hasR = pre.some((t) => chipE(t) === 'r');
         box.innerHTML = '<div class="gm-spg">' + Array.from({ length: n }, () => '<div class="gm-spc"></div>').join('') + '</div><div class="gm-spn">' + (en.count > n ? '남은 ' + (en.count - n) + '장' : '') + '</div>' +
-          '<button type="button" class="gm-tb gm-skip" aria-label="건너뛰기">SKIP <svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true"><path d="M4 5l8 7-8 7zM12 5l8 7-8 7z" fill="currentColor"/></svg></button>';
-        box.querySelector('.gm-skip').addEventListener('click', (e) => { e.stopPropagation(); S.spread.skip = true; doSkip(); });
-        box.querySelectorAll('.gm-spc').forEach((c, j) => { const t = { nk: en.nk }; c._t = t; c.innerHTML = orbHtml(t, ' top', '', ''); cards.push([c, t]); });
+          (hasR ? '' : '<button type="button" class="gm-tb gm-skip" aria-label="건너뛰기">SKIP <svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true"><path d="M4 5l8 7-8 7zM12 5l8 7-8 7z" fill="currentColor"/></svg></button>');
+        { const sk = box.querySelector('.gm-skip'); if (sk) sk.addEventListener('click', (e) => { e.stopPropagation(); S.spread.skip = true; doSkip(); }); }
+        box.querySelectorAll('.gm-spc').forEach((c, j) => { const t = pre[j]; c._t = t; c.innerHTML = orbHtml(t, ' top', '', ''); cards.push([c, t]); });
+        S.spread.cur = { hasR: cards.some(([, t]) => chipE(t) === 'r'), skip: () => doSkip() }; /* 무지개가 섞인 묶음은 건너뛰기 없음 */
         const flipCard = (c, t, fast) => {
           const orb = c.querySelector('.gm-orb'); if (!orb || t.flip) return; const k = chipE(t), a = rnd(0, TAU), m = rnd(2, 4);
           t.flip = true; t.tilt = [Math.round(Math.cos(a) * m), Math.round(Math.sin(a) * m)]; orb.style.setProperty('--tx', t.tilt[0] + 'deg'); orb.style.setProperty('--ty', t.tilt[1] + 'deg');
@@ -605,21 +616,27 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
           else { try { snd.flip(); } catch (er) { /* 무시 */ } if (fast) orb.style.transition = 'transform .35s ease-out'; void orb.offsetWidth; requestAnimationFrame(() => orb.classList.add('flip')); t.doneAt = performance.now() + (fast ? 400 : 950); }
         };
         /* SKIP: 남은 장은 빠르게 뒤집고, 상위 연출 중인 장은 바로 마지막 뒤집기로 */
-        const doSkip = () => cards.forEach(([c, t], j) => { if (!t.flip) setTimeout(() => flipCard(c, t, true), j * 25); else if (t.anim && t.skip) { t.busy = false; t.skip(); } });
-        const fast = !!S.spread.skip;
-        cards.forEach(([c, t], j) => setTimeout(() => flipCard(c, t, fast), fast ? 80 + j * 25 : 150 + j * 100));
+        const instant = (c, t) => { /* 즉시 뒤집힌 상태로 */
+          const orb = c.querySelector('.gm-orb'); if (!orb) return;
+          if (t.anim) { orb.getAnimations().forEach((a) => a.cancel()); t.anim = false; t.busy = false; t.skip = null; ['sss', 'glow', 'st-b', 'st-s', 'st-g', 'st-r'].forEach((x) => orb.classList.remove(x)); }
+          t.flip = true; orb.style.transition = 'none'; orb.classList.add('flip'); void orb.offsetWidth; t.doneAt = 0;
+        };
+        const doSkip = () => { if (hasR) return; cards.forEach(([c, t]) => instant(c, t)); try { snd.chipBurst(false); } catch (er) { /* 무시 */ } };
+        const fast = !!S.spread.skip && !hasR;
+        if (fast) setTimeout(doSkip, 60); else cards.forEach(([c, t], j) => setTimeout(() => flipCard(c, t, false), 150 + j * 100));
         const wait = () => {
           const ready = cards.every(([, t]) => t.flip && !t.anim && (!t.doneAt || performance.now() >= t.doneAt));
           if (!ready) { setTimeout(wait, 150); return; }
           setTimeout(() => {
-            cards.forEach(([c, t], j) => setTimeout(() => { const r = c.getBoundingClientRect(), k = chipE(t); c.style.visibility = 'hidden'; if (r.width) chipAbsorb(k, 1, r.left + r.width / 2, r.top + r.height / 2, r.width * 0.8, 'ssr'); else window.doroChips.add({ [k]: 1 }, 'ssr'); }, j * 70));
+            const gap = fast || S.spread.skip ? 30 : 70;
+            cards.forEach(([c, t], j) => setTimeout(() => { const r = c.getBoundingClientRect(), k = chipE(t); c.style.visibility = 'hidden'; if (r.width) chipAbsorb(k, 1, r.left + r.width / 2, r.top + r.height / 2, r.width * 0.8, 'ssr'); else window.doroChips.add({ [k]: 1 }, 'ssr'); }, j * gap));
             setTimeout(() => {
               en.count -= n; if (en.count <= 0) { const i = S.tray.indexOf(en); if (i >= 0) S.tray[i] = null; while (S.tray.length && !S.tray[S.tray.length - 1]) S.tray.pop(); }
               uiTray(); if (en.count > 0) setTimeout(batch, 350); else { box.remove(); S.spread = null; }
-            }, n * 70 + 250);
-          }, S.spread.skip ? 200 : 450);
+            }, n * gap + 250);
+          }, fast || S.spread.skip ? 120 : 450);
         };
-        setTimeout(wait, fast ? 200 : 150 + n * 100);
+        setTimeout(wait, fast ? 120 : 150 + n * 100);
       };
       batch();
     }
@@ -661,7 +678,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
       const i = S.tray.indexOf(en), t = en && en.top; if (i < 0 || !t || !t.flip || t.anim) return;
       const w = panEl.children[i], orb = w && w.querySelector('.gm-orb.top'), r = orb ? orb.getBoundingClientRect() : null;
       en.count -= 1; en.top = null; en.ck = null; if (en.count <= 0) { S.tray[i] = null; while (S.tray.length && !S.tray[S.tray.length - 1]) S.tray.pop(); }
-      uiTray(); if (r && r.width) chipAbsorb(chipE(t), 1, r.left + r.width / 2, r.top + r.height / 2, r.width); else window.doroChips.add({ [chipE(t)]: 1 }, 'ssr');
+      renderWell(i); if (r && r.width) chipAbsorb(chipE(t), 1, r.left + r.width / 2, r.top + r.height / 2, r.width); else window.doroChips.add({ [chipE(t)]: 1 }, 'ssr');
     }
     /* 뒤집히고 0.5초 뒤 스스로 잔고로 (실버·골드·무지개는 그 사이 커지며 빛남) */
     function autoAbsorb(en, t, wait) {
