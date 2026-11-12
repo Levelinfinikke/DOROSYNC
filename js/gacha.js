@@ -656,15 +656,15 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
       SSS: [2, 8, 89, 1], SS: [15, 35, 49.9, 0.1], S: [45, 45, 9.96, 0.04], low: [85, 13, 1.992, 0.008],
       capR: [90, 9, 0.995, 0.005], capSR: [80, 17, 2.988, 0.012], stkR: [0, 20, 70, 10], stkSR: [0, 0, 70, 30], /* 10연속: 확률이 낮은 만큼 크게 */
     };
-    const CAP_RATE = { R: 15.5, SR: 23.3 }; /* R·SR 캡슐을 열 때 칩이 나올 확률(%) — DORO MODE 1칩 = 1뽑, 10뽑마다 전부 개봉·개봉 중 시간 정지(10뽑당 게임 시간 약 2.3초) 기준 환수율 약 101%(COMBO=무지개↑, DORO TIME=수입×n) */
+    const CAP_RATE = { R: 29, SR: 44 }; /* R·SR 캡슐을 열 때 칩이 나올 확률(%) — DORO MODE 1칩 = 1뽑, 10뽑마다 전부 개봉·개봉 중 시간 정지(10뽑당 게임 시간 약 2.3초) 기준 환수율 약 101%(COMBO=무지개↑, DORO TIME=수입×n) */
     const KS = ['b', 's', 'g', 'r'], tierGrp = (nk) => { const t = CHT[nk.n]; return t === 'SSS' || t === 'SS' || t === 'S' ? t : 'low'; };
     /* DORO TIME(무지개칩 획득 후 5분): 무지개·골드·실버 확률 2배(위 등급부터 채우고 남는 만큼 DORO칩), 캡슐 칩 확률도 2배 */
     const FEV_K = 'dsgm-fever', FEV_MS = 90 * 1000; /* DORO TIME: 90초 동안 수입 ×2, 그 안에 무지개를 또 먹으면 ×3·×4…(시간은 다시 90초) */
     const fevEnd = () => { const v = +lsg(FEV_K) || 0; return v > 1e12 ? 0 : v; }; /* 예전(실제 시각) 값은 무시 */
     const feverOn = () => DM.on && DCLK.v < fevEnd();
     const fevP = (a) => { const r = Math.min(2 * a[3], 100), g = Math.min(2 * a[2], 100 - r), s2 = Math.min(2 * a[1], 100 - r - g); return [100 - r - g - s2, s2, g, r]; };
-    const RB_ADD = 0.5; /* COMBO 단계 n: 무지개 확률 +0.5%p × n (도로→실버→골드 몫에서 뺌) */
-    const boostP = (a, b) => { if (!(b > 1)) return a; const p = a.slice(); let add = Math.min(100 - p[3], RB_ADD * b); p[3] += add; for (let i = 0; i < 3 && add > 0; i++) { const tk = Math.min(p[i], add); p[i] -= tk; add -= tk; } return p; };
+    const RB_MUL = 2; /* COMBO 단계 n: 무지개 확률 ×(2×n) — 원래 확률에 비례(도로→실버→골드 몫에서 뺌) */
+    const boostP = (a, b) => { if (!(b > 1)) return a; const p = a.slice(); let add = Math.max(0, Math.min(Math.max(50, p[3]), p[3] * RB_MUL * b) - p[3]); /* 올라가도 최대 50% */ p[3] += add; for (let i = 0; i < 3 && add > 0; i++) { const tk = Math.min(p[i], add); p[i] -= tk; add -= tk; } return p; };
     const chipRoll = (key, boost) => { const p = boostP(CHIP_P[key], boost), u = Math.random() * 100; let a = 0; for (let i = 0; i < 4; i++) { a += p[i]; if (u < a) return KS[i]; } return 'b'; };
     const mkTop = (e) => ({ nk: e.nk, cm: e.cq && e.cq.length ? e.cq.shift() : 0 }); /* 맨 위 장: 남은 콤보 배수 중 가장 큰 것부터 */
     const isSSSn = (nk) => CHT[nk.n] === 'SSS', chipOf = (nk, code) => chipRoll(tierGrp(nk), (code || 0) % 1000), chipE = (en) => { if (!en.ck || en.ck === 'x') en.ck = chipOf(en.nk, en.cm); return en.ck; }, chipSvg = (k, px, fx, flat) => (window.doroChipSvg ? window.doroChipSvg(k, px, fx, flat) : '');
@@ -1200,10 +1200,10 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     function oddsHtml() {
       const cb = S.doro ? comboMul() : 1, fv = feverOn(), fmtP = (v) => (v < 0.1 ? v.toFixed(2) : v < 1 ? v.toFixed(2).replace(/0$/, '') : String(+v.toFixed(2)));
       const row = (nm, key, note) => { const base = CHIP_P[key], p = boostP(base, cb); return '<tr><th>' + nm + (note ? '<small>' + note + '</small>' : '') + '</th>' + p.map((v, i) => '<td class="' + (v ? '' : 'z') + (Math.abs(v - base[i]) > 1e-9 ? (v > base[i] ? ' up' : ' dn') : '') + '">' + (v ? fmtP(v) + '%' : '—') + '</td>').join('') + '</tr>'; };
-      const tags = (cb > 1 ? ' <em class="cb">COMBO ×' + cb + ' · 무지개 +' + fmtP(RB_ADD * cb) + '%p</em>' : '') + (fv ? ' <em>DORO TIME ×' + (fevLv() + 1) + '</em>' : '');
+      const tags = (cb > 1 ? ' <em class="cb">COMBO ×' + cb + ' · 무지개 ×' + RB_MUL * cb + '</em>' : '') + (fv ? ' <em>DORO TIME ×' + (fevLv() + 1) + '</em>' : '');
       return '<div class="gm-oddh"><b>DORO칩 획득 확률' + tags + '</b><button class="gm-tb" data-x>닫기</button></div><table><thead><tr><th></th>' + KS.map((k) => '<th>' + chipSvg(k, 20, false) + '</th>').join('') + '</tr></thead><tbody>' +
         row('SSS', 'SSS') + row('SS', 'SS') + row('S', 'S') + row('A 이하', 'low') + row('R 캡슐', 'capR', CAP_RATE.R + '% 확률로') + row('SR 캡슐', 'capSR', CAP_RATE.SR + '% 확률로') + row('R 10연속', 'stkR') + row('SR 10연속', 'stkSR') +
-        '</tbody></table><p>COMBO: 10뽑 묶음에서 SSR이 n장(2장 이상) 나오면 10×n초 동안 뽑은 캡슐의 무지개칩 확률 +0.5%p×단계. 시간 안에 또 나오면 단계 합산·시간 추가<br>DORO TIME: 무지개칩을 얻으면 90초 동안 뽑은 캡슐의 DORO칩 수입 ×2, 그 안에 또 얻으면 ×3·×4…</p><p>DORO칩 10 = 실버칩 2 = 골드칩 1 · 바디라벨 10,000 = DORO칩 1 · 티어는 기본 티어표(솔레) 기준</p>';
+        '</tbody></table><p>COMBO: 10뽑 묶음에서 SSR이 n장(2장 이상) 나오면 10×n초 동안 뽑은 캡슐의 무지개칩 확률 ×(2×단계). 시간 안에 또 나오면 단계 합산·시간 추가<br>DORO TIME: 무지개칩을 얻으면 90초 동안 뽑은 캡슐의 DORO칩 수입 ×2, 그 안에 또 얻으면 ×3·×4…</p><p>DORO칩 10 = 실버칩 2 = 골드칩 1 · 바디라벨 10,000 = DORO칩 1 · 티어는 기본 티어표(솔레) 기준</p>';
     }
     function chipOdds() {
       const tr = $('.gm-tray'); let box = tr.querySelector('.gm-odds'); if (box) { box.remove(); return; }
