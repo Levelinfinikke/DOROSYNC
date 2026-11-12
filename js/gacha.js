@@ -92,7 +92,7 @@
 .gm-c3-g .gm-c3r>i{background:linear-gradient(rgba(10,10,20,var(--dk)),rgba(10,10,20,var(--dk))),linear-gradient(90deg,#8a6508,#fff3b0 30%,#d9a520 55%,#fff6c8 75%,#8a6508)}.gm-c3-r .gm-c3r>i{background:linear-gradient(rgba(10,10,20,var(--dk)),rgba(10,10,20,var(--dk))),conic-gradient(#ff5d8f,#ffb84d,#f6f05a,#5ef0a0,#5ab8ff,#b47cff,#ff5d8f)}
 .gm-c3f{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;transform:translateZ(calc(var(--ct) * .5 + .3px)) scale(.93)}.gm-c3b{transform:rotateY(180deg) translateZ(calc(var(--ct) * .5 + .3px)) scale(.93)}.gm-c3f svg{width:100%;height:100%;display:block}
 @keyframes gmC3Spin{from{transform:rotateX(24deg) rotateY(0deg)}to{transform:rotateX(24deg) rotateY(360deg)}}
-.gm-pan{display:grid;grid-template-columns:repeat(var(--cols,4),1fr);align-content:start;flex:1 1 0;min-height:0;overflow-y:auto;gap:8px;padding:10px;border-radius:12px;background:#15171c;box-shadow:inset 0 2px 8px rgba(0,0,0,.7)}
+.gm-pan{display:grid;grid-template-columns:repeat(var(--cols,4),1fr);align-content:start;flex:1 1 0;min-height:0;overflow-y:auto;overflow-x:hidden;gap:8px;padding:10px;border-radius:12px;background:#15171c;box-shadow:inset 0 2px 8px rgba(0,0,0,.7)}
 .gm-well{position:relative;perspective:240px;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 50% 35%,#0c0d10 0%,#1d2027 70%,#30343e 100%);box-shadow:inset 0 5px 9px rgba(0,0,0,.85),0 1px 0 rgba(255,255,255,.1)}
 .gm-well.over{box-shadow:inset 0 5px 9px rgba(0,0,0,.85),0 0 0 3px var(--gold)}
 .gm-cf,.gm-float.orb{background:center/cover no-repeat,radial-gradient(circle at 50% 30%,#fff6d8,#d9b35a)}
@@ -606,7 +606,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     }
     /* 잔고에서 골드칩(DORO칩 10 = 10뽑)으로 꺼내 재화 상자에 떨어뜨림. 실제로 쓰는 건 투입구에 넣을 때 */
     function doroWithdraw(n) {
-      const av = Math.max(0, doroBal() - (S.dpile || 0)); n = Math.min(n, av); if (n <= 0) { say('꺼낼 DORO칩이 없습니다.'); return; }
+      const av = Math.max(0, doroBal() - (S.dpile || 0)), room2 = Math.max(0, 2000 - (S.dpile || 0)); if (room2 <= 0) { say('재화 상자에는 골드칩을 200개까지 둘 수 있습니다.'); return; } n = Math.min(n, av, room2); /* 골드칩 최대 200개 */ if (n <= 0) { say('꺼낼 DORO칩이 없습니다.'); return; }
       n -= n % 10; if (n <= 0) { say('골드칩 1개(DORO칩 10)부터 꺼낼 수 있습니다.'); return; } const tens = n / 10, ones = 0, num = wtEl.querySelector('.gm-dmb'), wr = walEl.getBoundingClientRect(), nr = num ? num.getBoundingClientRect() : wr, sx = clamp(nr.left - wr.left + 20, 20, PW - 20), sy = clamp(nr.top - wr.top + nr.height / 2, 10, PH - 20);
       S.dpile = (S.dpile || 0) + n; let i = 0; const drop = (u) => { const b = pileItem('doro', sx + rnd(-14, 14), sy, u); b.vx = rnd(30, 160); b.vy = rnd(-260, -80); b.w = rnd(-6, 6); S.pile.push(b); wake(S.pile); };
       for (let k = 0; k < tens; k++) setTimeout(() => { drop(10); try { snd.chipPop(); } catch (e) { /* 무시 */ } }, (i++) * 70);
@@ -795,12 +795,12 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     /* 칩 비: 캔버스 한 장에 칩 그림을 찍어 그림(두께는 옆면 띠로 흉내). DOM 수백 개보다 훨씬 가벼움 */
     const RAIN_IMG = {};
     const rainImg = (k) => { if (RAIN_IMG[k]) return RAIN_IMG[k]; const im = new Image(); im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(chipSvg(k, 96, false, true).replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ')); RAIN_IMG[k] = im; return im; };
-    function coinRain(gold, host0) {
+    function coinRain(gold, host0, lv) {
       const host = host0 || document.fullscreenElement || document.body, cv2 = document.createElement('canvas'), dpr = Math.min(1.5, window.devicePixelRatio || 1), W2 = innerWidth, H2 = innerHeight;
       cv2.className = 'gm-rain'; cv2.width = W2 * dpr; cv2.height = H2 * dpr; host.appendChild(cv2); const c = cv2.getContext('2d');
-      const ks = gold ? ['g', 'g', 'g', 'g', 'g', 'g', 'r'] : ['b', 'b', 'b', 's', 's', 'g', 'g', 'r'], EC = { b: '#a86405', s: '#8b9097', g: '#b8860b', r: '#7d5fc0' };
-      ks.forEach(rainImg); const N = gold ? 90 : 60, ps = [];
-      for (let i = 0; i < N; i++) { const k = pick(ks); ps.push({ k, x: rnd(0, W2), y: -rnd(30, H2 * 0.9), vy: rnd(380, 720), vx: rnd(-40, 40), sz: rnd(26, 56), sp: rnd(0, TAU), vs: rnd(5, 12) * (Math.random() < 0.5 ? -1 : 1), tl: rnd(-0.5, 0.5), d: i * (gold ? 18 : 30) }); }
+      const ks = lv ? (lv <= 2 ? ['b', 'b', 'b', 's'] : lv <= 3 ? ['b', 'b', 's', 's', 'g'] : lv <= 5 ? ['b', 's', 's', 'g', 'g'] : lv <= 8 ? ['s', 'g', 'g', 'g', 'r'] : ['g', 'g', 'g', 'r', 'r']) : gold ? ['g', 'g', 'g', 'g', 'g', 'g', 'r'] : ['b', 'b', 'b', 's', 's', 'g', 'g', 'r'], EC = { b: '#a86405', s: '#8b9097', g: '#b8860b', r: '#7d5fc0' };
+      ks.forEach(rainImg); const N = lv ? Math.min(160, 14 + lv * 12) : gold ? 90 : 60, ps = [];
+      for (let i = 0; i < N; i++) { const k = pick(ks); ps.push({ k, x: rnd(0, W2), y: -rnd(30, H2 * 0.9), vy: rnd(380, 720), vx: rnd(-40, 40), sz: rnd(26, 56), sp: rnd(0, TAU), vs: rnd(5, 12) * (Math.random() < 0.5 ? -1 : 1), tl: rnd(-0.5, 0.5), d: i * (lv ? 14 : gold ? 18 : 30) }); }
       const t0 = performance.now(); let last = t0;
       const step = (now) => { const dt = Math.min(0.05, (now - last) / 1000); last = now; c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, W2, H2); let alive = 0;
         for (const q of ps) { if (now - t0 < q.d) { alive++; continue; } q.vy += 600 * dt; q.y += q.vy * dt; q.x += q.vx * dt; q.sp += q.vs * dt; if (q.y > H2 + 60) continue; alive++;
@@ -820,7 +820,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
       const now = cNow(), on = CB.mul > 0 && now < CB.end, left = on ? CB.end - now : 0; CB.demo = on ? CB.demo && !!demo : !!demo;
       if (on) { CB.mul += n; CB.top = Math.max(CB.top, n); CB.end = now + Math.min(left + n * 10000, CB.top * 10000); } else { CB.mul = n; CB.top = n; CB.end = now + n * 10000; }
       thEl.style.height = Math.min(64, 18 + CB.top * 9) + '%'; thermoBuild(); thEl.classList.add('on');
-      if (on) comboPop(CB.mul); quake(CB.mul); cancelAnimationFrame(CB.raf); CB.raf = requestAnimationFrame(comboTick);
+      if (on) comboPop(CB.mul); quake(CB.mul); coinRain(false, null, CB.mul); /* COMBO마다 칩 비(연출): 배수가 클수록 많고 좋은 칩 */ cancelAnimationFrame(CB.raf); CB.raf = requestAnimationFrame(comboTick);
     }
     function comboTick() {
       const now = cNow(), left = Math.max(0, CB.end - now), cap = CB.top * 10000, f = cap ? left / cap : 0;
@@ -1073,7 +1073,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
       w.innerHTML = e ? trayOrbs(e, tr) : ''; w._h = null; if (e) e.merge = false; traySave();
       const tb = leftEl.querySelector('.gm-trbtn span'); if (tb) tb.textContent = S.tray.filter(Boolean).length;
     }
-    function uiTray0() { traySave(); const pw = panEl.clientWidth - 20, ph = panEl.clientHeight - 20, cols = pw > 60 ? Math.max(3, Math.min(12, Math.floor((pw + 8) / 62))) : 5, cell = pw > 60 ? (pw - (cols - 1) * 8) / cols : 50, n = cols * Math.max(Math.ceil((S.tray.length + 1) / cols), pw > 60 ? Math.floor((ph + 8) / (cell + 8)) : 3, 2); panEl.style.setProperty('--cols', cols); const tb = leftEl.querySelector('.gm-trbtn span'); if (tb) tb.textContent = S.tray.filter(Boolean).length; while (panEl.children.length > n) panEl.lastElementChild.remove(); while (panEl.children.length < n) { const d = document.createElement('div'); d.className = 'gm-well'; d.dataset.i = panEl.children.length; panEl.appendChild(d); }
+    function uiTray0() { traySave(); const pw = panEl.clientWidth - 20, ph = panEl.clientHeight - 20, cols = pw > 60 ? Math.max(3, Math.min(12, Math.floor((pw + 8) / 62))) : 5, cell = pw > 60 ? (pw - (cols - 1) * 8) / cols : 50, n = cols * Math.max(Math.ceil((S.tray.length + 1) / cols), pw > 60 ? Math.floor((ph + 8 - 14) / (cell + 8)) : 3, 2); panEl.style.setProperty('--cols', cols); const tb = leftEl.querySelector('.gm-trbtn span'); if (tb) tb.textContent = S.tray.filter(Boolean).length; while (panEl.children.length > n) panEl.lastElementChild.remove(); while (panEl.children.length < n) { const d = document.createElement('div'); d.className = 'gm-well'; d.dataset.i = panEl.children.length; panEl.appendChild(d); }
       for (let i = 0; i < n; i++) { const w = panEl.children[i], e = S.tray[i], t = e && e.top; if (t && (t.anim || t.flipping) && t._el && w.contains(t._el)) continue; /* 뒤집는 중인 칸은 그대로(다시 그리면 애니메이션이 끊김) */
         const tr = e ? (TIERS[S.val.mode === 2 ? 'pvp' : 'boss'][e.nk.n] || '-') : '', h = e ? trayOrbs(e, tr) : ''; if (e) e.merge = false; if (w._h !== h) { w.innerHTML = h; w._h = h; } } }
     const shortN = (n) => (n >= 1e6 ? +(n / 1e6).toFixed(2) + 'M' : n >= 1e4 ? +(n / 1e3).toFixed(1) + 'k' : fmt(n));
@@ -1107,11 +1107,11 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     optEl.addEventListener('click', (e) => { const g = e.target.closest('[data-g]'), op = e.target.closest('[data-op]'); if (op) { S.openM = op.dataset.op; uiOpt(); } if (!g) return; const k = g.dataset.g; if (k === 'corp') setMode('tier', false); else if (k === 'boss' || k === 'pvp') setMode('tier', k); else if (k === 'random') { S.mode.black = false; setMode('random', !S.mode.random); } else { const v = !S.mode.black; setMode('random', false); setMode('black', v); } uiTray(); });
     let tpd = null; /* 보관함: 누르면 뒤집기/흡수, 끌면 이동 */
     const busyE = (en) => !!(en && en.top && en.top.busy);
-    /* 모두 뒤집기: SSS를 뺀 칸마다 맨 위 한 장만 차례로 뒤집고, 잠시 뒤 그 장들만 한꺼번에 잔고로 (겹친 나머지는 그대로) */
+    /* 모두 뒤집기: SSS 포함 칸마다 맨 위 한 장만 차례로 뒤집고, 잠시 뒤 그 장들만 한꺼번에 잔고로 (겹친 나머지는 그대로) */
     function flipAll() {
       if (S.flipAllBusy) return; if (!S.doro) { say('일반 모드에서는 SSR을 DORO칩으로 바꾸지 않습니다.'); return; }
-      const list = S.tray.filter((e) => e && !isSSSn(e.nk) && !busyE(e) && !(e.top && (e.top.anim || e.top.flipping)));
-      if (!list.length) { say(S.tray.some(Boolean) ? 'SSS는 직접 뒤집어 주세요.' : '보관함이 비어 있습니다.'); return; }
+      const list = S.tray.filter((e) => e && !busyE(e) && !(e.top && (e.top.anim || e.top.flipping)));
+      if (!list.length) { say('보관함이 비어 있습니다.'); return; }
       S.flipAllBusy = true; let changed = false;
       list.forEach((e) => { if (!e.top) { e.top = mkTop(e); changed = true; } e.top.noAuto = true; });
       if (changed) uiTray();
@@ -1138,7 +1138,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
       const box = document.createElement('div'); box.className = 'gm-spread'; tr.appendChild(box); S.spread = { en, box };
       box.addEventListener('pointerdown', (e) => {
         if (e.target.closest('.gm-skip')) return;
-        if (!isSSSn(en.nk) && S.spread && S.spread.cur && !S.spread.cur.hasR) { S.spread.skip = true; S.spread.cur.skip(); return; } /* SS 이하: 화면을 눌러도 바로 건너뜀 */
+        if (S.spread && S.spread.cur && !S.spread.cur.hasR) { S.spread.skip = true; S.spread.cur.skip(); return; } /* 화면을 눌러도 바로 건너뜀(무지개가 섞이면 불가) */
         const c = e.target.closest('.gm-spc'); if (!c) return; const t = c._t; if (t && t.anim && !t.busy && t.skip) t.skip(); });
       const batch = () => {
         if (!S.tray.includes(en) || en.count <= 0) { box.remove(); S.spread = null; return; }
@@ -1424,10 +1424,10 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     function drawBodyAny(c, b) { let x = b.x, y = b.y, a = b.a; const g = S.grab; if (g && g.b === b && !g.moved) { x += rnd(-1.8, 1.8); y += rnd(-1.8, 1.8); a += rnd(-0.08, 0.08); } if (b.kind === 'orb') { if (b.res.cm > 1) comboAura(c, x, y, OR); drawOrb(c, b.res.nk, x, y, OR, a); if (b.res.cm > 1) badge(c, x - 16, y + 20, 'C×' + b.res.cm, '#ff7a1a'); if (b.res.count > 1) badge(c, x + 14, y + 20, '×' + b.res.count); if (S.mode.tier) { const t = tierOf(b.res.nk); badge(c, x - 14, y - 20, t, TIERC[t]); } } else if (b.kind === 'chip') { if (b.res.cm > 1) comboAura(c, x, y, OR); drawChip(c, b.res.chip, x, y, a); if (b.res.cm > 1) badge(c, x, y + 22, '×' + b.res.cm, '#ff7a1a'); } else { if (b.res && b.res.cm > 1) comboAura(c, x, y, b.r); drawCap(c, look(b), x, y, b.r, a); } }
     function tkPersp(c, im, x, yFar, wFar, wNear, len, f0) { // 짧은 변부터 안쪽으로: 깊이 방향 띠로 그림
       const N = 18, iw = im.naturalWidth, ih = im.naturalHeight; for (let i = 0; i < N; i++) { const u0 = f0 + (1 - f0) * i / N, u1 = f0 + (1 - f0) * (i + 1) / N, k0 = i / N, k1 = (i + 1) / N, yd = yFar + len * k0 * (1 - f0), hd = len * (k1 - k0) * (1 - f0) + 0.6, wd = wFar + (wNear - wFar) * (k0 + k1) / 2 * (1 - f0), sx = u0 * iw, sw = (u1 - u0) * iw; if (sw <= 0) continue; c.save(); c.translate(x + wd / 2, yd); c.transform(0, hd / sw, -wd / ih, 0, 0, 0); c.drawImage(im, sx, 0, sw, ih, 0, 0, sw, ih); c.restore(); } }
-    function drawIns(c, s) { if (s.k === 'doro') { /* 날아오며 옆으로 돌아 옆면(톱니 테)이 보이게 선 뒤, 옆면 그대로 투입구 안으로 */ const im = IM.doro, D = HOLE.s, cy0 = HOLE.y - 4, TW = DSLOT.w - 2; if (s.t < 0) { c.drawImage(im, s.x - D / 2, s.y - D / 2, D, D); return; }
+    function drawIns(c, s) { if (s.k === 'doro') { /* 날아오며 옆으로 돌아 옆면이 보이게 선 뒤, 옆면 그대로 투입구 안으로 */ const im = IM.doro, D = HOLE.s, cy0 = HOLE.y - 4, TW = DSLOT.w - 2; if (s.t < 0) { c.drawImage(im, s.x - D / 2, s.y - D / 2, D, D); return; }
         const f = ease(s.t / 0.34), u = clamp((s.t - 0.34) / 0.42, 0, 1), th = ease(Math.min(1, s.t / 0.38)) * Math.PI / 2, x = s.x + (HOLE.x - s.x) * f, y = s.y + (cy0 - s.y) * f - Math.sin(f * Math.PI) * 30, fw = D * Math.cos(th), ew = TW * Math.sin(th), H2 = D * 0.92;
         c.save(); c.translate(x, y); c.globalAlpha = 1 - ease(u) * 0.85;
-        if (ew > 0.5) { const ex = -(fw + ew) / 2; let g = c.createLinearGradient(ex, 0, ex + ew, 0); g.addColorStop(0, '#6b4e05'); g.addColorStop(0.45, '#ffe28a'); g.addColorStop(1, '#8a6508'); c.fillStyle = g; rr(c, ex, -H2 / 2, ew, H2, Math.min(ew / 2, 4)); c.fill(); c.fillStyle = 'rgba(70,45,0,.55)'; for (let yy = -H2 / 2 + 3; yy < H2 / 2 - 2; yy += 3.2) c.fillRect(ex + 0.6, yy, Math.max(0, ew - 1.2), 1.1); }
+        if (ew > 0.5) { const ex = -(fw + ew) / 2; let g = c.createLinearGradient(ex, 0, ex + ew, 0); g.addColorStop(0, '#6b4e05'); g.addColorStop(0.45, '#ffe28a'); g.addColorStop(1, '#8a6508'); c.fillStyle = g; rr(c, ex, -H2 / 2, ew, H2, Math.min(ew / 2, 4)); c.fill(); }
         if (fw > 0.8) { c.save(); c.translate(ew / 2, 0); c.scale(Math.max(0.001, fw / D), 1); c.drawImage(im, -D / 2, -D / 2, D, D); c.restore(); }
         if (u > 0) { c.globalAlpha = Math.min(1, u * 1.5) * (1 - ease(u)); c.fillStyle = '#05060a'; c.fillRect(-(fw + ew) / 2 - 1, -H2 / 2, fw + ew + 2, H2); }
         c.restore();
