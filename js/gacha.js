@@ -1233,7 +1233,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     }
 
     /* ---------- 그리기 ---------- */
-    function stkPath(x, pad) { const x0 = BAN.cx - BAN.w / 2 - pad, x1 = BAN.cx + BAN.w / 2 + pad, y0 = BAN.cy - BAN.h / 2 - pad, y1 = BAN.cy + BAN.h / 2 + pad, r = 18 + pad, bv = 0, bh = 10; x.beginPath(); x.moveTo(x0 + r, y0); x.quadraticCurveTo(BAN.cx, y0 - bv, x1 - r, y0); x.quadraticCurveTo(x1, y0, x1, y0 + r); x.quadraticCurveTo(x1 + bh, BAN.cy, x1, y1 - r); x.quadraticCurveTo(x1, y1, x1 - r, y1); x.quadraticCurveTo(BAN.cx, y1 + bv, x0 + r, y1); x.quadraticCurveTo(x0, y1, x0, y1 - r); x.quadraticCurveTo(x0 - bh, BAN.cy, x0, y0 + r); x.quadraticCurveTo(x0, y0, x0 + r, y0); x.closePath(); }
+    function stkPath(x, pad) { const x0 = BAN.cx - BAN.w / 2 - pad, x1 = BAN.cx + BAN.w / 2 + pad, y0 = BAN.cy - BAN.h / 2 - pad, y1 = BAN.cy + BAN.h / 2 + pad, r = 18 + pad, bv = 0, bh = 0; x.beginPath(); x.moveTo(x0 + r, y0); x.quadraticCurveTo(BAN.cx, y0 - bv, x1 - r, y0); x.quadraticCurveTo(x1, y0, x1, y0 + r); x.quadraticCurveTo(x1 + bh, BAN.cy, x1, y1 - r); x.quadraticCurveTo(x1, y1, x1 - r, y1); x.quadraticCurveTo(BAN.cx, y1 + bv, x0 + r, y1); x.quadraticCurveTo(x0, y1, x0, y1 - r); x.quadraticCurveTo(x0 - bh, BAN.cy, x0, y0 + r); x.quadraticCurveTo(x0, y0, x0 + r, y0); x.closePath(); }
     function sticker(x) { // 볼록한 사각 표지: 네 변이 살짝 부풀고 모서리는 둥글게
       const path = (pad) => stkPath(x, pad);
       x.save(); x.shadowColor = 'rgba(0,0,0,.55)'; x.shadowBlur = 16; x.shadowOffsetY = 5; x.fillStyle = '#f4f6fa'; path(5); x.fill(); x.restore();

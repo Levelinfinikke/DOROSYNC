@@ -21,6 +21,10 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
   }
 
   /** inp -> 계산 모델 */
+  /* 장비 경험치(= 같은 양의 크레딧 소모), 하루 기준. 싱크로 1~399 / 400~599 / 600~ = 요격전 3 / 4 / 5회(풀버스트 포함) + 전초기지 방어. 단기섬멸 1회당 +21,580 */
+  const EQ_DAY = (lv) => (lv >= 600 ? 1059456 : lv >= 400 ? 899357 : 739258), EQ_SO = 21580;
+  const EQ_CR = (lv, so) => EQ_DAY(lv) + EQ_SO * (so || 0);
+  self.DoroEQ = { EQ_DAY, EQ_SO, EQ_CR };
   function buildModel(inp, D) {
     const m = {};
     m.S0 = Math.round(inp.S0);
@@ -91,7 +95,9 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     m.Fc = [0, 0, 0];
     m.Oh = [0, 0, 0]; // 주기 0 = 1회성(1일차에 한 번만 수급)
     m.Of = [0, 0, 0];
+    m.Eq = 0; m.EqSo = Math.max(0, +inp.sortie || 0);
     for (const r of inp.inc) {
+      if (r.eq) { m.Eq = r.use ? 1 : 0; continue; } /* 장비 경험치 크레딧 소모: 시뮬레이션에서 날마다 레벨 구간별로 차감 */
       if (!r.use) continue;
       const once = !(r.cyc > 0), cyc = once ? 1 : r.cyc;
       for (let k = 0; k < 3; k++) {
@@ -281,7 +287,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
           const a = app[j];
           if (a !== 0) { h += a * m.Pk[j].H[k]; fx += a * m.Pk[j].Fl[k]; }
         }
-        acq[k] = fx + h * bx[k];
+        acq[k] = fx + h * bx[k] - (k === 2 && m.Eq ? EQ_CR(S, m.EqSo) : 0);
         Fx[k] += acq[k];
       }
       let n = 1 << 30;
@@ -437,6 +443,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
 (function () {
   'use strict';
   const D = self.DATA, E = self.DoroEngine;
+  if (!D.inc.some((d) => d.eq)) D.inc.push({ use: true, name: '장비 경험치', cyc: 1, h: [0, 0, 0], fx: [0, 0, 0], sortie: false, eq: true }); /* 빨간 줄: 크레딧 차감 */
   const RES = E.RES;
   const $ = (s, r) => (r || document).querySelector(s);
   const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
@@ -1107,6 +1114,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     st.inc.forEach((r) => { if (r.name !== '파견 리롤') return; const q = rrParse(r.rr), want = q[1] ? (r.rradv ? (q[0] === 'm' ? 'a' : q[0]) + q[1] : String(q[1])) : '0'; if (r.rr !== want) { r.rr = want; rrApply(r); } });
     let h = '<thead><tr><th>사용</th><th class="l">항목</th><th>주기(일)</th><th>코더 h</th><th>코더 고정</th><th>배데 h</th><th>배데 고정</th><th>크레딧 h</th><th>크레딧 고정</th><th>일일 코더</th><th>일일 배데</th><th>일일 크레딧</th></tr></thead><tbody>';
     st.inc.forEach((r, i) => {
+      if (r.eq) { h += '<tr data-i="' + i + '" class="eqrow"><td><input type="checkbox" data-f="use"' + (r.use ? ' checked' : '') + '></td><td class="name">장비 경험치 <small>크레딧 소모</small></td><td>1</td><td colspan="6" class="eqnote" data-o="eqn"></td><td data-o="d0"></td><td data-o="d1"></td><td data-o="d2"></td></tr>'; return; }
       h += '<tr data-i="' + i + '"><td><input type="checkbox" data-f="use"' + (r.use ? ' checked' : '') + '></td><td class="name">' + (r.custom ? '<input type="text" class="incname" data-f="name" maxlength="20" value="' + esc(r.name) + '" aria-label="항목 이름"> <button type="button" class="incdel" data-del title="항목 삭제" aria-label="항목 삭제">×</button>' : esc(r.name)) + (r.name === '파견 리롤' ? ' <select class="rrsel" data-rr aria-label="파견 새로고침 횟수" title="파견 새로고침 횟수">' + (() => { const cur = rrKey(r.rr), op = (v, t, sh) => '<option value="' + v + '" data-s="' + (sh || t) + '"' + (v === cur ? ' selected' : '') + '>' + t + '</option>'; let o = op('0', '0회'); if (r.rradv) [['k', '쥬얼+코더 우선', 0, '코'], ['a', '쥬얼+코더+크레딧 우선', 1, '크']].forEach((g) => { o += '<optgroup label="' + g[1] + '">'; for (let n = 1; n <= 10; n++) o += op(g[0] + n, g[1] + ' ' + n + '회 (쥬얼 ' + RR_NET(g[2], n) + '/일)', n + '회(' + g[3] + ')'); o += '</optgroup>'; }); else for (let n = 1; n <= 10; n++) o += op(String(n), n + '회 (쥬얼 ' + RR_NET(2, n) + '/일)', n + '회'); return o; })() + '</select>' + ' <label class="gtb rradv" title="쥬얼+코더 우선 / 쥬얼+코더+크레딧 우선을 따로 고르기 (끄면 두 방식 평균)"><input type="checkbox" data-rradv' + (r.rradv ? ' checked' : '') + '> 고급</label>' : '') + (r.name === '일반상점' && !r.custom ? ' <select class="rrsel" data-sh aria-label="일반상점 쥬얼 구매" title="2·3번 슬롯 쥬얼 구매 기준 (하루 평균 ' + SHT[r.shp || 'n'][1] + ' 쥬얼 소모)">' + Object.keys(SHL).map((k) => '<option value="' + k + '" data-s="' + SHS[k] + '"' + (k === (r.shp || 'n') ? ' selected' : '') + '>' + shLabel(k) + '</option>').join('') + '</select>' : '') + (r.name === '이벤트 짤짤이' ? ' <select class="rrsel" data-pick aria-label="짤짤이 수령 재화" title="둘 중 하나만 수령">' + [[2, '크레딧'], [0, '코더']].map((o) => '<option value="' + o[0] + '"' + (o[0] === (r.pick != null ? r.pick : 2) ? ' selected' : '') + '>' + o[1] + '</option>').join('') + '</select>' : '') + '</td>';
       h += '<td><input type="number" data-f="cyc" min="0" step="any" value="' + r.cyc + '"></td>';
       for (let k = 0; k < 3; k++) {
@@ -1643,6 +1651,8 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     const sums = [0, 0, 0];
     $$('#t-inc tr[data-i]').forEach((tr) => {
       const r = st.inc[+tr.dataset.i], once = !(r.cyc > 0), cyc = once ? 1 : r.cyc;
+      if (r.eq) { const lv = M.S0 || 1, so = Math.max(0, +st.sortie || 0), c = r.use ? self.DoroEQ.EQ_CR(lv, so) : 0; sums[2] -= c; tr.querySelector('[data-o=d0]').textContent = '-'; tr.querySelector('[data-o=d1]').textContent = '-'; tr.querySelector('[data-o=d2]').textContent = c ? '−' + fmt(c) : '0';
+        tr.querySelector('[data-o=eqn]').textContent = '싱크로 Lv ' + lv + ' 기준 ' + fmt(self.DoroEQ.EQ_DAY(lv)) + ' + 단기섬멸 ' + so + '회 × ' + fmt(self.DoroEQ.EQ_SO) + ' (레벨 구간이 바뀌면 그날부터 자동 반영)'; return; }
       for (let k = 0; k < 3; k++) {
         const h = r.sortie ? 2 * st.sortie : r.h[k];
         const pk = r.pick != null ? r.pick : (r.name === '이벤트 짤짤이' ? 2 : -1);
@@ -2104,7 +2114,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     '<div><h3>전초기지 레벨 · 보스 클리어</h3><ul><li><b>예상 전투력</b> = 평균 유저 전투력표(싱크로 Lv별) × 1군 전투력 보정계수. 1군 전투력을 입력하면 현재 싱크로 기준으로 곡선 전체가 보정됩니다.</li><li><b>클리어 판정</b>: 예상 전투력 ≥ 보스 판정 투력 × (1+투력차)이면 클리어로 봅니다. 판정 투력은 기준전투력의 88%입니다(실제 클리어 기록 기준). 보스 트라이는 매일 한다고 가정합니다.</li><li><b>전초기지 Lv</b> = 1 + 내림((노말 클리어 스테이지 + 하드 클리어 스테이지) ÷ 5). 챕터는 모드별 순서대로만 열리므로 같은 모드에서 앞선 보스의 판정 투력 최댓값을 씁니다.</li><li><b>방지턱</b>(하드 15~50장 보스): <a href="https://enikk.app/campaign" target="_blank" rel="noopener noreferrer">enikk</a> KR 최저 20위 평균 전투력 기준 보정계수를 반영합니다. 노말 방지턱은 하드 계수를 준용한 추정입니다.</li><li>전초기지 Lv이 오르면 다음 날부터 재화상자 가치와 일일 수급량이 늘어납니다.</li></ul></div>',
     '<div><h3>작전날짜 탭</h3><ul><li>예상 날짜는 예상 투력이 판정 투력 × (1+투력차) 이상이 되는 첫 날입니다. 1500일 안에 도달하지 못하면 \'미도달\'로 표시합니다.</li><li>시작 시점에 이미 클리어 가능한 보스는 기본으로 생략하며, 우측 상단의 \'모든 보스 표시\'를 체크하면 함께 보여 줍니다.</li><li>방지턱 보스는 붉은 배경으로 표시합니다. 한섭 최저클 평균은 하드 보스의 enikk KR 참고값입니다.</li><li>49·50챕터는 개방 직후라 신뢰도가 낮습니다.</li></ul></div>',
     '<div><h3>최적 조합 탐색</h3><ul><li>[패키지] 탭에서 체크한 패키지가 후보입니다. 스텝업5도 다른 패키지처럼 후보로 계산합니다.</li><li>월정액·커스텀1·커스텀2는 없음/코더/배데/크레딧 중 하나를 고르는 슬롯이라, 기본 13개 기준 조합은 65,536가지입니다. 조합이 50만 가지를 넘으면 느려지므로 최대 17개를 권장하고, 비효율 패키지는 구매 횟수를 조절하세요.</li><li>비용이 같으면 가장 빠른 조합을 고르고, 비용이 늘어도 일수가 줄지 않는 조합은 제외해 곡선을 만듭니다.</li><li>효율 구간(초록색)은 돈을 더 쓸수록 1만원당 줄어드는 일수가 점점 줄어드는 지점만 남긴 것으로, 멈추기 좋은 후보입니다.</li></ul></div>',
-    '<div><h3>일일 수급량 · 기본 항목</h3><ul><li>[일일 수급] 탭에서 항목별로 켜고 끄며, 주기와 h값도 직접 고칠 수 있습니다. 표의 h는 전초기지 Lv의 1h 기준 값입니다.</li><li><b>로그인</b>: 매일 코더·배데·크레딧 각 24h.</li><li><b>일간 퀘스트</b>: 매일 크레딧 2h + 코더 50개. <b>주간 퀘스트</b>: 7일 주기 크레딧 16h.</li><li><b>고철상점</b>: 매주 상점을 턴다고 가정합니다(7일 주기 코더 36h · 배데 36h · 크레딧 72h + 크레딧 500,000). 굿 팀워크 박스는 포함하지 않습니다.</li><li><b>시뮬레이션 룸</b>: 일일 배데 18h, 월평균 5일 풀버스트(재화 2배) 가정 = 일일 배데 21h.</li><li><b>레벨인피 출석</b>: 30일 주기 코더 9h + 30개, 배데 6h, 크레딧 9h(기본 체크).</li></ul></div>',
+    '<div><h3>일일 수급량 · 기본 항목</h3><ul><li>[일일 수급] 탭에서 항목별로 켜고 끄며, 주기와 h값도 직접 고칠 수 있습니다. 표의 h는 전초기지 Lv의 1h 기준 값입니다.</li><li><b>로그인</b>: 매일 코더·배데·크레딧 각 24h.</li><li><b>일간 퀘스트</b>: 매일 크레딧 2h + 코더 50개. <b>주간 퀘스트</b>: 7일 주기 크레딧 16h.</li><li><b>고철상점</b>: 매주 상점을 턴다고 가정합니다(7일 주기 코더 36h · 배데 36h · 크레딧 72h + 크레딧 500,000). 굿 팀워크 박스는 포함하지 않습니다.</li><li><b style="color:#e5484d">장비 경험치(크레딧 소모)</b>: 오버로드 장비를 키우는 데 매일 들어오는 장비 경험치만큼 크레딧을 차감합니다. 싱크로 Lv 1~399 하루 739,258 · 400~599 하루 899,357 · 600~ 하루 1,059,456, 단기섬멸 1회마다 21,580 추가. 레벨이 구간을 넘는 날부터 차감량이 바뀝니다. 체크를 끄면 차감하지 않습니다.</li><li><b>시뮬레이션 룸</b>: 일일 배데 18h, 월평균 5일 풀버스트(재화 2배) 가정 = 일일 배데 21h.</li><li><b>레벨인피 출석</b>: 30일 주기 코더 9h + 30개, 배데 6h, 크레딧 9h(기본 체크).</li></ul></div>',
     '<div><h3>일일 수급량 · 일반상점 · 단기섬멸</h3><ul><li><b>일반상점 기본</b>: 매일 (코더 30 × 33.3% + 크레딧 60,000 × 66.6%) × 2회(처음 목록 + 무료 새로고침).</li><li><b>쥬얼 구매</b>(드롭다운, 기본 구매 안 함)<ul><li>매일 1회 무료 새로고침만 쓰고, 이후 새로고침은 100쥬얼이라 쓰지 않습니다.</li><li>2·3번 슬롯 가격은 0% / -20% / -40% 구성이며, 선택한 할인율 이상인 아이템만 삽니다.</li><li>새로고침하면 2·3번 슬롯이 모두 다시 나오므로, 처음 목록과 새로고침 목록에서 각각 구매합니다(하루 2번).</li><li>2번 슬롯(2h): 크레딧 30·24·18쥬얼 / 배데·코더 90·72·54쥬얼, 확률 11.29% · 7.53% · 3.76%(재화별).</li><li>3번 슬롯(3h): 크레딧 40·32·24쥬얼 / 배데·코더 150·120·90쥬얼, 확률 12.96% · 8.64% · 4.32%(재화별).</li><li>하루 평균: -40%까지 코더·배데·크레딧 각 0.41h(약 27쥬얼), -20%까지 각 1.229h(약 99쥬얼), 0%까지 각 2.459h(약 235쥬얼).</li></ul></li><li><b>단기섬멸</b><ul><li>1~12회(1회 무료). 1회당 코더·배데·크레딧 각 2h를 얻습니다.</li><li>비용은 0 / 50 / 70 / 100 / 150~(50쥬얼씩 상승, 최대 500)입니다.</li><li>유저 정보에서 횟수를 바꾸면, 단기섬멸의 추가 비용(쥬얼 / 코더 환산 h)이 상점 구간의 추가 비용보다 비싸지는 횟수부터 상점 구매 구간이 자동 선택됩니다(-40%까지 5회, -20%까지 6회, 0%까지 7회 이후). 선택 뒤 드롭다운에서 직접 바꿀 수 있습니다.</li></ul></li></ul></div>',
     '<div><h3>비정기 수급 · 보스 클리어</h3><ul><li>보스를 잡으면 새로 열리는 스테이지 수(같은 모드에서 직전 보스와의 스테이지 차이)만큼 크레딧h와 배데h, 보스마다 코더 2h를 얻는다고 봅니다.</li><li>클리어 날짜는 매일의 예상 투력이 보스 기준 투력(판정 투력 × (1+보정 G))을 넘는 날로 잡고, 그 <b>다음 날 획득</b>으로 싱크로 계산에 더합니다. 시간(h) 재화는 그날의 전초기지 레벨 기준 1시간 획득량으로 환산합니다.</li><li>오늘 투력으로 이미 잡을 수 있는 보스는 받은 것으로 보고 빼며, 데이터에 있는 50챕터까지만 계산합니다.</li><li><b>대략적인 기댓값</b>입니다. 예상 클리어 목록은 [일일 수급] 탭 아래에 있습니다.</li></ul></div>',
     '<div><h3>일일 수급량 · 파견 리롤</h3><ul><li>매일 10칸이 열립니다. 내용물은 확률로 추첨해 미리 보여 주고, 원하는 파견(쥬얼·코더·크레딧)만 확정한 뒤 남은 칸은 새로고침합니다.</li><li>확정한 아이템은 다음 추첨 목록에서 제외합니다. 같은 목록 안에서는 같은 아이템이 겹치지 않는다고 봅니다.</li><li>마지막 새로고침 뒤에는 남은 칸을 전부 보냅니다(그때 나온 쥬얼·크레딧·코더도 수령).</li><li>확률(아이템 1개당): 크레딧 7종 × [2h 0.4286% · 2h 1.4286% · 3h 0.5714%], 코더 4종 × [2h 0.4286% · 2h 1.4286% · 3h 0.5714%], 쥬얼 15개 9종 × 0.7143% · 20개 7종 × 0.4286% · 25개 7종 × 1.4286% · 30개 7종 × 0.5714%. 나머지 49.9%는 기타 재화입니다.</li><li><b>쥬얼은 어느 모드든 뜨면 항상 확정</b>한다고 봅니다. 쥬얼이 칸을 차지하는 만큼 코더·크레딧 평균 획득량은 쥬얼을 제외할 때보다 줄어듭니다.</li><li>[일일 수급] 표의 드롭다운으로 새로고침 0~10회를 고릅니다(기본 0회). 계산에는 아래 두 운용 방식의 <b>평균</b>을 씁니다. <b>고급</b>을 체크하면 두 방식 중 하나를 직접 고를 수 있습니다.<ul><li>쥬얼+코더 우선: 쥬얼·코더만 확정하고, 크레딧은 마지막 목록에서만 받습니다.</li><li>쥬얼+코더+크레딧 우선: 쥬얼·코더·크레딧이 뜰 때마다 확정합니다.</li><li>평균을 쓰면 어느 한쪽 방식만 쓸 때와 비교해 목표 도달 일수가 약 ±1.4%(기본 설정에서 5~9일) 달라질 수 있습니다.</li></ul></li><li>아래 값은 몬테카를로(모드·횟수별 100만 일)로 구한 하루 평균이며 오차는 코더·크레딧 약 ±0.02h, 쥬얼 약 ±0.1개입니다. 쥬얼은 계산(싱크로 레벨)에는 쓰이지 않고 참고용으로만 표시합니다.</li><li>새로고침은 1회당 <b>50쥬얼</b>이 듭니다. 아래 표의 쥬얼은 획득량이고, 드롭다운에는 새로고침 비용을 뺀 하루 순증을 표시합니다(예: 5회 평균 = 121.1 − 250 ≈ −129/일).</li><li>2h 아이템을 버리고 새로고침하며 3h만 노리는 것은 손해입니다.</li></ul>' + (() => { let t = '<div class="tscroll"><table class="tbl compact"><thead><tr><th rowspan="2">새로고침</th><th colspan="3">쥬얼+코더 우선</th><th colspan="3">쥬얼+코더+크레딧 우선</th><th colspan="3">평균 (계산에 사용)</th></tr><tr><th>코더h</th><th>크레딧h</th><th>쥬얼</th><th>코더h</th><th>크레딧h</th><th>쥬얼</th><th>코더h</th><th>크레딧h</th><th>쥬얼</th></tr></thead><tbody>'; for (let n = 0; n <= 10; n++) t += '<tr><td>' + n + '회</td><td>' + RRK[n][0] + '</td><td>' + RRK[n][1] + '</td><td>' + RRJ[0][n] + '</td><td>' + RRT[n][0] + '</td><td>' + RRT[n][1] + '</td><td>' + RRJ[1][n] + '</td><td><b>' + RRM[n][0] + '</b></td><td><b>' + RRM[n][1] + '</b></td><td><b>' + RRJ[2][n] + '</b></td></tr>'; return t + '</tbody></table></div>'; })() + '</div>',

@@ -1605,3 +1605,8 @@ button:not(.tr-clr):not(.tabs button):not(.tr-f):not(.pk-t):not(.pk-r){border-ra
 @media(max-width:560px){#tab-me .mekpis .kpi.chipk{align-items:center}#tab-me .mekpis .chipk .chipv{justify-content:center;gap:10px 30px!important}}
 
 #tab-me .mekpis .kpi.chipk .l{position:relative;z-index:1;margin-bottom:4px}
+
+/* 일일 수급: 장비 경험치 크레딧 소모(빨간 줄) */
+#t-inc tr.eqrow td{color:#e5484d;background:rgba(229,72,77,.08);font-weight:700}
+#t-inc tr.eqrow td.name small{font-weight:600;opacity:.8;margin-left:4px}
+#t-inc tr.eqrow td.eqnote{font-size:11.5px;font-weight:600;text-align:left;white-space:normal;color:#c2383d}
