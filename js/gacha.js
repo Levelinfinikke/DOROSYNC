@@ -79,7 +79,9 @@
 .gm-chipbal b{display:inline-block;transition:transform .1s}.gm-chipbal svg{display:block}.gm-cbr{display:inline-flex;align-items:center;gap:4px;margin-left:6px;color:#e6d9ff}.gm-cbr[hidden]{display:none}
 .gm-chipbal.bump{animation:gmBal .16s ease-out}.gm-chipbal.bump .gm-cbn,.gm-cbr.bump b{transform:scale(1.28);color:#fff}
 @keyframes gmBal{0%{box-shadow:0 0 0 0 rgba(255,190,70,.9)}100%{box-shadow:0 0 0 7px rgba(255,190,70,0)}}
-.gm-chipfly{position:fixed;z-index:9999;pointer-events:none;will-change:transform}.gm-chipfly svg{display:block}
+.gm-chipfly{position:fixed;z-index:9999;pointer-events:none;will-change:transform}
+.gm-c3l{width:var(--cs);height:var(--cs);border-radius:50%;background:center/100% 100% no-repeat;background-color:#b8780e;box-shadow:0 2px 3px rgba(0,0,0,.4);animation:gmC3L .9s linear infinite}
+@keyframes gmC3L{0%{transform:rotate(-18deg) scaleX(1)}12.5%{transform:rotate(-18deg) scaleX(.72)}25%{transform:rotate(-18deg) scaleX(.12)}37.5%{transform:rotate(-18deg) scaleX(-.72)}50%{transform:rotate(-18deg) scaleX(-1)}62.5%{transform:rotate(-18deg) scaleX(-.72)}75%{transform:rotate(-18deg) scaleX(-.12)}87.5%{transform:rotate(-18deg) scaleX(.72)}100%{transform:rotate(-18deg) scaleX(1)}}.gm-chipfly svg{display:block}
 .gm-c3{width:var(--cs);height:var(--cs);perspective:calc(var(--cs) * 6);filter:drop-shadow(0 2px 3px rgba(0,0,0,.45))}
 .gm-c3r{position:relative;width:100%;height:100%;transform-style:preserve-3d;--ct:calc(var(--cs) * .13);animation:gmC3Spin .9s linear infinite}
 .gm-c3r>i{position:absolute;inset:0;border-radius:50%;background:linear-gradient(rgba(10,10,20,var(--dk)),rgba(10,10,20,var(--dk))),linear-gradient(90deg,#6d727a,#e4e7ec 30%,#9ea4ad 55%,#f1f3f6 75%,#70757d)}
@@ -230,14 +232,15 @@
 .gm-rbedge{position:fixed;inset:0;z-index:2147483100;pointer-events:none;opacity:0;--w:20px;--a:0deg;background:conic-gradient(from var(--a),#ff5d8f,#ffb84d,#f6f05a,#5ef0a0,#5ab8ff,#b47cff,#ff5d8f);-webkit-mask:linear-gradient(90deg,#000,transparent var(--w),transparent calc(100% - var(--w)),#000),linear-gradient(#000,transparent var(--w),transparent calc(100% - var(--w)),#000);mask:linear-gradient(90deg,#000,transparent var(--w),transparent calc(100% - var(--w)),#000),linear-gradient(#000,transparent var(--w),transparent calc(100% - var(--w)),#000)}
 .gm-thermo{position:absolute;left:88.6%;width:8.4%;bottom:23%;z-index:3;display:flex;flex-direction:column;align-items:center;pointer-events:none;opacity:0;transform:translateY(8px);transition:opacity .35s,transform .35s,height .5s cubic-bezier(.3,1.4,.5,1)}
 .gm-thermo.on{opacity:1;transform:none}
-.gm-thx{font:italic 900 clamp(13px,2.1vw,22px)/1 system-ui,sans-serif;color:#ffe14a;-webkit-text-stroke:1.5px #7a1600;paint-order:stroke fill;text-shadow:0 2px 0 #4a0c00,0 0 10px rgba(255,120,40,.8);margin-bottom:4px;white-space:nowrap}
-.gm-thx small{display:block;font-size:.45em;letter-spacing:.12em;-webkit-text-stroke:0;color:#fff;text-shadow:0 0 6px #ff3a6a;text-align:center;margin-bottom:1px}
-.gm-tht{position:relative;flex:1;width:38%;min-width:12px;border-radius:999px 999px 0 0;background:linear-gradient(90deg,rgba(255,255,255,.28),rgba(255,255,255,.08) 45%,rgba(255,255,255,.2));border:2px solid rgba(255,255,255,.75);border-bottom:0;box-shadow:inset 0 0 6px rgba(0,0,0,.4),0 0 10px rgba(0,0,0,.35);overflow:hidden}
+.gm-thf{position:absolute;left:-90%;width:280%;top:-34%;height:134%;pointer-events:none;z-index:2}
+.gm-tht{position:relative;z-index:3;flex:1;width:38%;min-width:12px;border-radius:999px 999px 0 0;background:linear-gradient(90deg,rgba(255,255,255,.28),rgba(255,255,255,.08) 45%,rgba(255,255,255,.2));border:2px solid rgba(255,255,255,.75);border-bottom:0;box-shadow:inset 0 0 6px rgba(0,0,0,.4),0 0 10px rgba(0,0,0,.35);overflow:hidden}
 .gm-tht i{position:absolute;left:0;right:0;bottom:0;background:var(--lq,#ff3a3a);box-shadow:inset 3px 0 0 rgba(255,255,255,.35),0 0 12px var(--lq,#ff3a3a)}
 .gm-tht b{position:absolute;left:0;width:20%;height:1px;background:rgba(255,255,255,.55)}.gm-tht b.m{width:36%;background:rgba(255,255,255,.75)}.gm-tht b.l{width:54%;height:2px;background:rgba(255,255,255,.9)}
 .gm-ccm{position:absolute;left:50%;top:-2px;transform:translateX(-50%);z-index:5;padding:1px 5px;border-radius:7px;font:italic 900 9.5px/1.3 system-ui,sans-serif;letter-spacing:.02em;color:#fff6c0;background:linear-gradient(90deg,#c41a00,#ff7a00);box-shadow:0 0 8px rgba(255,100,0,.7);white-space:nowrap;pointer-events:none}
 .gm-float.orb.cmb{box-shadow:0 0 0 3px #ff7a00,0 0 18px rgba(255,90,0,.8)}
-.gm-thb{width:84%;aspect-ratio:1;margin-top:-3px;border-radius:50%;background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.75),transparent 30%),var(--lq,#ff3a3a);border:2px solid rgba(255,255,255,.75);box-shadow:0 0 14px var(--lq,#ff3a3a),0 3px 8px rgba(0,0,0,.4);display:grid;place-items:center;font:900 clamp(9px,1.25vw,13px)/1 system-ui,sans-serif;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.6)}
+.gm-thb{position:relative;z-index:3;width:118%;aspect-ratio:1;margin-top:-4px;border-radius:50%;background:radial-gradient(circle at 35% 28%,rgba(255,255,255,.7),transparent 32%),var(--lq,#ff3a3a);border:2px solid rgba(255,255,255,.8);box-shadow:0 0 16px var(--lq,#ff3a3a),0 3px 8px rgba(0,0,0,.4);display:grid;place-content:center;text-align:center;line-height:1}
+.gm-thb small{font:900 clamp(6px,.75vw,8.5px)/1 system-ui,sans-serif;letter-spacing:.06em;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.7)}
+.gm-thb b{font:italic 900 clamp(12px,1.75vw,19px)/1.05 system-ui,sans-serif;color:#fff6c0;-webkit-text-stroke:1.5px #6a1000;paint-order:stroke fill;text-shadow:0 2px 0 #3a0800}
 .gm-cmul{position:fixed;z-index:9998;pointer-events:none;transform:translate(-50%,-50%);font:italic 900 20px/1 system-ui,sans-serif;color:#ffe14a;-webkit-text-stroke:1.5px #7a1600;paint-order:stroke fill;animation:gmCmul .9s ease-out forwards}
 @keyframes gmCmul{0%{transform:translate(-50%,-30%) scale(.6);opacity:0}25%{transform:translate(-50%,-60%) scale(1.15);opacity:1}100%{transform:translate(-50%,-150%) scale(1);opacity:0}}
 
@@ -363,7 +366,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
 
     root.innerHTML = '<div class="gm"><div class="gm-left"><canvas class="gm-cv"></canvas>'
       + '<div class="gm-tools">' + [['open', '개봉 방식 · 게임 모드', '<path d="M5 10.5a7 7 0 0114 0z"/><path d="M5 13.5a7 7 0 0014 0z"/>'], ['snd', '소리', '<path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 8.5a5 5 0 010 7"/>'], ['reset', '초기화', '<path d="M4 12a8 8 0 0113.7-5.7L20 8"/><path d="M20 4v4h-4"/><path d="M20 12a8 8 0 01-13.7 5.7L4 16"/><path d="M4 20v-4h4"/>'], ['hide', '화면 정리', '<path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.8"/><path d="M4 4l16 16"/>']].map((x) => '<button class="gm-ib" data-a="' + x[0] + '" title="' + x[1] + '" aria-label="' + x[1] + '"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + x[2] + '</svg></button>').join('') + '</div><button class="gm-ib gm-trbtn" data-a="topen" aria-label="SSR 보관함 열기" title="SSR 보관함"><img alt="" src="' + TRICO + '"><span>0</span></button><div class="gm-pop" hidden></div><button class="gm-auto" data-a="auto">AUTO</button><button class="gm-ib gm-fs" data-a="fs" title="전체화면" aria-label="전체화면"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>'
-      + '<div class="gm-thermo" aria-hidden="true"><div class="gm-thx"><small>COMBO</small><span>×2</span></div><div class="gm-tht"><i></i></div><div class="gm-thb"></div></div>'
+      + '<div class="gm-thermo" aria-hidden="true"><canvas class="gm-thf"></canvas><div class="gm-tht"><i></i></div><div class="gm-thb"><small>COMBO</small><b>×2</b></div></div>'
       + '<div class="gm-hud"><div class="gm-lab"><img alt=""><b>0</b></div><button class="gm-btn" data-a="exch">라벨 교환</button></div>' + '</div>'
       + '<div class="gm-right"><div class="gm-wal"><canvas class="gm-wcv"></canvas><div class="gm-wt"></div><div class="gm-mode"></div></div><div class="gm-graph"><div class="gm-gh"><b>실시간 수지</b><span class="gm-seg"><button data-v="0">픽업</button><button data-v="1">솔레티어</button><button data-v="2">PVP티어</button></span></div><canvas class="gm-gcv"></canvas><div class="gm-stat"></div></div><div class="gm-tray"><div class="gm-trh">SSR 보관함 <span class="gm-trr">' + (/github\.io$/.test(location.hostname) ? '' : '<button class="gm-tb gm-demo" data-a="demo" title="연출 시안 빠르게 보기">시안</button>') + '<button class="gm-tb gm-flipall" data-a="flipall" title="SSS를 뺀 모든 초상화를 뒤집어 바로 잔고에 넣습니다">모두 뒤집기</button><span class="gm-chipbal" data-a="odds" role="button" tabindex="0" title="DORO칩 잔고 · 누르면 획득 확률">' + (window.doroChipSvg ? window.doroChipSvg('b', 18) : '') + '<b class="gm-cbn">0</b><span class="gm-cbr" hidden>' + (window.doroChipSvg ? window.doroChipSvg('r', 18) : '') + '<b>0</b></span></span><button class="gm-tb gm-trt" data-a="tfold">접기</button></span></div><div class="gm-pan"></div><div class="gm-name"></div></div></div></div>';
     const $ = (s) => root.querySelector(s);
@@ -489,8 +492,9 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     function step(L, dt, walls) {
       const n = L.length; let i, j, a, b;
       for (i = 0; i < n; i++) { b = L[i]; b.gc = false; if (b.sl) continue; b.vy += GRAV * dt; b.x += b.vx * dt; b.y += b.vy * dt; b.a += b.w * dt; }
-      for (let it = 0; it < 3; it++) {
-        for (i = 0; i < n; i++) { a = L[i]; for (j = i + 1; j < n; j++) { b = L[j]; if (a.sl && b.sl) continue; const dx = b.x - a.x, dy = b.y - a.y, m = a.r + b.r; if (dx > m || dx < -m || dy > m || dy < -m) continue; const d2 = dx * dx + dy * dy; if (d2 >= m * m || d2 === 0) continue;
+      const O = step.o || (step.o = []); O.length = n; let mr = 0; for (i = 0; i < n; i++) { O[i] = L[i]; if (L[i].r > mr) mr = L[i].r; } const MD = mr * 2 + 2; /* x로 정렬해 가까운 것끼리만 충돌 검사(렉 방지) */
+      for (let it = 0; it < 3; it++) { O.sort((p, q) => p.x - q.x);
+        for (i = 0; i < n; i++) { a = O[i]; for (j = i + 1; j < n; j++) { b = O[j]; if (b.x - a.x > MD) break; if (a.sl && b.sl) continue; const dx = b.x - a.x, dy = b.y - a.y, m = a.r + b.r; if (dx > m || dx < -m || dy > m || dy < -m) continue; const d2 = dx * dx + dy * dy; if (d2 >= m * m || d2 === 0) continue;
           const d = Math.sqrt(d2), nx = dx / d, ny = dy / d, ov = m - d, vn = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
           if (a.sl && (vn < -70 || b.held)) { a.sl = false; a.st = 0; } if (b.sl && (vn < -70 || a.held)) { b.sl = false; b.st = 0; }
           const fa = a.sl || a.held ? 0 : (b.sl || b.held) ? 1 : 0.5, fb = b.sl || b.held ? 0 : (a.sl || a.held) ? 1 : 0.5;
@@ -631,6 +635,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     /* 2.5D 도로칩(두께 있는 원판, 기울어진 채 회전): 날아가는 칩용 */
     const C3E = (() => { let h = ''; for (let i = 0; i < 9; i++) { const f = i / 8 - 0.5, sc = 1 - 0.07 * (1 - Math.sqrt(Math.max(0, 1 - Math.pow(2 * f, 2)))); h += '<i style="transform:translateZ(calc(var(--ct) * ' + f.toFixed(3) + ')) scale(' + sc.toFixed(3) + ');--dk:' + (0.05 + Math.abs(f) * 0.7).toFixed(2) + '"></i>'; } return h; })();
     const chip3d = (k, px, fx, spin) => { const sv = chipSvg(k, px, fx, true); return '<div class="gm-c3 gm-c3-' + k + '" style="--cs:' + px + 'px"><div class="gm-c3r" style="animation-duration:' + (spin || 0.9).toFixed(2) + 's;animation-delay:-' + (Math.random() * 2).toFixed(2) + 's">' + C3E + '<div class="gm-c3f">' + sv + '</div><div class="gm-c3f gm-c3b">' + sv + '</div></div></div>'; };
+    const C3L = {}, chipLite = (k, px, spin) => { const u = C3L[k] || (C3L[k] = 'url("data:image/svg+xml;charset=utf-8,' + encodeURIComponent(chipSvg(k, 64, false, true).replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ')) + '")'); return '<div class="gm-c3l gm-c3l-' + k + '" style="--cs:' + px + 'px;background-image:' + u + ';animation-duration:' + (spin || 0.9).toFixed(2) + 's;animation-delay:-' + (Math.random() * 2).toFixed(2) + 's"></div>'; };
     GM_ALL.push({ S });
     const balEl = $('.gm-chipbal'); let chipPend = 0, chipPendR = 0, chipSeq = 0;
     /* 잔고 숫자: 바뀌면 이전 값에서 굴러 올라감 */
@@ -644,9 +649,11 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     }
     window.addEventListener('dorochips', () => uiBal()); uiBal();
     /* 칩이 잔고 숫자로 빨려 들어감. 실버칩은 도로칩 5개, 골드칩은 10개로 쪼개진 뒤 들어감 */
-    function chipAbsorb(k, n, cx, cy, size, src, cm) {
+    let flyN = 0, sndT = 0, balQ = 0, balB = null; /* 날아가는 칩 수 · 효과음/잔고 갱신은 프레임당 한 번 */
+    const balSoon = (b) => { if (b) balB = b === 'r' || balB === 'r' ? 'r' : b; if (balQ) return; balQ = requestAnimationFrame(() => { balQ = 0; const x = balB; balB = null; uiBal(x); }); };
+    function chipAbsorb(k, n, cx, cy, size, src, cm, whole) {
       if (!window.doroChips) { say('DORO칩을 불러오지 못했습니다.'); return; }
-      n = n || 1; if (k !== 'r' && cm > 1) { n *= cm; cmulPop(cx, cy, cm); } /* 콤보 캡슐·콤보 중 얻은 칩은 n배 */ const host = document.fullscreenElement || document.body, isR = k === 'r', unit = CHIP_VAL[k] || 0, total = isR ? n : unit * n;
+      n = n || 1; if (k !== 'r' && cm > 1) { cmulPop(cx, cy, cm); let v = (CHIP_VAL[k] || 1) * (n || 1) * cm; const parts = [['g', Math.floor(v / 10)], ['s', Math.floor((v % 10) / 5)], ['b', v % 5]].filter((p) => p[1] > 0); /* n배 → 골드·실버칩 단위로 개수 최소화 */ parts.forEach((p, j) => setTimeout(() => chipAbsorb(p[0], p[1], cx, cy, size, src, 1, true), j * 140)); return; } const host = document.fullscreenElement || document.body, isR = k === 'r', unit = CHIP_VAL[k] || 0, total = isR ? n : unit * n;
       if (isR) chipPendR += n; else chipPend += total;
       window.doroChips.add({ [k]: n }, src || 'ssr');
       const vis = (el) => { if (!el) return null; const r = el.getBoundingClientRect(); return r.width && r.height && r.bottom > 0 && r.top < innerHeight && getComputedStyle(el).visibility !== 'hidden' ? r : null; };
@@ -654,20 +661,20 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
       let br = toBtn ? vis(tbtn) : vis(balEl ? (isR ? balEl.querySelector('.gm-cbr') : balEl) : null) || vis(balEl);
       if (!br) { const r0 = root.getBoundingClientRect(); br = { left: r0.right - 60, top: r0.top + 10, width: 20, height: 20 }; }
       const tx = br.left + Math.min(14, br.width / 2), ty = br.top + br.height / 2;
-      const lite = !isR && unit > 1 && (S.lite > 0 || document.querySelectorAll('.gm-chipfly').length > 24); /* 여러 칸을 한꺼번에 정산할 때는 분열 없이 그 칩 그대로 날아감(렉 방지) */
-      const P = lite ? Math.min(n, 3) : Math.min(total, isR ? 12 : 60), per = total / P, split = !isR && unit > 1 && !lite, ps = split ? Math.max(14, size * (unit >= 10 ? 0.42 : 0.5)) : size, rad = split ? (unit >= 10 ? Math.max(70, size * 1.7) : Math.max(50, size * 1.2)) * Math.min(1.6, 1 + (n - 1) * 0.15) : 0;
+      const lite = whole || (!isR && unit > 1 && (S.lite > 0 || flyN > 24)); /* 여러 칸을 한꺼번에 정산할 때는 분열 없이 그 칩 그대로 날아감(렉 방지) */
+      const P = whole ? Math.min(n, 12) : lite ? Math.min(n, 3) : Math.min(total, isR ? 12 : 60), per = total / P, split = !isR && unit > 1 && !lite, ps = split ? Math.max(14, size * (unit >= 10 ? 0.42 : 0.5)) : size, rad = split ? (unit >= 10 ? Math.max(70, size * 1.7) : Math.max(50, size * 1.2)) * Math.min(1.6, 1 + (n - 1) * 0.15) : 0;
       const seq = ++chipSeq; let arrived = 0, acc = 0;
       const launch = () => {
         if (split) { try { snd.chipBurst(unit >= 10); } catch (e) { /* 무시 */ } }
         for (let i = 0; i < P; i++) {
-          const d = document.createElement('div'); d.className = 'gm-chipfly'; d.innerHTML = chip3d(isR ? 'r' : split ? 'b' : k, Math.round(ps), isR || (!split && k === 'g'), split ? rnd(0.5, 0.9) : 1.1); d.style.left = (cx - ps / 2) + 'px'; d.style.top = (cy - ps / 2) + 'px'; host.appendChild(d);
+          const d = document.createElement('div'); d.className = 'gm-chipfly'; flyN++; d.innerHTML = split && ps < 40 ? chipLite('b', Math.round(ps), rnd(0.5, 0.9)) : chip3d(isR ? 'r' : split ? 'b' : k, Math.round(ps), isR || (!split && k === 'g'), split ? rnd(0.5, 0.9) : 1.1); /* 작은 분열 칩은 가벼운 2D 회전판 */ d.style.left = (cx - ps / 2) + 'px'; d.style.top = (cy - ps / 2) + 'px'; host.appendChild(d);
           const a = rnd(0, TAU), rr = split ? rad * Math.sqrt(rnd(0.08, 1)) : 0, sx = Math.cos(a) * rr, sy = Math.sin(a) * rr * 0.85, ex = tx - cx, ey = ty - cy;
           const stag = split ? (unit >= 10 ? i * 22 : i * 40) : i * 60, T = split ? 980 : 720;
           const kf = split
             ? [{ transform: 'translate(0,0) scale(.3) rotate(0deg)', opacity: 1, easing: 'cubic-bezier(.1,.8,.2,1)' }, { transform: 'translate(' + sx + 'px,' + sy + 'px) scale(1) rotate(' + rnd(-90, 90) + 'deg)', opacity: 1, offset: 0.36 }, { transform: 'translate(' + sx + 'px,' + (sy + 4) + 'px) scale(1) rotate(0deg)', opacity: 1, offset: 0.5, easing: 'cubic-bezier(.6,0,.9,.4)' }, { transform: 'translate(' + ex + 'px,' + ey + 'px) scale(.35) rotate(180deg)', opacity: 0.9 }]
             : [{ transform: 'translate(0,0) scale(1)', opacity: 1, easing: 'cubic-bezier(.25,.1,.25,1)' }, { transform: 'translate(0,-10px) scale(1.06)', opacity: 1, offset: 0.22, easing: 'cubic-bezier(.45,0,.55,1)' }, { transform: 'translate(' + ex + 'px,' + ey + 'px) scale(.3) rotate(200deg)', opacity: 0.9 }]; /* 살짝 떠올랐다가 부드럽게 날아감 */
           const an = d.animate(kf, { duration: T, delay: stag, fill: 'both' });
-          an.onfinish = () => { d.remove(); arrived++; acc += per; const v = i === P - 1 || arrived === P ? Math.round(acc) : Math.floor(acc); acc -= v; if (isR) chipPendR = Math.max(0, chipPendR - v); else chipPend = Math.max(0, chipPend - v); uiBal(isR ? 'r' : true); if (toBtn) { tbtn.classList.remove('pop'); void tbtn.offsetWidth; tbtn.classList.add('pop'); } try { snd.chipIn(arrived / P, !isR && unit === 1); } catch (e) { /* 무시 */ } };
+          an.onfinish = () => { d.remove(); flyN--; arrived++; acc += per; const v = i === P - 1 || arrived === P ? Math.round(acc) : Math.floor(acc); acc -= v; if (isR) chipPendR = Math.max(0, chipPendR - v); else chipPend = Math.max(0, chipPend - v); balSoon(isR ? 'r' : true); if (toBtn && arrived === P) { tbtn.classList.remove('pop'); void tbtn.offsetWidth; tbtn.classList.add('pop'); } const nw = performance.now(); if (nw - sndT > 35 || arrived === P) { sndT = nw; try { snd.chipIn(arrived / P, !isR && unit === 1); } catch (e) { /* 무시 */ } } };
         }
       };
       if (split) { /* 큰 칩이 부풀었다가 터지며 분열 */
@@ -776,20 +783,34 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     /* ---- COMBO: DOUBLE 이상이면 n배(DOUBLE 2 · TRIPLE 3 …), 제한시간 10×n초. 시간 안에 또 터지면 배수 합산 + 시간 추가(상한 = 이번 콤보에서 나온 최고 단계의 시간) ---- */
     const CB = { mul: 0, end: 0, top: 0, raf: 0 };
     const comboMul = () => (CB.mul > 0 && !CB.demo && performance.now() < CB.end ? CB.mul : 1); /* 시안(demo)은 연출만 */
-    const thEl = $('.gm-thermo'), thTube = thEl.querySelector('.gm-tht'), thLiq = thTube.querySelector('i'), thX = thEl.querySelector('.gm-thx span'), thB = thEl.querySelector('.gm-thb');
+    const thEl = $('.gm-thermo'), thTube = thEl.querySelector('.gm-tht'), thLiq = thTube.querySelector('i'), thX = thEl.querySelector('.gm-thb b'), thF = thEl.querySelector('.gm-thf'), thFx = thF.getContext('2d'), FL = [];
     function comboHit(n, demo) {
       const now = performance.now(), on = CB.mul > 0 && now < CB.end, left = on ? CB.end - now : 0; CB.demo = on ? CB.demo && !!demo : !!demo;
       if (on) { CB.mul += n; CB.top = Math.max(CB.top, n); CB.end = now + Math.min(left + n * 10000, CB.top * 10000); } else { CB.mul = n; CB.top = n; CB.end = now + n * 10000; }
       { const N = CB.top * 10; let h = '<i></i>'; for (let i = 1; i < N; i++) h += '<b class="' + (i % 10 ? (i % 5 ? '' : 'm') : 'l') + '" style="bottom:' + (i / N * 100).toFixed(2) + '%"></b>'; thTube.innerHTML = h; } /* 눈금 1초 · 5초는 조금 길게 · 10초는 더 길게 */
-      thEl.style.height = Math.min(64, 18 + CB.top * 9) + '%'; thX.textContent = '×' + CB.mul; thEl.classList.add('on');
+      thEl.style.height = Math.min(64, 18 + CB.top * 9) + '%'; thX.textContent = '×' + CB.mul; thEl.classList.add('on'); CB.boost = 1; /* 다시 불타오름 */
       if (on) comboPop(CB.mul); quake(CB.mul); cancelAnimationFrame(CB.raf); CB.raf = requestAnimationFrame(comboTick);
     }
     function comboTick() {
       const now = performance.now(), left = Math.max(0, CB.end - now), cap = CB.top * 10000, f = cap ? left / cap : 0, liq = thTube.querySelector('i');
       const R = [255, 58, 58], B2 = [58, 139, 255], col = 'rgb(' + R.map((v, i) => Math.round(B2[i] + (v - B2[i]) * f)).join(',') + ')'; /* 시간이 흐를수록 빨강 → 파랑 */
-      thEl.style.setProperty('--lq', col); if (liq) liq.style.height = (f * 100).toFixed(2) + '%'; thB.textContent = Math.ceil(left / 1000) + 's';
-      if (left <= 0) { CB.mul = 0; CB.top = 0; thEl.classList.remove('on'); return; }
+      thEl.style.setProperty('--lq', col); if (liq) liq.style.height = (f * 100).toFixed(2) + '%';
+      const dt = Math.min(0.05, (now - (CB.lt || now)) / 1000); CB.lt = now; CB.boost = Math.max(0, (CB.boost || 0) - dt * 0.9);
+      flames(left > 0 ? Math.min(1.25, f * 0.85 + 0.15 + CB.boost * 0.45) : 0, f, dt); /* 남은 시간만큼 타오르고, 콤보가 이어지면 다시 확 */
+      if (left <= 0) { if (CB.mul) { CB.mul = 0; CB.top = 0; thEl.classList.remove('on'); } if (!FL.length) { CB.lt = 0; return; } }
       CB.raf = requestAnimationFrame(comboTick);
+    }
+    /* 온도계 불꽃: 액체 기둥과 알 주변에서 불씨가 솟아오름. k(세기)가 작아지면 사그라듦 */
+    const FSPR = ['#fff7c8', '#ffd04a', '#ff8a1a', '#e8380c'].map((col) => { const c = mkc(64, 64), x = c.getContext('2d'), g = x.createRadialGradient(32, 32, 0, 32, 32, 32); g.addColorStop(0, col); g.addColorStop(0.45, col + 'aa'); g.addColorStop(1, col + '00'); x.fillStyle = g; x.fillRect(0, 0, 64, 64); return c; });
+    function flames(k, f, dt) {
+      const W2 = thF.clientWidth, H2 = thF.clientHeight; if (!W2 || !H2) { FL.length = 0; return; } const dpr = Math.min(2, window.devicePixelRatio || 1); if (thF.width !== Math.round(W2 * dpr)) { thF.width = Math.round(W2 * dpr); thF.height = Math.round(H2 * dpr); }
+      const c = thFx; c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, W2, H2);
+      const tw = W2 / 2.8 * 0.38, cx = W2 / 2, base = H2 - W2 / 2.8 * 0.55, top0 = H2 * (0.34 / 1.34), lt = base - (base - top0) * f; /* 관 폭 · 알 중심 · 액체 윗면 */
+      const n = k * 60 * dt * 3.2; for (let i = 0; i < n; i++) { const onTop = Math.random() < 0.45; FL.push({ x: cx + rnd(-tw * 0.7, tw * 0.7), y: onTop ? lt + rnd(-2, 6) : rnd(lt, base), vx: rnd(-10, 10), vy: -rnd(30, 70) * (0.6 + k * 0.7), t: 0, m: rnd(0.35, 0.8) * (0.6 + 0.6 * k), r: rnd(4, 9) * (0.6 + 0.5 * k) * tw / 9 }); }
+      c.globalCompositeOperation = 'lighter';
+      for (let i = FL.length - 1; i >= 0; i--) { const p = FL[i]; p.t += dt; if (p.t >= p.m) { FL.splice(i, 1); continue; } const u = p.t / p.m; p.vx += Math.sin((p.y + p.t * 40) * 0.08) * 40 * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy -= 30 * dt;
+        const sz = p.r * (1 + u * 0.6) * (1 - u * 0.5), spr = FSPR[Math.min(3, (u * 4) | 0)]; c.globalAlpha = (1 - u) * 0.6; c.drawImage(spr, p.x - sz, p.y - sz * 1.3, sz * 2, sz * 2.6); }
+      c.globalAlpha = 1; c.globalCompositeOperation = 'source-over';
     }
     /* 기계 전체가 휘청 */
     function quake(m) { /* 지진처럼 축 없이 흔들림. 배수가 클수록 세고 길게 */ const A = Math.min(14, 1.2 + (m - 1) * 1.3), D = Math.min(1300, 450 + m * 70), N = Math.round(D / 45), kf = [{ transform: 'none' }];
@@ -970,9 +991,9 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
         for (let i = 0; i < 150; i++) { const a = Math.random() * TAU, v = 500 + Math.random() * 1100, cc = CC[(Math.random() * CC.length) | 0], st = Math.random() < 0.3; pt.push({ x: cx, y: cy, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 350, r: Math.random() * TAU, vr: (Math.random() - 0.5) * 18, sz: st ? 7 + Math.random() * 10 : 6 + Math.random() * 11, k: st ? 's' : 'c', col: st ? '#fff' : cc[0], rim: cc[1], life: 1.6 + Math.random() * 1.4 }); } };
       return { stop: () => { cancelAnimationFrame(raf); window.removeEventListener('resize', fit); }, hit };
     }
-    function chipSpawn() { const b = body('chip', HUDP.x, HUDP.y - 10, { chip: 'b', count: 1, src: 'label' }); b.vx = rnd(-520, -180); b.vy = rnd(-760, -520); b.w = rnd(-9, 9); S.bask.push(b); wake(S.bask); sparks(HUDP.x, HUDP.y, 16, '#ffc45a', 360); try { snd.chipPop(); } catch (e) { /* 무시 */ } }
+    function chipSpawn() { const cm0 = comboMul(), b = body('chip', HUDP.x, HUDP.y - 10, { chip: 'b', count: 1, src: 'label', cm: cm0 > 1 ? cm0 : 0 }); /* COMBO 중 바디라벨 교환 칩도 n배 */ b.vx = rnd(-520, -180); b.vy = rnd(-760, -520); b.w = rnd(-9, 9); S.bask.push(b); wake(S.bask); sparks(HUDP.x, HUDP.y, 16, '#ffc45a', 360); try { snd.chipPop(); } catch (e) { /* 무시 */ } }
     function chipTake(b) { const i = S.bask.indexOf(b); if (i < 0) return; S.bask.splice(i, 1); wake(S.bask); const r = cvRect(), sc = r.width / W; chipAbsorb(b.res.chip, b.res.count, r.left + b.x * sc, r.top + b.y * sc, Math.max(22, OR * 2 * sc), b.res.src || 'cap', b.res.cm); }
-    if (location.hostname === 'localhost') (window.__gms = window.__gms || []).push({ S, root, rbCut: () => rainbowCut(), rbCutEl: (el) => rainbowCut(el), dropChip: (k) => dropChip(k, 300, 600, "cap"), trayAdd: (n, c, m) => trayAdd(n, c, null, null, null, m), comboHit: (n) => comboHit(n), flipTop: (en) => flipTop(en), P, chipSpawn, capChip: (x, y) => capChip(x, y), streak: (k) => streak(k), uiTray: () => uiTray(), combo: (n) => multiPop(n), cmul: () => comboMul(), slow: (el, k) => slowFlip(el, k, null), addLab: (v) => { S.lab += v; labChips(); uiLab(true); } });
+    if (location.hostname === 'localhost') (window.__gms = window.__gms || []).push({ S, root, rbCut: () => rainbowCut(), rbCutEl: (el) => rainbowCut(el), dropChip: (k) => dropChip(k, 300, 600, "cap"), trayAdd: (n, c, m) => trayAdd(n, c, null, null, null, m), comboHit: (n) => comboHit(n), chipSpawn: () => chipSpawn(), ev: () => ({ CHIP_P, CAP_RATE, std: P.std.map(tierGrp), pil: P.pil.map(tierGrp), pu: tierGrp(P.pickup) }), flipTop: (en) => flipTop(en), P, chipSpawn, capChip: (x, y) => capChip(x, y), streak: (k) => streak(k), uiTray: () => uiTray(), combo: (n) => multiPop(n), cmul: () => comboMul(), slow: (el, k) => slowFlip(el, k, null), addLab: (v) => { S.lab += v; labChips(); uiLab(true); } });
     function labChips() { let n = 0; while (S.lab >= 10000 && n < 20) { S.lab -= 10000; n++; setTimeout(chipSpawn, (n - 1) * 140); } }
     /* 보관함은 빈칸을 그대로 둠(배열에 null). 끌어서 다른 니케 위에 놓으면 그 니케가 원래 칸으로 자리 바꿈 */
     const trayFree = () => { const i = S.tray.findIndex((x) => !x); return i < 0 ? S.tray.length : i; };
@@ -1201,9 +1222,17 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     /* 캔버스 조작 */
     const hitBody = (p) => { for (let i = S.bask.length - 1; i >= 0; i--) { const b = S.bask[i]; if (Math.hypot(p.x - b.x, p.y - b.y) <= b.r + 2) return b; } return null; };
     const inCh = (p) => p.x >= CH.x && p.x <= CH.x + CH.w && p.y >= CH.y && p.y <= CH.y + CH.h;
-    function addCracks(R) { /* 탭마다 굵기가 들쭉날쭉한 긴 균열 2개 + 가끔 잔가지 */
-      const one = (x, y, a, seg, ln, rim) => { const pts = [[x, y, rnd(0.5, 0.8)]]; for (let s = 0; s < seg; s++) { a += rnd(-0.8, 0.8); x += Math.cos(a) * rnd(ln * 0.6, ln * 1.4); y += Math.sin(a) * rnd(ln * 0.6, ln * 1.4); const d = Math.hypot(x, y); if (d >= 1) { pts.push([x / d * 1.12, y / d * 1.12, rnd(0.7, 1.2), 1]); break; } /* 테두리를 뚫고 나감(끝은 뭉툭하게, 그림은 캡슐 모양으로 잘림) */ pts.push([x, y, rnd(0.45, 1.35)]); if (rim && s === seg - 1 && seg < 14) seg++; } if (pts.length > 1) R.cracks.push(pts); return pts; };
-      for (let k = 0; k < 2; k++) { const pts = one(rnd(-0.25, 0.25), rnd(-0.25, 0.25), rnd(0, TAU), 5, 0.22, true); /* 큰 균열은 테두리까지 */ if (pts.length > 2 && Math.random() < 0.6) { const q = pts[1 + ((Math.random() * (pts.length - 2)) | 0)]; one(q[0], q[1], rnd(0, TAU), 2, 0.13); } } }
+    function addCracks(R) { /* 탭마다 다른 모양: 균열 수·출발점(빈 곳/기존 균열에서 이어짐)·길이·꺾임·굵기·잔가지가 모두 무작위 */
+      const one = (x, y, a, seg, ln, rim, jit, wm) => { const pts = [[x, y, rnd(0.5, 0.8) * wm]]; for (let s = 0; s < seg; s++) { a += rnd(-jit, jit); const l = rnd(ln * 0.5, ln * 1.5); x += Math.cos(a) * l; y += Math.sin(a) * l; const d = Math.hypot(x, y); if (d >= 1) { pts.push([x / d * 1.12, y / d * 1.12, rnd(0.7, 1.2) * wm, 1]); break; } pts.push([x, y, rnd(0.4, 1.4) * wm]); if (rim && s === seg - 1 && seg < 16) seg++; } if (pts.length > 1) R.cracks.push(pts); return pts; };
+      const nM = 1 + (Math.random() < 0.6 ? 1 : 0) + (Math.random() < 0.25 ? 1 : 0);
+      for (let k = 0; k < nM; k++) {
+        let x, y; const old = R.cracks.length && Math.random() < 0.45 ? pick(R.cracks) : null;
+        if (old) { const q = pick(old); x = q[0]; y = q[1]; if (q[3]) { x *= 0.85; y *= 0.85; } } else { const ang = rnd(0, TAU), rr = Math.sqrt(Math.random()) * 0.6; x = Math.cos(ang) * rr; y = Math.sin(ang) * rr; }
+        const out = Math.atan2(y, x), a0 = Math.random() < 0.6 && Math.hypot(x, y) > 0.15 ? out + rnd(-0.9, 0.9) : rnd(0, TAU);
+        const pts = one(x, y, a0, 2 + ((Math.random() * 5) | 0), rnd(0.12, 0.3), Math.random() < 0.65, rnd(0.3, 1.1), rnd(0.6, 1.35));
+        const nb = pts.length > 2 ? (Math.random() < 0.55 ? 1 : 0) + (Math.random() < 0.2 ? 1 : 0) : 0;
+        for (let b = 0; b < nb; b++) { const q = pts[1 + ((Math.random() * (pts.length - 2)) | 0)]; one(q[0], q[1], rnd(0, TAU), 1 + ((Math.random() * 3) | 0), rnd(0.08, 0.17), Math.random() < 0.2, rnd(0.4, 1), rnd(0.45, 0.8)); }
+      } }
     cv.addEventListener('pointerdown', (e) => { const lf = $('.gm-left'); if (lf.classList.contains('clean')) { lf.classList.remove('clean'); return; } const p = toCv(e), R = S.reveal;
       if (R) { if (R.ph === 'open') { if (R.method === 'auto') { if (R.t > 1 && !S.auto) R.prog = 1; } else if (R.method === 'hold') { R.hold = true; cv.setPointerCapture(e.pointerId); } else if (R.method === 'tap') { R.taps++; R.punch = 1; R.shake = Math.max(R.shake, 0.6); addCracks(R); snd.crack(); sparks(RV.x + rnd(-40, 40), RV.y + rnd(-40, 40), 8, () => lvCol(R, R.shown, 1), 300); } else { R.drag = { x: p.x, y: p.y, d: 0 }; cv.setPointerCapture(e.pointerId); } }
         else if (R.ph === 'show' && R.nk && R.t > 0.6) { if (Math.hypot(p.x - RV.x, p.y - RV.y) < RV.r + 10) R.down = { x: e.clientX, y: e.clientY }; else endReveal(true); } return; }
