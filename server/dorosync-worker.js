@@ -58,6 +58,7 @@ export default {
       return out(200, { ok: true, cookie: !!env.BLA_COOKIE, login: !!env.FIREBASE_SA, auto });
     }
     if (!okOrigin) return out(403, { ok: false, error: '허용되지 않은 사이트입니다.' });
+    if (url.pathname === '/admin') return adminView(req, env, out);
     if (url.pathname !== '/sync') return out(404, { ok: false, error: 'not found' });
 
     const area = Number(url.searchParams.get('area'));
@@ -317,7 +318,7 @@ function errCode(m) {
   return 'E_OTHER';
 }
 const dec = (v) => {
-  if (!v) return null; if ('stringValue' in v) return v.stringValue; if ('integerValue' in v) return +v.integerValue; if ('doubleValue' in v) return v.doubleValue; if ('booleanValue' in v) return v.booleanValue; if ('nullValue' in v) return null;
+  if (!v) return null; if ('stringValue' in v) return v.stringValue; if ('integerValue' in v) return +v.integerValue; if ('doubleValue' in v) return v.doubleValue; if ('booleanValue' in v) return v.booleanValue; if ('nullValue' in v) return null; if ('timestampValue' in v) return v.timestampValue;
   if ('mapValue' in v) { const o = {}; Object.entries(v.mapValue.fields || {}).forEach(([k, x]) => { o[k] = dec(x); }); return o; }
   if ('arrayValue' in v) return (v.arrayValue.values || []).map(dec); return null;
 };
@@ -361,4 +362,27 @@ async function chipsClaim(req, env, out) {
     if (cr.status !== 400 && cr.status !== 409) return out(502, { ok: false, error: 'write' }); /* 400/409: 그 사이 문서가 바뀜 → 다시 */
   }
   return out(409, { ok: false, error: 'busy' });
+}
+
+/* ================= 관리자 현황 =================
+ * 관리자(아래 UID)만: 계정별 DORO칩 잔고·오늘 기록·싱크로 자동 기록 설정. 이메일·연동 상세는 보내지 않음 */
+const ADMIN_UIDS = ['bAdQg5xtIsbCntzxuEjBoSB93T22', 'PdkjvEMLcaR76Ie7h13N6cnpDvT2'];
+async function adminView(req, env, out) {
+  if (!env.FIREBASE_SA) return out(503, { ok: false, error: 'not_ready' });
+  const idt = (req.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '');
+  if (!idt) return out(401, { ok: false, error: 'auth' });
+  const lk = await (await fetch('https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=' + FB_API_KEY, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ idToken: idt }) })).json();
+  const uid = lk && lk.users && lk.users[0] && lk.users[0].localId; if (!uid || !ADMIN_UIDS.includes(uid)) return out(403, { ok: false, error: 'admin' });
+  const sa = JSON.parse(env.FIREBASE_SA), at = await saToken(sa, 'https://www.googleapis.com/auth/datastore'), H = { Authorization: 'Bearer ' + at };
+  const mask = ['nickname', 'username', 'chipsV', 'chipDay', 'createdAt', 'updatedAt', 'auto', 'autoDue'].map((f) => 'mask.fieldPaths=' + f).join('&');
+  const users = []; let pt = '';
+  for (let i = 0; i < 20; i++) {
+    const r = await (await fetch(FS + '/users?pageSize=300&' + mask + (pt ? '&pageToken=' + encodeURIComponent(pt) : ''), { headers: H })).json();
+    (r.documents || []).forEach((d) => { const f = {}; Object.entries(d.fields || {}).forEach(([k, v]) => { f[k] = dec(v); }); const au = f.auto || null;
+      users.push({ id: d.name.split('/').pop().slice(0, 6), nick: f.nickname || f.username || '', created: f.createdAt || d.createTime, updated: f.updatedAt || d.updateTime, chips: f.chipsV || null, day: f.chipDay || null,
+        auto: au ? { on: !!au.on, area: au.area || '', since: au.since || 0, last: au.last ? { at: au.last.at || 0, ok: !!au.last.ok, s: au.last.s || 0, o: au.last.o || 0, code: au.last.code || '' } : null } : null, autoDue: f.autoDue || '', admin: ADMIN_UIDS.includes(d.name.split('/').pop()) }); });
+    pt = r.nextPageToken; if (!pt) break;
+  }
+  let run = null; try { const d = await (await fetch(FS + '/meta/autoRun', { headers: H })).json(); if (d && d.fields) { run = {}; Object.entries(d.fields).forEach(([k, v]) => { run[k] = dec(v); }); } } catch (e) { /* 무시 */ }
+  return out(200, { ok: true, users, autoRun: run });
 }
