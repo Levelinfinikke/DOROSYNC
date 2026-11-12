@@ -2598,29 +2598,11 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
       return chipGet();
     },
   };
-  /* 보유 도로칩을 가챠머신과 같은 2.5D 칩(두께 있는 원판)으로 쌓아 보여줌: 골드(10)·실버(5)·도로(1)로 환산, 무지개는 따로.
-     한 더미 = 원판(옆면) 여러 장 + 맨 위 칩 면 하나라 가벼움 */
-  const chipStacks = (d, r) => {
-    const g = Math.floor(d / 10), sv = Math.floor((d % 10) / 5), b = d % 5, PER = 10, MAXS = 7;
-    const kinds = [['g', g], ['s', sv], ['b', b], ['r', r]].filter((x) => x[1] > 0).map((x) => ({ k: x[0], n: x[1], st: Math.ceil(x[1] / PER) }));
-    if (!kinds.length) return '<div class="c3st empty">아직 도로칩이 없어요</div>';
-    while (kinds.reduce((a, x) => a + x.st, 0) > MAXS) { const big = kinds.reduce((a, x) => (x.st > a.st ? x : a)); big.st--; }
-    const stacks = []; kinds.forEach((x) => { let left = x.n; for (let i = 0; i < x.st; i++) { const c = Math.min(PER, Math.ceil(left / (x.st - i))); stacks.push([x.k, Math.max(1, c)]); left -= c; } });
-    const SZ = Math.max(20, Math.min(34, Math.floor(176 / stacks.length) - 3)), TH = Math.max(2.4, SZ * 0.11);
-    let h = '';
-    stacks.forEach(([k, c], si) => {
-      let disc = ''; const tot = c * TH, n = Math.ceil(tot);
-      for (let z = 0; z <= n; z++) { const zz = Math.min(z, tot), groove = z > 0 && z < n && Math.abs((zz % TH)) < 1; disc += '<i style="transform:translateZ(' + zz.toFixed(1) + 'px)' + (groove ? ';--dk:.42' : '') + '"></i>'; }
-      const face = window.doroChipSvg(k, SZ, false, true), jx = ((si * 37) % 5) - 2;
-      h += '<div class="c3s c3k-' + k + '" style="--sz:' + SZ + 'px;margin-left:' + jx * 0.4 + 'px" title="' + ({ g: '골드칩', s: '실버칩', b: '도로칩', r: '무지개 도로칩' })[k] + ' ' + c + '개"><div class="c3s-r">' + disc + '<b style="transform:translateZ(' + (tot + 0.4).toFixed(1) + 'px)">' + face + '</b></div></div>';
-    });
-    return '<div class="c3st">' + h + '</div>';
-  };
   const chipCard = () => {
-    const o = chipRaw(), tot = o.d, g = Math.floor(tot / 10), sv = Math.floor((tot % 10) / 5), b = tot % 5;
-    return '<div class="kpi chipk"><div class="l">도로칩</div>' + chipStacks(tot, o.r) +
-      '<div class="chipv"><span title="도로칩 합계 (실버칩 1 = 5, 골드칩 1 = 10)">' + window.doroChipSvg('b', 22) + '<b class="num">' + fmt(tot) + '</b></span><span title="무지개 도로칩">' + window.doroChipSvg('r', 22) + '<b class="num">' + fmt(o.r) + '</b></span></div>' +
-      '<div class="chipmix" title="쌓인 칩: 골드 10 · 실버 5 · 도로 1로 환산">골드 ' + fmt(g) + ' · 실버 ' + sv + ' · 도로 ' + b + '</div></div>';
+    const o = chipRaw(), tot = o.d;
+    return '<div class="kpi chipk"><div class="l">도로칩</div><div class="chipv">' +
+      '<span class="cv-d" title="도로칩 (실버칩 1 = 5, 골드칩 1 = 10)">' + window.doroChipSvg('b', 34) + '<span><b class="num">' + fmt(tot) + '</b><i class="cvc">도로칩</i></span></span>' +
+      '<span class="cv-r" title="무지개 도로칩">' + window.doroChipSvg('r', 34) + '<span><b class="num">' + fmt(o.r) + '</b><i class="cvc">무지개칩</i></span></span></div></div>';
   };
   window.addEventListener('doroacct', () => { if (!(doroBL && doroBL.data)) { try { renderMe(); } catch (e) { /* 초기화 전 */ } } });
   window.addEventListener('dorochips', () => { const el = document.querySelector('#tab-me .chipk'); if (el) el.outerHTML = chipCard(); });

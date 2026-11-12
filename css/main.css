@@ -1578,18 +1578,19 @@ button:not(.tr-clr):not(.tabs button):not(.tr-f):not(.pk-t):not(.pk-r){border-ra
 /* 모바일: 도로칩 카드 한 줄 전체 · 가운데 정렬 */
 @media(max-width:560px){#tab-me .mekpis .kpi.chipk{grid-column:1/-1}#tab-me .mekpis .chipk .chipv{justify-content:center;gap:28px}#tab-me .mekpis .chipk .l{text-align:center}}
 
-/* 도로칩 카드: 가챠머신과 같은 2.5D 칩 더미 */
-.chipk .c3st{display:flex;justify-content:center;align-items:flex-end;gap:3px;height:66px;padding-bottom:8px;margin:2px 0 0;perspective:520px;perspective-origin:50% 0}
-.chipk .c3st.empty{height:auto;font-size:12px;color:var(--muted);padding:14px 0;justify-content:flex-start}
-.c3s{width:var(--sz);height:var(--sz);flex:none;position:relative}
-.c3s-r{position:absolute;inset:0;transform-style:preserve-3d;transform:rotateX(64deg)}
-.c3s-r>i{position:absolute;inset:0;border-radius:50%;background:linear-gradient(rgba(10,10,20,var(--dk,0)),rgba(10,10,20,var(--dk,0))),linear-gradient(90deg,#5d6168,#e4e7ec 30%,#9ea4ad 55%,#f1f3f6 75%,#60656d)}
-.c3s-r>i:first-child{box-shadow:0 0 6px 2px rgba(0,0,0,.35)}
-.c3k-g .c3s-r>i{background:linear-gradient(rgba(10,10,20,var(--dk,0)),rgba(10,10,20,var(--dk,0))),linear-gradient(90deg,#7a5a06,#fff3b0 30%,#d9a520 55%,#fff6c8 75%,#7a5a06)}
-.c3k-b .c3s-r>i{background:linear-gradient(rgba(10,10,20,var(--dk,0)),rgba(10,10,20,var(--dk,0))),linear-gradient(90deg,#8a5205,#ffd38a 30%,#e09018 55%,#ffe2ae 75%,#8a5205)}
-.c3s-r>b{position:absolute;inset:0;display:block}
-.c3k-r .c3s-r>i{background:linear-gradient(rgba(10,10,20,var(--dk,0)),rgba(10,10,20,var(--dk,0))),conic-gradient(#ff5d8f,#ffb84d,#f6f05a,#5ef0a0,#5ab8ff,#b47cff,#ff5d8f)}.c3s-r>b svg{width:100%;height:100%;display:block}
-.c3s-r>i{backface-visibility:visible}
-.chipk .chipv{gap:14px!important;margin:2px 0 0!important}.chipk .chipv b{font-size:19px!important}
-.chipk .chipmix{font-size:11px;color:var(--muted);margin-top:1px}
-@media(max-width:560px){#tab-me .mekpis .chipk .chipmix{text-align:center}#tab-me .mekpis .chipk .c3st{height:96px;transform:scale(1.55);transform-origin:50% 100%;margin-bottom:6px}}
+/* 도로칩 카드: 카지노 펠트 + 금테 */
+#tab-me .mekpis .kpi.chipk{color:#fff;background:repeating-linear-gradient(45deg,rgba(255,255,255,.025) 0 2px,transparent 2px 7px),radial-gradient(130% 150% at 0% 0%,#22704a 0%,#11432c 55%,#0a2a1c 100%)!important;border:1px solid #c9a227!important;box-shadow:inset 0 0 0 3px rgba(10,30,20,.9),inset 0 0 0 4px rgba(233,196,92,.45),inset 0 0 26px rgba(0,0,0,.45),0 4px 14px rgba(10,40,25,.25)!important}
+#tab-me .mekpis .kpi.chipk::before{background:linear-gradient(180deg,#fff1b0,#e8b52c 45%,#a87708)!important}
+#tab-me .mekpis .kpi.chipk::after{content:"";position:absolute;right:-34px;bottom:-40px;width:120px;height:120px;border-radius:50%;border:12px dashed rgba(233,196,92,.16);box-shadow:inset 0 0 0 10px rgba(233,196,92,.07),0 0 0 6px rgba(233,196,92,.06);pointer-events:none}
+#tab-me .mekpis .kpi.chipk .l{color:#e9c45c;font-weight:800;letter-spacing:.14em;font-size:11.5px}
+.chipk .chipv{display:flex;flex-wrap:wrap;gap:8px 18px!important;align-items:center;margin:8px 0 2px!important;position:relative;z-index:1}
+.chipk .chipv>span{display:inline-flex;align-items:center;gap:8px;min-width:0}
+.chipk .chipv svg{flex:none;filter:drop-shadow(0 3px 4px rgba(0,0,0,.4))}
+.chipk .chipv>span>span{display:flex;flex-direction:column;line-height:1.05}
+.chipk .chipv b{font-size:24px!important;font-weight:900;letter-spacing:-.01em}
+.chipk .chipv .cvc{display:block;font-style:normal;font-size:10.5px;font-weight:600;color:rgba(255,255,255,.62);margin-top:3px;border:0;background:none;padding:0;text-decoration:none;align-self:flex-start}
+.chipk .cv-d b{background:linear-gradient(180deg,#fff6c8,#f3c745 55%,#c98e10);-webkit-background-clip:text;background-clip:text;color:transparent!important;-webkit-text-fill-color:transparent;filter:drop-shadow(0 1px 0 rgba(0,0,0,.5))}
+.chipk .cv-r b{background:linear-gradient(90deg,#ff7aa8,#ffc76a,#f8f27a,#7af0b5,#7ac8ff,#c39aff);-webkit-background-clip:text;background-clip:text;color:transparent!important;-webkit-text-fill-color:transparent;filter:drop-shadow(0 1px 0 rgba(0,0,0,.5))}
+.me-pre .mekpis-pre{grid-template-columns:minmax(0,520px)!important}
+.me-pre .chipk .chipv b{font-size:30px!important}
+@media(max-width:560px){#tab-me .mekpis .chipk .chipv{justify-content:center;gap:10px 30px!important}#tab-me .mekpis .chipk .l{text-align:center}}
