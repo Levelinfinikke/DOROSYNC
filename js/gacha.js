@@ -814,7 +814,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
         ov.innerHTML = '<canvas class="gm-rbcv"></canvas><div class="gm-rbfl"></div>' +
           '<div class="gm-rbtx">' + lay + '</div>' +
           '<div class="gm-rbch"><div class="gm-rbsw"></div><div class="gm-rbsw"></div><div class="gm-rbsw"></div><div class="gm-rbtl"><div class="gm-rbsp">' + edge + '<div class="gm-rbf">' + chipSvg('r', 260, true, true) + '</div><div class="gm-rbf gm-rbbk">' + chipSvg('r', 260, true, true) + '</div></div></div></div>' +
-          '<div class="gm-rbcnt"><b>0</b><span>' + cntT + '</span></div><div class="gm-rbbeat"></div><div class="gm-rbkk"><b>확정</b></div>' + (cur.jp ? '<div class="gm-jptx">JACKPOT!!</div><div class="gm-rbfv">FEVER ×' + (fevLv() + 1) + '</div>' : '') + '<div class="gm-rbtap">- 탭하여 계속 -</div>';
+          '<div class="gm-rbcnt"><b>0</b><span>' + cntT + '</span></div><div class="gm-rbbeat"></div><div class="gm-rbkk"><b>확정</b></div>' + (cur.jp ? '<div class="gm-jptx">JACKPOT!!</div><div class="gm-rbfv">FEVER ×' + Math.max(2, fevLv() + 1) + '</div>' : '') + '<div class="gm-rbtap">- 탭하여 계속 -</div>';
         (document.fullscreenElement || document.body).appendChild(ov);
         const bg = rbBg(ov.querySelector('canvas'), IMP), stop = bg.stop, ch = ov.querySelector('.gm-rbch'), fr = ch.getBoundingClientRect(), fx = fr.left + fr.width / 2, fy = fr.top + fr.height / 2;
         /* 칩: 제자리에서 가운데로 날아와 → 크게 부풀었다가 → 쿵! 하고 작아지며 멈춤 */
