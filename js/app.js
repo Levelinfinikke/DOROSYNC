@@ -2626,7 +2626,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     const a = acctUser(), who = (a ? a.user.uid : 'guest') + '|' + kstToday();
     let st = null; try { st = localStorage.getItem(ATT_K); } catch (e) { /* 무시 */ } if (st === who) return;
     try { localStorage.setItem(ATT_K, who); } catch (e) { return; }
-    window.doroChips.add({ b: 100 }, 'daily'); if (st) dailyNote(); /* 처음 온 사람에게는 안내하지 않음 */
+    window.doroChips.add({ b: 100 }, 'daily'); dailyNote(); /* 처음 온 사람 포함 누구나 */
   }
   function dailyNote() { /* 화면 아래 안내: 접속 보상 */
     const d = document.createElement('div'); d.className = 'daily-note'; d.setAttribute('role', 'status');
