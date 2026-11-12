@@ -113,6 +113,28 @@
 .gm-orb u{position:absolute;left:-6px;top:-4px;z-index:2;text-decoration:none;font-size:11px;font-weight:900;background:#11141b;border-radius:8px;padding:0 5px;border:1px solid currentColor}
 .gm-orb.merge{animation:gmMerge .4s}
 .gm-cnt{position:absolute;left:50%;bottom:-7px;transform:translateX(-50%);z-index:5;font-size:12px;font-weight:800;line-height:16px;background:#11141b;border:1px solid #ffc21a;color:#ffc21a;border-radius:9px;padding:0 6px;white-space:nowrap;pointer-events:none}
+.gm-rbcut{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 55%,rgba(45,20,80,.88),rgba(0,0,0,.95) 70%);animation:gmRbBg .25s ease-out both,gmRbShake .5s .32s;cursor:default;overflow:hidden;touch-action:none;user-select:none}
+.gm-rbcut.ok{cursor:pointer}.gm-rbcut.out{animation:gmRbOut .26s ease-in forwards}
+.gm-rbfl{position:absolute;inset:0;background:#fff;opacity:0;animation:gmRbFlash .6s .3s ease-out both;pointer-events:none}
+.gm-rbray{position:absolute;left:50%;top:56%;width:220vmax;height:220vmax;margin:-110vmax 0 0 -110vmax;background:repeating-conic-gradient(from 0deg,rgba(255,93,143,.12) 0 6deg,transparent 6deg 15deg,rgba(90,184,255,.12) 15deg 21deg,transparent 21deg 30deg);animation:gmRbSpin 14s linear infinite,gmRbBg .6s .3s both;pointer-events:none}
+.gm-rbtx{position:absolute;top:14%;left:0;right:0;text-align:center;font:italic 900 clamp(54px,13vw,150px)/1 system-ui,sans-serif;letter-spacing:.02em;background:linear-gradient(90deg,#ff5d8f,#ffb84d,#f6f05a,#5ef0a0,#5ab8ff,#b47cff,#ff5d8f);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 2px #fff) drop-shadow(0 6px 0 #2a0c45) drop-shadow(0 0 26px rgba(200,140,255,.9));animation:gmRbIn .34s cubic-bezier(.2,.8,.3,1) both,gmRbSlam .3s .34s cubic-bezier(.3,1.8,.5,1) both,gmRbHue 2s .7s linear infinite;pointer-events:none}
+.gm-rbch{position:relative;top:9%;perspective:900px;animation:gmRbZoom .6s .25s cubic-bezier(.2,1.5,.4,1) both;pointer-events:none}
+.gm-rbch::before{content:"";position:absolute;inset:-30%;border-radius:50%;background:radial-gradient(circle,rgba(220,170,255,.75),rgba(120,180,255,.25) 45%,transparent 70%);animation:gmRbPulse 1.2s ease-in-out infinite alternate}
+.gm-rbsp{position:relative;width:min(260px,52vw);height:min(260px,52vw);transform-style:preserve-3d;animation:gmRbRot 4s .85s ease-in-out infinite}
+.gm-rbf{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden}.gm-rbf svg{width:100%;height:100%;display:block}.gm-rbbk{transform:rotateY(180deg)}
+.gm-rbtap{position:absolute;bottom:9%;left:0;right:0;text-align:center;color:#fff;font-weight:800;font-size:17px;letter-spacing:.1em;opacity:0;text-shadow:0 0 10px rgba(200,140,255,.9);pointer-events:none}
+.gm-rbcut.ok .gm-rbtap{animation:gmRbBlink 1.1s ease-in-out infinite}
+@keyframes gmRbBg{from{opacity:0}to{opacity:1}}@keyframes gmRbOut{to{opacity:0;transform:scale(1.06)}}
+@keyframes gmRbFlash{0%{opacity:.95}100%{opacity:0}}
+@keyframes gmRbShake{0%,100%{transform:none}15%{transform:translate(-9px,5px)}30%{transform:translate(8px,-6px)}45%{transform:translate(-6px,-4px)}60%{transform:translate(5px,4px)}80%{transform:translate(-2px,2px)}}
+@keyframes gmRbIn{from{transform:translateX(110vw) skewX(-25deg) scaleX(1.6)}to{transform:translateX(0) skewX(-12deg)}}
+@keyframes gmRbSlam{0%{transform:skewX(-12deg) scale(1.45)}100%{transform:skewX(-8deg) scale(1)}}
+@keyframes gmRbHue{to{background-position:200% 0}}
+@keyframes gmRbSpin{to{transform:rotate(360deg)}}
+@keyframes gmRbZoom{from{transform:scale(.08);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes gmRbPulse{from{transform:scale(.9);opacity:.75}to{transform:scale(1.12);opacity:1}}
+@keyframes gmRbRot{0%{transform:rotateY(0)}25%,50%{transform:rotateY(180deg)}75%,100%{transform:rotateY(360deg)}}
+@keyframes gmRbBlink{0%,100%{opacity:.35}50%{opacity:1}}
 @keyframes gmIn{from{transform:scale(.3);opacity:0}to{transform:none;opacity:1}}
 @keyframes gmMerge{50%{transform:scale(1.22);filter:brightness(1.8)}}
 .gm-float{position:fixed;left:0;top:0;z-index:9999;pointer-events:none;transform:translate(-50%,-50%);filter:drop-shadow(0 8px 12px rgba(0,0,0,.55))}
@@ -229,6 +251,8 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
       return {
         tick() { noise(0.035, 0.7, 2400, 'bandpass'); tone(170, 0.05, 'square', 0.1, 90); },
         clunk() { if (thr('cl', 300)) return; tone(95, 0.13, 'sine', 0.6, 48); noise(0.06, 0.35, 380, 'lowpass'); },
+        fanfare() { [523, 659, 784, 1047, 1319, 1568].forEach((f, i) => tone(f, 0.22, 'triangle', 0.2, null, i * 0.07)); [1047, 1319, 1568, 2093].forEach((f) => tone(f, 1.3, 'sawtooth', 0.05, null, 0.45)); tone(2093, 1.5, 'sine', 0.14, null, 0.45); noise(0.5, 0.35, 5000, 'highpass'); },
+        slam() { tone(70, 0.45, 'sine', 0.9, 38); noise(0.2, 0.6, 900, 'lowpass'); },
         chipPop() { tone(2400, 0.16, 'triangle', 0.22); tone(3600, 0.26, 'sine', 0.14, null, 0.03); tone(5100, 0.2, 'sine', 0.07, null, 0.05); noise(0.03, 0.3, 6500, 'highpass'); },
         chipIn(u) { if (thr('ci', 28)) return; const f = 1500 + 1700 * (u || 0); tone(f, 0.07, 'triangle', 0.13); tone(f * 1.5, 0.1, 'sine', 0.07, null, 0.01); },
         chipBurst(big) { noise(0.12, 0.4, big ? 5200 : 4200, 'highpass'); tone(big ? 3200 : 2600, 0.2, 'triangle', 0.16, big ? 1500 : 1900); tone(big ? 4800 : 3900, 0.3, 'sine', 0.1, null, 0.04); },
@@ -465,7 +489,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
         at(() => { setSt(path[i]); stageBurst(orb, path[i], false); try { if (up) snd.chipBurst(path[i] === 'r'); else snd.fail(); } catch (e) { /* 무시 */ } /* 내려갈 때: 캡슐 승격 실패와 같은 소리 */ }, S0 + (i - 1) * STEP);
       }
       at(() => { try { snd.flip(); } catch (e) { /* 무시 */ } }, A + H);
-      const burst = () => { orb.classList.remove('glow'); STG.forEach((x) => orb.classList.remove('st-' + x)); try { snd.chipBurst(k === 'r' || k === 'g'); snd.chipPop(); } catch (e) { /* 무시 */ } stageBurst(orb, k, true); };
+      const burst = () => { orb.classList.remove('glow'); STG.forEach((x) => orb.classList.remove('st-' + x)); try { snd.chipBurst(k === 'r' || k === 'g'); snd.chipPop(); } catch (e) { /* 무시 */ } stageBurst(orb, k, true); if (k === 'r') setTimeout(rainbowCut, 450); };
       at(burst, T);
       /* 연출 중 다시 누르면(1초 뒤부터): 결과 단계로 정리하고 손으로 넘기듯 바로 마지막 뒤집기로 */
       if (en) en.skip = () => {
@@ -489,10 +513,25 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     function drawChip(c, k, x, y, a) { const sp = chipSprite(k), s = sp.R * 2; c.save(); c.translate(x, y); c.rotate(a || 0); c.drawImage(sp.c, -s / 2, -s / 2, s, s); c.restore(); }
     /* R·SR 캡슐: 도로칩 1%, 실버칩 0.1%, 골드칩 0.01% */
     function capChip(x, y, kind) { const sr = kind === 'SR'; if (Math.random() * 100 >= CAP_RATE[sr ? 'SR' : 'R']) return; dropChip(chipRoll(sr ? 'capSR' : 'capR'), x, y, 'cap'); }
-    function dropChip(k, x, y, src) { const b = body('chip', clamp(x, BK.x0 + OR, BK.x1 - OR), clamp(y, BK.y0 + OR, BK.y1 - OR), { chip: k, count: 1, src: src || 'cap' }); b.vx = rnd(-160, 160); b.vy = rnd(-620, -420); b.w = rnd(-9, 9); S.bask.push(b); wake(S.bask); sparks(b.x, b.y, k === 'b' ? 14 : 30, k === 'g' ? '#ffe27a' : k === 's' ? '#e9eef5' : '#ffc45a', 380); try { snd.chipPop(); if (k !== 'b') setTimeout(() => snd.chipPop(), 90); } catch (e) { /* 무시 */ } }
+    function dropChip(k, x, y, src) { if (k === 'r') setTimeout(rainbowCut, 500); const b = body('chip', clamp(x, BK.x0 + OR, BK.x1 - OR), clamp(y, BK.y0 + OR, BK.y1 - OR), { chip: k, count: 1, src: src || 'cap' }); b.vx = rnd(-160, 160); b.vy = rnd(-620, -420); b.w = rnd(-9, 9); S.bask.push(b); wake(S.bask); sparks(b.x, b.y, k === 'b' ? 14 : 30, k === 'g' ? '#ffe27a' : k === 's' ? '#e9eef5' : '#ffc45a', 380); try { snd.chipPop(); if (k !== 'b') setTimeout(() => snd.chipPop(), 90); } catch (e) { /* 무시 */ } }
+    /* 무지개칩 확정 컷인: RAINBOW!! 글자가 화면을 가로질러 박히고, 무지개칩이 가운데서 커져 회전(1초 180도 · 1초 정지). 3초간 못 넘기고 그 뒤 탭하면 닫힘. 그동안 기계는 멈춤 */
+    function rainbowCut() {
+      S.cutQ = (S.cutQ || 0) + 1; if (S.cut) return;
+      const next = () => {
+        if (!S.cutQ) { S.cut = false; return; } S.cutQ--; S.cut = true;
+        const ov = document.createElement('div'); ov.className = 'gm-rbcut';
+        ov.innerHTML = '<div class="gm-rbfl"></div><div class="gm-rbray"></div><div class="gm-rbtx">RAINBOW!!</div><div class="gm-rbch"><div class="gm-rbsp"><div class="gm-rbf">' + chipSvg('r', 220, true) + '</div><div class="gm-rbf gm-rbbk">' + chipSvg('r', 220, true) + '</div></div></div><div class="gm-rbtap">- 탭하여 계속 -</div>';
+        (document.fullscreenElement || document.body).appendChild(ov);
+        try { snd.slam(); setTimeout(() => { try { snd.fanfare(); } catch (e) { /* 무시 */ } }, 380); } catch (e) { /* 무시 */ }
+        vib([60, 40, 60, 40, 260], true);
+        let ok = false; setTimeout(() => { ok = true; ov.classList.add('ok'); }, 3000);
+        ov.addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); if (!ok) return; ok = false; ov.classList.add('out'); setTimeout(() => { ov.remove(); next(); }, 260); });
+      };
+      next();
+    }
     function chipSpawn() { const b = body('chip', HUDP.x, HUDP.y - 10, { chip: 'b', count: 1, src: 'label' }); b.vx = rnd(-520, -180); b.vy = rnd(-760, -520); b.w = rnd(-9, 9); S.bask.push(b); wake(S.bask); sparks(HUDP.x, HUDP.y, 16, '#ffc45a', 360); try { snd.chipPop(); } catch (e) { /* 무시 */ } }
     function chipTake(b) { const i = S.bask.indexOf(b); if (i < 0) return; S.bask.splice(i, 1); wake(S.bask); const r = cvRect(), sc = r.width / W; chipAbsorb(b.res.chip, b.res.count, r.left + b.x * sc, r.top + b.y * sc, Math.max(22, OR * 2 * sc), b.res.src || 'cap'); }
-    if (location.hostname === 'localhost') (window.__gms = window.__gms || []).push({ S, root, trayAdd: (n, c) => trayAdd(n, c), P, chipSpawn, capChip: (x, y) => capChip(x, y), streak: (k) => streak(k), uiTray: () => uiTray(), addLab: (v) => { S.lab += v; labChips(); uiLab(true); } });
+    if (location.hostname === 'localhost') (window.__gms = window.__gms || []).push({ S, root, rbCut: () => rainbowCut(), dropChip: (k) => dropChip(k, 300, 600, "cap"), trayAdd: (n, c) => trayAdd(n, c), P, chipSpawn, capChip: (x, y) => capChip(x, y), streak: (k) => streak(k), uiTray: () => uiTray(), addLab: (v) => { S.lab += v; labChips(); uiLab(true); } });
     function labChips() { let n = 0; while (S.lab >= 10000 && n < 20) { S.lab -= 10000; n++; setTimeout(chipSpawn, (n - 1) * 140); } }
     /* 보관함은 빈칸을 그대로 둠(배열에 null). 끌어서 다른 니케 위에 놓으면 그 니케가 원래 칸으로 자리 바꿈 */
     const trayFree = () => { const i = S.tray.findIndex((x) => !x); return i < 0 ? S.tray.length : i; };
@@ -581,7 +620,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
       const step = Math.max(40, Math.min(120, 1400 / list.length));
       list.forEach((e, n) => setTimeout(() => { const i = S.tray.indexOf(e), o = i >= 0 && panEl.children[i] && panEl.children[i].querySelector('.gm-orb.top'); if (!o || !e.top || e.top.flip) return;
         const t = e.top, a = rnd(0, TAU), m = rnd(2, 4), k = chipE(t); t.flip = true; t.tilt = [Math.round(Math.cos(a) * m), Math.round(Math.sin(a) * m)]; o.style.setProperty('--tx', t.tilt[0] + 'deg'); o.style.setProperty('--ty', t.tilt[1] + 'deg'); void o.offsetWidth;
-        requestAnimationFrame(() => { o.classList.add('flip'); if (k !== 'b') setTimeout(() => o.classList.add('shine', 'shine-' + k), 700); }); try { snd.flip(); } catch (er) { /* 무시 */ } }, 60 + n * step));
+        requestAnimationFrame(() => { o.classList.add('flip'); if (k !== 'b') setTimeout(() => o.classList.add('shine', 'shine-' + k), 700); }); if (k === 'r') setTimeout(rainbowCut, 800); try { snd.flip(); } catch (er) { /* 무시 */ } }, 60 + n * step));
       setTimeout(() => {
         list.forEach((e, n) => setTimeout(() => { if (e.top) e.top.noAuto = false; absorbTop(e); }, n * 40));
         setTimeout(() => { S.flipAllBusy = false; }, list.length * 40 + 200);
@@ -988,7 +1027,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
 
     /* ---------- 루프 ---------- */
     let lastT = 0, raf = 0;
-    function frame(ts) { raf = requestAnimationFrame(frame); if (!root.isConnected) { cancelAnimationFrame(raf); return; } if (!cv.offsetParent) { lastT = ts; return; } const dt = Math.min(0.034, (ts - lastT) / 1000 || 0.016); lastT = ts; const want = Math.round(cvRect().width * Math.min(1.5, window.devicePixelRatio || 1)); if (Math.abs(want - cv.width) > 2) resize(); if (S.paused) { if (S.peek || dirty) draw(); return; } for (let k = 0; k < (S.auto || 1); k++) update(dt); draw(); drawPile(); if (gDirty) drawGraph(); }
+    function frame(ts) { raf = requestAnimationFrame(frame); if (!root.isConnected) { cancelAnimationFrame(raf); return; } if (!cv.offsetParent) { lastT = ts; return; } const dt = Math.min(0.034, (ts - lastT) / 1000 || 0.016); lastT = ts; const want = Math.round(cvRect().width * Math.min(1.5, window.devicePixelRatio || 1)); if (Math.abs(want - cv.width) > 2) resize(); if (S.paused || S.cut) { if (S.peek || dirty) draw(); return; } for (let k = 0; k < (S.auto || 1); k++) update(dt); draw(); drawPile(); if (gDirty) drawGraph(); }
     window.addEventListener('resize', () => { resize(); gDirty = true; });
     trayLoad(); domeInit(); uiWal(); uiOpt(); uiStat(); uiTray(); uiLab(); resize(); requestAnimationFrame(resize); pileSync(); for (let k = 0; k < 500; k++) step(S.pile, 1 / 120, wallsPile);
     raf = requestAnimationFrame(frame);
