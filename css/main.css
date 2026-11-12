@@ -1577,3 +1577,10 @@ button:not(.tr-clr):not(.tabs button):not(.tr-f):not(.pk-t):not(.pk-r){border-ra
 .pbar-l span .pbd.ok{color:#16a34a;background:rgba(22,163,74,.12)}.pbar-l span .pbd.bad{color:#e5484d;background:rgba(229,72,77,.12)}
 /* 모바일: 도로칩 카드 한 줄 전체 · 가운데 정렬 */
 @media(max-width:560px){#tab-me .mekpis .kpi.chipk{grid-column:1/-1}#tab-me .mekpis .chipk .chipv{justify-content:center;gap:28px}#tab-me .mekpis .chipk .l{text-align:center}}
+
+/* 도로칩 카드: 쌓인 칩 */
+.chipk .chipst{display:block;width:100%;height:58px;margin:4px 0 2px}
+.chipk .chipst.empty{height:auto;font-size:12px;color:var(--muted);padding:14px 0}
+.chipk .chipv{gap:14px!important;margin:2px 0 0!important}.chipk .chipv b{font-size:19px!important}
+.chipk .chipmix{font-size:11px;color:var(--muted);margin-top:1px}
+@media(max-width:560px){#tab-me .mekpis .chipk .chipst{height:70px}#tab-me .mekpis .chipk .chipmix{text-align:center}}

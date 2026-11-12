@@ -2598,10 +2598,35 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
       return chipGet();
     },
   };
+  /* 보유 도로칩을 실제로 쌓아 둔 모습(2.5D, SVG 한 장): 골드(10)·실버(5)·도로(1)로 환산해 칩 수를 줄이고, 무지개는 따로 */
+  const chipStacks = (d, r) => {
+    const g = Math.floor(d / 10), sv = Math.floor((d % 10) / 5), b = d % 5, PER = 10, MAXS = 7;
+    const kinds = [['g', g], ['s', sv], ['b', b], ['r', r]].filter((x) => x[1] > 0).map((x) => ({ k: x[0], n: x[1], st: Math.ceil(x[1] / PER) }));
+    if (!kinds.length) return '<div class="chipst empty">아직 도로칩이 없어요</div>';
+    while (kinds.reduce((a, x) => a + x.st, 0) > MAXS) { const big = kinds.reduce((a, x) => (x.st > a.st ? x : a)); big.st--; }
+    const COL = { g: ['#f6c431', '#fff3b0', '#8a6508', '#b8860b'], s: ['#c9ced6', '#f4f6f9', '#5d6168', '#8b9097'], b: ['#f0a020', '#ffd38a', '#8a5205', '#a86405'], r: ['url(#csR)', '#fff', '#4a3d8a', '#7d5fc0'] };
+    const RX = 14, RY = 5.6, TH = 3.6, W = 34, stacks = [];
+    kinds.forEach((x) => { let left = x.n; for (let i = 0; i < x.st; i++) { const c = Math.min(PER, Math.ceil(left / (x.st - i))); stacks.push([x.k, Math.max(1, c)]); left -= c; } });
+    const VW = stacks.length * W + 4, VH = PER * TH + RY * 2 + 8;
+    let h = '';
+    stacks.forEach(([k, c], si) => {
+      const cx = 2 + si * W + W / 2, C = COL[k]; let seed = si * 97 + c * 13 + 7;
+      const rj = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280 - 0.5; };
+      for (let j = 0; j < c; j++) {
+        const x = +(cx + rj() * 2.2).toFixed(2), y = VH - RY - 3 - j * TH;
+        h += '<path d="M' + (x - RX) + ' ' + (y - TH) + 'v' + TH + 'a' + RX + ' ' + RY + ' 0 0 0 ' + RX * 2 + ' 0v' + -TH + 'z" fill="' + C[3] + '"/>' +
+          '<path d="M' + (x - RX) + ' ' + (y - TH + 1.4) + 'a' + RX + ' ' + RY + ' 0 0 0 ' + RX * 2 + ' 0" fill="none" stroke="' + C[2] + '" stroke-width=".8" stroke-dasharray="3 2.4" opacity=".7"/>' +
+          '<ellipse cx="' + x + '" cy="' + (y - TH) + '" rx="' + RX + '" ry="' + RY + '" fill="' + C[0] + '" stroke="' + C[2] + '" stroke-width=".5"/>';
+        if (j === c - 1) h += '<ellipse cx="' + x + '" cy="' + (y - TH) + '" rx="' + RX * 0.78 + '" ry="' + RY * 0.78 + '" fill="#3b3e44"/><ellipse cx="' + x + '" cy="' + (y - TH) + '" rx="' + RX * 0.62 + '" ry="' + RY * 0.62 + '" fill="none" stroke="' + C[0] + '" stroke-width="1.6" stroke-dasharray="4 1.6"/><ellipse cx="' + x + '" cy="' + (y - TH) + '" rx="' + RX * 0.36 + '" ry="' + RY * 0.36 + '" fill="' + C[0] + '"/><ellipse cx="' + (x - RX * 0.35) + '" cy="' + (y - TH - RY * 0.35) + '" rx="' + RX * 0.3 + '" ry="' + RY * 0.22 + '" fill="#fff" opacity=".45"/>';
+      }
+    });
+    return '<svg class="chipst" viewBox="0 0 ' + VW + ' ' + VH + '" preserveAspectRatio="xMidYMax meet" aria-hidden="true"><defs><linearGradient id="csR" x1="0" x2="1"><stop offset="0" stop-color="#ff5d8f"/><stop offset=".25" stop-color="#ffb84d"/><stop offset=".5" stop-color="#f6f05a"/><stop offset=".75" stop-color="#5ef0a0"/><stop offset="1" stop-color="#b47cff"/></linearGradient></defs><ellipse cx="' + VW / 2 + '" cy="' + (VH - 4) + '" rx="' + VW / 2 + '" ry="3" fill="rgba(0,0,0,.18)"/>' + h + '</svg>';
+  };
   const chipCard = () => {
-    const o = chipRaw(), tot = o.d;
-    return '<div class="kpi chipk"><div class="l">도로칩</div><div class="chipv"><span title="도로칩 (실버칩 1 = 5, 골드칩 1 = 10)">' + window.doroChipSvg('b', 32) + '<b class="num">' + fmt(tot) + '</b></span><span title="무지개 도로칩">' + window.doroChipSvg('r', 32) + '<b class="num">' + fmt(o.r) + '</b></span></div>' +
-      '</div>';
+    const o = chipRaw(), tot = o.d, g = Math.floor(tot / 10), sv = Math.floor((tot % 10) / 5), b = tot % 5;
+    return '<div class="kpi chipk"><div class="l">도로칩</div>' + chipStacks(tot, o.r) +
+      '<div class="chipv"><span title="도로칩 합계 (실버칩 1 = 5, 골드칩 1 = 10)">' + window.doroChipSvg('b', 22) + '<b class="num">' + fmt(tot) + '</b></span><span title="무지개 도로칩">' + window.doroChipSvg('r', 22) + '<b class="num">' + fmt(o.r) + '</b></span></div>' +
+      '<div class="chipmix" title="쌓인 칩: 골드 10 · 실버 5 · 도로 1로 환산">골드 ' + fmt(g) + ' · 실버 ' + sv + ' · 도로 ' + b + '</div></div>';
   };
   window.addEventListener('doroacct', () => { if (!(doroBL && doroBL.data)) { try { renderMe(); } catch (e) { /* 초기화 전 */ } } });
   window.addEventListener('dorochips', () => { const el = document.querySelector('#tab-me .chipk'); if (el) el.outerHTML = chipCard(); });
