@@ -285,7 +285,8 @@ async function autoRecord(env) {
     const area = Number(au.area && au.area.stringValue), id = toIntlId(au.openid && au.openid.stringValue);
     let last, entry = null;
     try {
-      if (!(au.on && au.on.booleanValue) || !AREAS.includes(area) || !id) throw new Error('CFG');
+      if (!(au.on && au.on.booleanValue) || !AREAS.includes(area)) throw new Error('CFG');
+      if (!id) throw new Error('OPENID'); /* 저장된 프로필 주소가 공유 링크·계정 ID 형식이 아님 (닉네임 등) */
       const oi = (await post('GetUserProfileOutpostInfo', { intl_open_id: id, nikke_area_id: area }, env.BLA_COOKIE)).outpost_info || {};
       const s = Number(oi.synchro_level) || 0, o = Number(oi.outpost_battle_level) || 0;
       if (!s) throw new Error('NOLEVEL');
@@ -308,10 +309,10 @@ async function autoRecord(env) {
     await fetch(FS + '/meta/autoRun', { method: 'PATCH', headers: H, body: JSON.stringify({ fields }) }).catch(() => {});
   }
 }
-/* 오류 코드(파악용): E_LOGIN 쿠키 만료 · E_PRIVATE 비공개/없는 계정 · E_BUSY 요청 과다 · E_HTTP_### 블라블라 응답 오류 · E_API_### 블라블라 오류 코드 · E_NET 연결 실패 · E_CFG 설정 없음 · E_NOLEVEL 레벨 정보 없음 */
-const ERR_TXT = { E_LOGIN: '중계 서버 로그인 만료', E_PRIVATE: '비공개 또는 없는 계정', E_BUSY: '요청 과다', E_CFG: 'AUTO 설정 없음', E_NOLEVEL: '레벨 정보 없음', E_NET: '블라블라링크 연결 실패' };
+/* 오류 코드(파악용): E_LOGIN 쿠키 만료 · E_PRIVATE 비공개/없는 계정 · E_BUSY 요청 과다 · E_HTTP_### 블라블라 응답 오류 · E_API_### 블라블라 오류 코드 · E_NET 연결 실패 · E_CFG 설정 없음 · E_OPENID 프로필 주소 형식 오류 · E_NOLEVEL 레벨 정보 없음 */
+const ERR_TXT = { E_LOGIN: '중계 서버 로그인 만료', E_PRIVATE: '비공개 또는 없는 계정', E_BUSY: '요청 과다', E_CFG: 'AUTO 설정 없음', E_OPENID: '프로필 주소 형식 오류 (공유 링크를 다시 넣어 주세요)', E_NOLEVEL: '레벨 정보 없음', E_NET: '블라블라링크 연결 실패' };
 function errCode(m) {
-  if (m === 'LOGIN') return 'E_LOGIN'; if (m === 'PRIVATE') return 'E_PRIVATE'; if (m === 'BUSY') return 'E_BUSY'; if (m === 'CFG') return 'E_CFG'; if (m === 'NOLEVEL') return 'E_NOLEVEL';
+  if (m === 'LOGIN') return 'E_LOGIN'; if (m === 'PRIVATE') return 'E_PRIVATE'; if (m === 'BUSY') return 'E_BUSY'; if (m === 'CFG') return 'E_CFG'; if (m === 'OPENID') return 'E_OPENID'; if (m === 'NOLEVEL') return 'E_NOLEVEL';
   let x = m.match(/^HTTP (\d+)/); if (x) return 'E_HTTP_' + x[1];
   x = m.match(/^(\d{3,})\s/); if (x) return 'E_API_' + x[1];
   if (/fetch|network|connect/i.test(m)) return 'E_NET';

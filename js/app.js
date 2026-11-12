@@ -3058,7 +3058,10 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
     v = String(v || '').trim(); if (!v) return '';
     const m = v.match(/[?&]openid=([^&#\s]+)/i); let id = m ? m[1] : v;
     try { id = decodeURIComponent(id); } catch (e) { /* 그대로 */ }
-    return /^[A-Za-z0-9+/=_-]{6,}$/.test(id) ? id : '';
+    /* 워커(toIntlId)와 같은 기준: 숫자 계정 ID(6~25자리) 또는 base64로 풀면 '29080-숫자'인 openid만 통과 (닉네임·아이디는 거름) */
+    if (/^\d{6,25}$/.test(id)) return id;
+    try { const n = atob(id.replace(/-/g, '+').replace(/_/g, '/')).split('-').pop(); if (/^\d{6,25}$/.test(n)) return id; } catch (e) { /* 잘못된 값 */ }
+    return '';
   };
   try { const a = localStorage.getItem('dorosync-bl-area'), u = localStorage.getItem('dorosync-bl-purl'); if (a) $('#bl-area').value = a; if (u) $('#bl-purl').value = u; } catch (e) { /* 무시 */ }
   const blUrlFail = (t) => { const f = $('#bl-url-fail'); if (!f) return; f.hidden = !t; if (t) $('#bl-url-ftx').textContent = t; };
@@ -3262,7 +3265,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
       if (b.dataset.ax === 'login') { $('#auto-modal').hidden = true; if (a) a.open(); return; }
       if (b.dataset.ax === 'start') {
         const area = $('#auto-area').value, raw = $('#auto-url').value.trim();
-        if (!blOpenId(raw)) { autoMsg('프로필 주소를 다시 확인해 주십시오, 지휘관.', 1); return; }
+        if (!blOpenId(raw)) { autoMsg('닉네임이나 아이디가 아니라, 블라블라링크 프로필의 공유 링크(…?openid=…)를 붙여 넣어 주십시오, 지휘관.', 1); return; }
         if (!$('#auto-agree').checked) return;
         b.disabled = true;
         await a.patch({ auto: { on: true, area, openid: raw, since: Date.now() }, autoDue: kstDate(Date.now()) });
