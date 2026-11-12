@@ -2598,11 +2598,15 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
       return chipGet();
     },
   };
-  /* 카드 우하단의 큰 2.5D 도로칩(두께 있는 원판, 비스듬히 누운 모습) */
-  const chipBig = () => { let d = ''; for (let z = 0; z <= 14; z++) d += '<i style="transform:translateZ(' + z + 'px);--dk:' + (z % 7 === 0 && z ? '.35' : (Math.abs(z - 7) / 7 * 0.35).toFixed(2)) + '"></i>'; return '<span class="chipbig" aria-hidden="true"><span class="cbr">' + d + '<b style="transform:translateZ(14.5px)">' + window.doroChipSvg('b', 150, false, true) + '</b></span></span>'; };
+  /* 카드 우하단의 큰 2.5D 도로칩: 얇은 원판을 겹친 둥근 테두리(가운데가 가장 넓고 앞뒤로 갈수록 좁아짐) + 광택 */
+  const chipBig = () => {
+    const N = 22, T = 20; let d = '';
+    for (let i = 0; i < N; i++) { const f = i / (N - 1) - 0.5, sc = 1 - 0.1 * (1 - Math.sqrt(Math.max(0, 1 - Math.pow(2 * f, 2)))), dk = f > 0 ? 0.02 + f * 0.5 : 0.1 + -f * 0.9; d += '<i style="transform:translateZ(' + ((f + 0.5) * T).toFixed(2) + 'px) scale(' + sc.toFixed(3) + ');--dk:' + dk.toFixed(2) + '"></i>'; }
+    return '<span class="chipbig" aria-hidden="true"><span class="cbr">' + d + '<b style="transform:translateZ(' + (T + 0.4) + 'px) scale(.9)">' + window.doroChipSvg('b', 170, false, true) + '<u></u></b></span></span>';
+  };
   const chipCard = () => {
     const o = chipRaw(), tot = o.d;
-    return '<div class="kpi chipk">' + chipBig() + '<div class="l">도로칩</div><div class="chipv">' +
+    return '<div class="kpi chipk">' + chipBig() + '<div class="chipv">' +
       '<span class="cv-d" title="도로칩 (실버칩 1 = 5, 골드칩 1 = 10)">' + window.doroChipSvg('b', 30) + '<b class="num">' + fmt(tot) + '</b></span>' +
       '<span class="cv-r" title="무지개 도로칩">' + window.doroChipSvg('r', 30) + '<b class="num">' + fmt(o.r) + '</b></span></div></div>';
   };
