@@ -71,7 +71,7 @@
 .gm-spread{position:absolute;z-index:7;left:8px;right:8px;top:40px;bottom:8px;border-radius:12px;background:rgba(10,13,20,.94);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;animation:gmSpIn .2s ease-out}
 @keyframes gmSpIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
 .gm-spg{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;width:100%;max-width:330px;padding:0 6px}
-.gm-spc{position:relative;aspect-ratio:1;perspective:340px}.gm-spc .gm-orb{inset:4%}
+.gm-spc{position:relative;aspect-ratio:1;perspective:260px}.gm-spc .gm-orb{inset:4%}
 .gm-spn{font-size:12px;color:#9eaac0;min-height:16px}.gm-skip{position:absolute;right:10px;top:10px;display:inline-flex;align-items:center;gap:5px;font-weight:800;letter-spacing:.04em}.gm-odds{position:absolute;z-index:8;top:44px;right:8px;left:8px;padding:10px 12px;border-radius:14px;background:rgba(12,16,26,.97);border:1px solid rgba(240,160,32,.5);box-shadow:0 10px 30px rgba(0,0,0,.6);color:#e9edf5;font-size:12px}
 .gm-oddh{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}.gm-odds table{width:100%;border-collapse:collapse}.gm-odds th,.gm-odds td{padding:4px 3px;text-align:right;border-bottom:1px solid rgba(255,255,255,.07);font-variant-numeric:tabular-nums}
 .gm-odds tbody th{text-align:left;font-weight:700;white-space:nowrap}.gm-odds th small{display:block;font-weight:400;opacity:.6;font-size:10px}.gm-odds thead th{text-align:right}.gm-odds thead th svg{display:inline-block}.gm-odds td.z{opacity:.35}.gm-odds p{margin:8px 0 0;opacity:.7;font-size:11px;line-height:1.5}.gm-flipall{white-space:nowrap}
@@ -81,7 +81,7 @@
 @keyframes gmBal{0%{box-shadow:0 0 0 0 rgba(255,190,70,.9)}100%{box-shadow:0 0 0 7px rgba(255,190,70,0)}}
 .gm-chipfly{position:fixed;z-index:9999;pointer-events:none;will-change:transform}.gm-chipfly svg{display:block;filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))}
 .gm-pan{display:grid;grid-template-columns:repeat(var(--cols,4),1fr);align-content:start;flex:1 1 0;min-height:0;overflow-y:auto;gap:8px;padding:10px;border-radius:12px;background:#15171c;box-shadow:inset 0 2px 8px rgba(0,0,0,.7)}
-.gm-well{position:relative;perspective:340px;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 50% 35%,#0c0d10 0%,#1d2027 70%,#30343e 100%);box-shadow:inset 0 5px 9px rgba(0,0,0,.85),0 1px 0 rgba(255,255,255,.1)}
+.gm-well{position:relative;perspective:240px;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 50% 35%,#0c0d10 0%,#1d2027 70%,#30343e 100%);box-shadow:inset 0 5px 9px rgba(0,0,0,.85),0 1px 0 rgba(255,255,255,.1)}
 .gm-well.over{box-shadow:inset 0 5px 9px rgba(0,0,0,.85),0 0 0 3px var(--gold)}
 .gm-cf,.gm-float.orb{background:center/cover no-repeat,radial-gradient(circle at 50% 30%,#fff6d8,#d9b35a)}
 .gm-orb{position:absolute;inset:5%;border-radius:50%;transform-style:preserve-3d;transition:transform .9s cubic-bezier(.4,0,.3,1.2);cursor:pointer;touch-action:none}.gm-orb.pop{animation:gmIn .35s cubic-bezier(.2,1.6,.4,1)}
@@ -103,10 +103,10 @@
 @keyframes gmGlowR{0%{box-shadow:0 0 6px 2px #ff5d8f,0 0 16px 5px #ffb84d}25%{box-shadow:0 0 6px 2px #f6f05a,0 0 16px 5px #5ef0a0}50%{box-shadow:0 0 6px 2px #5ef0a0,0 0 16px 5px #5ab8ff}75%{box-shadow:0 0 6px 2px #5ab8ff,0 0 16px 5px #b47cff}100%{box-shadow:0 0 6px 2px #ff5d8f,0 0 16px 5px #ffb84d}}
 .gm-sssp{position:fixed;z-index:9999;pointer-events:none;border-radius:50%;box-shadow:0 0 6px currentColor}
 .gm-cf,.gm-cb{position:absolute;inset:0;border-radius:50%;backface-visibility:hidden;-webkit-backface-visibility:hidden}
-.gm-cf{transform:translateZ(1.2px);box-shadow:0 0 0 2.5px var(--gold),0 3px 8px rgba(0,0,0,.6)}
-.gm-cb{transform:rotateY(180deg) translateZ(1.2px);display:grid;place-items:center}.gm-cb svg{width:108%;height:108%;flex:none}
-.gm-ce{position:absolute;inset:-1px;border-radius:50%;background:linear-gradient(90deg,#6d727a,#e4e7ec 30%,#9ea4ad 55%,#f1f3f6 75%,#70757d);box-shadow:0 0 0 1px #5d6168}
-.gm-ce:nth-child(1){transform:translateZ(-1px)}.gm-ce:nth-child(2){transform:translateZ(-.5px)}.gm-ce:nth-child(3){transform:translateZ(0)}.gm-ce:nth-child(4){transform:translateZ(.5px)}.gm-ce:nth-child(5){transform:translateZ(1px)}
+.gm-cf{transform:translateZ(calc(var(--ot) * .5 + .4px)) scale(.94);box-shadow:0 0 0 2.5px var(--gold),0 3px 8px rgba(0,0,0,.6)}
+.gm-cb{transform:rotateY(180deg) translateZ(calc(var(--ot) * .5 + .4px)) scale(.94);display:grid;place-items:center}.gm-cb svg{width:108%;height:108%;flex:none}
+.gm-ce{position:absolute;inset:-1px;border-radius:50%;background:linear-gradient(90deg,#6d727a,#e4e7ec 30%,#9ea4ad 55%,#f1f3f6 75%,#70757d)}
+.gm-orb{--ot:7px}.gm-spc .gm-orb{--ot:9px}.gm-ce::after{content:"";position:absolute;inset:0;border-radius:50%;background:rgba(10,12,20,var(--dk,0))}
 .gm-orb.pu .gm-cf{box-shadow:0 0 0 2.5px #fff,0 0 12px 3px #ff7ad9,0 3px 8px rgba(0,0,0,.6)}
 .gm-cf::after{content:"";position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 32% 24%,rgba(255,255,255,.55),rgba(255,255,255,0) 38%)}
 .gm-orb i,.gm-float.orb i{position:absolute;right:-7px;bottom:-4px;z-index:2;font-style:normal;font-size:12px;font-weight:800;background:#11141b;border:1px solid #ffc21a;color:#ffc21a;border-radius:9px;padding:0 6px;white-space:nowrap}
@@ -668,7 +668,8 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
         : '<small>도움말</small><ol class="gm-help"><li>오른쪽 상자의 재화를 끌어 기계 위에 놓기 (큰 것 10뽑 · 작은 것 1뽑)</li><li>레버 클릭 = 10연속, 드래그 = 한 칸씩</li><li>사출구 뚜껑을 위로 끌어 캡슐 꺼내기</li><li>캡슐을 눌렀다 떼면 개봉, 구슬 클릭 = 보관함</li><li>통이 비면 자동 리필</li><li>빈 곳을 옆으로 끌면 다른 픽업 머신</li></ol>'; }
     function uiStat() { const t = S.stats; statEl.innerHTML = [['뽑은 횟수', t.n], ['SSR', t.ssr + (t.pu ? ' <em>픽업 ' + t.pu + '</em>' : '')], ].map((x) => '<div><small>' + x[0] + '</small><b>' + x[1] + '</b></div>').join(''); }
     /* 보관함 한 칸: 겹친 초상화는 맨 위 한 장(top)만 들어 올려 뒤집고, 나머지는 아래에 깔림 */
-    const EDGES = '<span class="gm-ce"></span><span class="gm-ce"></span><span class="gm-ce"></span><span class="gm-ce"></span><span class="gm-ce"></span>';
+    /* 초상화 두께: 얇은 원판 11장을 겹쳐 둥근 테두리(가운데가 가장 넓고 앞뒤로 갈수록 살짝 작아짐) */
+    const EDGES = Array.from({ length: 11 }, (_, i) => { const f = i / 10 - 0.5, sc = 1 - 0.07 * (1 - Math.sqrt(Math.max(0, 1 - Math.pow(2 * f, 2)))); return '<span class="gm-ce" style="transform:translateZ(calc(var(--ot) * ' + f.toFixed(2) + ')) scale(' + sc.toFixed(3) + ');--dk:' + (0.05 + Math.abs(f) * 0.7).toFixed(2) + '"></span>'; }).join('');
     function orbHtml(t, cls, badge, tr) {
       const ck = chipE(t);
       return '<div class="gm-orb' + cls + (t.nk.pu ? ' pu' : '') + (t.flip ? ' flip' : '') + '"' + (t.tilt ? ' style="--tx:' + t.tilt[0] + 'deg;--ty:' + t.tilt[1] + 'deg"' : '') + ' title="' + (t.flip ? CHIP_NM[ck] + ' · 누르면 잔고로' : t.nk.n + ' · 누르면 뒤집기') + '">' + EDGES +
