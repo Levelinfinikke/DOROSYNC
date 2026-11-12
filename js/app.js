@@ -2530,7 +2530,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
       '<circle r="34" fill="' + c[1] + '"/><circle r="30" fill="' + f + '"/>' + fxs + (TH ? '</g>' : '') + '</svg>';
   };
   /* 지갑
-     - 화면에 보이는 잔고: dschip-v2 { d: 도로칩(실버 5·골드 10 환산), r: 무지개, o: 주인 계정 uid('' = 비회원) }
+     - 화면에 보이는 잔고: dschip-v2 { d: DORO칩(실버 5·골드 10 환산), r: 무지개, o: 주인 계정 uid('' = 비회원) }
      - 로그인 중 얻은 칩은 지급 기록(dschip-q)으로 모아 서버(/chips)에 보내고, 서버가 검사한 뒤 계정의 chipsV(검증 잔고)에 더함
      - 계정 잔고는 서버만 바꿀 수 있음. 화면 잔고 = 서버 잔고 + 아직 안 보낸 기록 */
   const CHIP2_K = 'dschip-v2', CHIPQ_K = 'dschip-q', CHIP_API = 'https://dorosync.bomullee88.workers.dev/chips', CV = { b: 1, s: 5, g: 10 };
@@ -2561,7 +2561,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
           const q2 = qGet(); if (q2.o === a.user.uid) { q2.ev = q2.ev.slice(send.length); qSet(q2); }
           if (a.doc) a.doc.chipsV = j.chips;
           const p = qSum(qGet().ev); chipSave({ d: j.chips.d + p.d, r: j.chips.r + p.r, o: a.user.uid });
-          if (j.rejected) console.warn('[도로칩] 서버가 일부 기록을 받지 않음', j.rejected, j.day);
+          if (j.rejected) console.warn('[DORO칩] 서버가 일부 기록을 받지 않음', j.rejected, j.day);
           if (qGet().ev.length) chipFlush(300);
         } else if (r.status === 401) { /* 토큰 문제: 다음 기회에 */ } else chipFlush(15000);
       } catch (e) { chipFlush(15000); /* 네트워크 문제: 잠시 뒤 다시 */ }
@@ -2607,8 +2607,8 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
   const chipCard = () => {
     const o = chipRaw(), tot = o.d;
     return '<div class="kpi chipk">' + chipBig() + '<div class="l">DORO칩</div><div class="chipv">' +
-      '<span class="cv-d" title="도로칩 (실버칩 1 = 5, 골드칩 1 = 10)">' + window.doroChipSvg('b', 30) + '<b class="num">' + fmt(tot) + '</b></span>' +
-      '<span class="cv-r" title="무지개 도로칩">' + window.doroChipSvg('r', 30) + '<b class="num">' + fmt(o.r) + '</b></span></div></div>';
+      '<span class="cv-d" title="DORO칩 (실버칩 1 = 5, 골드칩 1 = 10)">' + window.doroChipSvg('b', 30) + '<b class="num">' + fmt(tot) + '</b></span>' +
+      '<span class="cv-r" title="무지개 DORO칩">' + window.doroChipSvg('r', 30) + '<b class="num">' + fmt(o.r) + '</b></span></div></div>';
   };
   window.addEventListener('doroacct', () => { if (!(doroBL && doroBL.data)) { try { renderMe(); } catch (e) { /* 초기화 전 */ } } });
   window.addEventListener('dorochips', () => { const el = document.querySelector('#tab-me .chipk'); if (el) el.outerHTML = chipCard(); });
@@ -2843,9 +2843,9 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     { const iv = $('#me-inv'), pg = $('#me-prog'); if (iv && root.contains(iv)) root.after(iv); if (iv && pg && root.contains(pg)) iv.before(pg); } /* innerHTML로 지워지지 않게 밖으로 */
     const d = doroBL.data;
     { const lk = $('#me-link'); if (lk) lk.style.display = d ? 'none' : ''; }
-    if (!d) { /* 연동 전: 도로칩 잔고만 보여 주고, 로그인 안 했으면 로그인 권유 */
+    if (!d) { /* 연동 전: DORO칩 잔고만 보여 주고, 로그인 안 했으면 로그인 권유 */
       const logged = !!(window.doroAccount && window.doroAccount.user);
-      root.innerHTML = '<div class="card me-pre"><div class="mekpis mekpis-pre">' + chipCard() + '</div>' + (logged ? '' : '<p class="me-login">도로칩을 안전하게 저장하려면 로그인하세요. <button type="button" class="ghost sm" id="me-login">로그인</button></p>') + '</div>';
+      root.innerHTML = '<div class="card me-pre"><div class="mekpis mekpis-pre">' + chipCard() + '</div>' + (logged ? '' : '<p class="me-login">DORO칩을 안전하게 저장하려면 로그인하세요. <button type="button" class="ghost sm" id="me-login">로그인</button></p>') + '</div>';
       const lb = $('#me-login'); if (lb) lb.addEventListener('click', () => { if (window.doroAccount) window.doroAccount.open(); else { const b = $('#btn-acct'); if (b) b.click(); } });
       return;
     }
