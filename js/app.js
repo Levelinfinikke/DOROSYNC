@@ -2506,7 +2506,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
   const CHIP_K = 'dorosync-chips', CHIP_COL = { b: ['#f0a020', '#a86405'], s: ['#c3c9d2', '#6f7782'], g: ['#f6c431', '#8a6508'], r: ['#b47cff', '#4a3d8a'] };
   let chipN = 0;
   /* k: b 도로칩(주황) · s 실버칩 · g 골드칩(반짝임) · r 무지개(프리미엄). fx=false면 애니메이션 없는 가벼운 버전 */
-  window.doroChipSvg = function (k, px, fx) {
+  window.doroChipSvg = function (k, px, fx, flat) {
     const c = CHIP_COL[k] || CHIP_COL.b, id = 'dc' + (++chipN), grad = k === 'g' || k === 'r', f = grad ? 'url(#' + id + ')' : c[0], anim = grad && fx !== false;
     const dots = [0, 60, 120, 180, 240, 300].map((a) => '<circle cx="' + (40 * Math.sin(a * Math.PI / 180)).toFixed(1) + '" cy="' + (-40 * Math.cos(a * Math.PI / 180)).toFixed(1) + '" r="2.4" fill="' + f + '"/>').join('');
     const star = (x, y, r, col, dur, bg) => '<path d="M0 ' + -r + 'L' + r * 0.22 + ' ' + -r * 0.22 + 'L' + r + ' 0L' + r * 0.22 + ' ' + r * 0.22 + 'L0 ' + r + 'L' + -r * 0.22 + ' ' + r * 0.22 + 'L' + -r + ' 0L' + -r * 0.22 + ' ' + -r * 0.22 + 'Z" fill="' + col + '" transform="translate(' + x + ' ' + y + ')" opacity="0"><animate attributeName="opacity" values="0;1;0" keyTimes="0;.5;1" dur="' + dur + 's" begin="' + bg + 's" repeatCount="indefinite"/></path>';
@@ -2520,10 +2520,14 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
         (k === 'g' ? star(-34, -40, 15, '#fffbe0', 2.2, 0.3) + star(42, 30, 11, '#fffbe0', 2.2, 1.3)
           : star(-36, -42, 17, '#fff', 1.6, 0) + star(44, -20, 12, '#ffe9fb', 1.6, 0.5) + star(30, 46, 14, '#e6fbff', 1.6, 1) + star(-44, 28, 10, '#fff7d6', 1.6, 1.3));
     }
-    return '<svg class="dchip dchip-' + k + (anim ? ' fx' : '') + '" viewBox="-80 -80 160 160" width="' + (px || 24) + '" height="' + (px || 24) + '" aria-hidden="true">' + (defs ? '<defs>' + defs + '</defs>' : '') +
+    /* 2.5D: 아래로 두께(옆면)를 겹쳐 그림. 3D로 뒤집는 곳(보관함·컷인)은 flat */
+    const EC = k === 'g' ? ['#7a5a06', '#d6a51c'] : k === 'r' ? ['#5a3d9a', '#b49cff'] : ['#55595f', '#c4c8ce'], TH = flat ? 0 : 7;
+    let edge = ''; for (let i = TH; i >= 1; i--) { const p = 1 - i / TH; edge += '<circle cy="' + i + '" r="72" fill="' + (i === TH ? EC[0] : p > 0.6 ? EC[1] : EC[0]) + '"' + (i === TH ? '' : ' opacity="' + (0.55 + p * 0.45).toFixed(2) + '"') + '/>'; }
+    if (TH) edge = '<ellipse cy="' + (TH + 2) + '" rx="70" ry="66" fill="rgba(0,0,0,.28)"/>' + edge;
+    return '<svg class="dchip dchip-' + k + (anim ? ' fx' : '') + '" viewBox="-80 -80 160 160" width="' + (px || 24) + '" height="' + (px || 24) + '" aria-hidden="true">' + (defs ? '<defs>' + defs + '</defs>' : '') + (TH ? '<g transform="translate(0 -3)">' + edge : '') +
       '<circle r="72" fill="' + (k === 'g' ? '#f3e3a6' : '#d5d8dd') + '" stroke="' + (k === 'g' ? '#a8830f' : '#8b9097') + '" stroke-width="3"/><circle r="61" fill="#3b3e44"/>' +
       '<circle r="52" fill="none" stroke="' + f + '" stroke-width="11" stroke-dasharray="44 10.45"/><circle r="44" fill="#26282c"/>' + dots +
-      '<circle r="34" fill="' + c[1] + '"/><circle r="30" fill="' + f + '"/>' + fxs + '</svg>';
+      '<circle r="34" fill="' + c[1] + '"/><circle r="30" fill="' + f + '"/>' + fxs + (TH ? '</g>' : '') + '</svg>';
   };
   /* 지갑
      - 화면에 보이는 잔고: dschip-v2 { d: 도로칩(실버 5·골드 10 환산), r: 무지개, o: 주인 계정 uid('' = 비회원) }
