@@ -1579,7 +1579,7 @@ button:not(.tr-clr):not(.tabs button):not(.tr-f):not(.pk-t):not(.pk-r){border-ra
 @media(max-width:560px){#tab-me .mekpis .kpi.chipk{grid-column:1/-1}#tab-me .mekpis .chipk .chipv{justify-content:center;gap:28px}#tab-me .mekpis .chipk .l{text-align:center}}
 
 /* 도로칩 카드: 왼쪽 금 막대 + 옅은 금빛 바탕 + 우하단 큰 2.5D 칩 */
-#tab-me .mekpis .kpi.chipk{display:flex;align-items:center;min-height:84px;background:linear-gradient(135deg,rgba(255,221,128,.34),rgba(240,190,70,.16) 60%,rgba(255,226,150,.26))!important;border:0!important;box-shadow:none!important}
+#tab-me .mekpis .kpi.chipk{display:flex;flex-direction:column;justify-content:center;align-items:flex-start;min-height:84px;background:linear-gradient(135deg,rgba(255,221,128,.34),rgba(240,190,70,.16) 60%,rgba(255,226,150,.26))!important;border:0!important;box-shadow:none!important}
 #tab-me .mekpis .kpi.chipk::before{background:linear-gradient(180deg,#fff1b0,#e8b52c 45%,#a87708)!important}
 .chipk .chipbig{position:absolute;right:-44px;bottom:-92px;width:170px;height:170px;perspective:760px;pointer-events:none;opacity:.6;-webkit-mask-image:linear-gradient(100deg,transparent 0,#000 50%);mask-image:linear-gradient(100deg,transparent 0,#000 50%)}
 .chipk .cbr{position:absolute;inset:0;transform-style:preserve-3d;transform:rotateX(56deg) rotateZ(-22deg)}
@@ -1602,4 +1602,6 @@ button:not(.tr-clr):not(.tabs button):not(.tr-f):not(.pk-t):not(.pk-r){border-ra
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .chipk .cv-d b{color:#ffc54a!important}}
 .me-pre .mekpis-pre{grid-template-columns:minmax(0,520px)!important}
 .me-pre .chipk .chipv b{font-size:30px!important}
-@media(max-width:560px){#tab-me .mekpis .kpi.chipk{justify-content:center}#tab-me .mekpis .chipk .chipv{justify-content:center;gap:10px 30px!important}}
+@media(max-width:560px){#tab-me .mekpis .kpi.chipk{align-items:center}#tab-me .mekpis .chipk .chipv{justify-content:center;gap:10px 30px!important}}
+
+#tab-me .mekpis .kpi.chipk .l{position:relative;z-index:1;margin-bottom:4px}

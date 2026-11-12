@@ -2606,7 +2606,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
   };
   const chipCard = () => {
     const o = chipRaw(), tot = o.d;
-    return '<div class="kpi chipk">' + chipBig() + '<div class="chipv">' +
+    return '<div class="kpi chipk">' + chipBig() + '<div class="l">DORO칩</div><div class="chipv">' +
       '<span class="cv-d" title="도로칩 (실버칩 1 = 5, 골드칩 1 = 10)">' + window.doroChipSvg('b', 30) + '<b class="num">' + fmt(tot) + '</b></span>' +
       '<span class="cv-r" title="무지개 도로칩">' + window.doroChipSvg('r', 30) + '<b class="num">' + fmt(o.r) + '</b></span></div></div>';
   };
