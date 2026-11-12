@@ -2598,11 +2598,13 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
       return chipGet();
     },
   };
+  /* 카드 우하단의 큰 2.5D 도로칩(두께 있는 원판, 비스듬히 누운 모습) */
+  const chipBig = () => { let d = ''; for (let z = 0; z <= 14; z++) d += '<i style="transform:translateZ(' + z + 'px);--dk:' + (z % 7 === 0 && z ? '.35' : (Math.abs(z - 7) / 7 * 0.35).toFixed(2)) + '"></i>'; return '<span class="chipbig" aria-hidden="true"><span class="cbr">' + d + '<b style="transform:translateZ(14.5px)">' + window.doroChipSvg('b', 150, false, true) + '</b></span></span>'; };
   const chipCard = () => {
     const o = chipRaw(), tot = o.d;
-    return '<div class="kpi chipk"><div class="l">도로칩</div><div class="chipv">' +
-      '<span class="cv-d" title="도로칩 (실버칩 1 = 5, 골드칩 1 = 10)">' + window.doroChipSvg('b', 34) + '<span><b class="num">' + fmt(tot) + '</b><i class="cvc">도로칩</i></span></span>' +
-      '<span class="cv-r" title="무지개 도로칩">' + window.doroChipSvg('r', 34) + '<span><b class="num">' + fmt(o.r) + '</b><i class="cvc">무지개칩</i></span></span></div></div>';
+    return '<div class="kpi chipk">' + chipBig() + '<div class="l">도로칩</div><div class="chipv">' +
+      '<span class="cv-d" title="도로칩 (실버칩 1 = 5, 골드칩 1 = 10)">' + window.doroChipSvg('b', 30) + '<b class="num">' + fmt(tot) + '</b></span>' +
+      '<span class="cv-r" title="무지개 도로칩">' + window.doroChipSvg('r', 30) + '<b class="num">' + fmt(o.r) + '</b></span></div></div>';
   };
   window.addEventListener('doroacct', () => { if (!(doroBL && doroBL.data)) { try { renderMe(); } catch (e) { /* 초기화 전 */ } } });
   window.addEventListener('dorochips', () => { const el = document.querySelector('#tab-me .chipk'); if (el) el.outerHTML = chipCard(); });
