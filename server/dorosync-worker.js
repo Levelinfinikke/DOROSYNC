@@ -326,7 +326,7 @@ const dec = (v) => {
  * 사이트가 칩을 얻을 때마다 기록(source·종류·개수·시각)을 모아 보냄 → 서버가 검사 후 계정의 chipsV에 더함.
  * 계정 문서의 chipsV(검증된 잔고)·chipDay(하루 사용량)는 서버만 쓸 수 있음(Firestore 규칙).
  * 검사: 로그인 토큰 확인 · 출처별 허용 종류 · 1회 요청 최대 건수 · 하루 상한(도로칩 환산 · 무지개 따로) · 시각이 미래/너무 과거면 거절 */
-const CHIP_VAL = { b: 1, s: 5, g: 10 }, CHIP_SRC = { ssr: 'bsgr', label: 'b', cap: 'bsg', streak: 'bs', guest: 'bsgr' };
+const CHIP_VAL = { b: 1, s: 5, g: 10 }, CHIP_SRC = { ssr: 'bsgr', label: 'b', cap: 'bsgr', streak: 'bsgr', guest: 'bsgr' };
 const DAY_CAP_D = 3000, DAY_CAP_R = 20, MAX_EV = 300, GUEST_CAP_D = 3000, GUEST_CAP_R = 20;
 async function chipsClaim(req, env, out) {
   if (!env.FIREBASE_SA) return out(503, { ok: false, error: 'not_ready' });
