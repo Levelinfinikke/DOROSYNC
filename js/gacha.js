@@ -443,7 +443,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
 
     /* ---------- 스프라이트 ---------- */
     function tint(img, color, size) { const c = mkc(size, size), x = c.getContext('2d'); if (img && img.complete && img.naturalWidth) { x.drawImage(img, 0, 0, size, size); x.globalCompositeOperation = 'source-in'; x.fillStyle = color; x.fillRect(0, 0, size, size); } return c; }
-    const look = (b) => ((S.mode.random && b.kind !== 'orb') ? ['Q', '?'] : b.kind === 'SSR' ? ['SSR', S.mode.tier ? 'T' + tierOf(b.res.nk) : embOf(b.res.nk)] : [b.kind, '']).concat(b.res && b.res.cm > 1 ? [b.res.cm] : []);
+    const look = (b) => ((S.mode.random && b.kind !== 'orb') ? ['Q', '?'] : b.kind === 'SSR' ? ['SSR', S.mode.tier ? 'T' + tierOf(b.res.nk) : embOf(b.res.nk)] : [b.kind, '']).concat(b.res && b.res.cm % 1000 > 1 ? [b.res.cm % 1000] : []);
     const rOf = (kind) => (kind === 'orb' || kind === 'chip' ? OR : (kind === 'SSR' && !S.mode.random) ? YR : CR);
     function capSprite(kind, pr, r, cm) {
       const dm = S.doro && feverOn(), key = kind + pr + r + (cm ? 'c' + cm : '') + (dm ? 'D' : ''); if (spr[key]) return spr[key];
@@ -531,7 +531,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     const doroBal = () => (window.doroChips ? window.doroChips.get().b : 0);
     const allowed = () => (S.reveal || S.refill ? 0 : Math.max(0, Math.min(S.credN, room(), domeN())));
     function pull() { const c = S.cred[0]; if (!c || !domeN()) return; c.n--; if (!c.n) S.cred.shift(); S.credN--; const b = domeTake(); if (!b) return; const res = b.res; if (S.doro) res.dm = 1; /* 1칩 = 1뽑 */
-      S.stats.n++; S.stats.gold++; if (res.kind === 'SSR') { S.stats.ssr++; if (res.nk.pu) S.stats.pu++; } S.log.push(0); if (S.doro) { S.dnet = (S.dnet || 0) - 1; (S.dlog = S.dlog || [0]).push(S.dnet); } res.sq = S.sq.length; S.sq.push({ k: res.kind, d: 0, a: 0 }); res.blk = blockAdd(res.kind); { const m = comboMul(); if (m > 1) res.cm = m; } /* COMBO 중에 뽑은 캡슐 = 콤보 캡슐(안에서 나오는 칩 n배) */ gDirty = true; snd.tick(); /* AUTO에서도 레버 드르륵 10번 모두 */ uiStat(); }
+      S.stats.n++; S.stats.gold++; if (res.kind === 'SSR') { S.stats.ssr++; if (res.nk.pu) S.stats.pu++; } S.log.push(0); if (S.doro) { S.dnet = (S.dnet || 0) - 1; (S.dlog = S.dlog || [0]).push(S.dnet); } res.sq = S.sq.length; S.sq.push({ k: res.kind, d: 0, a: 0 }); res.blk = blockAdd(res.kind); { const c0 = curCode(); if (c0 > 1) res.cm = c0; } /* 뽑는 순간 도장: COMBO 단계(무지개 확률↑)와 DORO TIME 배수(수입 ×n) */ gDirty = true; snd.tick(); /* AUTO에서도 레버 드르륵 10번 모두 */ uiStat(); }
     /* 10연속 R·SR: 뽑은 순서 기준, 10개가 모두 까졌을 때 확률 고지 */
     function streak(k) { if (!S.doro) return; const p = +(Math.pow(k === 'SR' ? 0.43 : 0.53, 10) * 100).toPrecision(2), ck = chipRoll(k === 'SR' ? 'stkSR' : 'stkR'); S.flash = 0.7; snd.burst(2); vib([40, 30, 40, 30, 120], true); sparks(480, 330, 70, k === 'SR' ? '#b06bff' : '#4f9bff', 700, 200); setTimeout(() => streakCut(k, p, ck), 260); } /* 10연속 보상: 고유 연출 뒤 보상 칩이 바구니로 */
     /* R·SR 10연속 컷인: ?칩이 박히고, 가운데 버튼을 꾹 누르면 단계가 오르내리다 보상이 정해짐. 3초 뒤 탭하여 계속(AUTO는 자동) */
@@ -656,16 +656,18 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
       SSS: [2, 8, 89, 1], SS: [15, 35, 49.9, 0.1], S: [45, 45, 9.96, 0.04], low: [85, 13, 1.992, 0.008],
       capR: [90, 9, 0.995, 0.005], capSR: [80, 17, 2.988, 0.012], stkR: [0, 20, 70, 10], stkSR: [0, 0, 70, 30], /* 10연속: 확률이 낮은 만큼 크게 */
     };
-    const CAP_RATE = { R: 9.3, SR: 14 }; /* R·SR 캡슐을 열 때 칩이 나올 확률(%) — DORO MODE 1칩 = 1뽑, 10뽑마다 전부 개봉·개봉 중 시간 정지(10뽑당 게임 시간 약 2.3초) 기준 환수율 약 101% */
+    const CAP_RATE = { R: 15.5, SR: 23.3 }; /* R·SR 캡슐을 열 때 칩이 나올 확률(%) — DORO MODE 1칩 = 1뽑, 10뽑마다 전부 개봉·개봉 중 시간 정지(10뽑당 게임 시간 약 2.3초) 기준 환수율 약 101%(COMBO=무지개↑, DORO TIME=수입×n) */
     const KS = ['b', 's', 'g', 'r'], tierGrp = (nk) => { const t = CHT[nk.n]; return t === 'SSS' || t === 'SS' || t === 'S' ? t : 'low'; };
     /* DORO TIME(무지개칩 획득 후 5분): 무지개·골드·실버 확률 2배(위 등급부터 채우고 남는 만큼 DORO칩), 캡슐 칩 확률도 2배 */
-    const FEV_K = 'dsgm-fever', FEV_MS = 5 * 60 * 1000;
+    const FEV_K = 'dsgm-fever', FEV_MS = 90 * 1000; /* DORO TIME: 90초 동안 수입 ×2, 그 안에 무지개를 또 먹으면 ×3·×4…(시간은 다시 90초) */
     const fevEnd = () => { const v = +lsg(FEV_K) || 0; return v > 1e12 ? 0 : v; }; /* 예전(실제 시각) 값은 무시 */
     const feverOn = () => DM.on && DCLK.v < fevEnd();
     const fevP = (a) => { const r = Math.min(2 * a[3], 100), g = Math.min(2 * a[2], 100 - r), s2 = Math.min(2 * a[1], 100 - r - g); return [100 - r - g - s2, s2, g, r]; };
-    const chipRoll = (key) => { const p = feverOn() ? fevP(CHIP_P[key]) : CHIP_P[key], u = Math.random() * 100; let a = 0; for (let i = 0; i < 4; i++) { a += p[i]; if (u < a) return KS[i]; } return 'b'; };
+    const RB_ADD = 0.5; /* COMBO 단계 n: 무지개 확률 +0.5%p × n (도로→실버→골드 몫에서 뺌) */
+    const boostP = (a, b) => { if (!(b > 1)) return a; const p = a.slice(); let add = Math.min(100 - p[3], RB_ADD * b); p[3] += add; for (let i = 0; i < 3 && add > 0; i++) { const tk = Math.min(p[i], add); p[i] -= tk; add -= tk; } return p; };
+    const chipRoll = (key, boost) => { const p = boostP(CHIP_P[key], boost), u = Math.random() * 100; let a = 0; for (let i = 0; i < 4; i++) { a += p[i]; if (u < a) return KS[i]; } return 'b'; };
     const mkTop = (e) => ({ nk: e.nk, cm: e.cq && e.cq.length ? e.cq.shift() : 0 }); /* 맨 위 장: 남은 콤보 배수 중 가장 큰 것부터 */
-    const isSSSn = (nk) => CHT[nk.n] === 'SSS', chipOf = (nk) => chipRoll(tierGrp(nk)), chipE = (en) => { if (!en.ck || en.ck === 'x') en.ck = chipOf(en.nk); return en.ck; }, chipSvg = (k, px, fx, flat) => (window.doroChipSvg ? window.doroChipSvg(k, px, fx, flat) : '');
+    const isSSSn = (nk) => CHT[nk.n] === 'SSS', chipOf = (nk, code) => chipRoll(tierGrp(nk), (code || 0) % 1000), chipE = (en) => { if (!en.ck || en.ck === 'x') en.ck = chipOf(en.nk, en.cm); return en.ck; }, chipSvg = (k, px, fx, flat) => (window.doroChipSvg ? window.doroChipSvg(k, px, fx, flat) : '');
     /* 2.5D 도로칩(두께 있는 원판, 기울어진 채 회전): 날아가는 칩용 */
     const C3E = (() => { let h = ''; for (let i = 0; i < 9; i++) { const f = i / 8 - 0.5, sc = 1 - 0.07 * (1 - Math.sqrt(Math.max(0, 1 - Math.pow(2 * f, 2)))); h += '<i style="transform:translateZ(calc(var(--ct) * ' + f.toFixed(3) + ')) scale(' + sc.toFixed(3) + ');--dk:' + (0.05 + Math.abs(f) * 0.7).toFixed(2) + '"></i>'; } return h; })();
     const chip3d = (k, px, fx, spin) => { const sv = chipSvg(k, px, fx, true); return '<div class="gm-c3 gm-c3-' + k + '" style="--cs:' + px + 'px"><div class="gm-c3r" style="animation-duration:' + (spin || 0.9).toFixed(2) + 's;animation-delay:-' + (Math.random() * 2).toFixed(2) + 's">' + C3E + '<div class="gm-c3f">' + sv + '</div><div class="gm-c3f gm-c3b">' + sv + '</div></div></div>'; };
@@ -687,7 +689,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     const balSoon = (b) => { if (b) balB = b === 'r' || balB === 'r' ? 'r' : b; if (balQ) return; balQ = requestAnimationFrame(() => { balQ = 0; const x = balB; balB = null; uiBal(x); }); };
     function chipAbsorb(k, n, cx, cy, size, src, cm, whole) {
       if (!window.doroChips) { say('DORO칩을 불러오지 못했습니다.'); return; }
-      n = n || 1; if (k !== 'r' && cm > 1) { cmulPop(cx, cy, cm); let v = (CHIP_VAL[k] || 1) * (n || 1) * cm; const parts = [['g', Math.floor(v / 10)], ['s', Math.floor((v % 10) / 5)], ['b', v % 5]].filter((p) => p[1] > 0); /* n배 → 골드·실버칩 단위로 개수 최소화 */ parts.forEach((p, j) => setTimeout(() => chipAbsorb(p[0], p[1], cx, cy, size, src, 1, true), j * 140)); return; } const host = document.fullscreenElement || document.body, isR = k === 'r', unit = CHIP_VAL[k] || 0, total = isR ? n : unit * n;
+      n = n || 1; const dmul = Math.floor((cm || 0) / 1000); if (k !== 'r' && dmul > 1) { cmulPop(cx, cy, dmul); let v = (CHIP_VAL[k] || 1) * (n || 1) * dmul; const parts = [['g', Math.floor(v / 10)], ['s', Math.floor((v % 10) / 5)], ['b', v % 5]].filter((p) => p[1] > 0); /* ×n → 골드·실버칩 단위로 개수 최소화 */ parts.forEach((p, j) => setTimeout(() => chipAbsorb(p[0], p[1], cx, cy, size, src, 0, true), j * 140)); return; } const host = document.fullscreenElement || document.body, isR = k === 'r', unit = CHIP_VAL[k] || 0, total = isR ? n : unit * n;
       if (isR) chipPendR += n; else chipPend += total; if (S.doro && !isR && src !== 'daily') { S.dnet = (S.dnet || 0) + total; S.dlog = S.dlog || [0]; S.dlog[S.dlog.length - 1] = S.dnet; gDirty = true; } /* DORO 수지 */
       window.doroChips.add({ [k]: n }, src || 'ssr');
       const vis = (el) => { if (!el) return null; const r = el.getBoundingClientRect(); return r.width && r.height && r.bottom > 0 && r.top < innerHeight && getComputedStyle(el).visibility !== 'hidden' ? r : null; };
@@ -769,10 +771,10 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
       let lv = 1; try { lv = +localStorage.getItem(FEV_LV) || 1; } catch (e) { /* 무시 */ }
       c.textAlign = 'center'; c.textBaseline = 'middle'; c.lineJoin = 'round';
       const txt = (s2, yy, sz, fill, sc) => { c.save(); c.translate(BAN.cx, yy); if (sc) c.scale(sc, sc); c.font = sz + 'px Bungee, "Arial Black", Impact, sans-serif'; c.lineWidth = sz * 0.14; c.strokeStyle = gray ? '#2a2c33' : '#12062a'; c.strokeText(s2, 0, 0); c.fillStyle = fill; if (!gray) { c.shadowColor = 'rgba(255,255,255,.55)'; c.shadowBlur = 14; } c.fillText(s2, 0, 0); c.restore(); };
-      txt('DORO TIME' + (lv > 1 ? ' ×' + lv : ''), y0 + h * 0.24, lv > 1 ? 50 : 58, rg(y0 + h * 0.24));
+      txt('DORO TIME ×' + (lv + 1), y0 + h * 0.24, 50, rg(y0 + h * 0.24));
       const m = Math.floor(left / 60000), sec = Math.floor(left / 1000) % 60, cs = Math.floor(left / 10) % 100, z = (n) => String(n).padStart(2, '0'), pul = last ? 1 + 0.1 * Math.max(0, Math.sin((left / 1000) * TAU)) : 1;
       txt(z(m) + ':' + z(sec) + ':' + z(cs), y0 + h * 0.58, 84, last ? '#ff5d6c' : rg(y0 + h * 0.58), pul);
-      c.font = '800 20px system-ui, sans-serif'; c.fillStyle = gray ? '#6b6f78' : '#ffe28a'; c.fillText(gray ? 'DORO TIME 종료' : 'DORO칩 확률 2배', BAN.cx, y0 + h * 0.88);
+      c.font = '800 20px system-ui, sans-serif'; c.fillStyle = gray ? '#6b6f78' : '#ffe28a'; c.fillText(gray ? 'DORO TIME 종료' : 'DORO칩 수입 ×' + (lv + 1), BAN.cx, y0 + h * 0.88);
       c.strokeStyle = 'rgba(0,0,0,.35)'; c.lineWidth = 2; stkPath(c, 0); c.stroke();
       c.restore();
     }
@@ -791,7 +793,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     function basketGold() { let n = 0; S.bask.forEach((b) => { if (b.kind === 'chip' && (b.res.chip === 'b' || b.res.chip === 's')) { b.res.chip = 'g'; n++; sparks(b.x, b.y, 14, () => pick(['#fff3b0', '#ffd24d', '#ffffff']), 260, 120); } }); if (n) say('바구니의 칩 ' + n + '개가 골드칩으로!'); }
     /* ---- 시안용 추가 연출 ---- */
     function feverPop(lv) { const g = $('.gm'); if (!g) return; g.classList.remove('gm-fever'); void g.offsetWidth; g.classList.add('gm-fever'); clearTimeout(feverPop.t); feverPop.t = setTimeout(() => g.classList.remove('gm-fever'), 8000);
-      const r = cvRect(), d = document.createElement('div'); d.className = 'gm-fevb'; d.style.cssText = 'left:' + r.left + 'px;top:' + (r.top + r.height * 0.42) + 'px;width:' + r.width + 'px'; d.innerHTML = '<b>DORO TIME' + (lv > 1 ? ' ×' + lv : '') + '!</b>'; (document.fullscreenElement || document.body).appendChild(d); setTimeout(() => d.remove(), 2200); try { snd.fanfare(); } catch (e) { /* 무시 */ } }
+      const r = cvRect(), d = document.createElement('div'); d.className = 'gm-fevb'; d.style.cssText = 'left:' + r.left + 'px;top:' + (r.top + r.height * 0.42) + 'px;width:' + r.width + 'px'; d.innerHTML = '<b>DORO TIME ×' + ((lv || 1) + 1) + '!</b>'; (document.fullscreenElement || document.body).appendChild(d); setTimeout(() => d.remove(), 2200); try { snd.fanfare(); } catch (e) { /* 무시 */ } }
     /* 칩 비: 캔버스 한 장에 칩 그림을 찍어 그림(두께는 옆면 띠로 흉내). DOM 수백 개보다 훨씬 가벼움 */
     const RAIN_IMG = {};
     const rainImg = (k) => { if (RAIN_IMG[k]) return RAIN_IMG[k]; const im = new Image(); im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(chipSvg(k, 96, false, true).replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ')); RAIN_IMG[k] = im; return im; };
@@ -814,7 +816,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     }
     /* ---- COMBO: DOUBLE 이상이면 n배(DOUBLE 2 · TRIPLE 3 …), 제한시간 10×n초. 시간 안에 또 터지면 배수 합산 + 시간 추가(상한 = 이번 콤보에서 나온 최고 단계의 시간) ---- */
     const CB = { mul: 0, end: 0, top: 0, raf: 0 };
-    const cNow = () => (S.doro ? DCLK.v : performance.now()), comboMul = () => (CB.mul > 0 && !CB.demo && cNow() < CB.end ? CB.mul : 1); /* 시안(demo)은 연출만 */
+    const cNow = () => (S.doro ? DCLK.v : performance.now()), curCode = () => { const m = comboMul(), d = feverOn() ? fevLv() + 1 : 0; return d * 1000 + (m > 1 ? m : 0); }, comboMul = () => (CB.mul > 0 && !CB.demo && cNow() < CB.end ? CB.mul : 1); /* 시안(demo)은 연출만 */
     const thEl = $('.gm-thermo'), thSvg = thEl.querySelector('svg'), TH = { id: 'gmth' + Math.random().toString(36).slice(2, 8) };
     function comboHit(n, demo) {
       const now = cNow(), on = CB.mul > 0 && now < CB.end, left = on ? CB.end - now : 0; CB.demo = on ? CB.demo && !!demo : !!demo;
@@ -911,8 +913,8 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     function drawChip(c, k, x, y, a) { const sp = chipSprite(k), s = sp.R * 2; c.save(); c.translate(x, y);
       { const TH = 5, ec = k === 'g' ? ['#7a5a06', '#d6a51c'] : ['#4f5359', '#c4c8ce']; for (let i = TH; i >= 1; i--) { c.fillStyle = i > 2 ? ec[0] : ec[1]; c.beginPath(); c.arc(0, i, OR * 0.985, 0, TAU); c.fill(); } } /* 2.5D 두께 */ c.rotate(a || 0); c.drawImage(sp.c, -s / 2, -s / 2, s, s); c.restore(); }
     /* R·SR 캡슐: 도로칩 1%, 실버칩 0.1%, 골드칩 0.01% */
-    function capChip(x, y, kind, cm) { if (!S.doro) return; const sr = kind === 'SR'; if (Math.random() * 100 >= CAP_RATE[sr ? 'SR' : 'R'] * (feverOn() ? 2 : 1)) return; dropChip(chipRoll(sr ? 'capSR' : 'capR'), x, y, 'cap', cm || 1); }
-    function dropChip(k, x, y, src, cm) { if (cm == null) cm = comboMul(); /* 새로 얻는 칩: 지금 COMBO 배수(캡슐 칩은 그 캡슐의 배수) */ if (k === 'r') { const r = cvRect(), sx = r.left + clamp(x, BK.x0 + OR, BK.x1 - OR) * r.width / W, sy = r.top + clamp(y, BK.y0 + OR, BK.y1 - OR) * r.height / H; sparks(x, y, 30); setTimeout(() => rainbowCut({ left: sx - 22, top: sy - 22, width: 44, height: 44 }, src || 'cap'), 250); return; } /* 무지개는 바구니에 떨어뜨리지 않고 컷인으로 바로 */ if (k === 'g') { const r = cvRect(), sx = r.left + clamp(x, BK.x0 + OR, BK.x1 - OR) * r.width / W, sy = r.top + clamp(y, BK.y0 + OR, BK.y1 - OR) * r.height / H, sz = OR * 2 * r.width / W; setTimeout(() => goldPop({ getBoundingClientRect: () => ({ left: sx - sz / 2, top: sy - sz / 2, width: sz, height: sz }) }), 200); } const b = body('chip', clamp(x, BK.x0 + OR, BK.x1 - OR), clamp(y, BK.y0 + OR, BK.y1 - OR), { chip: k, count: 1, src: src || 'cap', cm: cm > 1 ? cm : 0 }); b.vx = rnd(-160, 160); b.vy = rnd(-620, -420); b.w = rnd(-9, 9); S.bask.push(b); wake(S.bask); if ((src || 'cap') === 'cap') setTimeout(() => chipTake(b), 1100 / (S.auto || 1)); /* 캡슐에서 나온 칩은 저절로 잔고로 */ sparks(b.x, b.y, k === 'b' ? 14 : 30, k === 'g' ? '#ffe27a' : k === 's' ? '#e9eef5' : '#ffc45a', 380); try { snd.chipPop(); if (k !== 'b') setTimeout(() => snd.chipPop(), 90); } catch (e) { /* 무시 */ } }
+    function capChip(x, y, kind, cm) { if (!S.doro) return; const sr = kind === 'SR'; if (Math.random() * 100 >= CAP_RATE[sr ? 'SR' : 'R']) return; dropChip(chipRoll(sr ? 'capSR' : 'capR', (cm || 0) % 1000), x, y, 'cap', cm || 1); }
+    function dropChip(k, x, y, src, cm) { if (cm == null) cm = curCode(); /* 새로 얻는 칩: 지금 도장(캡슐 칩은 그 캡슐의 도장) */ if (k === 'r') { const r = cvRect(), sx = r.left + clamp(x, BK.x0 + OR, BK.x1 - OR) * r.width / W, sy = r.top + clamp(y, BK.y0 + OR, BK.y1 - OR) * r.height / H; sparks(x, y, 30); setTimeout(() => rainbowCut({ left: sx - 22, top: sy - 22, width: 44, height: 44 }, src || 'cap'), 250); return; } /* 무지개는 바구니에 떨어뜨리지 않고 컷인으로 바로 */ if (k === 'g') { const r = cvRect(), sx = r.left + clamp(x, BK.x0 + OR, BK.x1 - OR) * r.width / W, sy = r.top + clamp(y, BK.y0 + OR, BK.y1 - OR) * r.height / H, sz = OR * 2 * r.width / W; setTimeout(() => goldPop({ getBoundingClientRect: () => ({ left: sx - sz / 2, top: sy - sz / 2, width: sz, height: sz }) }), 200); } const b = body('chip', clamp(x, BK.x0 + OR, BK.x1 - OR), clamp(y, BK.y0 + OR, BK.y1 - OR), { chip: k, count: 1, src: src || 'cap', cm: cm > 1 ? cm : 0 }); b.vx = rnd(-160, 160); b.vy = rnd(-620, -420); b.w = rnd(-9, 9); S.bask.push(b); wake(S.bask); if ((src || 'cap') === 'cap') setTimeout(() => chipTake(b), 1100 / (S.auto || 1)); /* 캡슐에서 나온 칩은 저절로 잔고로 */ sparks(b.x, b.y, k === 'b' ? 14 : 30, k === 'g' ? '#ffe27a' : k === 's' ? '#e9eef5' : '#ffc45a', 380); try { snd.chipPop(); if (k !== 'b') setTimeout(() => snd.chipPop(), 90); } catch (e) { /* 무시 */ } }
     /* 무지개칩 확정 컷인: RAINBOW!! 글자가 화면을 가로질러 박히고, 무지개칩이 가운데서 커져 회전(1초 180도 · 1초 정지). 3초간 못 넘기고 그 뒤 탭하면 닫힘. 그동안 기계는 멈춤 */
     function rbFont() { if (!document.getElementById('gm-rbfont')) { const l = document.createElement('link'); l.id = 'gm-rbfont'; l.rel = 'stylesheet'; l.href = 'https://fonts.googleapis.com/css2?family=Bungee&display=swap&text=' + encodeURIComponent('RAINBOW!0123456789,.%S'); document.head.appendChild(l); } }
     function rainbowCut(from, src, opt) {
@@ -1021,7 +1023,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
         for (let i = 0; i < 150; i++) { const a = Math.random() * TAU, v = 500 + Math.random() * 1100, cc = CC[(Math.random() * CC.length) | 0], st = Math.random() < 0.3; pt.push({ x: cx, y: cy, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 350, r: Math.random() * TAU, vr: (Math.random() - 0.5) * 18, sz: st ? 7 + Math.random() * 10 : 6 + Math.random() * 11, k: st ? 's' : 'c', col: st ? '#fff' : cc[0], rim: cc[1], life: 1.6 + Math.random() * 1.4 }); } };
       return { stop: () => { cancelAnimationFrame(raf); window.removeEventListener('resize', fit); }, hit };
     }
-    function chipSpawn() { const cm0 = comboMul(), b = body('chip', HUDP.x, HUDP.y - 10, { chip: 'b', count: 1, src: 'label', cm: cm0 > 1 ? cm0 : 0 }); /* COMBO 중 바디라벨 교환 칩도 n배 */ b.vx = rnd(-520, -180); b.vy = rnd(-760, -520); b.w = rnd(-9, 9); S.bask.push(b); wake(S.bask); sparks(HUDP.x, HUDP.y, 16, '#ffc45a', 360); try { snd.chipPop(); } catch (e) { /* 무시 */ } }
+    function chipSpawn() { const cm0 = curCode(), b = body('chip', HUDP.x, HUDP.y - 10, { chip: 'b', count: 1, src: 'label', cm: cm0 > 1 ? cm0 : 0 }); /* DORO TIME 중 바디라벨 교환 칩도 ×n */ b.vx = rnd(-520, -180); b.vy = rnd(-760, -520); b.w = rnd(-9, 9); S.bask.push(b); wake(S.bask); sparks(HUDP.x, HUDP.y, 16, '#ffc45a', 360); try { snd.chipPop(); } catch (e) { /* 무시 */ } }
     function chipTake(b) { const i = S.bask.indexOf(b); if (i < 0) return; S.bask.splice(i, 1); wake(S.bask); const r = cvRect(), sc = r.width / W; chipAbsorb(b.res.chip, b.res.count, r.left + b.x * sc, r.top + b.y * sc, Math.max(22, OR * 2 * sc), b.res.src || 'cap', b.res.cm); }
     if (location.hostname === 'localhost') (window.__gms = window.__gms || []).push({ S, root, rbCut: () => rainbowCut(), rbCutEl: (el) => rainbowCut(el), dropChip: (k) => dropChip(k, 300, 600, "cap"), trayAdd: (n, c, m) => trayAdd(n, c, null, null, null, m), comboHit: (n) => comboHit(n), dclk: () => DCLK.v, insert: (k, items, x, y) => insert(k, items, x, y), chipSpawn: () => chipSpawn(), ev: () => ({ CHIP_P, CAP_RATE, std: P.std.map(tierGrp), pil: P.pil.map(tierGrp), pu: tierGrp(P.pickup) }), flipTop: (en) => flipTop(en), P, chipSpawn, capChip: (x, y) => capChip(x, y), streak: (k) => streak(k), uiTray: () => uiTray(), combo: (n) => multiPop(n), cmul: () => comboMul(), slow: (el, k) => slowFlip(el, k, null), addLab: (v) => { S.lab += v; labChips(); uiLab(true); } });
     function labChips() { if (!S.doro) return; let n = 0; while (S.lab >= 10000 && n < 20) { S.lab -= 10000; n++; setTimeout(chipSpawn, (n - 1) * 140); } }
@@ -1051,7 +1053,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
       return '<div class="gm-orb' + cls + (t.nk.pu ? ' pu' : '') + (t.flip ? ' flip' : '') + '"' + (t.tilt ? ' style="--tx:' + t.tilt[0] + 'deg;--ty:' + t.tilt[1] + 'deg"' : '') + ' title="' + (t.flip ? CHIP_NM[ck] + ' · 누르면 잔고로' : t.nk.n + ' · 누르면 뒤집기') + '">' + EDGES +
         '<div class="gm-cf" style="' + orbBg(t.nk) + '">' + (tr ? '<u style="color:' + (TIERC[tr] || '#fff') + '">' + tr + '</u>' : '') + badge + (ctag || '') + '</div><div class="gm-cb">' + chipSvg(ck, 64, undefined, true) + '</div></div>'; /* COMBO 태그는 앞면에만: 뒤집으면 사라짐 */
     }
-    const ctagHtml = (m, nq) => '<b class="gm-ccf">COMBO ×' + m + (nq > 1 ? '<small>+' + (nq - 1) + '</small>' : '') + '</b>';
+    const ctagHtml = (m, nq) => { const c = m % 1000, d = Math.floor(m / 1000); return '<b class="gm-ccf">' + [c > 1 ? 'COMBO ×' + c : '', d > 1 ? 'DORO ×' + d : ''].filter(Boolean).join(' · ') + (nq > 1 ? '<small>+' + (nq - 1) + '</small>' : '') + '</b>'; };
     function trayOrbs(e, tr) {
       const t = e.top, rest = e.count - (t ? 1 : 0);
       const tc = t ? t.cm || 0 : 0, nq = (e.cq || []).length + (tc > 1 ? 1 : 0), m = t ? tc : (e.cq && e.cq[0]) || 0; /* 다음에 뒤집을 장의 콤보 배수 */
@@ -1168,7 +1170,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
           if (!ready) { setTimeout(wait, 150); return; }
           setTimeout(() => {
             const gap = fast || S.spread.skip ? 30 : 70;
-            cards.forEach(([c, t], j) => setTimeout(() => { const r = c.getBoundingClientRect(), k = chipE(t); c.style.visibility = 'hidden'; if (t.cutR) return; if (r.width) chipAbsorb(k, 1, r.left + r.width / 2, r.top + r.height / 2, r.width * 0.8, 'ssr', t.cm); else window.doroChips.add({ [k]: k !== 'r' && t.cm > 1 ? t.cm : 1 }, 'ssr'); }, j * gap));
+            cards.forEach(([c, t], j) => setTimeout(() => { const r = c.getBoundingClientRect(), k = chipE(t); c.style.visibility = 'hidden'; if (t.cutR) return; if (r.width) chipAbsorb(k, 1, r.left + r.width / 2, r.top + r.height / 2, r.width * 0.8, 'ssr', t.cm); else window.doroChips.add({ [k]: k !== 'r' && t.cm >= 2000 ? Math.floor(t.cm / 1000) : 1 }, 'ssr'); }, j * gap));
             setTimeout(() => {
               en.count -= n; if (en.count <= 0) { const i = S.tray.indexOf(en); if (i >= 0) S.tray[i] = null; while (S.tray.length && !S.tray[S.tray.length - 1]) S.tray.pop(); }
               uiTray(); if (en.count > 0) setTimeout(batch, 350); else { box.remove(); S.spread = null; }
@@ -1196,11 +1198,11 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     /* 도로칩 잔고를 누르면: 어디서 어떤 칩이 몇 %로 나오는지 */
     function chipOdds() {
       const tr = $('.gm-tray'); let box = tr.querySelector('.gm-odds'); if (box) { box.remove(); return; }
-      const fv = feverOn(), row = (nm, key, note) => '<tr><th>' + nm + (note ? '<small>' + note + '</small>' : '') + '</th>' + (fv ? fevP(CHIP_P[key]) : CHIP_P[key]).map((v, i) => '<td class="' + (v ? '' : 'z') + '">' + (v ? (v < 0.1 ? v.toFixed(2) : v < 1 ? v.toFixed(2).replace(/0$/, '') : String(+v.toFixed(2))) + '%' : '—') + '</td>').join('') + '</tr>';
+      const fv = feverOn(), row = (nm, key, note) => '<tr><th>' + nm + (note ? '<small>' + note + '</small>' : '') + '</th>' + CHIP_P[key].map((v, i) => '<td class="' + (v ? '' : 'z') + '">' + (v ? (v < 0.1 ? v.toFixed(2) : v < 1 ? v.toFixed(2).replace(/0$/, '') : String(+v.toFixed(2))) + '%' : '—') + '</td>').join('') + '</tr>';
       box = document.createElement('div'); box.className = 'gm-odds' + (fv ? ' fev' : '');
-      box.innerHTML = '<div class="gm-oddh"><b>DORO칩 획득 확률' + (fv ? ' <em>DORO TIME ×2</em>' : '') + '</b><button class="gm-tb" data-x>닫기</button></div><table><thead><tr><th></th>' + KS.map((k) => '<th>' + chipSvg(k, 20, false) + '</th>').join('') + '</tr></thead><tbody>' +
-        row('SSS', 'SSS') + row('SS', 'SS') + row('S', 'S') + row('A 이하', 'low') + row('R 캡슐', 'capR', CAP_RATE.R * (fv ? 2 : 1) + '% 확률로') + row('SR 캡슐', 'capSR', CAP_RATE.SR * (fv ? 2 : 1) + '% 확률로') + row('R 10연속', 'stkR') + row('SR 10연속', 'stkSR') +
-        '</tbody></table><p>COMBO: 10뽑 묶음에서 SSR이 n장(2장 이상) 나오면 10×n초 동안 뽑은 캡슐에서 나오는 DORO칩 n배. 시간 안에 또 나오면 배수 합산·시간 추가</p><p>DORO칩 10 = 실버칩 2 = 골드칩 1 · 바디라벨 10,000 = DORO칩 1 · 티어는 기본 티어표(솔레) 기준</p>';
+      box.innerHTML = '<div class="gm-oddh"><b>DORO칩 획득 확률' + (fv ? ' <em>DORO TIME ×' + (fevLv() + 1) + '</em>' : '') + '</b><button class="gm-tb" data-x>닫기</button></div><table><thead><tr><th></th>' + KS.map((k) => '<th>' + chipSvg(k, 20, false) + '</th>').join('') + '</tr></thead><tbody>' +
+        row('SSS', 'SSS') + row('SS', 'SS') + row('S', 'S') + row('A 이하', 'low') + row('R 캡슐', 'capR', CAP_RATE.R + '% 확률로') + row('SR 캡슐', 'capSR', CAP_RATE.SR + '% 확률로') + row('R 10연속', 'stkR') + row('SR 10연속', 'stkSR') +
+        '</tbody></table><p>COMBO: 10뽑 묶음에서 SSR이 n장(2장 이상) 나오면 10×n초 동안 뽑은 캡슐의 무지개칩 확률 +0.5%p×단계. 시간 안에 또 나오면 단계 합산·시간 추가<br>DORO TIME: 무지개칩을 얻으면 90초 동안 뽑은 캡슐의 DORO칩 수입 ×2, 그 안에 또 얻으면 ×3·×4…</p><p>DORO칩 10 = 실버칩 2 = 골드칩 1 · 바디라벨 10,000 = DORO칩 1 · 티어는 기본 티어표(솔레) 기준</p>';
       box.querySelector('[data-x]').onclick = (e) => { e.stopPropagation(); box.remove(); };
       tr.appendChild(box);
     }
@@ -1209,16 +1211,16 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
       S.lite = (S.lite || 0) + 1; setTimeout(() => { S.lite = Math.max(0, S.lite - 1); }, S.tray.length * 40 + 600);
       S.tray.forEach((e, i) => {
         if (!e) return; const w = panEl.children[i], r = w ? w.getBoundingClientRect() : null, got = {}, q = (e.cq || []).slice();
-        for (let c = 0; c < e.count; c++) { const top = c === 0 && e.top, k = top && e.top.ck ? e.top.ck : chipOf(e.nk), m = (top ? e.top.cm : q.shift()) || 1, key = k + '|' + (k === 'r' ? 1 : m); got[key] = (got[key] || 0) + 1; }
-        Object.keys(got).forEach((key, j) => { const [k, m] = key.split('|'); setTimeout(() => { if (r && r.width) chipAbsorb(k, got[key], r.left + r.width / 2, r.top + r.height / 2, r.width * 0.9, 'ssr', +m); else window.doroChips.add({ [k]: got[key] * +m }, 'ssr'); }, i * 40 + j * 80); });
+        for (let c = 0; c < e.count; c++) { const top = c === 0 && e.top, code = (top ? e.top.cm : q.shift()) || 0, k = top && e.top.ck ? e.top.ck : chipOf(e.nk, code), m = Math.floor(code / 1000) * 1000, key = k + '|' + (k === 'r' ? 0 : m); got[key] = (got[key] || 0) + 1; }
+        Object.keys(got).forEach((key, j) => { const [k, m] = key.split('|'); setTimeout(() => { if (r && r.width) chipAbsorb(k, got[key], r.left + r.width / 2, r.top + r.height / 2, r.width * 0.9, 'ssr', +m); else window.doroChips.add({ [k]: got[key] * Math.max(1, Math.floor(+m / 1000)) }, 'ssr'); }, i * 40 + j * 80); });
       });
     }
     /* 칸에 남은 장을 한꺼번에 칩으로(장마다 콤보 배수 반영). 무지개는 한 장만 컷인, 나머지는 바로 */
     function absorbRest(en) {
       const i = S.tray.indexOf(en); if (i < 0 || en.top || en.count <= 0) return; const w = panEl.children[i], r = w ? w.getBoundingClientRect() : null, got = {}, q = (en.cq || []).slice(); let rb = 0;
-      for (let c = 0; c < en.count; c++) { const k = chipOf(en.nk), m = q.shift() || 1; if (k === 'r') { rb++; continue; } const key = k + '|' + m; got[key] = (got[key] || 0) + 1; }
+      for (let c = 0; c < en.count; c++) { const code = q.shift() || 0, k = chipOf(en.nk, code), m = Math.floor(code / 1000) * 1000; if (k === 'r') { rb++; continue; } const key = k + '|' + m; got[key] = (got[key] || 0) + 1; }
       S.tray[i] = null; while (S.tray.length && !S.tray[S.tray.length - 1]) S.tray.pop(); renderWell(i); uiTray();
-      const rc = r && r.width ? r : null; Object.keys(got).forEach((key, j) => { const [k, m] = key.split('|'); setTimeout(() => { if (rc) chipAbsorb(k, got[key], rc.left + rc.width / 2, rc.top + rc.height / 2, rc.width * 0.9, 'ssr', +m); else window.doroChips.add({ [k]: got[key] * +m }, 'ssr'); }, j * 120); });
+      const rc = r && r.width ? r : null; Object.keys(got).forEach((key, j) => { const [k, m] = key.split('|'); setTimeout(() => { if (rc) chipAbsorb(k, got[key], rc.left + rc.width / 2, rc.top + rc.height / 2, rc.width * 0.9, 'ssr', +m); else window.doroChips.add({ [k]: got[key] * Math.max(1, Math.floor(+m / 1000)) }, 'ssr'); }, j * 120); });
       if (rb) { if (rc) setTimeout(() => rainbowCut({ left: rc.left, top: rc.top, width: rc.width, height: rc.height }, 'ssr'), 300); else window.doroChips.add({ r: 1 }, 'ssr'); if (rb > 1) window.doroChips.add({ r: rb - 1 }, 'ssr'); }
     }
     /* 뒤집힌 맨 위 한 장을 잔고로 */
@@ -1226,7 +1228,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
       const i = S.tray.indexOf(en), t = en && en.top; if (i < 0 || !t || !t.flip || t.anim) return;
       const w = panEl.children[i], orb = w && w.querySelector('.gm-orb.top'), r = orb ? orb.getBoundingClientRect() : null;
       en.count -= 1; en.top = null; en.ck = null; if (en.count <= 0) { S.tray[i] = null; while (S.tray.length && !S.tray[S.tray.length - 1]) S.tray.pop(); }
-      renderWell(i); if (t.cutR) return; /* 무지개 컷인이 직접 잔고로 옮김 */ if (r && r.width) chipAbsorb(chipE(t), 1, r.left + r.width / 2, r.top + r.height / 2, r.width, 'ssr', t.cm); else window.doroChips.add({ [chipE(t)]: chipE(t) !== 'r' && t.cm > 1 ? t.cm : 1 }, 'ssr');
+      renderWell(i); if (t.cutR) return; /* 무지개 컷인이 직접 잔고로 옮김 */ if (r && r.width) chipAbsorb(chipE(t), 1, r.left + r.width / 2, r.top + r.height / 2, r.width, 'ssr', t.cm); else window.doroChips.add({ [chipE(t)]: chipE(t) !== 'r' && t.cm >= 2000 ? Math.floor(t.cm / 1000) : 1 }, 'ssr');
     }
     /* 뒤집히고 0.5초 뒤 스스로 잔고로 (실버·골드·무지개는 그 사이 커지며 빛남) */
     function autoAbsorb(en, t, wait) {
@@ -1421,7 +1423,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
       stD = mkc(cv.width, cv.height); dirty = false;
     }
     function resize() { const r = cvRect(), d = Math.min(1.5, window.devicePixelRatio || 1); const w = Math.max(320, Math.round(r.width * d)); if (cv.width !== w) { cv.width = w; cv.height = Math.round(w * H / W); } scale = cv.width / W; dirty = true; txs = clamp(800 / Math.max(1, r.width), 1, 2.4); rightEl.style.height = rightEl.offsetParent ? leftEl.offsetHeight + 'px' : ''; pileResize(); uiTray(); gDirty = true; }
-    function drawBodyAny(c, b) { let x = b.x, y = b.y, a = b.a; const g = S.grab; if (g && g.b === b && !g.moved) { x += rnd(-1.8, 1.8); y += rnd(-1.8, 1.8); a += rnd(-0.08, 0.08); } if (b.kind === 'orb') { if (b.res.cm > 1) comboAura(c, x, y, OR); drawOrb(c, b.res.nk, x, y, OR, a); if (b.res.cm > 1) badge(c, x - 16, y + 20, 'C×' + b.res.cm, '#ff7a1a'); if (b.res.count > 1) badge(c, x + 14, y + 20, '×' + b.res.count); if (S.mode.tier) { const t = tierOf(b.res.nk); badge(c, x - 14, y - 20, t, TIERC[t]); } } else if (b.kind === 'chip') { if (b.res.cm > 1) comboAura(c, x, y, OR); drawChip(c, b.res.chip, x, y, a); if (b.res.cm > 1) badge(c, x, y + 22, '×' + b.res.cm, '#ff7a1a'); } else { if (b.res && b.res.cm > 1) comboAura(c, x, y, b.r); drawCap(c, look(b), x, y, b.r, a); } }
+    function drawBodyAny(c, b) { let x = b.x, y = b.y, a = b.a; const g = S.grab; if (g && g.b === b && !g.moved) { x += rnd(-1.8, 1.8); y += rnd(-1.8, 1.8); a += rnd(-0.08, 0.08); } if (b.kind === 'orb') { if (b.res.cm > 1) comboAura(c, x, y, OR); drawOrb(c, b.res.nk, x, y, OR, a); if (b.res.cm % 1000 > 1) badge(c, x - 16, y + 20, 'C×' + (b.res.cm % 1000), '#ff7a1a'); if (b.res.count > 1) badge(c, x + 14, y + 20, '×' + b.res.count); if (S.mode.tier) { const t = tierOf(b.res.nk); badge(c, x - 14, y - 20, t, TIERC[t]); } } else if (b.kind === 'chip') { if (b.res.cm > 1) comboAura(c, x, y, OR); drawChip(c, b.res.chip, x, y, a); if (b.res.cm >= 2000) badge(c, x, y + 22, '×' + Math.floor(b.res.cm / 1000), '#ff7a1a'); } else { if (b.res && b.res.cm > 1) comboAura(c, x, y, b.r); drawCap(c, look(b), x, y, b.r, a); } }
     function tkPersp(c, im, x, yFar, wFar, wNear, len, f0) { // 짧은 변부터 안쪽으로: 깊이 방향 띠로 그림
       const N = 18, iw = im.naturalWidth, ih = im.naturalHeight; for (let i = 0; i < N; i++) { const u0 = f0 + (1 - f0) * i / N, u1 = f0 + (1 - f0) * (i + 1) / N, k0 = i / N, k1 = (i + 1) / N, yd = yFar + len * k0 * (1 - f0), hd = len * (k1 - k0) * (1 - f0) + 0.6, wd = wFar + (wNear - wFar) * (k0 + k1) / 2 * (1 - f0), sx = u0 * iw, sw = (u1 - u0) * iw; if (sw <= 0) continue; c.save(); c.translate(x + wd / 2, yd); c.transform(0, hd / sw, -wd / ih, 0, 0, 0); c.drawImage(im, sx, 0, sw, ih, 0, 0, sw, ih); c.restore(); } }
     function drawIns(c, s) { if (s.k === 'doro') { /* 날아오며 옆으로 돌아 옆면이 보이게 선 뒤, 옆면 그대로 투입구 안으로 */ const im = IM.doro, D = HOLE.s, cy0 = HOLE.y - 4, TW = DSLOT.w - 2; if (s.t < 0) { c.drawImage(im, s.x - D / 2, s.y - D / 2, D, D); return; }
@@ -1551,21 +1553,21 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     function dmcBuild(N) {
       const K = Math.max(1, Math.round(N / 100)), M = Math.floor(N / K), RUNS = Math.max(300, Math.min(1000, Math.floor(1.5e6 / N))), cols = Array.from({ length: M + 1 }, () => new Float64Array(RUNS));
       const groups = [[0.01, [P.pickup]], [0.005, P.pil], [0.025, P.std]].map(([p, L]) => [p, L.map(tierGrp)]), VAL = [1, 5, 10, 0];
-      const roll = (key, fv) => { const p = fv ? fevP(CHIP_P[key]) : CHIP_P[key]; let u = Math.random() * 100; for (let i = 0; i < 4; i++) { u -= p[i]; if (u < 0) return i; } return 0; };
+      const roll = (key, bo) => { const p = boostP(CHIP_P[key], bo); let u = Math.random() * 100; for (let i = 0; i < 4; i++) { u -= p[i]; if (u < 0) return i; } return 0; };
       for (let r = 0; r < RUNS; r++) {
-        let bal = 0, t = 0, mul = 0, end = -1, top = 0, lab = 0, fend = -1, pulls = 0;
+        let bal = 0, t = 0, mul = 0, end = -1, top = 0, lab = 0, fend = -1, lvl = 0, pulls = 0;
         while (pulls < N) {
-          const fv = t < fend, m = t < end ? mul : 1; let nS = 0, nR = 0, nSR = 0, rb = 0;
+          const bo = t < end ? mul : 0, m = t < fend ? lvl + 1 : 1; let nS = 0, nR = 0, nSR = 0, rb = 0;
           for (let q = 0; q < 10 && pulls < N; q++) {
             pulls++; bal -= 1; const u = Math.random();
-            if (u < 0.04) { nS++; let uu = Math.random() * 0.04; for (const [p, L] of groups) { if ((uu -= p) < 0) { const k = roll(L[(Math.random() * L.length) | 0], fv); if (k === 3) rb++; else bal += VAL[k] * m; break; } } }
-            else if (u < 0.47) { nSR++; lab += 200; if (Math.random() * 100 < CAP_RATE.SR * (fv ? 2 : 1)) { const k = roll('capSR', fv); if (k === 3) rb++; else bal += VAL[k] * m; } }
-            else { nR++; lab += 150; if (Math.random() * 100 < CAP_RATE.R * (fv ? 2 : 1)) { const k = roll('capR', fv); if (k === 3) rb++; else bal += VAL[k] * m; } }
+            if (u < 0.04) { nS++; let uu = Math.random() * 0.04; for (const [p, L] of groups) { if ((uu -= p) < 0) { const k = roll(L[(Math.random() * L.length) | 0], bo); if (k === 3) rb++; else bal += VAL[k] * m; break; } } }
+            else if (u < 0.47) { nSR++; lab += 200; if (Math.random() * 100 < CAP_RATE.SR) { const k = roll('capSR', bo); if (k === 3) rb++; else bal += VAL[k] * m; } }
+            else { nR++; lab += 150; if (Math.random() * 100 < CAP_RATE.R) { const k = roll('capR', bo); if (k === 3) rb++; else bal += VAL[k] * m; } }
             while (lab >= 10000) { lab -= 10000; bal += m; }
             if (pulls % K === 0) cols[pulls / K][r] = bal;
           }
-          if (nR === 10) { const k = roll('stkR', fv); if (k === 3) rb++; else bal += VAL[k] * m; } if (nSR === 10) { const k = roll('stkSR', fv); if (k === 3) rb++; else bal += VAL[k] * m; }
-          if (rb) fend = t + FEV_MS / 1000;
+          if (nR === 10) { const k = roll('stkR', bo); if (k === 3) rb++; else bal += VAL[k] * m; } if (nSR === 10) { const k = roll('stkSR', bo); if (k === 3) rb++; else bal += VAL[k] * m; }
+          if (rb) { lvl = t < fend ? lvl + rb : rb; fend = t + FEV_MS / 1000; }
           if (nS >= 2) { if (t < end) { const left = end - t; mul += nS; top = Math.max(top, nS); end = t + Math.min(left + 10 * nS, 10 * top); } else { mul = nS; top = nS; end = t + 10 * nS; } }
           t += DM_T;
         }
