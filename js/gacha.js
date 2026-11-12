@@ -71,9 +71,6 @@
 .gm-spread{position:absolute;z-index:7;left:8px;right:8px;top:40px;bottom:8px;border-radius:12px;background:rgba(10,13,20,.94);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;animation:gmSpIn .2s ease-out}
 @keyframes gmSpIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
 .gm-spg{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;width:100%;max-width:330px;padding:0 6px}
-.gm-rf{position:absolute;inset:0}.gm-rfd{position:absolute;inset:0;transition:transform .3s,opacity .3s}.gm-rfd .gm-orb{cursor:default}.gm-rfd.gone{opacity:0;transform:scale(.6)}
-.gm-rfc{position:absolute;inset:0;perspective:340px;transition:transform .32s cubic-bezier(.3,.8,.4,1);pointer-events:none}.gm-rfc .gm-orb{transition:transform .3s ease-out}.gm-rfc.go{transform:translate(calc(30% + var(--ox,0px)),calc(16% + var(--oy,0px))) scale(.6)}.gm-rf.done .gm-rfc.go{transform:translate(calc(var(--ox,0px) * .6),calc(4% + var(--oy,0px) * .6)) scale(.8)}
-.gm-rfs{position:absolute;left:-4px;right:-4px;bottom:-6px;z-index:4;display:flex;flex-wrap:wrap-reverse;justify-content:center;gap:2px;pointer-events:none;animation:gmIn .3s cubic-bezier(.2,1.6,.4,1) both}.gm-rfs span{display:inline-flex;align-items:center;gap:2px;background:rgba(10,12,17,.92);border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:0 4px 0 2px;font-size:10px;line-height:14px;font-weight:800;color:#fff;white-space:nowrap}.gm-rfs svg{display:block}
 .gm-spc{position:relative;aspect-ratio:1;perspective:340px}.gm-spc .gm-orb{inset:4%}
 .gm-spn{font-size:12px;color:#9eaac0;min-height:16px}.gm-skip{position:absolute;right:10px;top:10px;display:inline-flex;align-items:center;gap:5px;font-weight:800;letter-spacing:.04em}.gm-odds{position:absolute;z-index:8;top:44px;right:8px;left:8px;padding:10px 12px;border-radius:14px;background:rgba(12,16,26,.97);border:1px solid rgba(240,160,32,.5);box-shadow:0 10px 30px rgba(0,0,0,.6);color:#e9edf5;font-size:12px}
 .gm-oddh{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}.gm-odds table{width:100%;border-collapse:collapse}.gm-odds th,.gm-odds td{padding:4px 3px;text-align:right;border-bottom:1px solid rgba(255,255,255,.07);font-variant-numeric:tabular-nums}
@@ -115,6 +112,7 @@
 .gm-orb i,.gm-float.orb i{position:absolute;right:-7px;bottom:-4px;z-index:2;font-style:normal;font-size:12px;font-weight:800;background:#11141b;border:1px solid #ffc21a;color:#ffc21a;border-radius:9px;padding:0 6px;white-space:nowrap}
 .gm-orb u{position:absolute;left:-6px;top:-4px;z-index:2;text-decoration:none;font-size:11px;font-weight:900;background:#11141b;border-radius:8px;padding:0 5px;border:1px solid currentColor}
 .gm-orb.merge{animation:gmMerge .4s}
+.gm-cnt{position:absolute;left:50%;bottom:-7px;transform:translateX(-50%);z-index:5;font-size:12px;font-weight:800;line-height:16px;background:#11141b;border:1px solid #ffc21a;color:#ffc21a;border-radius:9px;padding:0 6px;white-space:nowrap;pointer-events:none}
 @keyframes gmIn{from{transform:scale(.3);opacity:0}to{transform:none;opacity:1}}
 @keyframes gmMerge{50%{transform:scale(1.22);filter:brightness(1.8)}}
 .gm-float{position:fixed;left:0;top:0;z-index:9999;pointer-events:none;transform:translate(-50%,-50%);filter:drop-shadow(0 8px 12px rgba(0,0,0,.55))}
@@ -522,10 +520,11 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     }
     function trayOrbs(e, tr) {
       const t = e.top, rest = e.count - (t ? 1 : 0);
-      if (!t) { const pp = e.fresh ? ' pop' : ''; e.fresh = false; return orbHtml(e, (e.merge ? ' merge' : '') + pp, e.count > 1 ? '<i>×' + e.count + '</i>' : '', tr); }
-      return (rest > 0 ? orbHtml({ nk: e.nk, ck: 'x' }, ' under', rest > 1 ? '<i>×' + rest + '</i>' : '', tr) : '') + orbHtml(t, ' top' + (rest > 0 ? ' lift' : ''), '', rest > 0 ? '' : tr);
+      const cnt = e.count > 1 ? '<b class="gm-cnt">×' + e.count + '</b>' : ''; /* 겹친 칸: 하단에 총 수량 */
+      if (!t) { const pp = e.fresh ? ' pop' : ''; e.fresh = false; return orbHtml(e, (e.merge ? ' merge' : '') + pp, '', tr) + cnt; }
+      return cnt + (rest > 0 ? orbHtml({ nk: e.nk, ck: 'x' }, ' under', '', tr) : '') + orbHtml(t, ' top' + (rest > 0 ? ' lift' : ''), '', rest > 0 ? '' : tr);
     }
-    function uiTray() { uiTray0(); S.tray.forEach((e, i) => { if (e && e._rf) { const w = panEl.children[i]; if (w) { w.innerHTML = ''; w.appendChild(e._rf); } return; } const t = e && e.top; if (!t || !(t.anim || t.flipping) || !t._el) return; const w = panEl.children[i], o = w && w.querySelector('.gm-orb.top'); if (o && o !== t._el) o.replaceWith(t._el); }); }
+    function uiTray() { uiTray0(); S.tray.forEach((e, i) => {  const t = e && e.top; if (!t || !(t.anim || t.flipping) || !t._el) return; const w = panEl.children[i], o = w && w.querySelector('.gm-orb.top'); if (o && o !== t._el) o.replaceWith(t._el); }); }
     /* SSR 보관함은 이 기기에 저장(머신별). 다시 열면 그대로 */
     const TRAY_K = 'dsgm-tray-' + String(o.title || 'std').replace(/\s+/g, '');
     const trayFind = (n) => { for (const k of Object.keys(P)) { const a = P[k]; if (Array.isArray(a)) { const x = a.find((y) => y && y.n === n); if (x) return x; } else if (a && a.n === n) return a; } return null; };
@@ -534,7 +533,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     /* 한 칸만 다시 그림(다른 칸의 뒤집기·빛남이 끊기지 않게) */
     function renderWell(i) {
       const w = panEl.children[i]; if (!w) { uiTray(); return; }
-      const e = S.tray[i]; if (e && e._rf) { w.innerHTML = ''; w.appendChild(e._rf); return; } const tr = e ? (TIERS[S.val.mode === 2 ? 'pvp' : 'boss'][e.nk.n] || '-') : '';
+      const e = S.tray[i], tr = e ? (TIERS[S.val.mode === 2 ? 'pvp' : 'boss'][e.nk.n] || '-') : '';
       w.innerHTML = e ? trayOrbs(e, tr) : ''; if (e) e.merge = false; traySave();
       const tb = leftEl.querySelector('.gm-trbtn span'); if (tb) tb.textContent = S.tray.filter(Boolean).length;
     }
@@ -571,47 +570,22 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     optEl.addEventListener('click', (e) => { const g = e.target.closest('[data-g]'), op = e.target.closest('[data-op]'); if (op) { S.openM = op.dataset.op; uiOpt(); } if (!g) return; const k = g.dataset.g; if (k === 'corp') setMode('tier', false); else if (k === 'boss' || k === 'pvp') setMode('tier', k); else if (k === 'random') { S.mode.black = false; setMode('random', !S.mode.random); } else { const v = !S.mode.black; setMode('random', false); setMode('black', v); } uiTray(); });
     let tpd = null; /* 보관함: 누르면 뒤집기/흡수, 끌면 이동 */
     const busyE = (en) => !!(en && en.top && en.top.busy);
-    /* 모두 뒤집기: SSS를 뺀 칸마다 그 자리에서 한 장씩(0.1초 간격) 뒤집어 옆에 쌓고, 칸에 결과를 보여준 뒤 모든 칸이 끝나면 한꺼번에 잔고로 */
+    /* 모두 뒤집기: SSS를 뺀 칸마다 맨 위 한 장만 차례로 뒤집고, 잠시 뒤 그 장들만 한꺼번에 잔고로 (겹친 나머지는 그대로) */
     function flipAll() {
       if (S.flipAllBusy) return;
-      const list = S.tray.map((e, i) => [e, i]).filter(([e]) => e && !isSSSn(e.nk) && !busyE(e) && !(e.top && (e.top.anim || e.top.flipping)));
+      const list = S.tray.filter((e) => e && !isSSSn(e.nk) && !busyE(e) && !(e.top && (e.top.anim || e.top.flipping)));
       if (!list.length) { say(S.tray.some(Boolean) ? 'SSS는 직접 뒤집어 주세요.' : '보관함이 비어 있습니다.'); return; }
-      S.flipAllBusy = true; let lastSnd = 0, ends = 0;
-      const ORD = ['r', 'g', 's', 'b'];
-      const jobs = list.map(([e, i], wn) => {
-        const n = e.count, ks = [];
-        for (let c = 0; c < n; c++) ks.push(c === 0 && e.top && e.top.ck && e.top.ck !== 'x' ? e.top.ck : chipOf(e.nk)); /* 한 장씩 따로 판정 */
-        const first = e.top && e.top.flip ? 1 : 0; /* 이미 뒤집힌 맨 위 장은 바로 쌓음 */
-        const tr = TIERS[S.val.mode === 2 ? 'pvp' : 'boss'][e.nk.n] || '-';
-        const box = document.createElement('div'); box.className = 'gm-rf';
-        box.innerHTML = '<div class="gm-rfd">' + orbHtml({ nk: e.nk, ck: 'x' }, ' top', n - first > 1 ? '<i>×' + (n - first) + '</i>' : '', tr) + '</div>';
-        e._rf = box; const w = panEl.children[i]; if (w) { w.innerHTML = ''; w.appendChild(box); }
-        const iv = Math.max(35, Math.min(100, 2200 / n)), t0 = 120 + Math.min(wn * 70, 700), got = {};
-        const land = (k, j) => {
-          got[k] = (got[k] || 0) + 1;
-          const c = document.createElement('div'); c.className = 'gm-rfc'; c.innerHTML = orbHtml({ nk: e.nk, ck: k }, ' top', '', '');
-          const orb = c.firstChild, a = rnd(0, TAU), m = rnd(2, 4); orb.style.setProperty('--tx', Math.round(Math.cos(a) * m) + 'deg'); orb.style.setProperty('--ty', Math.round(Math.sin(a) * m) + 'deg');
-          c.style.setProperty('--ox', (Math.min(j, 12) * 1.2 + rnd(-1.5, 1.5)).toFixed(1) + 'px'); c.style.setProperty('--oy', (-Math.min(j, 12) * 1.4 + rnd(-1, 1)).toFixed(1) + 'px');
-          box.appendChild(c); void c.offsetWidth;
-          requestAnimationFrame(() => { orb.classList.add('flip'); if (n > 1) c.classList.add('go'); if (k !== 'b') orb.classList.add('shine', 'shine-' + k); });
-          const d = box.querySelector('.gm-rfd'), left = n - j - 1;
-          if (d) { const bd = d.querySelector('i'); if (left <= 0) { d.classList.add('gone'); setTimeout(() => box.classList.add('done'), 380); } else if (bd) { if (left > 1) bd.textContent = '×' + left; else bd.remove(); } }
-          const now = performance.now(); try { if (k === 'r' || k === 'g') snd.chipBurst(k === 'r'); else if (now - lastSnd > 70) { lastSnd = now; snd.flip(); } } catch (er) { /* 무시 */ }
-        };
-        ks.forEach((k, j) => { if (j < first) land(k, j); else setTimeout(() => land(k, j), t0 + (j - first) * iv); });
-        const end = t0 + (n - first) * iv + 450; ends = Math.max(ends, end);
-        setTimeout(() => { const sm = document.createElement('div'); sm.className = 'gm-rfs'; sm.innerHTML = ORD.filter((k) => got[k]).map((k) => '<span>' + chipSvg(k, 11, false) + got[k] + '</span>').join(''); box.appendChild(sm); }, end);
-        return { e, n, got, box };
-      });
-      setTimeout(() => { /* 모든 칸이 끝나면 한꺼번에 정산 */
-        jobs.forEach((jb, wn) => setTimeout(() => {
-          const i = S.tray.indexOf(jb.e), w = i >= 0 ? panEl.children[i] : null, r = w ? w.getBoundingClientRect() : null;
-          Object.keys(jb.got).sort((x, y) => ORD.indexOf(y) - ORD.indexOf(x)).forEach((k, j) => setTimeout(() => { if (r && r.width) chipAbsorb(k, jb.got[k], r.left + r.width / 2, r.top + r.height / 2, r.width * 0.9, 'ssr'); else window.doroChips.add({ [k]: jb.got[k] }, 'ssr'); }, j * 90));
-          jb.e._rf = null; jb.e.top = null; jb.e.ck = null; jb.e.count -= jb.n;
-          if (i >= 0) { if (jb.e.count <= 0) S.tray[i] = null; renderWell(i); }
-        }, wn * 50));
-        setTimeout(() => { while (S.tray.length && !S.tray[S.tray.length - 1]) S.tray.pop(); uiTray(); S.flipAllBusy = false; }, jobs.length * 50 + 400);
-      }, ends + 700);
+      S.flipAllBusy = true; let changed = false;
+      list.forEach((e) => { if (!e.top) { e.top = { nk: e.nk }; changed = true; } e.top.noAuto = true; });
+      if (changed) uiTray();
+      const step = Math.max(40, Math.min(120, 1400 / list.length));
+      list.forEach((e, n) => setTimeout(() => { const i = S.tray.indexOf(e), o = i >= 0 && panEl.children[i] && panEl.children[i].querySelector('.gm-orb.top'); if (!o || !e.top || e.top.flip) return;
+        const t = e.top, a = rnd(0, TAU), m = rnd(2, 4), k = chipE(t); t.flip = true; t.tilt = [Math.round(Math.cos(a) * m), Math.round(Math.sin(a) * m)]; o.style.setProperty('--tx', t.tilt[0] + 'deg'); o.style.setProperty('--ty', t.tilt[1] + 'deg'); void o.offsetWidth;
+        requestAnimationFrame(() => { o.classList.add('flip'); if (k !== 'b') setTimeout(() => o.classList.add('shine', 'shine-' + k), 700); }); try { snd.flip(); } catch (er) { /* 무시 */ } }, 60 + n * step));
+      setTimeout(() => {
+        list.forEach((e, n) => setTimeout(() => { if (e.top) e.top.noAuto = false; absorbTop(e); }, n * 40));
+        setTimeout(() => { S.flipAllBusy = false; }, list.length * 40 + 200);
+      }, 60 + list.length * step + 1100);
     }
     panEl.addEventListener('pointerdown', (e) => { const well = e.target.closest('.gm-well'); if (!well || fl || S.spread || S.flipAllBusy) return; const en = S.tray[+well.dataset.i]; if (!en) return; e.preventDefault(); if (busyE(en)) return; /* SSS 뒤집는 중: 누르기·끌기 막음 */ tpd = { en, well, x: e.clientX, y: e.clientY }; });
     window.addEventListener('pointermove', (e) => { if (!tpd || fl) return; if (Math.hypot(e.clientX - tpd.x, e.clientY - tpd.y) < 7) return; const en = tpd.en, i = S.tray.indexOf(en); tpd = null; if (i < 0 || busyE(en)) return; S.tray[i] = null; uiTray(); orbDrag(en.nk, e, 'tray', en.count); fl.ti = i; fl.en = en; });
