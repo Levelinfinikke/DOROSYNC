@@ -375,6 +375,7 @@ async function onClick(e) {
     open, boot,
     get user() { return user && profile ? { uid: user.uid, username: profile.username } : null; },
     get doc() { return profile; },
+    token: () => tok(),
     /* 내 문서의 일부 필드 저장: patch({ auto: {...}, autoDue: '...' }) */
     async patch(obj) {
       if (!user || !profile) throw new Error('login');

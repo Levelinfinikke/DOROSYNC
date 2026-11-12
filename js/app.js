@@ -2526,45 +2526,72 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
       '<circle r="52" fill="none" stroke="' + f + '" stroke-width="11" stroke-dasharray="44 10.45"/><circle r="44" fill="#26282c"/>' + dots +
       '<circle r="34" fill="' + c[1] + '"/><circle r="30" fill="' + f + '"/>' + fxs + '</svg>';
   };
-  /* 지갑: 이 기기 키는 dschip-v2 { d: 도로칩 누적(실버 5·골드 10으로 환산), r: 무지개 누적, o: 주인 계정 uid }.
-     dorosync* 동기화 묶음과 분리해 계정 문서의 chips 필드에 따로 저장(두 쪽 중 큰 값으로 합침 → 어느 기기에서도 줄어들지 않음) */
-  const CHIP2_K = 'dschip-v2';
+  /* 지갑
+     - 화면에 보이는 잔고: dschip-v2 { d: 도로칩(실버 5·골드 10 환산), r: 무지개, o: 주인 계정 uid('' = 비회원) }
+     - 로그인 중 얻은 칩은 지급 기록(dschip-q)으로 모아 서버(/chips)에 보내고, 서버가 검사한 뒤 계정의 chipsV(검증 잔고)에 더함
+     - 계정 잔고는 서버만 바꿀 수 있음. 화면 잔고 = 서버 잔고 + 아직 안 보낸 기록 */
+  const CHIP2_K = 'dschip-v2', CHIPQ_K = 'dschip-q', CHIP_API = 'https://dorosync.bomullee88.workers.dev/chips', CV = { b: 1, s: 5, g: 10 };
+  const lsJ = (k, d) => { try { return JSON.parse(localStorage.getItem(k) || 'null') || d; } catch (e) { return d; } };
+  const lsS = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* 저장 불가 */ } };
   const chipRaw = () => {
-    let o = null; try { o = JSON.parse(localStorage.getItem(CHIP2_K) || 'null'); } catch (e) { o = null; }
-    if (!o) { o = { d: 0, r: 0, o: '' }; try { const old = JSON.parse(localStorage.getItem(CHIP_K) || 'null'); if (old) { o.d = (+old.b || 0) + (+old.s || 0) * 5 + (+old.g || 0) * 10; o.r = +old.r || 0; } } catch (e) { /* 무시 */ } }
+    let o = lsJ(CHIP2_K, null);
+    if (!o) { o = { d: 0, r: 0, o: '' }; const old = lsJ(CHIP_K, null); if (old) { o.d = (+old.b || 0) + (+old.s || 0) * 5 + (+old.g || 0) * 10; o.r = +old.r || 0; } }
     return { d: Math.max(0, Math.floor(+o.d || 0)), r: Math.max(0, Math.floor(+o.r || 0)), o: o.o || '' };
   };
-  const chipSave = (o) => { try { localStorage.setItem(CHIP2_K, JSON.stringify(o)); localStorage.removeItem(CHIP_K); } catch (e) { /* 저장 불가 */ } try { window.dispatchEvent(new CustomEvent('dorochips', { detail: o })); } catch (e) { /* 무시 */ } };
+  const chipSave = (o) => { lsS(CHIP2_K, o); try { localStorage.removeItem(CHIP_K); } catch (e) { /* 무시 */ } try { window.dispatchEvent(new CustomEvent('dorochips', { detail: o })); } catch (e) { /* 무시 */ } };
   const chipGet = () => { const o = chipRaw(); return { b: o.d, s: 0, g: 0, r: o.r }; };
-  let chipPushT = 0;
-  const chipCloud = () => { const a = window.doroAccount, c = a && a.user && a.doc && a.doc.chips; return { d: Math.max(0, Math.floor(+(c && c.d) || 0)), r: Math.max(0, Math.floor(+(c && c.r) || 0)) }; };
-  function chipPush() {
-    clearTimeout(chipPushT);
-    chipPushT = setTimeout(async () => {
-      const a = window.doroAccount; if (!a || !a.user) return;
-      const l = chipRaw(), c = chipCloud(); if (l.o && l.o !== a.user.uid) return;
-      const m = { d: Math.max(l.d, c.d), r: Math.max(l.r, c.r) };
-      if (m.d === c.d && m.r === c.r) return;
-      try { await a.patch({ chips: m }); } catch (e) { chipPushT = setTimeout(chipPush, 15000); /* 실패하면 잠시 뒤 다시 */ }
-    }, 1200);
+  const qGet = () => lsJ(CHIPQ_K, { o: '', ev: [] }), qSet = (q) => lsS(CHIPQ_K, q);
+  const qSum = (ev) => ev.reduce((a, e) => { if (e.k === 'r') a.r += e.n; else a.d += (CV[e.k] || 0) * e.n; return a; }, { d: 0, r: 0 });
+  const acctUser = () => { const a = window.doroAccount; return a && a.user ? a : null; };
+  const srvChips = () => { const a = acctUser(), c = a && a.doc && (a.doc.chipsV || a.doc.chips); return { d: Math.max(0, Math.floor(+(c && c.d) || 0)), r: Math.max(0, Math.floor(+(c && c.r) || 0)) }; };
+  let chipT = 0, chipBusy = false;
+  function chipFlush(delay) {
+    clearTimeout(chipT);
+    chipT = setTimeout(async () => {
+      const a = acctUser(); if (!a || chipBusy) return;
+      const q = qGet(); if (q.o !== a.user.uid || !q.ev.length) return;
+      const send = q.ev.slice(0, 300); chipBusy = true;
+      try {
+        const t = await a.token(), r = await fetch(CHIP_API, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + t }, body: JSON.stringify({ events: send }) });
+        const j = await r.json().catch(() => ({}));
+        if (r.ok && j.ok) {
+          const q2 = qGet(); if (q2.o === a.user.uid) { q2.ev = q2.ev.slice(send.length); qSet(q2); }
+          if (a.doc) a.doc.chipsV = j.chips;
+          const p = qSum(qGet().ev); chipSave({ d: j.chips.d + p.d, r: j.chips.r + p.r, o: a.user.uid });
+          if (j.rejected) console.warn('[도로칩] 서버가 일부 기록을 받지 않음', j.rejected, j.day);
+          if (qGet().ev.length) chipFlush(300);
+        } else if (r.status === 401) { /* 토큰 문제: 다음 기회에 */ } else chipFlush(15000);
+      } catch (e) { chipFlush(15000); /* 네트워크 문제: 잠시 뒤 다시 */ }
+      chipBusy = false;
+    }, delay == null ? 1500 : delay);
   }
   /* 로그인·로그아웃 때 계정 지갑과 맞춤 */
   window.addEventListener('doroacct', () => {
-    const a = window.doroAccount, u = a && a.user, l = chipRaw();
-    if (!u) { if (l.o) chipSave({ d: 0, r: 0, o: '' }); return; } /* 로그아웃: 계정 칩은 계정에 남고, 이 기기는 비회원 지갑으로 */
-    const c = chipCloud(), base = l.o && l.o !== u.uid ? { d: 0, r: 0 } : l; /* 다른 계정의 칩은 섞지 않음 · 비회원 때 모은 칩은 이 계정으로 */
-    const m = { d: Math.max(base.d, c.d), r: Math.max(base.r, c.r), o: u.uid };
-    if (m.d !== l.d || m.r !== l.r || l.o !== u.uid) chipSave(m);
-    if (m.d !== c.d || m.r !== c.r) chipPush();
+    const a = acctUser(), l = chipRaw();
+    if (!a) { if (l.o) chipSave({ d: 0, r: 0, o: '' }); return; } /* 로그아웃: 계정 칩은 계정에, 이 기기는 비회원 지갑으로 */
+    const uid = a.user.uid; let q = qGet();
+    if (q.o !== uid) q = { o: uid, ev: [] }; /* 다른 계정의 보내지 못한 기록은 섞지 않음 */
+    if (!l.o && (l.d || l.r)) { /* 비회원 때 모은 칩: 이 계정으로 옮겨 달라고 서버에 요청(상한 안에서) */
+      const t = Date.now(); if (l.d) q.ev.push({ k: 'b', n: Math.min(500, l.d), src: 'guest', t }); if (l.r) q.ev.push({ k: 'r', n: Math.min(500, l.r), src: 'guest', t });
+    }
+    qSet(q);
+    const sv = srvChips(), p = qSum(q.ev), m = { d: sv.d + p.d, r: sv.r + p.r, o: uid };
+    if (m.d !== l.d || m.r !== l.r || l.o !== uid) chipSave(m);
+    if (q.ev.length) chipFlush(800);
   });
   window.doroChips = {
     get: chipGet,
     total() { return chipRaw().d; },
-    add(dl) {
-      const o = chipRaw();
-      o.d += (+(dl && dl.b) || 0) + (+(dl && dl.s) || 0) * 5 + (+(dl && dl.g) || 0) * 10; o.r += +(dl && dl.r) || 0;
-      const a = window.doroAccount; if (a && a.user) o.o = a.user.uid;
-      chipSave(o); chipPush();
+    /* dl: { b, s, g, r } 개수 · src: 'ssr' | 'label' | 'cap' | 'streak' (서버 검증용 출처) */
+    add(dl, src) {
+      const o = chipRaw(), a = acctUser(), t = Date.now();
+      ['b', 's', 'g', 'r'].forEach((k) => {
+        const n = Math.floor(+(dl && dl[k]) || 0); if (n <= 0) return;
+        if (k === 'r') o.r += n; else o.d += CV[k] * n;
+        if (a) { const q = qGet(); if (q.o !== a.user.uid) { q.o = a.user.uid; q.ev = []; } q.ev.push({ k, n, src: src || 'ssr', t }); qSet(q); }
+      });
+      if (a) o.o = a.user.uid;
+      chipSave(o); if (a) chipFlush();
       return chipGet();
     },
   };
@@ -2573,6 +2600,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     return '<div class="kpi chipk"><div class="l">도로칩</div><div class="chipv"><span title="도로칩 (실버칩 1 = 5, 골드칩 1 = 10)">' + window.doroChipSvg('b', 32) + '<b class="num">' + fmt(tot) + '</b></span><span title="무지개 도로칩">' + window.doroChipSvg('r', 32) + '<b class="num">' + fmt(o.r) + '</b></span></div>' +
       '</div>';
   };
+  window.addEventListener('doroacct', () => { if (!(doroBL && doroBL.data)) { try { renderMe(); } catch (e) { /* 초기화 전 */ } } });
   window.addEventListener('dorochips', () => { const el = document.querySelector('#tab-me .chipk'); if (el) el.outerHTML = chipCard(); });
   const PFP_K = 'dorosync-pfp';
   /* 프로필 니케: 고른 니케, 없으면 전투력 1위 */
@@ -2805,7 +2833,12 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     { const iv = $('#me-inv'), pg = $('#me-prog'); if (iv && root.contains(iv)) root.after(iv); if (iv && pg && root.contains(pg)) iv.before(pg); } /* innerHTML로 지워지지 않게 밖으로 */
     const d = doroBL.data;
     { const lk = $('#me-link'); if (lk) lk.style.display = d ? 'none' : ''; }
-    if (!d) { root.innerHTML = '<div class="card"><p class="muted">아직 불러온 정보가 없습니다. 위의 [BlaBla연동]을 눌러 주세요.</p></div>'; return; }
+    if (!d) { /* 연동 전: 도로칩 잔고만 보여 주고, 로그인 안 했으면 로그인 권유 */
+      const logged = !!(window.doroAccount && window.doroAccount.user);
+      root.innerHTML = '<div class="card me-pre"><div class="mekpis mekpis-pre">' + chipCard() + '</div>' + (logged ? '' : '<p class="me-login">도로칩을 안전하게 저장하려면 로그인하세요. <button type="button" class="ghost sm" id="me-login">로그인</button></p>') + '</div>';
+      const lb = $('#me-login'); if (lb) lb.addEventListener('click', () => { if (window.doroAccount) window.doroAccount.open(); else { const b = $('#btn-acct'); if (b) b.click(); } });
+      return;
+    }
     const m = d.me || {}, pk = blPick();
     const man = d.src === 'relay';
     const dIn = (t) => { if (!t) return ''; const z = new Date(t * 1000), p = (x) => String(x).padStart(2, '0'); return z.getFullYear() + '-' + p(z.getMonth() + 1) + '-' + p(z.getDate()); };
@@ -3158,7 +3191,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
       const l = au.last || {};
       body.innerHTML = '<p class="rapisay">매일 <b>오전 5시~6시</b> 사이에 싱크로 레벨을 기록하고 있습니다, 지휘관.</p>' +
         '<div class="acct-row"><span class="acct-k">상태</span><span><span class="acct-ok">● 기록 중</span></span></div>' +
-        '<div class="acct-row"><span class="acct-k">마지막 자동 기록</span><span>' + (l.at ? new Date(l.at).toLocaleString('ko-KR') + (l.ok ? ' · 싱크로 ' + l.s + ' · 전초기지 ' + l.o : ' · <span class="acct-no">실패</span>') : '아직 없음 (내일 오전 5~6시에 첫 기록)') + '</span></div>' +
+        '<div class="acct-row"><span class="acct-k">마지막 자동 기록</span><span>' + (l.at ? new Date(l.at).toLocaleString('ko-KR') + (l.ok ? ' · 싱크로 ' + l.s + ' · 전초기지 ' + l.o : ' · <span class="acct-no">실패</span>' + (l.err || l.code ? ' <span class="muted sm">(' + esc(l.err || '') + (l.code ? ' · ' + esc(l.code) : '') + ')</span>' : '')) : '아직 없음 (내일 오전 5~6시에 첫 기록)') + '</span></div>' +
         (l.at && !l.ok ? '<p class="rapisay">기록에 실패했습니다. 블라블라링크 프로필 공개 설정과 서버를 확인해 주십시오. (' + esc(l.err || '') + ')</p>' : '') +
         '<div class="auto-acts"><button type="button" class="ghost pad" data-ax="stop">자동 기록 중지</button></div>';
       return;
@@ -3241,6 +3274,8 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
         '<button type="button" class="ghost sm icb" data-whide="' + p.id + '|' + w.id + '" title="' + (w.hidden ? '다시 보이기' : '숨기기') + '" aria-label="' + (w.hidden ? '다시 보이기' : '숨기기') + '">' + EYE(w.hidden) + '</button>' +
         '<button type="button" class="ghost sm icb pl-del" data-wdel="' + p.id + '|' + w.id + '" title="삭제" aria-label="세계선 삭제">' + TRASH + '</button>' + buysHtml(p.id + '|' + w.id, w) + '</li>').join('') + '</ul></details>';
   }
+  /* 모바일 탭 줄: 오른쪽(왼쪽)에 더 있으면 끝을 흐리게 */
+  { const tb = document.getElementById('tabs'); if (tb) { const f = () => { const m = tb.scrollWidth - tb.clientWidth; tb.classList.toggle('fade-r', m > 2 && tb.scrollLeft < m - 2); tb.classList.toggle('fade-l', tb.scrollLeft > 2); }; tb.addEventListener('scroll', f, { passive: true }); window.addEventListener('resize', f); setTimeout(f, 300); } }
   /* 한 줄 맞춤: 글자가 칸을 넘치면 넘치지 않을 때까지 줄임 */
   function fitOne(scope) { (scope || document).querySelectorAll('.fit1').forEach((el) => { el.style.fontSize = ''; let f = parseFloat(getComputedStyle(el).fontSize) || 40, n = 0; while (el.scrollWidth > el.clientWidth + 1 && f > 12 && n++ < 40) { f -= 1.5; el.style.fontSize = f + 'px'; } }); }
   window.addEventListener('resize', () => { clearTimeout(fitOne.t); fitOne.t = setTimeout(() => fitOne($('#me-prog')), 150); });

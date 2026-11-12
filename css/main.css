@@ -1557,3 +1557,10 @@ button:not(.tr-clr):not(.tabs button):not(.tr-f):not(.pk-t):not(.pk-r){border-ra
 /* 결과 카드 상단 버튼(확정·저장·공유) 아이콘 크기 맞춤 */
 .btns #btn-save-res svg.icb-i,.btns #btn-commit svg.icb-i{width:18px!important;height:18px!important;flex:none}
 .btns #btn-save-res,.btns #btn-commit{padding-left:6px!important;padding-right:6px!important}
+/* 모바일 탭 줄 흐림 */
+.tabs.fade-r{-webkit-mask-image:linear-gradient(to right,#000 82%,transparent);mask-image:linear-gradient(to right,#000 82%,transparent)}
+.tabs.fade-l{-webkit-mask-image:linear-gradient(to left,#000 82%,transparent);mask-image:linear-gradient(to left,#000 82%,transparent)}
+.tabs.fade-l.fade-r{-webkit-mask-image:linear-gradient(to right,transparent,#000 14%,#000 86%,transparent);mask-image:linear-gradient(to right,transparent,#000 14%,#000 86%,transparent)}
+/* 연동 전 전초기지: 도로칩 잔고 + 로그인 권유 */
+.me-pre .mekpis-pre{grid-template-columns:minmax(0,320px)!important}
+.me-login{margin:12px 0 0;display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:13.5px;color:var(--muted)}
