@@ -313,7 +313,7 @@
 .gm-mode{right:8px;top:8px;gap:6px;justify-items:end}
 .gm-mode .gm-mg{width:36px;height:36px;padding:0;display:grid;place-items:center;border-radius:10px}.gm-mode .gm-mg svg{pointer-events:none}
 .gm-mode .gm-dmt{appearance:none;border:0;border-radius:10px;padding:6px 9px;font-weight:900;cursor:pointer;font-size:12.5px;color:#fff;background:linear-gradient(90deg,#ff5d8f,#ffb84d,#5ef0a0,#5ab8ff,#b47cff);box-shadow:0 0 0 1px rgba(255,255,255,.35) inset;opacity:.75}.gm-dmt.on{opacity:1;box-shadow:0 0 0 2px #fff inset,0 0 14px rgba(200,120,255,.8)}
-.gm-wal.dm .gm-wt{padding-right:112px}.gm-dw{display:inline-flex;align-items:center;gap:4px}.gm-dw svg{width:15px;height:15px}.gm-dmb svg{width:40px;height:40px}
+.gm-wal.dm .gm-wt{padding-right:112px}.gm-dw{display:inline-flex;align-items:center;gap:4px}.gm-odds td.up{color:#ff9af0;font-weight:900}.gm-odds td.dn{opacity:.7}.gm-odds em.cb{background:linear-gradient(90deg,#c41a00,#ff7a00);color:#fff6c0}.gm-dw svg{width:15px;height:15px}.gm-dmb svg{width:40px;height:40px}
 .gm-fb{appearance:none;border:1px solid #ffc21a;background:rgba(40,30,0,.78);color:#ffd24d;border-radius:10px;padding:6px 9px;font-weight:800;cursor:pointer;font-size:12.5px}
 .gm-mode .gm-fb.run{background:#ffc21a;color:#1b1400}.gm-mode .gm-fb.full{border-color:#ff8a5c;color:#ffb494;background:rgba(60,20,0,.8)}
 .gm-trt{display:none}.gm-trbtn{display:none;position:absolute;left:2.4%;bottom:21.5%;z-index:5;overflow:visible}.gm-trbtn img{width:22px;height:22px;object-fit:contain;pointer-events:none}.gm-trbtn span{position:absolute;right:-5px;top:-5px;min-width:17px;height:17px;border-radius:9px;background:#11141b;border:1px solid #ffc21a;color:#ffc21a;font:800 10.5px/15px sans-serif;text-align:center;padding:0 4px}.gm-left.clean .gm-trbtn{display:none!important}
@@ -1196,15 +1196,20 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
       }
     }
     /* 도로칩 잔고를 누르면: 어디서 어떤 칩이 몇 %로 나오는지 */
-    function chipOdds() {
-      const tr = $('.gm-tray'); let box = tr.querySelector('.gm-odds'); if (box) { box.remove(); return; }
-      const fv = feverOn(), row = (nm, key, note) => '<tr><th>' + nm + (note ? '<small>' + note + '</small>' : '') + '</th>' + CHIP_P[key].map((v, i) => '<td class="' + (v ? '' : 'z') + '">' + (v ? (v < 0.1 ? v.toFixed(2) : v < 1 ? v.toFixed(2).replace(/0$/, '') : String(+v.toFixed(2))) + '%' : '—') + '</td>').join('') + '</tr>';
-      box = document.createElement('div'); box.className = 'gm-odds' + (fv ? ' fev' : '');
-      box.innerHTML = '<div class="gm-oddh"><b>DORO칩 획득 확률' + (fv ? ' <em>DORO TIME ×' + (fevLv() + 1) + '</em>' : '') + '</b><button class="gm-tb" data-x>닫기</button></div><table><thead><tr><th></th>' + KS.map((k) => '<th>' + chipSvg(k, 20, false) + '</th>').join('') + '</tr></thead><tbody>' +
+    /* DORO칩 확률표: 지금 COMBO 단계(무지개↑)·DORO TIME 배수를 반영해 열려 있는 동안 계속 갱신 */
+    function oddsHtml() {
+      const cb = S.doro ? comboMul() : 1, fv = feverOn(), fmtP = (v) => (v < 0.1 ? v.toFixed(2) : v < 1 ? v.toFixed(2).replace(/0$/, '') : String(+v.toFixed(2)));
+      const row = (nm, key, note) => { const base = CHIP_P[key], p = boostP(base, cb); return '<tr><th>' + nm + (note ? '<small>' + note + '</small>' : '') + '</th>' + p.map((v, i) => '<td class="' + (v ? '' : 'z') + (Math.abs(v - base[i]) > 1e-9 ? (v > base[i] ? ' up' : ' dn') : '') + '">' + (v ? fmtP(v) + '%' : '—') + '</td>').join('') + '</tr>'; };
+      const tags = (cb > 1 ? ' <em class="cb">COMBO ×' + cb + ' · 무지개 +' + fmtP(RB_ADD * cb) + '%p</em>' : '') + (fv ? ' <em>DORO TIME ×' + (fevLv() + 1) + '</em>' : '');
+      return '<div class="gm-oddh"><b>DORO칩 획득 확률' + tags + '</b><button class="gm-tb" data-x>닫기</button></div><table><thead><tr><th></th>' + KS.map((k) => '<th>' + chipSvg(k, 20, false) + '</th>').join('') + '</tr></thead><tbody>' +
         row('SSS', 'SSS') + row('SS', 'SS') + row('S', 'S') + row('A 이하', 'low') + row('R 캡슐', 'capR', CAP_RATE.R + '% 확률로') + row('SR 캡슐', 'capSR', CAP_RATE.SR + '% 확률로') + row('R 10연속', 'stkR') + row('SR 10연속', 'stkSR') +
         '</tbody></table><p>COMBO: 10뽑 묶음에서 SSR이 n장(2장 이상) 나오면 10×n초 동안 뽑은 캡슐의 무지개칩 확률 +0.5%p×단계. 시간 안에 또 나오면 단계 합산·시간 추가<br>DORO TIME: 무지개칩을 얻으면 90초 동안 뽑은 캡슐의 DORO칩 수입 ×2, 그 안에 또 얻으면 ×3·×4…</p><p>DORO칩 10 = 실버칩 2 = 골드칩 1 · 바디라벨 10,000 = DORO칩 1 · 티어는 기본 티어표(솔레) 기준</p>';
-      box.querySelector('[data-x]').onclick = (e) => { e.stopPropagation(); box.remove(); };
-      tr.appendChild(box);
+    }
+    function chipOdds() {
+      const tr = $('.gm-tray'); let box = tr.querySelector('.gm-odds'); if (box) { box.remove(); return; }
+      box = document.createElement('div'); box.className = 'gm-odds'; tr.appendChild(box);
+      let key = ''; const paint = () => { if (!box.isConnected) { clearInterval(box._t); return; } const fv = feverOn(), k2 = (S.doro ? comboMul() : 1) + '|' + (fv ? fevLv() : 0); if (k2 === key) return; key = k2; box.classList.toggle('fev', fv); box.innerHTML = oddsHtml(); box.querySelector('[data-x]').onclick = (e) => { e.stopPropagation(); clearInterval(box._t); box.remove(); }; };
+      paint(); box._t = setInterval(paint, 300);
     }
     /* 초기화 전 정산: 보관함의 모든 SSR(SSS 포함)을 칩으로 바꿔 잔고에 넣음 */
     function traySettle() {
