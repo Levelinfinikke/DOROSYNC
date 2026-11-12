@@ -91,7 +91,7 @@
 .gm-well.over{box-shadow:inset 0 5px 9px rgba(0,0,0,.85),0 0 0 3px var(--gold)}
 .gm-cf,.gm-float.orb{background:center/cover no-repeat,radial-gradient(circle at 50% 30%,#fff6d8,#d9b35a)}
 .gm-orb{position:absolute;inset:5%;border-radius:50%;transform-style:preserve-3d;transition:transform .9s cubic-bezier(.4,0,.3,1.2);cursor:pointer;touch-action:none}.gm-orb.pop{animation:gmIn .35s cubic-bezier(.2,1.6,.4,1)}
-.gm-orb.under{top:11%;bottom:-1%;cursor:default}.gm-orb.under .gm-cf{filter:brightness(.62)}.gm-orb.lift{top:0;bottom:10%}.gm-orb.lift .gm-cf{box-shadow:0 0 0 2.5px var(--gold),0 7px 10px rgba(0,0,0,.7)}
+.gm-orb.under{top:11%;bottom:-1%;cursor:default}.gm-orb.under .gm-cf{filter:brightness(.62)}.gm-orb.lift{top:0;bottom:10%}.gm-orb.lift .gm-cf{box-shadow:inset 0 0 0 1px rgba(60,35,0,.55),inset 0 -5px 9px rgba(0,0,0,.38),inset 0 4px 7px rgba(255,255,255,.22),0 0 0 3.8px rgba(50,28,0,.7),0 7px 10px rgba(0,0,0,.7)}
 .gm-orb.top{animation:none;transform:rotateX(0deg) rotateY(0deg)}.gm-orb.top.lift{animation:none}
 .gm-orb.flip.shine{animation:gmShine .5s ease-out forwards}
 .gm-orb.shine-s .gm-cb{box-shadow:0 0 10px 3px rgba(225,235,250,.95)}.gm-orb.shine-g .gm-cb{box-shadow:0 0 12px 4px rgba(255,214,80,.95)}.gm-orb.shine-r .gm-cb{box-shadow:0 0 14px 5px rgba(200,140,255,.95)}
@@ -109,7 +109,9 @@
 @keyframes gmGlowR{0%{box-shadow:0 0 6px 2px #ff5d8f,0 0 16px 5px #ffb84d}25%{box-shadow:0 0 6px 2px #f6f05a,0 0 16px 5px #5ef0a0}50%{box-shadow:0 0 6px 2px #5ef0a0,0 0 16px 5px #5ab8ff}75%{box-shadow:0 0 6px 2px #5ab8ff,0 0 16px 5px #b47cff}100%{box-shadow:0 0 6px 2px #ff5d8f,0 0 16px 5px #ffb84d}}
 .gm-sssp{position:fixed;z-index:9999;pointer-events:none;border-radius:50%;box-shadow:0 0 6px currentColor}
 .gm-cf,.gm-cb{position:absolute;inset:0;border-radius:50%;backface-visibility:hidden;-webkit-backface-visibility:hidden}
-.gm-cf{transform:translateZ(calc(var(--ot) * .5 + .4px)) scale(.94);box-shadow:0 0 0 2.5px var(--gold),0 3px 8px rgba(0,0,0,.6)}
+.gm-cf{transform:translateZ(calc(var(--ot) * .5 + .4px)) scale(.94);box-shadow:inset 0 0 0 1px rgba(60,35,0,.55),inset 0 -5px 9px rgba(0,0,0,.38),inset 0 4px 7px rgba(255,255,255,.22),0 0 0 3.8px rgba(50,28,0,.7),0 3px 8px rgba(0,0,0,.6)}
+/* 노랑 테두리 2.5D 마감: 금속 금테(위 밝고 아래 어두운 베벨) + 바깥·안쪽 어두운 경계 */
+.gm-cf::before{content:"";position:absolute;inset:-3px;z-index:1;border-radius:50%;pointer-events:none;background:linear-gradient(160deg,#fff6c4 0%,#ffd84a 22%,#f5bd22 50%,#e0a010 72%,#a86f06 100%);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 4.2px),#000 calc(100% - 3.6px));mask:radial-gradient(farthest-side,transparent calc(100% - 4.2px),#000 calc(100% - 3.6px));box-shadow:inset 0 0 0 .6px rgba(40,22,0,.7)}
 .gm-cb{transform:rotateY(180deg) translateZ(calc(var(--ot) * .5 + .4px)) scale(.94)}.gm-cb svg{position:absolute;left:-4%;top:-4%;width:108%;height:108%;display:block}
 .gm-ce{position:absolute;inset:-1px;border-radius:50%;background:linear-gradient(90deg,#6d727a,#e4e7ec 30%,#9ea4ad 55%,#f1f3f6 75%,#70757d)}
 .gm-orb{--ot:7px}.gm-spc .gm-orb{--ot:9px}.gm-ce::after{content:"";position:absolute;inset:0;border-radius:50%;background:rgba(10,12,20,var(--dk,0))}
@@ -1095,7 +1097,11 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
             c.beginPath(); c.rect(x - r - 4, y - up - 1, 2 * r + 8, gap + 2); c.clip(); g = c.createRadialGradient(x, cy2, 0, x, cy2, R2); g.addColorStop(0, 'rgba(255,255,255,' + flick + ')'); g.addColorStop(0.5, lvCol(R, lv, 0.95 * flick)); g.addColorStop(1, lvCol(R, lv, 0.3 * flick)); c.fillStyle = g; c.beginPath(); c.arc(x, cy2, R2, 0, TAU); c.fill(); c.restore(); }
           for (let h = 0; h < 2; h++) { c.save(); c.translate(x, y + (h ? dn : -up)); c.rotate(h ? 0 : Math.sin(S.time * 30) * 0.015 * pr); c.beginPath(); c.rect(-s / 2, h ? 0 : -s / 2, s, s / 2); c.clip(); c.drawImage(sp.base, -s / 2, -s / 2, s, s); c.drawImage(sp.over, -s / 2, -s / 2, s, s); c.restore(); }
         } else { c.save(); c.translate(x, y); c.shadowColor = glow; c.shadowBlur = 24 + 70 * pr; c.drawImage(sp.base, -s / 2, -s / 2, s, s); c.shadowBlur = 0; c.drawImage(sp.over, -s / 2, -s / 2, s, s); c.globalCompositeOperation = 'lighter'; c.lineCap = 'round'; c.lineJoin = 'round'; c.shadowColor = glow; c.shadowBlur = 16 + 30 * pr;
-          if (R.method === 'tap') { c.strokeStyle = 'rgba(255,255,255,' + (0.9 * flick) + ')'; c.lineWidth = 2.5 + 3 * pr; for (const pts of R.cracks) { c.beginPath(); pts.forEach((q, i) => (i ? c.lineTo(q[0] * r, q[1] * r) : c.moveTo(q[0] * r, q[1] * r))); c.stroke(); } c.strokeStyle = lvCol(R, lv, 0.8 * flick); c.lineWidth = 7 + 6 * pr; c.globalAlpha = 0.5; for (const pts of R.cracks) { c.beginPath(); pts.forEach((q, i) => (i ? c.lineTo(q[0] * r, q[1] * r) : c.moveTo(q[0] * r, q[1] * r))); c.stroke(); } }
+          if (R.method === 'tap') { /* 균열: 가운데가 가장 넓고 양 끝이 바늘처럼 뾰족한 틈 (꾹 눌러 열기의 틈새처럼) */
+            const taper = (pts, W) => { const n = pts.length; if (n < 2) return; const P = pts.map((q) => [q[0] * r, q[1] * r]), L = [], Rr = [];
+              for (let i = 0; i < n; i++) { const a = P[Math.max(0, i - 1)], b = P[Math.min(n - 1, i + 1)], dx = b[0] - a[0], dy = b[1] - a[1], d = Math.hypot(dx, dy) || 1, t = i / (n - 1), w = W * Math.pow(Math.sin(Math.PI * t), 0.75) / 2; L.push([P[i][0] - dy / d * w, P[i][1] + dx / d * w]); Rr.push([P[i][0] + dy / d * w, P[i][1] - dx / d * w]); }
+              c.beginPath(); c.moveTo(P[0][0], P[0][1]); for (let i = 1; i < n - 1; i++) c.lineTo(L[i][0], L[i][1]); c.lineTo(P[n - 1][0], P[n - 1][1]); for (let i = n - 2; i >= 1; i--) c.lineTo(Rr[i][0], Rr[i][1]); c.closePath(); c.fill(); };
+            c.lineJoin = 'miter'; c.fillStyle = lvCol(R, lv, 0.55 * flick); for (const pts of R.cracks) taper(pts, 9 + 10 * pr); c.fillStyle = 'rgba(255,255,255,' + (0.95 * flick) + ')'; for (const pts of R.cracks) taper(pts, 3 + 4 * pr); }
           else { const hw = r * (0.2 + 0.8 * Math.min(1, pr * 1.6)), lens = (th) => { c.beginPath(); c.moveTo(-hw, 0); c.quadraticCurveTo(0, -th, hw, 0); c.quadraticCurveTo(0, th, -hw, 0); c.fill(); }; c.fillStyle = lvCol(R, lv, 0.45 * flick); lens(6 + 20 * pr * pr); c.fillStyle = 'rgba(255,255,255,' + ((0.45 + 0.55 * pr) * flick) + ')'; lens(1.8 + 9 * pr * pr); }
           c.restore(); }
         if (Math.random() < 0.3 + pr * 0.5) { const a2 = rnd(0, TAU), d = rnd(180, 330); S.parts.push({ ty: 'spark', x: RV.x + Math.cos(a2) * d, y: RV.y + Math.sin(a2) * d, vx: -Math.cos(a2) * d * 1.6, vy: -Math.sin(a2) * d * 1.6, g: 0, life: 0, max: 0.55, col: lvCol(R, lv, 1), size: rnd(1.5, 3.5) }); }

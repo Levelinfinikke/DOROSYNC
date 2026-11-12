@@ -1555,8 +1555,8 @@ button:not(.tr-clr):not(.tabs button):not(.tr-f):not(.pk-t):not(.pk-r){border-ra
 .cmt-tip .cmt-x,.auto-tip .cmt-x{color:#fff0f1!important}
 #btn-commit .cmt-flag{overflow:visible}
 /* 결과 카드 상단 버튼(확정·저장·공유) 아이콘 크기 맞춤 */
-.btns #btn-save-res svg.icb-i,.btns #btn-commit svg.icb-i{width:18px!important;height:18px!important;flex:none}
-.btns #btn-save-res,.btns #btn-commit{padding-left:6px!important;padding-right:6px!important}
+.btns #btn-save-res svg.icb-i,.btns #btn-commit svg.icb-i,#btn-boss-img svg.icb-i{width:18px!important;height:18px!important;flex:none}
+.btns #btn-save-res,.btns #btn-commit,#btn-boss-img{padding-left:6px!important;padding-right:6px!important}
 /* 모바일 탭 줄 흐림 */
 .tabs.fade-r{-webkit-mask-image:linear-gradient(to right,#000 82%,transparent);mask-image:linear-gradient(to right,#000 82%,transparent)}
 .tabs.fade-l{-webkit-mask-image:linear-gradient(to left,#000 82%,transparent);mask-image:linear-gradient(to left,#000 82%,transparent)}
