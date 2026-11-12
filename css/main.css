@@ -1553,4 +1553,7 @@ button:not(.tr-clr):not(.tabs button):not(.tr-f):not(.pk-t):not(.pk-r){border-ra
 .cmt-tip,.auto-tip{background:#f2626c!important;box-shadow:0 6px 16px rgba(242,98,108,.3)!important}
 .cmt-tip::after,.auto-tip::after{border-left-color:#f2626c!important}
 .cmt-tip .cmt-x,.auto-tip .cmt-x{color:#fff0f1!important}
-#btn-commit .cmt-flag{width:22px!important;height:22px!important;overflow:visible}
+#btn-commit .cmt-flag{overflow:visible}
+/* 결과 카드 상단 버튼(확정·저장·공유) 아이콘 크기 맞춤 */
+.btns #btn-save-res svg.icb-i,.btns #btn-commit svg.icb-i{width:20px!important;height:20px!important;flex:none}
+.btns #btn-save-res,.btns #btn-commit{padding-left:6px!important;padding-right:6px!important}
