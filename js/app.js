@@ -2518,8 +2518,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
       const band = (w, op, dur, bg) => '<rect x="' + -w / 2 + '" y="-110" width="' + w + '" height="220" fill="#fff" opacity="' + op + '" transform="rotate(24)"><animateTransform attributeName="transform" type="translate" values="-150 0;150 0;150 0" keyTimes="0;.45;1" dur="' + dur + 's" begin="' + bg + 's" repeatCount="indefinite" additive="sum"/></rect>';
       fxs = '<g clip-path="url(#' + id + 'c)">' + band(26, 0.55, k === 'r' ? 1.8 : 2.6, 0) + (k === 'r' ? band(10, 0.4, 1.8, 0.25) : '') + '</g>' +
         (k === 'g' ? star(-34, -40, 15, '#fffbe0', 2.2, 0.3) + star(42, 30, 11, '#fffbe0', 2.2, 1.3)
-          : star(-36, -42, 17, '#fff', 1.6, 0) + star(44, -20, 12, '#ffe9fb', 1.6, 0.5) + star(30, 46, 14, '#e6fbff', 1.6, 1) + star(-44, 28, 10, '#fff7d6', 1.6, 1.3) +
-            '<circle r="70" fill="none" stroke="' + f + '" stroke-width="3" opacity=".9"><animate attributeName="r" values="66;76;66" dur="1.6s" repeatCount="indefinite"/><animate attributeName="opacity" values=".9;.15;.9" dur="1.6s" repeatCount="indefinite"/></circle>');
+          : star(-36, -42, 17, '#fff', 1.6, 0) + star(44, -20, 12, '#ffe9fb', 1.6, 0.5) + star(30, 46, 14, '#e6fbff', 1.6, 1) + star(-44, 28, 10, '#fff7d6', 1.6, 1.3));
     }
     return '<svg class="dchip dchip-' + k + (anim ? ' fx' : '') + '" viewBox="-80 -80 160 160" width="' + (px || 24) + '" height="' + (px || 24) + '" aria-hidden="true">' + (defs ? '<defs>' + defs + '</defs>' : '') +
       '<circle r="72" fill="' + (k === 'g' ? '#f3e3a6' : '#d5d8dd') + '" stroke="' + (k === 'g' ? '#a8830f' : '#8b9097') + '" stroke-width="3"/><circle r="61" fill="#3b3e44"/>' +
