@@ -5,11 +5,12 @@
   const lsg = (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } }, lss = (k, v) => { try { localStorage.setItem(k, v); } catch (e) { /* 무시 */ } };
   const DM = { on: lsg('dsgm-doro') === '1' }; /* DORO MODE: DORO칩으로만 뽑기(1칩 = 1뽑), 2배속 AUTO 고정 */
   const DCLK = { v: +lsg('dsgm-dclk') || 0, saved: 0 };
-  /* LT(럭키 트리거) 사양 — e東京喰種(399)식. 1뽑 = 1회전
-     통상: 대당첨(무지개) 1/830 × (1 + COMBO 단계) → 평균 약 1/399. 첫 당첨 60칩, 51%(+COMBO 6%p/단계, 최대 90%)로 DORO TIME(LT) 돌입
-     DORO TIME: 130뽑 ST, 1/95.3(계속 약 75%). 당첨마다 120칩(25%로 240칩)·남은 횟수 다시 130. COMBO가 터지면 남은 횟수 +10×n
+  /* LT(럭키 트리거) 사양 — e東京喰種(399)식. 1뽑 = 1회전, SSR이 나오면 리치(대당첨 추첨은 SSR에서만)
+     통상: SSR 1장당 3.1% × 등급(픽업·SSS ×2, 그 외 약 ×0.62) × (1 + COMBO 단계) → 1뽑 평균 약 1/399
+     첫 당첨 63칩, 51%(+COMBO 6%p/단계, 최대 90%)로 DORO TIME(LT) 돌입
+     DORO TIME: 130뽑 ST, SSR 1장당 26.2% × 등급(1뽑 기준 1/95.3, 계속 약 75%). 당첨마다 126칩(25%로 252칩)·남은 횟수 다시 130. COMBO가 터지면 +10×n
      칩 환수율 약 101% */
-  const LT = { p0: 1 / 830, rush: 1 / 95.3, N: 130, F: 60, lt0: 0.51, ltC: 0.06, ltMax: 0.9 };
+  const LT = { q0: 0.031, qR: (1 / 95.3) / 0.04, N: 130, F: 63, lt0: 0.51, ltC: 0.06, ltMax: 0.9, wHot: 2 };
   const RUSH = (() => { try { return Object.assign({ n: 0, ch: 0, got: 0 }, JSON.parse(lsg('dsgm-rush') || '{}'), { pend: 0 }); } catch (e) { return { n: 0, ch: 0, got: 0, pend: 0 }; } })();
   const rushSave = () => lss('dsgm-rush', JSON.stringify({ n: RUSH.n, ch: RUSH.ch, got: RUSH.got })); /* DORO MODE 게임 시계(ms): COMBO·DORO TIME은 이 시계로 흐름(기기 속도와 상관없이 같은 환수율) */
   const W = 960, H = 956, TAU = Math.PI * 2;
@@ -550,10 +551,11 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     function pull() { const c = S.cred[0]; if (!c || !domeN()) return; c.n--; if (!c.n) S.cred.shift(); S.credN--; const b = domeTake(); if (!b) return; const res = b.res; if (S.doro) res.dm = 1; /* 1칩 = 1뽑 */
       S.stats.n++; S.stats.gold++; if (res.kind === 'SSR') { S.stats.ssr++; if (res.nk.pu) S.stats.pu++; } S.log.push(0); if (S.doro) { S.dnet = (S.dnet || 0) - 1; (S.dlog = S.dlog || [0]).push(S.dnet); } res.sq = S.sq.length; S.sq.push({ k: res.kind, d: 0, a: 0 }); res.blk = blockAdd(res.kind); { const c0 = curCode(); if (c0 > 1) res.cm = c0; }
       if (S.doro) { /* 대당첨 추첨(1뽑 = 1회전) */ const cm = comboMul() > 1 ? comboMul() : 0;
-        if (RUSH.n > 0) { RUSH.n--; if (Math.random() < LT.rush) { res.rb = { t: 'rush' }; RUSH.pend++; } else if (RUSH.n <= 0 && !RUSH.pend) rushEnd(); rushSave(); }
-        else if (Math.random() < LT.p0 * (1 + cm)) res.rb = { t: 'first', lt: Math.random() < Math.min(LT.ltMax, LT.lt0 + LT.ltC * cm) };
+        let hit = false; if (res.kind === 'SSR' && res.nk) { const w = rbW(res.nk); hit = Math.random() < (RUSH.n > 0 ? Math.min(0.95, LT.qR * w) : LT.q0 * w * (1 + cm)); } /* SSR = 리치 */
+        if (RUSH.n > 0) { RUSH.n--; if (hit) { res.rb = { t: 'rush' }; RUSH.pend++; } else if (RUSH.n <= 0 && !RUSH.pend) rushEnd(); rushSave(); }
+        else if (hit) res.rb = { t: 'first', lt: Math.random() < Math.min(LT.ltMax, LT.lt0 + LT.ltC * cm) };
         if (S.forceRb) { res.rb = S.forceRb; S.forceRb = null; if (res.rb.t === 'rush') RUSH.pend++; } /* 시험용(localhost) */
-        if (res.rb ? Math.random() < 0.6 : Math.random() < 0.004) { const col = teaseCol(!!res.rb); setTimeout(() => { edgeTo(0.55, 220, col); setTimeout(() => edgeTo(0, 900), 650); }, 120); } /* 先読み: 테두리 색으로 예고 */ } gDirty = true; snd.tick(); /* AUTO에서도 레버 드르륵 10번 모두 */ uiStat(); }
+        } gDirty = true; snd.tick(); /* AUTO에서도 레버 드르륵 10번 모두 */ uiStat(); }
     /* 10연속 R·SR: 뽑은 순서 기준, 10개가 모두 까졌을 때 확률 고지 */
     function streak(k) { if (!S.doro) return; const p = +(Math.pow(k === 'SR' ? 0.43 : 0.53, 10) * 100).toPrecision(2), ck = chipRoll(k === 'SR' ? 'stkSR' : 'stkR'); S.flash = 0.7; snd.burst(2); vib([40, 30, 40, 30, 120], true); sparks(480, 330, 70, k === 'SR' ? '#b06bff' : '#4f9bff', 700, 200); setTimeout(() => streakCut(k, p, ck), 260); } /* 10연속 보상: 고유 연출 뒤 보상 칩이 바구니로 */
     /* R·SR 10연속 컷인: ?칩이 박히고, 가운데 버튼을 꾹 누르면 단계가 오르내리다 보상이 정해짐. 3초 뒤 탭하여 계속(AUTO는 자동) */
@@ -660,7 +662,8 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
       else if (T === 3) ev.push({ p: Math.random() < 0.5 ? 0.9 : 0.42, lv: 3 }); else if (Math.random() < 0.2) { ev.push({ p: 0.6, lv: 3, fake: true }); ev.push({ p: 0.9, lv: 2, fail: true }); }
       if (rand && res.dummy && kind !== 'SSR') { const u = Math.random(), pk = Math.max(T, u < 0.2 ? 0 : u < 0.5 ? 1 : u < 0.8 ? 2 : 3); ev.length = 0; for (let lv = 1; lv <= pk; lv++) ev.push({ p: clamp(0.14 + 0.66 * lv / (pk + 0.5) + rnd(-0.03, 0.03), 0.1, 0.86), lv }); if (pk > T) ev.push({ p: 0.95, lv: T, fail: true }); }
       S.reveal = { res, nk, kind, T, grow: 0, hold: false, skin: T === 3 ? (nk.pu || isSSS(nk) ? 'rb' : 'ov') : pick(['rb', 'ov']), method, ev, ei: 0, shown: rand ? 0 : 2, fakeOn: false, prog: 0, t: 0, ph: 'in', x0: b.x, y0: b.y, a0: b.a % TAU, r0: b.r, lk: look(b), taps: 0, cracks: [], drag: null, punch: 0, shake: 0, rings: [], hb: 0, D: 1.25 + 0.55 * ev.length,
-        pu: !!(nk && nk.pu), ovr: !!(nk && isOvr(nk)), isNew: !!nk && !S.tray.some((x) => x && x.nk.n === nk.n) }; }
+        pu: !!(nk && nk.pu), ovr: !!(nk && isOvr(nk)), isNew: !!nk && !S.tray.some((x) => x && x.nk.n === nk.n) };
+      if (S.doro && kind === 'SSR') { const rb = !!res.rb; if (rb ? Math.random() < 0.7 : Math.random() < 0.12) { const col = teaseCol(rb); setTimeout(() => { edgeTo(0.55, 260, col); setTimeout(() => edgeTo(0, 1100), 1300); }, 200); } } /* 리치 예고: 테두리 색 */ }
     function lvCol(R, lv, al) { if (lv < 3) { const h = LVC[lv]; return 'rgba(' + parseInt(h.slice(1, 3), 16) + ',' + parseInt(h.slice(3, 5), 16) + ',' + parseInt(h.slice(5, 7), 16) + ',' + al + ')'; } return R.skin === 'ov' ? 'rgba(150,240,255,' + al + ')' : 'hsla(' + ((S.time * 200) % 360) + ',100%,70%,' + al + ')'; }
     function revEvent(R, e) { R.shown = e.lv; R.fakeOn = !!e.fake; R.rings.push({ t: 0, lv: e.lv }); R.shake = 1; if (!e.fail && e.lv >= 2) vib(e.lv === 3 ? [50, 40, 110] : 45); if (e.fail) { snd.fail(); S.flash = 0; sparks(RV.x, RV.y, 26, '#8a93a3', 380, 500); } else if (e.fake) { snd.fakeUp(); S.flash = 0.2; } else { snd.up(e.lv); S.flash = 0.3; sparks(RV.x, RV.y, 30, () => lvCol(R, e.lv, 1), 520, 120); } }
     function revBurst(R) { while (R.ei < R.ev.length) { const e = R.ev[R.ei++]; R.shown = e.lv; R.fakeOn = false; } R.shown = R.T; R.ph = 'hit'; R.t = 0; R.drag = null; }
@@ -690,6 +693,9 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     const boostP = (a, b) => { if (!(b > 1)) return a; const p = a.slice(); let add = Math.max(0, Math.min(Math.max(50, p[3]), p[3] * RB_MUL * b) - p[3]); /* 올라가도 최대 50% */ p[3] += add; for (let i = 0; i < 3 && add > 0; i++) { const tk = Math.min(p[i], add); p[i] -= tk; add -= tk; } return p; };
     const chipRoll = (key, boost) => { const p = boostP(CHIP_P[key], boost), u = Math.random() * 100; let a = 0; for (let i = 0; i < 4; i++) { a += p[i]; if (u < a) return KS[i]; } return 'b'; };
     const mkTop = (e) => ({ nk: e.nk, cm: e.cq && e.cq.length ? e.cq.shift() : 0 }); /* 맨 위 장: 남은 콤보 배수 중 가장 큰 것부터 */
+    /* 리치 신뢰도: 픽업·SSS ×2, 그 외는 평균이 1이 되게 */
+    const W0 = (() => { const sh = (L) => (L.length ? L.filter((x) => x && CHT[x.n] === 'SSS').length / L.length : 0), fs = 0.125 * sh(P.pil || []) + 0.625 * sh(P.std || []); return Math.max(0.2, (1 - 0.25 * LT.wHot - LT.wHot * fs) / (0.75 - fs)); })();
+    const rbW = (nk) => (nk.pu || CHT[nk.n] === 'SSS' ? LT.wHot : W0);
     const isSSSn = (nk) => CHT[nk.n] === 'SSS', chipOf = (nk, code) => chipRoll(tierGrp(nk), (code || 0) % 1000), chipE = (en) => { if (!en.ck || en.ck === 'x') en.ck = chipOf(en.nk, en.cm); return en.ck; }, chipSvg = (k, px, fx, flat) => (window.doroChipSvg ? window.doroChipSvg(k, px, fx, flat) : '');
     /* 2.5D 도로칩(두께 있는 원판, 기울어진 채 회전): 날아가는 칩용 */
     const C3E = (() => { let h = ''; for (let i = 0; i < 9; i++) { const f = i / 8 - 0.5, sc = 1 - 0.07 * (1 - Math.sqrt(Math.max(0, 1 - Math.pow(2 * f, 2)))); h += '<i style="transform:translateZ(calc(var(--ct) * ' + f.toFixed(3) + ')) scale(' + sc.toFixed(3) + ');--dk:' + (0.05 + Math.abs(f) * 0.7).toFixed(2) + '"></i>'; } return h; })();
@@ -1258,7 +1264,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
       const tags = (cb > 1 ? ' <em class="cb">COMBO ×' + cb + ' · 대당첨 ×' + (1 + cb) + '</em>' : '') + (fv ? ' <em>DORO TIME ' + RUSH.n + '뽑' + (RUSH.ch > 1 ? ' · ' + RUSH.ch + '연짱' : '') + '</em>' : '');
       return '<div class="gm-oddh"><b>DORO칩 획득 확률' + tags + '</b><button class="gm-tb" data-x>닫기</button></div><table><thead><tr><th></th>' + KS.map((k) => '<th>' + chipSvg(k, 20, false) + '</th>').join('') + '</tr></thead><tbody>' +
         row('SSS', 'SSS') + row('SS', 'SS') + row('S', 'S') + row('A 이하', 'low') + row('R 캡슐', 'capR', CAP_RATE.R + '% 확률로') + row('SR 캡슐', 'capSR', CAP_RATE.SR + '% 확률로') + row('R 10연속', 'stkR') + row('SR 10연속', 'stkSR') +
-        '</tbody></table><p><b>대당첨(무지개)</b>: 1뽑마다 1/830 × (1 + COMBO 단계) · 평균 약 1/399 · 첫 당첨 60칩, 51%(+COMBO 단계마다 6%p, 최대 90%)로 DORO TIME 돌입<br><b>DORO TIME</b>: 130뽑 동안 1/95.3(계속 약 75%) · 당첨마다 120칩(25%로 240칩)·남은 횟수 다시 130 · COMBO가 터지면 남은 횟수 +10×n<br>COMBO: 10뽑 묶음에서 SSR이 n장(2장 이상) 나오면 10×n초 · 시간 안에 또 나오면 단계 합산<br>예고: 대당첨 직전 화면 테두리가 무지개 &gt; 금 &gt; 파랑 순으로 진짜일 가능성이 높음</p><p>DORO칩 10 = 실버칩 2 = 골드칩 1 · 바디라벨 10,000 = DORO칩 1 · 티어는 기본 티어표(솔레) 기준</p>';
+        '</tbody></table><p><b>대당첨(무지개)</b>: SSR이 나오면 리치 · SSR 1장당 3.1% × 등급(픽업·SSS ×2, 그 외 ×' + W0.toFixed(2) + ') × (1 + COMBO 단계) · 1뽑 평균 약 1/399 · 첫 당첨 63칩, 51%(+COMBO 단계마다 6%p, 최대 90%)로 DORO TIME 돌입<br><b>DORO TIME</b>: 130뽑 동안 SSR 1장당 26% × 등급(계속 약 75%) · 당첨마다 126칩(25%로 252칩)·남은 횟수 다시 130 · COMBO가 터지면 남은 횟수 +10×n<br>COMBO: 10뽑 묶음에서 SSR이 n장(2장 이상) 나오면 10×n초 · 시간 안에 또 나오면 단계 합산<br>예고: SSR을 열 때 화면 테두리가 무지개 &gt; 금 &gt; 파랑 순으로 진짜일 가능성이 높음</p><p>DORO칩 10 = 실버칩 2 = 골드칩 1 · 바디라벨 10,000 = DORO칩 1 · 티어는 기본 티어표(솔레) 기준</p>';
     }
     function oddsRefresh() { const b = root.querySelector('.gm-odds'); if (b && b._paint) b._paint(); }
     function chipOdds() {
@@ -1613,7 +1619,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     const DM_T = 2.3; let DMC = null;
     function dmcBuild(N) {
       const K = Math.max(1, Math.round(N / 100)), M = Math.floor(N / K), RUNS = Math.max(300, Math.min(1000, Math.floor(1.5e6 / N))), cols = Array.from({ length: M + 1 }, () => new Float64Array(RUNS));
-      const groups = [[0.01, [P.pickup]], [0.005, P.pil], [0.025, P.std]].map(([p, L]) => [p, L.map(tierGrp)]), VAL = [1, 5, 10, 0];
+      const groups = [[0.01, [P.pickup]], [0.005, P.pil], [0.025, P.std]].map(([p, L], gi) => [p, L.map((x) => [tierGrp(x), gi === 0 ? LT.wHot : rbW(x)])]), VAL = [1, 5, 10, 0];
       const roll = (key) => { const p = CHIP_P[key]; let u = Math.random() * 100; for (let i = 0; i < 4; i++) { u -= p[i]; if (u < 0) return i; } return 0; };
       for (let r = 0; r < RUNS; r++) {
         let bal = 0, t = 0, mul = 0, end = -1, top = 0, lab = 0, st = 0, pulls = 0;
@@ -1621,12 +1627,12 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
           const cm = t < end ? mul : 0; let nS = 0, nR = 0, nSR = 0;
           for (let q = 0; q < 10 && pulls < N; q++) {
             pulls++; bal -= 1;
-            if (st > 0) { st--; if (Math.random() < LT.rush) { bal += LT.F * (Math.random() < 0.25 ? 4 : 2); st = LT.N; } }
-            else if (Math.random() < LT.p0 * (1 + cm)) { bal += LT.F; if (Math.random() < Math.min(LT.ltMax, LT.lt0 + LT.ltC * cm)) st = LT.N; }
-            const u = Math.random();
-            if (u < 0.04) { nS++; let uu = Math.random() * 0.04; for (const [p, L] of groups) { if ((uu -= p) < 0) { bal += VAL[roll(L[(Math.random() * L.length) | 0])]; break; } } }
+            let hit = false; const u = Math.random();
+            if (u < 0.04) { nS++; let uu = Math.random() * 0.04; for (const [p, L] of groups) { if ((uu -= p) < 0) { const [tg, w] = L[(Math.random() * L.length) | 0]; bal += VAL[roll(tg)]; hit = Math.random() < (st > 0 ? Math.min(0.95, LT.qR * w) : LT.q0 * w * (1 + cm)); break; } } }
             else if (u < 0.47) { nSR++; lab += 200; if (Math.random() * 100 < CAP_RATE.SR) bal += VAL[roll('capSR')]; }
             else { nR++; lab += 150; if (Math.random() * 100 < CAP_RATE.R) bal += VAL[roll('capR')]; }
+            if (st > 0) { st--; if (hit) { bal += LT.F * (Math.random() < 0.25 ? 4 : 2); st = LT.N; } }
+            else if (hit) { bal += LT.F; if (Math.random() < Math.min(LT.ltMax, LT.lt0 + LT.ltC * cm)) st = LT.N; }
             while (lab >= 10000) { lab -= 10000; bal += 1; }
             if (pulls % K === 0) cols[pulls / K][r] = bal;
           }
