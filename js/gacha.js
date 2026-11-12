@@ -322,9 +322,8 @@
 .gm-save,.gm-recp{position:fixed;z-index:9998;pointer-events:none;transform:translate(-50%,-50%);text-align:center;animation:gmCombo 1.25s cubic-bezier(.3,1.7,.5,1) forwards}
 .gm-save b{font:italic 900 54px/1 system-ui,sans-serif;color:#fff;-webkit-text-stroke:3px #c40000;paint-order:stroke fill;text-shadow:0 0 18px #ff2a2a}
 .gm-recp{animation-duration:2.1s}.gm-recp small{display:block;font:900 13px/1 system-ui,sans-serif;letter-spacing:.3em;color:#fff;text-shadow:0 0 8px #ff3a6a}.gm-recp b{display:block;font:italic 900 34px/1.1 system-ui,sans-serif;color:#ffe14a;-webkit-text-stroke:2px #7a1600;paint-order:stroke fill}
-.gm-fevb.t1,.gm-fevb.t2,.gm-fevb.t3,.gm-fevb.ch{flex-direction:column;justify-content:center;height:124px;margin-top:-62px}.gm-fevb i{display:block;font:italic 900 22px/1 system-ui,sans-serif;letter-spacing:.3em;color:#fff;text-shadow:0 0 10px #fff}.gm-fevb small{display:block;font:900 22px/1.3 system-ui,sans-serif;color:#ffe14a;text-shadow:0 2px 0 #5a0e00}
-.gm-fevb.t1 b{filter:sepia(1) saturate(3) hue-rotate(-10deg)}.gm-fevb.t2 b{filter:saturate(2) hue-rotate(-30deg);transform:scale(1.15)}.gm-fevb.t3 b{transform:scale(1.3);filter:drop-shadow(0 0 16px #fff)}
-.gm-left.gm-fvt1{box-shadow:0 0 0 3px #ffb84d,0 0 30px 8px rgba(255,170,40,.7)!important}.gm-left.gm-fvt2{box-shadow:0 0 0 4px #ff3a3a,0 0 40px 12px rgba(255,40,40,.75)!important}.gm-left.gm-fvt3{box-shadow:0 0 0 4px #fff,0 0 50px 16px rgba(200,120,255,.9),0 0 90px 30px rgba(90,184,255,.5)!important}.gm-odds td.up{color:#ff9af0;font-weight:900}.gm-odds td.dn{opacity:.7}.gm-odds em.cb{background:linear-gradient(90deg,#c41a00,#ff7a00);color:#fff6c0}.gm-dw svg{width:15px;height:15px}.gm-dmb svg{width:40px;height:40px}
+.gm-fevb.ch{flex-direction:column;justify-content:center;height:124px;margin-top:-62px}.gm-fevb i{display:block;font:italic 900 22px/1 system-ui,sans-serif;letter-spacing:.3em;color:#fff;text-shadow:0 0 10px #fff}.gm-fevb small{display:block;font:900 22px/1.3 system-ui,sans-serif;color:#ffe14a;text-shadow:0 2px 0 #5a0e00}
+
 .gm-fb{appearance:none;border:1px solid #ffc21a;background:rgba(40,30,0,.78);color:#ffd24d;border-radius:10px;padding:6px 9px;font-weight:800;cursor:pointer;font-size:12.5px}
 .gm-mode .gm-fb.run{background:#ffc21a;color:#1b1400}.gm-mode .gm-fb.full{border-color:#ff8a5c;color:#ffb494;background:rgba(60,20,0,.8)}
 .gm-trt{display:none}.gm-trbtn{display:none;position:absolute;left:2.4%;bottom:21.5%;z-index:5;overflow:visible}.gm-trbtn img{width:22px;height:22px;object-fit:contain;pointer-events:none}.gm-trbtn span{position:absolute;right:-5px;top:-5px;min-width:17px;height:17px;border-radius:9px;background:#11141b;border:1px solid #ffc21a;color:#ffc21a;font:800 10.5px/15px sans-serif;text-align:center;padding:0 4px}.gm-left.clean .gm-trbtn{display:none!important}
@@ -764,20 +763,27 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
       const on = feverOn(), left = Math.max(0, fevEnd() - DCLK.v);
       document.querySelectorAll('.gm').forEach((g) => g.classList.toggle('gm-feveron', on));
       if (on) { window.__fevWas = true; const sec = Math.ceil(left / 1000); if (left <= 10000 && sec !== window.__fevBeep) { window.__fevBeep = sec; try { snd.beep(sec <= 3); } catch (e) { /* 무시 */ } } }
-      else if (window.__fevWas) { window.__fevWas = false; window.__fevEndT = performance.now(); try { snd.fevEnd(); } catch (e) { /* 무시 */ } document.querySelectorAll('.gm-left').forEach((x) => x.classList.remove('gm-fvt1', 'gm-fvt2', 'gm-fvt3')); GM_ALL.forEach((x) => x.odds && x.odds()); }
+      else if (window.__fevWas) { window.__fevWas = false; window.__fevEndT = performance.now(); try { snd.fevEnd(); } catch (e) { /* 무시 */ } GM_ALL.forEach((x) => x.odds && x.odds()); }
       cancelAnimationFrame(feverTick.raf); if (on) feverTick.raf = requestAnimationFrame(feverTick);
     }
     /* 픽업 표지 = 화면: DORO TIME 중에는 표지 위에 무지개 타이머를 띄움. 끝나면 회색으로 멈췄다가 천천히 흐려짐 */
+    /* DORO TIME 화면 배경: 무지개칩 컷인 배경(rbBg)을 숨긴 캔버스에 돌려 표지 화면에 찍음 */
+    let SB = null;
+    function scrBg(on) {
+      if (!on) { if (SB) { SB.bg.stop(); SB.cv.remove(); SB = null; } return null; }
+      if (!SB) { const cv0 = document.createElement('canvas'); cv0.style.cssText = 'position:fixed;left:-9999px;top:0;width:470px;height:264px;pointer-events:none;visibility:hidden'; document.body.appendChild(cv0); SB = { cv: cv0, bg: rbBg(cv0, { burst: false }) }; }
+      return SB.cv;
+    }
     function drawScreen(c) {
       const on = feverOn(), endT = window.__fevEndT || 0, nowP = performance.now(); let al = 1;
-      if (!on) { if (!endT || nowP - endT > 2600) return; al = 1 - (nowP - endT) / 2600; }
+      if (!on) { if (!endT || nowP - endT > 2600) { if (SB) scrBg(false); return; } al = 1 - (nowP - endT) / 2600; }
       const x0 = BAN.cx - BAN.w / 2, y0 = BAN.cy - BAN.h / 2, w = BAN.w, h = BAN.h, gray = !on, left = on ? Math.max(0, fevEnd() - DCLK.v) : 0, t = gray ? endT / 1000 : S.time, last = on && left <= 10000;
       c.save(); c.globalAlpha = al;
       { let rb; if (gray) rb = '#8a8f99'; else if (c.createConicGradient) { rb = c.createConicGradient(t * 1.2, BAN.cx, BAN.cy); ['#ff5d8f', '#ffb84d', '#f6f05a', '#5ef0a0', '#5ab8ff', '#b47cff', '#ff5d8f'].forEach((col, i, A) => rb.addColorStop(i / (A.length - 1), col)); } else rb = '#ff5d8f'; c.fillStyle = rb; if (!gray) { c.shadowColor = 'rgba(255,255,255,.7)'; c.shadowBlur = 12; } stkPath(c, 6); c.fill(); c.shadowBlur = 0; } /* 표지 테두리 → 무지개 테두리 */
       stkPath(c, 0); c.clip();
-      let lv0 = 1; try { lv0 = +localStorage.getItem(FEV_LV) || 1; } catch (e) { /* 무시 */ } const tier = gray ? 0 : fvTier(lv0 + 1), BG = [['#0c0620', '#1a0b33'], ['#1e0c00', '#4a2400'], ['#22000a', '#5a0018'], ['#000000', '#120020']][tier];
-      let g = c.createLinearGradient(0, y0, 0, y0 + h); g.addColorStop(0, gray ? '#1a1b20' : BG[0]); g.addColorStop(1, gray ? '#26272e' : BG[1]); c.fillStyle = g; c.fillRect(x0, y0, w, h);
-      if (!gray) { c.globalCompositeOperation = 'lighter'; for (let k = 0; k < 10; k++) { const a = t * 0.6 + k * TAU / 10; c.fillStyle = tier === 1 ? 'hsla(' + (35 + 10 * Math.sin(k + t)) + ',100%,60%,.13)' : tier === 2 ? 'hsla(' + (350 + 12 * Math.sin(k + t)) + ',100%,58%,.15)' : 'hsla(' + ((k * 36 + t * (tier === 3 ? 240 : 80)) % 360) + ',90%,60%,' + (tier === 3 ? 0.22 : 0.10) + ')'; c.beginPath(); c.moveTo(BAN.cx, BAN.cy); c.arc(BAN.cx, BAN.cy, w, a, a + 0.22); c.closePath(); c.fill(); } c.globalCompositeOperation = 'source-over'; }
+      let g = c.createLinearGradient(0, y0, 0, y0 + h); g.addColorStop(0, gray ? '#1a1b20' : '#0c0620'); g.addColorStop(1, gray ? '#26272e' : '#1a0b33'); c.fillStyle = g; c.fillRect(x0, y0, w, h);
+      const sb = gray ? null : scrBg(true); if (sb) c.drawImage(sb, x0, y0, w, h); /* DORO TIME 화면 배경 = 무지개칩 획득 배경 */
+      if (gray) scrBg(false);
       c.fillStyle = 'rgba(255,255,255,.035)'; for (let yy = y0; yy < y0 + h; yy += 4) c.fillRect(x0, yy, w, 1.4); /* 화면 주사선 */
       const rg = (yy) => { if (gray) return '#8a8f99'; const sh = (t * 160) % w, gg = c.createLinearGradient(x0 + sh - w, yy, x0 + sh + w, yy); ['#ff5d8f', '#ffb84d', '#f6f05a', '#5ef0a0', '#5ab8ff', '#b47cff', '#ff5d8f', '#ffb84d', '#f6f05a', '#5ef0a0', '#5ab8ff', '#b47cff', '#ff5d8f'].forEach((col, i, A) => gg.addColorStop(i / (A.length - 1), col)); return gg; };
       let lv = 1; try { lv = +localStorage.getItem(FEV_LV) || 1; } catch (e) { /* 무시 */ }
@@ -786,7 +792,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
       txt('DORO TIME ×' + (lv + 1), y0 + h * 0.24, 50, rg(y0 + h * 0.24));
       const m = Math.floor(left / 60000), sec = Math.floor(left / 1000) % 60, cs = Math.floor(left / 10) % 100, z = (n) => String(n).padStart(2, '0'), pul = last ? 1 + 0.1 * Math.max(0, Math.sin((left / 1000) * TAU)) : 1;
       txt(z(m) + ':' + z(sec) + ':' + z(cs), y0 + h * 0.58, 84, last ? '#ff5d6c' : rg(y0 + h * 0.58), pul);
-      c.font = '800 20px system-ui, sans-serif'; c.fillStyle = gray ? '#6b6f78' : '#ffe28a'; c.fillText(gray ? 'DORO TIME 종료' : (tier ? FV_NM[tier] + ' · ' : '') + 'DORO칩 수입 ×' + (lv + 1) + (lv > 1 ? ' · ' + lv + '연짱' : ''), BAN.cx, y0 + h * 0.88);
+      c.font = '800 20px system-ui, sans-serif'; c.fillStyle = gray ? '#6b6f78' : '#ffe28a'; c.fillText(gray ? 'DORO TIME 종료' : 'DORO칩 수입 ×' + (lv + 1) + (lv > 1 ? ' · ' + lv + '연짱' : ''), BAN.cx, y0 + h * 0.88);
       c.strokeStyle = 'rgba(0,0,0,.35)'; c.lineWidth = 2; stkPath(c, 0); c.stroke();
       c.restore();
     }
@@ -804,10 +810,9 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     }
     function basketGold() { let n = 0; S.bask.forEach((b) => { if (b.kind === 'chip' && (b.res.chip === 'b' || b.res.chip === 's')) { b.res.chip = 'g'; n++; sparks(b.x, b.y, 14, () => pick(['#fff3b0', '#ffd24d', '#ffffff']), 260, 120); } }); if (n) say('바구니의 칩 ' + n + '개가 골드칩으로!'); }
     /* ---- 시안용 추가 연출 ---- */
-    const fvTier = (m) => (m >= 10 ? 3 : m >= 5 ? 2 : m >= 3 ? 1 : 0), FV_NM = ['', 'RUSH', 'FEVER', 'LEGEND'];
-    function feverPop(lv) { const g = $('.gm'); if (!g) return; const mlt = (lv || 1) + 1, tier = fvTier(mlt); leftEl.classList.remove('gm-fvt1', 'gm-fvt2', 'gm-fvt3'); if (tier) leftEl.classList.add('gm-fvt' + tier);
-      if (tier && tier > (feverPop.tier || 0)) { setTimeout(() => { quake(4 + tier * 3); coinRain(tier >= 2, null, 3 + tier * 3); try { snd.fanfare(); setTimeout(() => snd.fanfare(), 260); } catch (e) { /* 무시 */ } }, 300); } feverPop.tier = lv > 1 ? tier : 0; /* 단계가 오를 때마다 진입 연출 */ g.classList.remove('gm-fever'); void g.offsetWidth; g.classList.add('gm-fever'); clearTimeout(feverPop.t); feverPop.t = setTimeout(() => g.classList.remove('gm-fever'), 8000);
-      const r = cvRect(), d = document.createElement('div'); d.className = 'gm-fevb'; d.style.cssText = 'left:' + r.left + 'px;top:' + (r.top + r.height * 0.42) + 'px;width:' + r.width + 'px'; d.className = 'gm-fevb t' + tier + (lv > 1 ? ' ch' : ''); d.innerHTML = (tier ? '<i>' + FV_NM[tier] + '</i>' : '') + '<b>DORO TIME ×' + mlt + '!</b>' + (lv > 1 ? '<small>' + lv + '연짱!</small>' : ''); (document.fullscreenElement || document.body).appendChild(d); setTimeout(() => d.remove(), 2200); try { snd.fanfare(); } catch (e) { /* 무시 */ } }
+        function feverPop(lv) { const g = $('.gm'); if (!g) return; const mlt = (lv || 1) + 1;
+ g.classList.remove('gm-fever'); void g.offsetWidth; g.classList.add('gm-fever'); clearTimeout(feverPop.t); feverPop.t = setTimeout(() => g.classList.remove('gm-fever'), 8000);
+      const r = cvRect(), d = document.createElement('div'); d.className = 'gm-fevb'; d.style.cssText = 'left:' + r.left + 'px;top:' + (r.top + r.height * 0.42) + 'px;width:' + r.width + 'px'; d.className = 'gm-fevb' + (lv > 1 ? ' ch' : ''); d.innerHTML = '<b>DORO TIME ×' + mlt + '!</b>' + (lv > 1 ? '<small>' + lv + '연짱!</small>' : ''); (document.fullscreenElement || document.body).appendChild(d); setTimeout(() => d.remove(), 2200); try { snd.fanfare(); } catch (e) { /* 무시 */ } }
     /* 칩 비: 캔버스 한 장에 칩 그림을 찍어 그림(두께는 옆면 띠로 흉내). DOM 수백 개보다 훨씬 가벼움 */
     const RAIN_IMG = {};
     const rainImg = (k) => { if (RAIN_IMG[k]) return RAIN_IMG[k]; const im = new Image(); im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(chipSvg(k, 96, false, true).replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ')); RAIN_IMG[k] = im; return im; };
@@ -983,7 +988,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
             const run = (now) => { const p = Math.min(1, (now - t0) / D), v = Math.round(cntV * (1 - Math.pow(1 - p, 3))); el.textContent = fmt(v); const q = Math.floor(p * 18); if (q !== lastP) { lastP = q; try { snd.tickUp(p); } catch (e) { /* 무시 */ } } if (p < 1 && ov.isConnected) requestAnimationFrame(run); else { ov.querySelector('.gm-rbcnt').classList.add('done'); try { snd.chipPop(); } catch (e) { /* 무시 */ } } };
             requestAnimationFrame(run); }, 900);
         }, IMP);
-        let ok = false; setTimeout(() => { ok = true; ov.classList.add('ok'); }, IMP + 3000);
+        let ok = true; setTimeout(() => { if (ok) ov.classList.add('ok'); }, IMP); /* 기다림 없이 누르면 바로 넘어감 */
         ov.addEventListener('pointerdown', (e) => {
           e.preventDefault(); e.stopPropagation(); if (!ok) return; ok = false; ov.classList.add('leave');
           /* 그 칩이 직접 잔고(모바일은 보관함 아이콘)로 날아감 */
