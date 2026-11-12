@@ -94,7 +94,7 @@ self.DATA={"boxes":[[20.24,6437.98,3456],[21.93,9221.99,3935.98],[23.39,12353.99
     m.Of = [0, 0, 0];
     m.Eq = 0; m.EqSo = Math.max(0, +inp.sortie || 0);
     for (const r of inp.inc) {
-      if (r.eq) { m.Eq = r.use ? 1 : 0; continue; } /* 장비 경험치 크레딧 소모 */
+      if (r.eq) { m.Eq = r.use ? (r.pct == null ? 100 : +r.pct) / 100 : 0; continue; } /* 장비 경험치 크레딧 소모 */
       if (!r.use) continue;
       const once = !(r.cyc > 0), cyc = once ? 1 : r.cyc;
       for (let k = 0; k < 3; k++) {
@@ -284,7 +284,7 @@ self.DATA={"boxes":[[20.24,6437.98,3456],[21.93,9221.99,3935.98],[23.39,12353.99
           const a = app[j];
           if (a !== 0) { h += a * m.Pk[j].H[k]; fx += a * m.Pk[j].Fl[k]; }
         }
-        acq[k] = fx + h * bx[k] - (k === 2 && m.Eq ? EQ_CR(S, m.EqSo) : 0);
+        acq[k] = fx + h * bx[k] - (k === 2 && m.Eq ? m.Eq * EQ_CR(S, m.EqSo) : 0);
         Fx[k] += acq[k];
       }
       let n = 1 << 30;
