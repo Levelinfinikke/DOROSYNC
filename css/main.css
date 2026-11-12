@@ -1564,3 +1564,7 @@ button:not(.tr-clr):not(.tabs button):not(.tr-f):not(.pk-t):not(.pk-r){border-ra
 /* 연동 전 전초기지: 도로칩 잔고 + 로그인 권유 */
 .me-pre .mekpis-pre{grid-template-columns:minmax(0,320px)!important}
 .me-login{margin:12px 0 0;display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:13.5px;color:var(--muted)}
+/* AUTO 켜짐: 성장 기록 카드 초록 형광 테두리 */
+#me-prog.auto-glow{border-color:#2cff8a!important;box-shadow:0 0 0 1px #2cff8a,0 0 14px rgba(44,255,138,.45),inset 0 0 10px rgba(44,255,138,.08);animation:autoGlow 2.4s ease-in-out infinite}
+@keyframes autoGlow{0%,100%{box-shadow:0 0 0 1px #2cff8a,0 0 10px rgba(44,255,138,.35),inset 0 0 8px rgba(44,255,138,.06)}50%{box-shadow:0 0 0 1px #2cff8a,0 0 20px rgba(44,255,138,.6),inset 0 0 12px rgba(44,255,138,.12)}}
+@media(prefers-reduced-motion:reduce){#me-prog.auto-glow{animation:none}}

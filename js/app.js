@@ -3282,6 +3282,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   function renderProg() {
     let box = $('#me-prog');
     if (!box) { box = document.createElement('div'); box.className = 'card'; box.id = 'me-prog'; }
+    box.classList.toggle('auto-glow', autoOn()); /* AUTO 켜짐: 초록 형광 테두리 */
     { const iv = $('#me-inv'); if (!iv) return; if (box.nextElementSibling !== iv) iv.before(box); } /* 인벤토리 바로 위 */
     const h = histGet(), all = plansGet(), vis = all.filter((p) => !p.hidden);
     let ref = vis.find((p) => p.ref) || vis[vis.length - 1] || null;
