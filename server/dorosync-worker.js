@@ -341,7 +341,7 @@ async function chipsClaim(req, env, out) {
     const dr = await fetch(FS + '/users/' + uid, { headers: H }); if (dr.status === 404) return out(404, { ok: false, error: 'nouser' });
     const doc = await dr.json(), f = doc.fields || {}, today = kstDay(Date.now());
     let cv = dec(f.chipsV) || null; const old = dec(f.chips) || {};
-    if (!cv) cv = { d: Math.min(GUEST_CAP_D, Math.max(0, +old.d || 0)), r: Math.min(GUEST_CAP_R, Math.max(0, +old.r || 0)) }; /* 처음 1회: 예전 잔고를 상한 안에서 옮김 */
+    if (!cv) cv = { d: Math.max(0, Math.floor(+old.d || 0)), r: Math.max(0, Math.floor(+old.r || 0)) }; /* 처음 1회: 검증 전에 모아 둔 계정 잔고는 그대로 옮김 */
     let day = dec(f.chipDay) || {}; if (day.d !== today) day = { d: today, n: 0, r: 0, g: 0 };
     let okD = 0, okR = 0, rej = 0; const now = Date.now();
     for (const e of evs) {
