@@ -1,0 +1,23 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{uid} {
+      // chipsV(검증된 도로칩 잔고)·chipDay(하루 사용량)는 서버(워커)만 쓸 수 있음
+      allow read, delete: if request.auth != null && request.auth.uid == uid;
+      allow create: if request.auth != null && request.auth.uid == uid
+        && !request.resource.data.keys().hasAny(['chipsV', 'chipDay']);
+      allow update: if request.auth != null && request.auth.uid == uid
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['chipsV', 'chipDay']);
+      // 하위 컬렉션만 (v2의 {doc=**}는 이 문서 자신까지 포함하므로 한 단계 아래부터)
+      match /{sub}/{doc=**} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+      }
+    }
+    match /usernames/{name} {
+      allow read: if true;
+      allow create: if request.auth != null && request.resource.data.uid == request.auth.uid && name.matches('^[a-z0-9_]{3,16}$');
+      allow delete: if request.auth != null && resource.data.uid == request.auth.uid;
+      allow update: if false;
+    }
+  }
+}
