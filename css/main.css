@@ -1568,3 +1568,12 @@ button:not(.tr-clr):not(.tabs button):not(.tr-f):not(.pk-t):not(.pk-r){border-ra
 #me-prog.auto-glow{border-color:#2cff8a!important;box-shadow:0 0 0 1px #2cff8a,0 0 14px rgba(44,255,138,.45),inset 0 0 10px rgba(44,255,138,.08);animation:autoGlow 2.4s ease-in-out infinite}
 @keyframes autoGlow{0%,100%{box-shadow:0 0 0 1px #2cff8a,0 0 10px rgba(44,255,138,.35),inset 0 0 8px rgba(44,255,138,.06)}50%{box-shadow:0 0 0 1px #2cff8a,0 0 20px rgba(44,255,138,.6),inset 0 0 12px rgba(44,255,138,.12)}}
 @media(prefers-reduced-motion:reduce){#me-prog.auto-glow{animation:none}}
+
+/* 기준 플랜 대비: 실제 막대 옆 배지로 통합 */
+.prog-sum{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr)!important}
+.prog-sum .prog-boost{grid-column:auto!important}
+@media(max-width:860px){.prog-sum{grid-template-columns:1fr!important}.prog-sum .prog-boost{padding-top:4px}}
+.pbar-l span .pbd{font-style:normal;font-weight:800;font-size:11.5px;margin-left:4px;padding:1px 7px;border-radius:9px;white-space:nowrap;background:rgba(127,127,127,.14);color:var(--ink)}
+.pbar-l span .pbd.ok{color:#16a34a;background:rgba(22,163,74,.12)}.pbar-l span .pbd.bad{color:#e5484d;background:rgba(229,72,77,.12)}
+/* 모바일: 도로칩 카드 한 줄 전체 · 가운데 정렬 */
+@media(max-width:560px){#tab-me .mekpis .kpi.chipk{grid-column:1/-1}#tab-me .mekpis .chipk .chipv{justify-content:center;gap:28px}#tab-me .mekpis .chipk .l{text-align:center}}
