@@ -654,9 +654,9 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     /* 도로칩 확률표 [도로, 실버, 골드, 무지개](%) — 목표: 도로칩 1,000개당 무지개 1개 */
     const CHIP_P = {
       SSS: [2, 8, 89, 1], SS: [15, 35, 49.9, 0.1], S: [45, 45, 9.96, 0.04], low: [85, 13, 1.992, 0.008],
-      capR: [90, 9, 0.995, 0.005], capSR: [80, 17, 2.988, 0.012], stkR: [75, 20, 4.98, 0.02], stkSR: [20, 40, 38, 2],
+      capR: [90, 9, 0.995, 0.005], capSR: [80, 17, 2.988, 0.012], stkR: [0, 20, 72, 8], stkSR: [0, 0, 70, 30], /* 10연속: 확률이 낮은 만큼 크게 */
     };
-    const CAP_RATE = { R: 10.5, SR: 15.5 }; /* R·SR 캡슐을 열 때 칩이 나올 확률(%) — DORO MODE 1칩 = 1뽑, 10뽑마다 전부 개봉·개봉 중 시간 정지(10뽑당 게임 시간 약 2.3초) 기준 환수율 약 105% */
+    const CAP_RATE = { R: 10, SR: 15 }; /* R·SR 캡슐을 열 때 칩이 나올 확률(%) — DORO MODE 1칩 = 1뽑, 10뽑마다 전부 개봉·개봉 중 시간 정지(10뽑당 게임 시간 약 2.3초) 기준 환수율 약 105% */
     const KS = ['b', 's', 'g', 'r'], tierGrp = (nk) => { const t = CHT[nk.n]; return t === 'SSS' || t === 'SS' || t === 'S' ? t : 'low'; };
     /* DORO TIME(무지개칩 획득 후 5분): 무지개·골드·실버 확률 2배(위 등급부터 채우고 남는 만큼 DORO칩), 캡슐 칩 확률도 2배 */
     const FEV_K = 'dsgm-fever', FEV_MS = 5 * 60 * 1000;
@@ -798,9 +798,9 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     function coinRain(gold, host0, lv) {
       const host = host0 || document.fullscreenElement || document.body, cv2 = document.createElement('canvas'), dpr = Math.min(1.5, window.devicePixelRatio || 1), W2 = innerWidth, H2 = innerHeight;
       cv2.className = 'gm-rain'; cv2.width = W2 * dpr; cv2.height = H2 * dpr; host.appendChild(cv2); const c = cv2.getContext('2d');
-      const ks = lv ? (lv <= 2 ? ['b', 'b', 'b', 's'] : lv <= 3 ? ['b', 'b', 's', 's', 'g'] : lv <= 5 ? ['b', 's', 's', 'g', 'g'] : lv <= 8 ? ['s', 'g', 'g', 'g', 'r'] : ['g', 'g', 'g', 'r', 'r']) : gold ? ['g', 'g', 'g', 'g', 'g', 'g', 'r'] : ['b', 'b', 'b', 's', 's', 'g', 'g', 'r'], EC = { b: '#a86405', s: '#8b9097', g: '#b8860b', r: '#7d5fc0' };
-      ks.forEach(rainImg); const N = lv ? Math.min(160, 14 + lv * 12) : gold ? 90 : 60, ps = [];
-      for (let i = 0; i < N; i++) { const k = pick(ks); ps.push({ k, x: rnd(0, W2), y: -rnd(30, H2 * 0.9), vy: rnd(380, 720), vx: rnd(-40, 40), sz: rnd(26, 56), sp: rnd(0, TAU), vs: rnd(5, 12) * (Math.random() < 0.5 ? -1 : 1), tl: rnd(-0.5, 0.5), d: i * (lv ? 14 : gold ? 18 : 30) }); }
+      const ks = lv ? (lv <= 2 ? ['b', 'b', 'b', 's'] : lv <= 3 ? ['b', 'b', 's', 's', 'g'] : lv <= 5 ? ['b', 's', 's', 'g', 'g'] : lv <= 8 ? ['s', 'g', 'g', 'g'] : ['s', 'g', 'g', 'g', 'g']) : gold ? ['g', 'g', 'g', 'g', 'g', 'g', 'r'] : ['b', 'b', 'b', 's', 's', 'g', 'g', 'r'], EC = { b: '#a86405', s: '#8b9097', g: '#b8860b', r: '#7d5fc0' };
+      if (lv >= 6) ks.push('r'); ks.forEach(rainImg); const N = lv ? (lv <= 10 ? lv * 3 : Math.min(160, 30 + (lv - 10) * 10)) : gold ? 90 : 60, ps = []; /* 10콤보까지는 적게 */
+      for (let i = 0; i < N; i++) { const k = lv ? (lv >= 6 && Math.random() < 0.02 ? 'r' : pick(ks.filter((x) => x !== 'r'))) : pick(ks); /* 칩 비 무지개는 드물게(2%) */ ps.push({ k, x: rnd(0, W2), y: -rnd(30, H2 * 0.9), vy: rnd(380, 720), vx: rnd(-40, 40), sz: rnd(26, 56), sp: rnd(0, TAU), vs: rnd(5, 12) * (Math.random() < 0.5 ? -1 : 1), tl: rnd(-0.5, 0.5), d: i * (lv ? 14 : gold ? 18 : 30) }); }
       const t0 = performance.now(); let last = t0;
       const step = (now) => { const dt = Math.min(0.05, (now - last) / 1000); last = now; c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, W2, H2); let alive = 0;
         for (const q of ps) { if (now - t0 < q.d) { alive++; continue; } q.vy += 600 * dt; q.y += q.vy * dt; q.x += q.vx * dt; q.sp += q.vs * dt; if (q.y > H2 + 60) continue; alive++;

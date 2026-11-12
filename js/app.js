@@ -2626,7 +2626,13 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     const a = acctUser(), who = (a ? a.user.uid : 'guest') + '|' + kstToday();
     let st = null; try { st = localStorage.getItem(ATT_K); } catch (e) { /* 무시 */ } if (st === who) return;
     try { localStorage.setItem(ATT_K, who); } catch (e) { return; }
-    window.doroChips.add({ b: 100 }, 'daily'); if (st) { try { toast('출석 보상: DORO칩 100개를 받았습니다.'); } catch (e) { /* 무시 */ } } /* 처음 온 사람에게는 안내하지 않음 */
+    window.doroChips.add({ b: 100 }, 'daily'); if (st) dailyNote(); /* 처음 온 사람에게는 안내하지 않음 */
+  }
+  function dailyNote() { /* 화면 아래 안내: 접속 보상 */
+    const d = document.createElement('div'); d.className = 'daily-note'; d.setAttribute('role', 'status');
+    d.innerHTML = '접속 보상으로 <b>100</b>' + window.doroChipSvg('b', 20) + '이 지급되었습니다.';
+    if (!document.getElementById('daily-css')) { const st2 = document.createElement('style'); st2.id = 'daily-css'; st2.textContent = '.daily-note{position:fixed;left:50%;bottom:22px;transform:translate(-50%,20px);z-index:99999;display:flex;align-items:center;gap:6px;padding:11px 20px;border-radius:999px;background:rgba(16,20,30,.94);color:#fff;font-weight:700;font-size:15px;box-shadow:0 0 0 1px rgba(255,194,26,.6),0 8px 24px rgba(0,0,0,.45);opacity:0;transition:opacity .35s,transform .35s;pointer-events:none;white-space:nowrap}.daily-note.on{opacity:1;transform:translate(-50%,0)}.daily-note b{color:#ffd24d;font-size:17px}.daily-note svg{width:20px;height:20px}'; document.head.appendChild(st2); }
+    document.body.appendChild(d); requestAnimationFrame(() => d.classList.add('on')); setTimeout(() => { d.classList.remove('on'); setTimeout(() => d.remove(), 400); }, 4500);
   }
   setTimeout(doroDaily, 1500); window.addEventListener('doroacct', () => setTimeout(doroDaily, 1200)); document.addEventListener('visibilitychange', () => { if (!document.hidden) doroDaily(); });
   /* 카드 우하단의 큰 2.5D 도로칩: 얇은 원판을 겹친 둥근 테두리(가운데가 가장 넓고 앞뒤로 갈수록 좁아짐) + 광택 */
