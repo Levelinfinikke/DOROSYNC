@@ -230,16 +230,13 @@
 @keyframes gmStamp{0%{transform:translate(-50%,-50%) rotate(-12deg) scale(3.2);opacity:0}11%{transform:translate(-50%,-50%) rotate(-12deg) scale(.95);opacity:1}16%{transform:translate(-50%,-50%) rotate(-12deg) scale(1.03)}20%,80%{transform:translate(-50%,-50%) rotate(-12deg) scale(1);opacity:1}100%{transform:translate(-50%,-50%) rotate(-12deg) scale(1);opacity:0}}
 .gm.gm-thump .gm-left{animation:gmThump .4s}
 .gm-rbedge{position:fixed;inset:0;z-index:2147483100;pointer-events:none;opacity:0;--w:20px;--a:0deg;background:conic-gradient(from var(--a),#ff5d8f,#ffb84d,#f6f05a,#5ef0a0,#5ab8ff,#b47cff,#ff5d8f);-webkit-mask:linear-gradient(90deg,#000,transparent var(--w),transparent calc(100% - var(--w)),#000),linear-gradient(#000,transparent var(--w),transparent calc(100% - var(--w)),#000);mask:linear-gradient(90deg,#000,transparent var(--w),transparent calc(100% - var(--w)),#000),linear-gradient(#000,transparent var(--w),transparent calc(100% - var(--w)),#000)}
-.gm-thermo{position:absolute;left:88.6%;width:8.4%;bottom:23%;z-index:3;display:flex;flex-direction:column;align-items:center;pointer-events:none;opacity:0;transform:translateY(8px);transition:opacity .35s,transform .35s,height .5s cubic-bezier(.3,1.4,.5,1)}
+.gm-thermo{position:absolute;left:88.6%;width:8.4%;bottom:23%;z-index:3;pointer-events:none;opacity:0;transform:translateY(8px);transition:opacity .35s,transform .35s}
+.gm-thermo svg{display:block;width:100%;height:100%;overflow:visible;filter:drop-shadow(0 0 7px var(--lq,#ff3a3a)) drop-shadow(0 3px 5px rgba(0,0,0,.45))}
+.gm-thermo text{font:italic 900 1px system-ui,sans-serif;fill:#fff6c0;stroke:#6a1000;paint-order:stroke fill;stroke-linejoin:round}
 .gm-thermo.on{opacity:1;transform:none}
-.gm-tht{position:relative;z-index:3;flex:1;margin-bottom:-3px;width:38%;min-width:12px;border-radius:999px 999px 0 0;background:linear-gradient(90deg,rgba(255,255,255,.28),rgba(255,255,255,.08) 45%,rgba(255,255,255,.2));border:2px solid rgba(255,255,255,.75);border-bottom:0;box-shadow:inset 0 0 6px rgba(0,0,0,.4),0 0 10px rgba(0,0,0,.35);overflow:hidden}
-.gm-tht i{position:absolute;left:0;right:0;bottom:-6px;background:var(--lq,#ff3a3a);box-shadow:inset 3px 0 0 rgba(255,255,255,.35),0 0 12px var(--lq,#ff3a3a)}
-.gm-tht b{position:absolute;left:0;width:20%;height:1px;background:rgba(255,255,255,.55)}.gm-tht b.m{width:36%;background:rgba(255,255,255,.75)}.gm-tht b.l{width:54%;height:2px;background:rgba(255,255,255,.9)}
-.gm-ccm small{font-size:.85em;margin-left:2px;opacity:.85}
-.gm-ccm{position:absolute;left:50%;top:-2px;transform:translateX(-50%);z-index:5;padding:1px 5px;border-radius:7px;font:italic 900 9.5px/1.3 system-ui,sans-serif;letter-spacing:.02em;color:#fff6c0;background:linear-gradient(90deg,#c41a00,#ff7a00);box-shadow:0 0 8px rgba(255,100,0,.7);white-space:nowrap;pointer-events:none}
+.gm-ccf{position:absolute;left:50%;bottom:-13%;transform:translateX(-50%);z-index:5;padding:1px 6px;border-radius:9px;font:italic 900 10.5px/1.45 system-ui,sans-serif;letter-spacing:.02em;color:#fff6c0;background:linear-gradient(90deg,#c41a00,#ff7a00);border:1px solid #ffd27a;box-shadow:0 0 8px rgba(255,100,0,.7);white-space:nowrap;pointer-events:none}
+.gm-ccf small{font-size:.85em;margin-left:2px;opacity:.85}
 .gm-float.orb.cmb{box-shadow:0 0 0 3px #ff7a00,0 0 18px rgba(255,90,0,.8)}
-.gm-thb{position:relative;z-index:2;width:88%;aspect-ratio:1;margin-top:-6px;border-radius:50%;background:radial-gradient(circle at 35% 28%,rgba(255,255,255,.6),transparent 30%),var(--lq,#ff3a3a);border:2px solid rgba(255,255,255,.75);box-shadow:0 0 14px var(--lq,#ff3a3a),0 3px 8px rgba(0,0,0,.4);display:grid;place-content:center;line-height:1}
-.gm-thb b{font:italic 900 clamp(11px,1.5vw,16px)/1 system-ui,sans-serif;color:#fff6c0;-webkit-text-stroke:1.5px #6a1000;paint-order:stroke fill;text-shadow:0 2px 0 #3a0800}
 .gm-cmul{position:fixed;z-index:9998;pointer-events:none;transform:translate(-50%,-50%);font:italic 900 20px/1 system-ui,sans-serif;color:#ffe14a;-webkit-text-stroke:1.5px #7a1600;paint-order:stroke fill;animation:gmCmul .9s ease-out forwards}
 @keyframes gmCmul{0%{transform:translate(-50%,-30%) scale(.6);opacity:0}25%{transform:translate(-50%,-60%) scale(1.15);opacity:1}100%{transform:translate(-50%,-150%) scale(1);opacity:0}}
 
@@ -365,7 +362,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
 
     root.innerHTML = '<div class="gm"><div class="gm-left"><canvas class="gm-cv"></canvas>'
       + '<div class="gm-tools">' + [['open', '개봉 방식 · 게임 모드', '<path d="M5 10.5a7 7 0 0114 0z"/><path d="M5 13.5a7 7 0 0014 0z"/>'], ['snd', '소리', '<path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 8.5a5 5 0 010 7"/>'], ['reset', '초기화', '<path d="M4 12a8 8 0 0113.7-5.7L20 8"/><path d="M20 4v4h-4"/><path d="M20 12a8 8 0 01-13.7 5.7L4 16"/><path d="M4 20v-4h4"/>'], ['hide', '화면 정리', '<path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.8"/><path d="M4 4l16 16"/>']].map((x) => '<button class="gm-ib" data-a="' + x[0] + '" title="' + x[1] + '" aria-label="' + x[1] + '"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + x[2] + '</svg></button>').join('') + '</div><button class="gm-ib gm-trbtn" data-a="topen" aria-label="SSR 보관함 열기" title="SSR 보관함"><img alt="" src="' + TRICO + '"><span>0</span></button><div class="gm-pop" hidden></div><button class="gm-auto" data-a="auto">AUTO</button><button class="gm-ib gm-fs" data-a="fs" title="전체화면" aria-label="전체화면"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>'
-      + '<div class="gm-thermo" aria-hidden="true"><div class="gm-tht"><i></i></div><div class="gm-thb"><b>×2</b></div></div>'
+      + '<div class="gm-thermo" aria-hidden="true"><svg></svg></div>'
       + '<div class="gm-hud"><div class="gm-lab"><img alt=""><b>0</b></div><button class="gm-btn" data-a="exch">라벨 교환</button></div>' + '</div>'
       + '<div class="gm-right"><div class="gm-wal"><canvas class="gm-wcv"></canvas><div class="gm-wt"></div><div class="gm-mode"></div></div><div class="gm-graph"><div class="gm-gh"><b>실시간 수지</b><span class="gm-seg"><button data-v="0">픽업</button><button data-v="1">솔레티어</button><button data-v="2">PVP티어</button></span></div><canvas class="gm-gcv"></canvas><div class="gm-stat"></div></div><div class="gm-tray"><div class="gm-trh">SSR 보관함 <span class="gm-trr">' + (/github\.io$/.test(location.hostname) ? '' : '<button class="gm-tb gm-demo" data-a="demo" title="연출 시안 빠르게 보기">시안</button>') + '<button class="gm-tb gm-flipall" data-a="flipall" title="SSS를 뺀 모든 초상화를 뒤집어 바로 잔고에 넣습니다">모두 뒤집기</button><span class="gm-chipbal" data-a="odds" role="button" tabindex="0" title="DORO칩 잔고 · 누르면 획득 확률">' + (window.doroChipSvg ? window.doroChipSvg('b', 18) : '') + '<b class="gm-cbn">0</b><span class="gm-cbr" hidden>' + (window.doroChipSvg ? window.doroChipSvg('r', 18) : '') + '<b>0</b></span></span><button class="gm-tb gm-trt" data-a="tfold">접기</button></span></div><div class="gm-pan"></div><div class="gm-name"></div></div></div></div>';
     const $ = (s) => root.querySelector(s);
@@ -623,7 +620,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     };
     const CAP_RATE = { R: 2, SR: 3 }; /* R·SR 캡슐을 열 때 칩이 나올 확률(%) */
     const KS = ['b', 's', 'g', 'r'], tierGrp = (nk) => { const t = CHT[nk.n]; return t === 'SSS' || t === 'SS' || t === 'S' ? t : 'low'; };
-    /* FEVER TIME(무지개칩 획득 후 5분): 무지개·골드·실버 확률 2배(위 등급부터 채우고 남는 만큼 DORO칩), 캡슐 칩 확률도 2배 */
+    /* DORO TIME(무지개칩 획득 후 5분): 무지개·골드·실버 확률 2배(위 등급부터 채우고 남는 만큼 DORO칩), 캡슐 칩 확률도 2배 */
     const FEV_K = 'dsgm-fever', FEV_MS = 5 * 60 * 1000;
     const fevEnd = () => { try { return +localStorage.getItem(FEV_K) || 0; } catch (e) { return 0; } };
     const feverOn = () => Date.now() < fevEnd();
@@ -708,7 +705,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
       const d = document.createElement('div'); d.className = 'gm-mpop gm-mp' + Math.min(n, 4); d.style.cssText = 'left:' + (r.left + r.width / 2) + 'px;top:' + (r.top + r.height * 0.24) + 'px'; d.innerHTML = '<b>' + W2 + '!</b><small>SSR ×' + n + ' · 보상 ' + (n >= 3 ? '골드칩' : '실버칩') + (n >= 4 ? ' ×3' : '') + '</small>'; host.appendChild(d); setTimeout(() => d.remove(), 1900);
       try { snd.burst(3); if (n >= 3) setTimeout(() => snd.fanfare(), 250); } catch (e) { /* 무시 */ } S.flash = Math.max(S.flash || 0, 0.6); sparks(RV.x, RV.y - 120, 40 + n * 20, () => pick(['#fff3b0', '#ffd24d', '#ffffff', '#ff9ad5']), 700, 200); vib([50, 30, 50, 30, 50 + n * 40], true); }
     /* 가짜 무지개 예고: 무지개 단계까지 갔다가 떨어질 때 가끔 화면 가장자리가 무지개로 번쩍 */
-    /* ---- FEVER TIME: 화면 아래 무지개 타이머, 기계 테두리 무지개 ---- */
+    /* ---- DORO TIME: 화면 아래 무지개 타이머, 기계 테두리 무지개 ---- */
     const FEV_LV = 'dsgm-fevlv';
     const fevLv = () => { try { return feverOn() ? (+localStorage.getItem(FEV_LV) || 1) : 0; } catch (e) { return 0; } };
     function feverStart(ms, up) { const lv = up ? fevLv() + 1 : 1; try { localStorage.setItem(FEV_K, String(Date.now() + (ms || FEV_MS))); localStorage.setItem(FEV_LV, String(lv)); } catch (e) { /* 무시 */ } window.__fevEndT = 0; rbFont(); feverPop(lv); feverTick(); }
@@ -721,7 +718,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
       else if (window.__fevWas) { window.__fevWas = false; window.__fevEndT = performance.now(); try { snd.fevEnd(); } catch (e) { /* 무시 */ } }
       cancelAnimationFrame(feverTick.raf); if (on) feverTick.raf = requestAnimationFrame(feverTick);
     }
-    /* 픽업 표지 = 화면: FEVER 중에는 표지 위에 무지개 타이머를 띄움. 끝나면 회색으로 멈췄다가 천천히 흐려짐 */
+    /* 픽업 표지 = 화면: DORO TIME 중에는 표지 위에 무지개 타이머를 띄움. 끝나면 회색으로 멈췄다가 천천히 흐려짐 */
     function drawScreen(c) {
       const on = feverOn(), endT = window.__fevEndT || 0, nowP = performance.now(); let al = 1;
       if (!on) { if (!endT || nowP - endT > 2600) return; al = 1 - (nowP - endT) / 2600; }
@@ -736,15 +733,15 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
       let lv = 1; try { lv = +localStorage.getItem(FEV_LV) || 1; } catch (e) { /* 무시 */ }
       c.textAlign = 'center'; c.textBaseline = 'middle'; c.lineJoin = 'round';
       const txt = (s2, yy, sz, fill, sc) => { c.save(); c.translate(BAN.cx, yy); if (sc) c.scale(sc, sc); c.font = sz + 'px Bungee, "Arial Black", Impact, sans-serif'; c.lineWidth = sz * 0.14; c.strokeStyle = gray ? '#2a2c33' : '#12062a'; c.strokeText(s2, 0, 0); c.fillStyle = fill; if (!gray) { c.shadowColor = 'rgba(255,255,255,.55)'; c.shadowBlur = 14; } c.fillText(s2, 0, 0); c.restore(); };
-      txt('FEVER TIME' + (lv > 1 ? ' ×' + lv : ''), y0 + h * 0.24, lv > 1 ? 50 : 58, rg(y0 + h * 0.24));
+      txt('DORO TIME' + (lv > 1 ? ' ×' + lv : ''), y0 + h * 0.24, lv > 1 ? 50 : 58, rg(y0 + h * 0.24));
       const m = Math.floor(left / 60000), sec = Math.floor(left / 1000) % 60, cs = Math.floor(left / 10) % 100, z = (n) => String(n).padStart(2, '0'), pul = last ? 1 + 0.1 * Math.max(0, Math.sin((left / 1000) * TAU)) : 1;
       txt(z(m) + ':' + z(sec) + ':' + z(cs), y0 + h * 0.58, 84, last ? '#ff5d6c' : rg(y0 + h * 0.58), pul);
-      c.font = '800 20px system-ui, sans-serif'; c.fillStyle = gray ? '#6b6f78' : '#ffe28a'; c.fillText(gray ? 'FEVER 종료' : 'DORO칩 확률 2배', BAN.cx, y0 + h * 0.88);
+      c.font = '800 20px system-ui, sans-serif'; c.fillStyle = gray ? '#6b6f78' : '#ffe28a'; c.fillText(gray ? 'DORO TIME 종료' : 'DORO칩 확률 2배', BAN.cx, y0 + h * 0.88);
       c.strokeStyle = 'rgba(0,0,0,.35)'; c.lineWidth = 2; stkPath(c, 0); c.stroke();
       c.restore();
     }
     setTimeout(() => { if (feverOn()) rbFont(); feverTick(); }, 500);
-    /* ---- JACKPOT: FEVER 중 무지개를 또 얻으면. 커다란 무지개 JACKPOT이 왼쪽에서 오른쪽으로 지나가고 금칩 비, 바구니의 DORO·실버칩이 모두 골드로 ---- */
+    /* ---- JACKPOT: DORO TIME 중 무지개를 또 얻으면. 커다란 무지개 JACKPOT이 왼쪽에서 오른쪽으로 지나가고 금칩 비, 바구니의 DORO·실버칩이 모두 골드로 ---- */
     function jackpotShow() {
       rbFont(); S.stk = true; const host = document.fullscreenElement || document.body, ov = document.createElement('div'); ov.className = 'gm-jp';
       let tw = ''; for (let i = 0; i < 70; i++) tw += '<i style="left:' + rnd(0, 100).toFixed(1) + '%;top:' + rnd(0, 100).toFixed(1) + '%;animation-delay:-' + rnd(0, 1.6).toFixed(2) + 's;--s:' + rnd(0.5, 1.6).toFixed(2) + '"></i>';
@@ -758,7 +755,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     function basketGold() { let n = 0; S.bask.forEach((b) => { if (b.kind === 'chip' && (b.res.chip === 'b' || b.res.chip === 's')) { b.res.chip = 'g'; n++; sparks(b.x, b.y, 14, () => pick(['#fff3b0', '#ffd24d', '#ffffff']), 260, 120); } }); if (n) say('바구니의 칩 ' + n + '개가 골드칩으로!'); }
     /* ---- 시안용 추가 연출 ---- */
     function feverPop(lv) { const g = $('.gm'); if (!g) return; g.classList.remove('gm-fever'); void g.offsetWidth; g.classList.add('gm-fever'); clearTimeout(feverPop.t); feverPop.t = setTimeout(() => g.classList.remove('gm-fever'), 8000);
-      const r = cvRect(), d = document.createElement('div'); d.className = 'gm-fevb'; d.style.cssText = 'left:' + r.left + 'px;top:' + (r.top + r.height * 0.42) + 'px;width:' + r.width + 'px'; d.innerHTML = '<b>FEVER TIME' + (lv > 1 ? ' ×' + lv : '') + '!</b>'; (document.fullscreenElement || document.body).appendChild(d); setTimeout(() => d.remove(), 2200); try { snd.fanfare(); } catch (e) { /* 무시 */ } }
+      const r = cvRect(), d = document.createElement('div'); d.className = 'gm-fevb'; d.style.cssText = 'left:' + r.left + 'px;top:' + (r.top + r.height * 0.42) + 'px;width:' + r.width + 'px'; d.innerHTML = '<b>DORO TIME' + (lv > 1 ? ' ×' + lv : '') + '!</b>'; (document.fullscreenElement || document.body).appendChild(d); setTimeout(() => d.remove(), 2200); try { snd.fanfare(); } catch (e) { /* 무시 */ } }
     /* 칩 비: 캔버스 한 장에 칩 그림을 찍어 그림(두께는 옆면 띠로 흉내). DOM 수백 개보다 훨씬 가벼움 */
     const RAIN_IMG = {};
     const rainImg = (k) => { if (RAIN_IMG[k]) return RAIN_IMG[k]; const im = new Image(); im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(chipSvg(k, 96, false, true).replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ')); RAIN_IMG[k] = im; return im; };
@@ -782,20 +779,32 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     /* ---- COMBO: DOUBLE 이상이면 n배(DOUBLE 2 · TRIPLE 3 …), 제한시간 10×n초. 시간 안에 또 터지면 배수 합산 + 시간 추가(상한 = 이번 콤보에서 나온 최고 단계의 시간) ---- */
     const CB = { mul: 0, end: 0, top: 0, raf: 0 };
     const comboMul = () => (CB.mul > 0 && !CB.demo && performance.now() < CB.end ? CB.mul : 1); /* 시안(demo)은 연출만 */
-    const thEl = $('.gm-thermo'), thTube = thEl.querySelector('.gm-tht'), thLiq = thTube.querySelector('i'), thX = thEl.querySelector('.gm-thb b');
+    const thEl = $('.gm-thermo'), thSvg = thEl.querySelector('svg'), TH = { id: 'gmth' + Math.random().toString(36).slice(2, 8) };
     function comboHit(n, demo) {
       const now = performance.now(), on = CB.mul > 0 && now < CB.end, left = on ? CB.end - now : 0; CB.demo = on ? CB.demo && !!demo : !!demo;
       if (on) { CB.mul += n; CB.top = Math.max(CB.top, n); CB.end = now + Math.min(left + n * 10000, CB.top * 10000); } else { CB.mul = n; CB.top = n; CB.end = now + n * 10000; }
-      { const N = CB.top * 10; let h = '<i></i>'; for (let i = 1; i < N; i++) h += '<b class="' + (i % 10 ? (i % 5 ? '' : 'm') : 'l') + '" style="bottom:' + (i / N * 100).toFixed(2) + '%"></b>'; thTube.innerHTML = h; } /* 눈금 1초 · 5초는 조금 길게 · 10초는 더 길게 */
-      thEl.style.height = Math.min(64, 18 + CB.top * 9) + '%'; thX.textContent = '×' + CB.mul; thEl.classList.add('on');
+      thEl.style.height = Math.min(64, 18 + CB.top * 9) + '%'; thermoBuild(); thEl.classList.add('on');
       if (on) comboPop(CB.mul); quake(CB.mul); cancelAnimationFrame(CB.raf); CB.raf = requestAnimationFrame(comboTick);
     }
     function comboTick() {
-      const now = performance.now(), left = Math.max(0, CB.end - now), cap = CB.top * 10000, f = cap ? left / cap : 0, liq = thTube.querySelector('i');
+      const now = performance.now(), left = Math.max(0, CB.end - now), cap = CB.top * 10000, f = cap ? left / cap : 0;
       const R = [255, 58, 58], B2 = [58, 139, 255], col = 'rgb(' + R.map((v, i) => Math.round(B2[i] + (v - B2[i]) * f)).join(',') + ')'; /* 시간이 흐를수록 빨강 → 파랑 */
-      thEl.style.setProperty('--lq', col); if (liq) liq.style.height = (f * 100).toFixed(2) + '%';
+      thEl.style.setProperty('--lq', col); if (TH.lq) TH.lq.setAttribute('y', (TH.y0 - f * (TH.y0 - TH.y1)).toFixed(2));
       if (left <= 0) { CB.mul = 0; CB.top = 0; thEl.classList.remove('on'); return; }
       CB.raf = requestAnimationFrame(comboTick);
+    }
+    /* 온도계: 관과 알이 하나로 이어진 한 덩어리(SVG 한 개의 윤곽). 알은 늘 차 있고 관의 액체만 줄어듦. 눈금 1초·5초·10초 */
+    function thermoBuild() {
+      const w = thEl.clientWidth, h = thEl.clientHeight; if (!w || !h) return; const sw = Math.max(1.6, w * 0.045), tw = w * 0.38, R = w * 0.46, cx = w / 2, cy = h - R - sw, x0 = cx - tw / 2, x1 = cx + tw / 2, top = sw + tw / 2, yj = cy - Math.sqrt(R * R - (tw / 2) * (tw / 2));
+      const d = 'M' + x0 + ',' + yj + 'L' + x0 + ',' + top + 'A' + tw / 2 + ',' + tw / 2 + ' 0 0 1 ' + x1 + ',' + top + 'L' + x1 + ',' + yj + 'A' + R + ',' + R + ' 0 1 1 ' + x0 + ',' + yj + 'Z';
+      TH.y0 = yj + tw * 0.2; TH.y1 = top - tw / 2 + sw; const N = CB.top * 10; let tk = ''; for (let i = 1; i < N; i++) { const y = TH.y0 - (TH.y0 - TH.y1) * i / N, L = i % 10 ? (i % 5 ? 0.22 : 0.38) : 0.56; tk += '<line x1="' + x0 + '" x2="' + (x0 + tw * L) + '" y1="' + y.toFixed(2) + '" y2="' + y.toFixed(2) + '" stroke="rgba(255,255,255,' + (i % 10 ? 0.6 : 0.95) + ')" stroke-width="' + (i % 10 ? 0.8 : 1.5) + '"/>'; }
+      thSvg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
+      thSvg.innerHTML = '<defs><clipPath id="' + TH.id + '"><path d="' + d + '"/></clipPath><linearGradient id="' + TH.id + 'g" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity=".32"/><stop offset=".45" stop-color="#fff" stop-opacity=".06"/><stop offset="1" stop-color="#fff" stop-opacity=".22"/></linearGradient></defs>' +
+        '<path d="' + d + '" fill="rgba(20,24,34,.55)"/><g clip-path="url(#' + TH.id + ')"><rect class="lq" x="0" y="' + TH.y1 + '" width="' + w + '" height="' + h + '" style="fill:var(--lq,#ff3a3a)"/><path d="' + d + '" fill="url(#' + TH.id + 'g)"/>' + tk +
+        '<ellipse cx="' + (cx - R * 0.38) + '" cy="' + (cy - R * 0.4) + '" rx="' + R * 0.22 + '" ry="' + R * 0.14 + '" fill="rgba(255,255,255,.55)" transform="rotate(-35 ' + (cx - R * 0.38) + ' ' + (cy - R * 0.4) + ')"/></g>' +
+        '<path d="' + d + '" fill="none" stroke="rgba(255,255,255,.9)" stroke-width="' + sw + '" stroke-linejoin="round"/>' +
+        '<text x="' + cx + '" y="' + (cy + R * 0.28) + '" text-anchor="middle" style="font-size:' + (R * (CB.mul >= 10 ? 0.66 : 0.8)).toFixed(1) + 'px;stroke-width:' + (R * 0.12).toFixed(2) + 'px">×' + CB.mul + '</text>';
+      TH.lq = thSvg.querySelector('.lq');
     }
     /* 기계 전체가 휘청 */
     function quake(m) { /* 지진처럼 축 없이 흔들림. 배수가 클수록 세고 길게 */ const A = Math.min(14, 1.2 + (m - 1) * 1.3), D = Math.min(1300, 450 + m * 70), N = Math.round(D / 45), kf = [{ transform: 'none' }];
@@ -872,7 +881,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     function rbFont() { if (!document.getElementById('gm-rbfont')) { const l = document.createElement('link'); l.id = 'gm-rbfont'; l.rel = 'stylesheet'; l.href = 'https://fonts.googleapis.com/css2?family=Bungee&display=swap&text=' + encodeURIComponent('RAINBOW!0123456789,.%S'); document.head.appendChild(l); } }
     function rainbowCut(from, src, opt) {
       const r0 = from && from.getBoundingClientRect ? from.getBoundingClientRect() : from, ok0 = r0 && r0.width > 0;
-      const it = { cx: ok0 ? r0.left + r0.width / 2 : innerWidth / 2, cy: ok0 ? r0.top + r0.height / 2 : innerHeight / 2, size: ok0 ? r0.width : 40, src, jp: opt && opt.jp != null ? opt.jp : feverOn() }; /* FEVER 중이면 JACKPOT 연출로 합쳐서 강화 */
+      const it = { cx: ok0 ? r0.left + r0.width / 2 : innerWidth / 2, cy: ok0 ? r0.top + r0.height / 2 : innerHeight / 2, size: ok0 ? r0.width : 40, src, jp: opt && opt.jp != null ? opt.jp : feverOn() }; /* DORO TIME 중이면 JACKPOT 연출로 합쳐서 강화 */
       if (from && from.style) from.style.visibility = 'hidden'; /* 그 자리의 칩이 직접 날아오름 */
       if (src && window.doroChips) { chipPendR += 1; window.doroChips.add({ r: 1 }, src); } /* 바로 저장, 잔고 숫자는 칩이 도착할 때 올라감 */
       (S.cutQ = S.cutQ || []).push(it); if (S.cut) return;
@@ -924,7 +933,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
           const an = ch.animate([{ transform: 'none' }, { transform: 'translate(0,-24px) scale(1.08)', offset: 0.22, easing: 'cubic-bezier(.55,0,.85,.35)' }, { transform: 'translate(' + (tx - cx) + 'px,' + (ty - cy) + 'px) scale(' + (22 / fr.width) + ')' }], { duration: 780, fill: 'both' });
           an.onfinish = () => {
             stop(); ov.remove();
-            if (cur.src) { chipPendR = Math.max(0, chipPendR - 1); uiBal('r'); const was = feverOn(); feverStart(undefined, was); if (cur.jp) basketGold(); } /* 무지개 → FEVER, FEVER 중 무지개 → JACKPOT(FEVER 단계 +1) */
+            if (cur.src) { chipPendR = Math.max(0, chipPendR - 1); uiBal('r'); const was = feverOn(); feverStart(undefined, was); if (cur.jp) basketGold(); } /* 무지개 → DORO TIME, DORO TIME 중 무지개 → JACKPOT(DORO TIME 단계 +1) */
             if (toBtn) { tbtn.classList.remove('pop'); void tbtn.offsetWidth; tbtn.classList.add('pop'); }
             try { snd.chipIn(1); snd.chipBurst(true); } catch (er) { /* 무시 */ }
             setTimeout(next, 250);
@@ -1000,16 +1009,18 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     /* 보관함 한 칸: 겹친 초상화는 맨 위 한 장(top)만 들어 올려 뒤집고, 나머지는 아래에 깔림 */
     /* 초상화 두께: 얇은 원판 11장을 겹쳐 둥근 테두리(가운데가 가장 넓고 앞뒤로 갈수록 살짝 작아짐) */
     const EDGES = Array.from({ length: 11 }, (_, i) => { const f = i / 10 - 0.5, sc = 1 - 0.07 * (1 - Math.sqrt(Math.max(0, 1 - Math.pow(2 * f, 2)))); return '<span class="gm-ce" style="transform:translateZ(calc(var(--ot) * ' + f.toFixed(2) + ')) scale(' + sc.toFixed(3) + ');--dk:' + (0.05 + Math.abs(f) * 0.7).toFixed(2) + '"></span>'; }).join('');
-    function orbHtml(t, cls, badge, tr) {
+    function orbHtml(t, cls, badge, tr, ctag) {
       const ck = chipE(t);
       return '<div class="gm-orb' + cls + (t.nk.pu ? ' pu' : '') + (t.flip ? ' flip' : '') + '"' + (t.tilt ? ' style="--tx:' + t.tilt[0] + 'deg;--ty:' + t.tilt[1] + 'deg"' : '') + ' title="' + (t.flip ? CHIP_NM[ck] + ' · 누르면 잔고로' : t.nk.n + ' · 누르면 뒤집기') + '">' + EDGES +
-        '<div class="gm-cf" style="' + orbBg(t.nk) + '">' + (tr ? '<u style="color:' + (TIERC[tr] || '#fff') + '">' + tr + '</u>' : '') + badge + '</div><div class="gm-cb">' + chipSvg(ck, 64, undefined, true) + '</div></div>';
+        '<div class="gm-cf" style="' + orbBg(t.nk) + '">' + (tr ? '<u style="color:' + (TIERC[tr] || '#fff') + '">' + tr + '</u>' : '') + badge + (ctag || '') + '</div><div class="gm-cb">' + chipSvg(ck, 64, undefined, true) + (ctag || '') + '</div></div>';
     }
+    const ctagHtml = (m, nq) => '<b class="gm-ccf">COMBO ×' + m + (nq > 1 ? '<small>+' + (nq - 1) + '</small>' : '') + '</b>';
     function trayOrbs(e, tr) {
       const t = e.top, rest = e.count - (t ? 1 : 0);
-      const cnt = (e.count > 1 ? '<b class="gm-cnt">×' + e.count + '</b>' : '') + (() => { const tc = e.top ? e.top.cm || 0 : 0, nq = (e.cq || []).length + (tc > 1 ? 1 : 0), m = tc > 1 ? tc : (e.cq && e.cq[0]) || 0; return m > 1 ? '<b class="gm-ccm">COMBO ×' + m + (nq > 1 ? '<small>+' + (nq - 1) + '</small>' : '') + '</b>' : ''; })(); /* 겹친 칸: 하단에 총 수량 · 콤보 SSR: 상단에 배수 */
-      if (!t) { const pp = e.fresh ? ' pop' : ''; e.fresh = false; return orbHtml({ nk: e.nk, ck: 'b' }, (e.merge ? ' merge' : '') + pp, '', tr) + cnt; }
-      return cnt + (rest > 0 ? orbHtml({ nk: e.nk, ck: 'b' }, ' under', '', tr) : '') + orbHtml(t, ' top' + (rest > 0 ? ' lift' : ''), '', rest > 0 ? '' : tr);
+      const tc = t ? t.cm || 0 : 0, nq = (e.cq || []).length + (tc > 1 ? 1 : 0), m = t ? tc : (e.cq && e.cq[0]) || 0; /* 다음에 뒤집을 장의 콤보 배수 */
+      const ctag = m > 1 ? ctagHtml(m, nq) : '', cnt = !ctag && e.count > 1 ? '<b class="gm-cnt">×' + e.count + '</b>' : ''; /* 콤보 장이 있으면 하단 수량 태그 대신 COMBO 태그(초상화와 함께 뒤집힘) */
+      if (!t) { const pp = e.fresh ? ' pop' : ''; e.fresh = false; return orbHtml({ nk: e.nk, ck: 'b' }, (e.merge ? ' merge' : '') + pp, '', tr, ctag) + cnt; }
+      return cnt + (rest > 0 ? orbHtml({ nk: e.nk, ck: 'b' }, ' under', '', tr) : '') + orbHtml(t, ' top' + (rest > 0 ? ' lift' : ''), '', rest > 0 ? '' : tr, ctag);
     }
     function uiTray() { uiTray0(); S.tray.forEach((e, i) => {  const t = e && e.top; if (!t || !(t.anim || t.flipping) || !t._el) return; const w = panEl.children[i], o = w && w.querySelector('.gm-orb.top'); if (o && o !== t._el) o.replaceWith(t._el); }); }
     /* SSR 보관함은 이 기기에 저장(머신별). 다시 열면 그대로 */
@@ -1098,7 +1109,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
         box.innerHTML = '<div class="gm-spg">' + Array.from({ length: n }, () => '<div class="gm-spc"></div>').join('') + '</div><div class="gm-spn">' + (en.count > n ? '남은 ' + (en.count - n) + '장' : '') + '</div>' +
           ('<button type="button" class="gm-tb gm-skip" aria-label="건너뛰기">SKIP <svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true"><path d="M4 5l8 7-8 7zM12 5l8 7-8 7z" fill="currentColor"/></svg></button>');
         { const sk = box.querySelector('.gm-skip'); if (sk) sk.addEventListener('click', (e) => { e.stopPropagation(); S.spread.skip = true; doSkip(); }); }
-        box.querySelectorAll('.gm-spc').forEach((c, j) => { const t = pre[j]; c._t = t; c.innerHTML = orbHtml(t, ' top', '', ''); cards.push([c, t]); });
+        box.querySelectorAll('.gm-spc').forEach((c, j) => { const t = pre[j]; c._t = t; c.innerHTML = orbHtml(t, ' top', '', '', t.cm > 1 ? ctagHtml(t.cm, 1) : ''); cards.push([c, t]); });
         S.spread.cur = { hasR: cards.some(([, t]) => chipE(t) === 'r'), skip: () => doSkip() }; /* 무지개가 섞인 묶음은 건너뛰기 없음 */
         const flipCard = (c, t, fast) => {
           const orb = c.querySelector('.gm-orb'); if (!orb || t.flip) return; const k = chipE(t), a = rnd(0, TAU), m = rnd(2, 4);
@@ -1136,7 +1147,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
       const i = S.tray.indexOf(en); if (i < 0) return;
       if (!en.top) { /* 다시 그리지 않고 그 자리의 초상화를 맨 위 장으로 (다른 칸 애니메이션이 끊기지 않게) */
         en.top = mkTop(en); const w0 = panEl.children[i], o0 = w0 && w0.querySelector('.gm-orb');
-        if (o0) { o0.classList.remove('pop', 'merge'); o0.classList.add('top'); const bd = o0.querySelector('.gm-cf i'); if (bd) bd.remove(); const cb = o0.querySelector('.gm-cb'); if (cb) cb.innerHTML = chipSvg(chipE(en.top), 64, undefined, true); } else uiTray();
+        if (o0) { o0.classList.remove('pop', 'merge'); o0.classList.add('top'); const bd = o0.querySelector('.gm-cf i'); if (bd) bd.remove(); const cb = o0.querySelector('.gm-cb'); if (cb) { const tg = cb.querySelector('.gm-ccf'); cb.innerHTML = chipSvg(chipE(en.top), 64, undefined, true); if (tg) cb.appendChild(tg); } } else uiTray();
       }
       const t = en.top, well = panEl.children[i], orb = well && well.querySelector('.gm-orb.top'); if (!orb || t.flip) return;
       {
@@ -1150,7 +1161,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
       const tr = $('.gm-tray'); let box = tr.querySelector('.gm-odds'); if (box) { box.remove(); return; }
       const fv = feverOn(), row = (nm, key, note) => '<tr><th>' + nm + (note ? '<small>' + note + '</small>' : '') + '</th>' + (fv ? fevP(CHIP_P[key]) : CHIP_P[key]).map((v, i) => '<td class="' + (v ? '' : 'z') + '">' + (v ? (v < 0.1 ? v.toFixed(2) : v < 1 ? v.toFixed(2).replace(/0$/, '') : String(+v.toFixed(2))) + '%' : '—') + '</td>').join('') + '</tr>';
       box = document.createElement('div'); box.className = 'gm-odds' + (fv ? ' fev' : '');
-      box.innerHTML = '<div class="gm-oddh"><b>DORO칩 획득 확률' + (fv ? ' <em>FEVER ×2</em>' : '') + '</b><button class="gm-tb" data-x>닫기</button></div><table><thead><tr><th></th>' + KS.map((k) => '<th>' + chipSvg(k, 20, false) + '</th>').join('') + '</tr></thead><tbody>' +
+      box.innerHTML = '<div class="gm-oddh"><b>DORO칩 획득 확률' + (fv ? ' <em>DORO TIME ×2</em>' : '') + '</b><button class="gm-tb" data-x>닫기</button></div><table><thead><tr><th></th>' + KS.map((k) => '<th>' + chipSvg(k, 20, false) + '</th>').join('') + '</tr></thead><tbody>' +
         row('SSS', 'SSS') + row('SS', 'SS') + row('S', 'S') + row('A 이하', 'low') + row('R 캡슐', 'capR', CAP_RATE.R * (fv ? 2 : 1) + '% 확률로') + row('SR 캡슐', 'capSR', CAP_RATE.SR * (fv ? 2 : 1) + '% 확률로') + row('R 10연속', 'stkR') + row('SR 10연속', 'stkSR') +
         '</tbody></table><p>10개 묶음 보상: DOUBLE(SSR 2장) 실버칩 1 · TRIPLE(3장) 골드칩 1 · 4장 이상 골드칩 3 + 10% 확률로 무지개칩 1<br>COMBO: DOUBLE 이상이 나오면 10×n초 동안 DORO칩 수입 n배. 시간 안에 또 나오면 배수 합산·시간 추가</p><p>DORO칩 10 = 실버칩 2 = 골드칩 1 · 바디라벨 10,000 = DORO칩 1 · 티어는 기본 티어표(솔레) 기준</p>';
       box.querySelector('[data-x]').onclick = (e) => { e.stopPropagation(); box.remove(); };
@@ -1192,7 +1203,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
       else if (k === 'flipall') flipAll();
       else if (k === 'odds') chipOdds();
       else if (k === 'demo') { const tr = $('.gm-tray'); let m = tr.querySelector('.gm-demob'); if (m) { m.remove(); return; } m = document.createElement('div'); m.className = 'gm-demob';
-        m.innerHTML = '<b>연출 시안</b>' + [['rb', '무지개 컷인'], ['gold', '골드 확정'], ['dbl', 'DOUBLE'], ['tri', 'TRIPLE'], ['stkR', 'R 10연속'], ['stkSR', 'SR 10연속'], ['tease', '가짜 무지개 예고'], ['fev5', 'FEVER 5분 시작'], ['fev10s', 'FEVER 10초(끝 확인)'], ['fevoff', 'FEVER 끄기'], ['jack', 'JACKPOT'], ['rain', '칩 비 내리기'], ['combo', 'COMBO 연속'], ['shard', '깨트리기 파편'], ['tap', '다음 개봉 = 깨트리기'], ['roll', '잔고 굴러가기']].map((x) => '<button type="button" class="gm-tb" data-d="' + x[0] + '">' + x[1] + '</button>').join('');
+        m.innerHTML = '<b>연출 시안</b>' + [['rb', '무지개 컷인'], ['gold', '골드 확정'], ['dbl', 'DOUBLE'], ['tri', 'TRIPLE'], ['stkR', 'R 10연속'], ['stkSR', 'SR 10연속'], ['tease', '가짜 무지개 예고'], ['fev5', 'DORO TIME 5분 시작'], ['fev10s', 'DORO TIME 10초(끝 확인)'], ['fevoff', 'DORO TIME 끄기'], ['jack', 'JACKPOT'], ['rain', '칩 비 내리기'], ['combo', 'COMBO 연속'], ['shard', '깨트리기 파편'], ['tap', '다음 개봉 = 깨트리기'], ['roll', '잔고 굴러가기']].map((x) => '<button type="button" class="gm-tb" data-d="' + x[0] + '">' + x[1] + '</button>').join('');
         m.addEventListener('click', (e2) => { const d = e2.target.closest('[data-d]'); if (!d) return; e2.stopPropagation(); const v = d.dataset.d, o1 = panEl.querySelector('.gm-orb.top, .gm-orb') || balEl;
           if (v === 'rb') rainbowCut(o1 && o1.closest('.gm-well') ? o1 : null, null, { jp: false }); else if (v === 'gold') goldPop(o1); else if (v === 'dbl') multiPop(2, true); else if (v === 'tri') multiPop(3, true); else if (v === 'tease') teasePop(); else if (v === 'fever') feverPop(); else if (v === 'rain') coinRain(); else if (v === 'combo') { multiPop(2, true); setTimeout(() => multiPop(3, true), 2600); } else if (v === 'jack') rainbowCut(null, null, { jp: true }); else if (v === 'fev5') feverStart(); else if (v === 'fev10s') feverStart(10000); else if (v === 'fevoff') { try { localStorage.removeItem(FEV_K); } catch (er) { /* 무시 */ } } else if (v === 'stkR') streakCut('R', 0.17, 'b', true); else if (v === 'stkSR') streakCut('SR', 0.022, 's', true);
           else if (v === 'shard') { S.flash = 0.6; snd.crack(); shards(RV.x, RV.y, RV.r, COL.SSR); sparks(RV.x, RV.y, 60, () => pick(['#fff3b0', '#ffd24d', '#ffffff']), 650, 260); }
