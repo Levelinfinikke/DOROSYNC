@@ -113,32 +113,46 @@
 .gm-orb u{position:absolute;left:-6px;top:-4px;z-index:2;text-decoration:none;font-size:11px;font-weight:900;background:#11141b;border-radius:8px;padding:0 5px;border:1px solid currentColor}
 .gm-orb.merge{animation:gmMerge .4s}
 .gm-cnt{position:absolute;left:50%;bottom:-7px;transform:translateX(-50%);z-index:5;font-size:12px;font-weight:800;line-height:16px;background:#11141b;border:1px solid #ffc21a;color:#ffc21a;border-radius:9px;padding:0 6px;white-space:nowrap;pointer-events:none}
-.gm-rbcut{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;background:rgba(12,4,28,.6);animation:gmRbBg .25s ease-out both,gmRbShake .5s .62s;cursor:default;overflow:hidden;touch-action:none;user-select:none}
-.gm-rbcut.ok{cursor:pointer}.gm-rbcut.leave{background:transparent;transition:background .35s;pointer-events:none}.gm-rbcut.leave .gm-rbcv,.gm-rbcut.leave .gm-rbtx,.gm-rbcut.leave .gm-rbtap,.gm-rbcut.leave .gm-rbfl{opacity:0!important;transition:opacity .35s;animation:none}.gm-rbcut.leave .gm-rbch::before{opacity:0;transition:opacity .3s}
-.gm-rbcv{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;animation:gmRbBg .12s .56s both}
-.gm-rbfl{position:absolute;inset:0;background:#fff;opacity:0;animation:gmRbFlash .7s .6s ease-out both;pointer-events:none}
-.gm-rbtx{position:absolute;top:9%;left:0;right:0;display:grid;justify-items:center;font:400 clamp(50px,14.5vw,190px)/1.1 Bungee,'Arial Black',Impact,sans-serif;letter-spacing:.02em;animation:gmRbIn .34s .62s cubic-bezier(.2,.8,.3,1) both,gmRbSlam .3s .96s cubic-bezier(.3,1.8,.5,1) both;pointer-events:none}
-.gm-rbtx span{grid-area:1/1;white-space:nowrap;padding:0 .2em;position:relative}.gm-rbtx .ta{z-index:1}.gm-rbtx .tb{z-index:2}.gm-rbtx .tc{z-index:3}.gm-rbtx .td{z-index:4}.gm-rbtx .te{z-index:5}
-.gm-rbtx .ta{color:#5a3402;-webkit-text-stroke:.24em #5a3402;text-shadow:0 .03em 0 #4a2a01,0 .06em 0 #3d2201,0 .09em 0 #2e1900,0 .12em 0 #221200,0 .2em .25em rgba(40,0,60,.7)}
-.gm-rbtx .tb{color:#f7c844;-webkit-text-stroke:.19em #e7aa1c;text-shadow:0 -.025em 0 #fff6c2,0 .025em 0 #b37406}
-.gm-rbtx .tc{color:#fff4b8;-webkit-text-stroke:.115em #ffe57a;top:-.018em}
-.gm-rbtx .td{color:#140a1e;-webkit-text-stroke:.075em #140a1e}
-.gm-rbtx .te{color:transparent;-webkit-text-fill-color:transparent;background:linear-gradient(105deg,transparent 42%,rgba(255,255,255,.95) 50%,transparent 58%) 0 0/300% 100% no-repeat,repeating-conic-gradient(from 8deg at 35% 42%,rgba(255,255,255,.42) 0 14deg,rgba(255,255,255,.08) 14deg 31deg,rgba(20,0,60,.2) 31deg 44deg,transparent 44deg 60deg) 0 0/.82em 1.1em,repeating-conic-gradient(from 40deg at 60% 65%,rgba(255,255,255,.25) 0 22deg,transparent 22deg 47deg,rgba(0,30,80,.14) 47deg 70deg,transparent 70deg 90deg) .3em .4em/1.3em 1.5em,linear-gradient(90deg,#ff3f8e,#ff9e2c,#f8ee3c,#40f08e,#2fc4ff,#6a6bff,#c04bff,#ff3f8e) 0 0/200% 100%;-webkit-background-clip:text;background-clip:text;animation:gmRbHolo 2.4s linear infinite;filter:saturate(1.15)}
-.gm-rbch{position:relative;top:10%;--cs:min(260px,50vw);--ct:calc(var(--cs) * .12);pointer-events:none}
-.gm-rbch::before{content:"";position:absolute;inset:-35%;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.95),rgba(255,240,255,.5) 38%,transparent 68%);animation:gmRbPulse 1.2s ease-in-out infinite alternate}
+.gm-rbcut{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;background:rgba(12,4,28,.6);animation:gmRbBg .25s ease-out both;cursor:default;overflow:hidden;touch-action:none;user-select:none}
+.gm-rbcut.hit{animation:gmRbShake .6s}
+.gm-rbcut.ok{cursor:pointer}.gm-rbcut.leave{background:transparent;transition:background .35s;pointer-events:none}.gm-rbcut.leave .gm-rbcv,.gm-rbcut.leave .gm-rbtx,.gm-rbcut.leave .gm-rbtap,.gm-rbcut.leave .gm-rbfl,.gm-rbcut.leave .gm-rbcnt{opacity:0!important;transition:opacity .35s;animation:none}.gm-rbcut.leave .gm-rbch::before{opacity:0;transition:opacity .3s}
+.gm-rbcv{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:0}.gm-rbcut.hit .gm-rbcv{opacity:1}
+.gm-rbfl{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:6}.gm-rbcut.hit .gm-rbfl{animation:gmRbFlash 1.1s ease-out both}
+.gm-rbtx{position:absolute;top:8%;left:0;right:0;display:grid;justify-items:center;font:400 clamp(50px,14.5vw,190px)/1.1 Bungee,'Arial Black',Impact,sans-serif;letter-spacing:.03em;transform:skewX(-7deg);pointer-events:none;z-index:3}
+.gm-rbtx>span{grid-area:1/1;white-space:nowrap;padding:0 .2em;position:relative}.gm-rbtx>span b{display:inline-block;font-weight:400;opacity:0}
+.gm-rbcut.hit .gm-rbtx>span b{animation:gmRbDrop .34s calc(.12s + var(--i) * .07s) cubic-bezier(.3,1.5,.5,1) both}
+.gm-rbtx .ta{z-index:1;color:#5a3402;-webkit-text-stroke:.24em #5a3402;text-shadow:0 .03em 0 #4a2a01,0 .06em 0 #3d2201,0 .09em 0 #2e1900,0 .12em 0 #221200,0 .2em .25em rgba(40,0,60,.7)}
+.gm-rbtx .tb{z-index:2;color:#f7c844;-webkit-text-stroke:.19em #e7aa1c;text-shadow:0 -.025em 0 #fff6c2,0 .025em 0 #b37406}
+.gm-rbtx .tc{z-index:3;color:#fff4b8;-webkit-text-stroke:.115em #ffe57a;top:-.018em}
+.gm-rbtx .td{z-index:4;color:#140a1e;-webkit-text-stroke:.075em #140a1e}
+.gm-rbtx .te{z-index:5;animation:gmRbHue 3s linear infinite}
+.gm-rbtx .te b{color:transparent;-webkit-text-fill-color:transparent;background:repeating-conic-gradient(from 8deg at 35% 42%,rgba(255,255,255,.42) 0 14deg,rgba(255,255,255,.08) 14deg 31deg,rgba(20,0,60,.2) 31deg 44deg,transparent 44deg 60deg) 0 0/.82em 1.1em,repeating-conic-gradient(from 40deg at 60% 65%,rgba(255,255,255,.25) 0 22deg,transparent 22deg 47deg,rgba(0,30,80,.14) 47deg 70deg,transparent 70deg 90deg) .3em .4em/1.3em 1.5em,linear-gradient(90deg,#ff3f8e,#ff9e2c,#f8ee3c,#40f08e,#2fc4ff,#6a6bff,#c04bff,#ff3f8e) calc(var(--i) * -.95em) 0/8.6em 100%;-webkit-background-clip:text;background-clip:text}
+.gm-rbtx .tf{z-index:6}.gm-rbtx .tf b{color:transparent;-webkit-text-fill-color:transparent;background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.95) 50%,transparent 65%) 0 0/300% 100% no-repeat;-webkit-background-clip:text;background-clip:text}
+.gm-rbcut.hit .gm-rbtx .tf b{animation:gmRbDrop .34s calc(.12s + var(--i) * .07s) cubic-bezier(.3,1.5,.5,1) both,gmRbGlint 2.2s calc(1s + var(--i) * .06s) ease-in-out infinite}
+.gm-rbch{position:relative;top:10%;--cs:min(260px,50vw);--ct:calc(var(--cs) * .12);pointer-events:none;z-index:4}
+.gm-rbch::before{content:"";position:absolute;inset:-35%;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.95),rgba(255,240,255,.5) 38%,transparent 68%);opacity:0}.gm-rbcut.hit .gm-rbch::before{opacity:1;animation:gmRbPulse 1.2s ease-in-out infinite alternate}
+.gm-rbsw{position:absolute;left:50%;top:50%;width:var(--cs);height:var(--cs);margin:calc(var(--cs) / -2) 0 0 calc(var(--cs) / -2);border-radius:50%;border:7px solid #fff;box-shadow:0 0 18px 4px rgba(255,255,255,.9),inset 0 0 18px 4px rgba(255,200,255,.8);opacity:0;pointer-events:none}
+.gm-rbcut.hit .gm-rbsw{animation:gmRbWave .9s cubic-bezier(.1,.6,.3,1) both}.gm-rbcut.hit .gm-rbsw:nth-child(2){animation-delay:.12s;border-color:#ffe36a}.gm-rbcut.hit .gm-rbsw:nth-child(3){animation-delay:.24s;border-color:#9ad8ff}
 .gm-rbtl{perspective:1100px;transform:rotateX(14deg);transform-style:preserve-3d}
-.gm-rbsp{position:relative;width:var(--cs);height:var(--cs);transform-style:preserve-3d;animation:gmRbRot 4s 1.3s ease-in-out infinite}
+.gm-rbsp{position:relative;width:var(--cs);height:var(--cs);transform-style:preserve-3d}.gm-rbcut.hit .gm-rbsp{animation:gmRbRot 4s 1.6s ease-in-out infinite}
 .gm-rbsp>i{position:absolute;inset:0;border-radius:50%;background:linear-gradient(rgba(10,0,25,var(--dk)),rgba(10,0,25,var(--dk))),conic-gradient(#ff5d8f,#ffb84d,#f6f05a,#5ef0a0,#5ab8ff,#b47cff,#ff5d8f);box-shadow:inset 0 0 0 2px rgba(255,255,255,.25)}
 .gm-rbf{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;transform:translateZ(calc(var(--ct) * .5 + .5px)) scale(.925)}.gm-rbf svg{width:100%;height:100%;display:block}.gm-rbbk{transform:rotateY(180deg) translateZ(calc(var(--ct) * .5 + .5px)) scale(.925)}
-.gm-rbtap{position:absolute;bottom:7%;left:0;right:0;text-align:center;color:#fff;font-weight:900;font-size:18px;letter-spacing:.12em;opacity:0;pointer-events:none}.gm-rbtap::before{content:'- 탭하여 계속 -';display:inline-block;padding:7px 20px;border-radius:20px;background:rgba(20,8,40,.62);box-shadow:0 0 0 1px rgba(255,255,255,.35),0 4px 18px rgba(60,0,100,.35)}.gm-rbtap{font-size:0}.gm-rbtap::before{font-size:17px}
+.gm-rbcnt{position:absolute;bottom:15%;left:0;right:0;display:flex;justify-content:center;align-items:baseline;gap:.25em;opacity:0;pointer-events:none;z-index:5;transform:skewX(-7deg)}
+.gm-rbcut.hit .gm-rbcnt{animation:gmRbCnt .35s .85s cubic-bezier(.3,1.6,.5,1) both}
+.gm-rbcnt b{font:400 clamp(34px,8vw,84px)/1 Bungee,'Arial Black',Impact,sans-serif;color:#ffe680;-webkit-text-stroke:.05em #7a4a03;paint-order:stroke fill;text-shadow:0 .04em 0 #b8790c,0 .08em 0 #7a4a03,0 .14em .2em rgba(40,0,60,.6),0 0 .4em rgba(255,230,120,.8);font-variant-numeric:tabular-nums}
+.gm-rbcnt span{font:900 clamp(17px,3.4vw,34px)/1 system-ui,sans-serif;color:#fff;-webkit-text-stroke:.14em #3a145e;paint-order:stroke fill;text-shadow:0 .1em .2em rgba(40,0,60,.6)}
+.gm-rbcnt.done b{animation:gmRbPop .4s cubic-bezier(.3,1.8,.5,1)}
+.gm-rbtap{position:absolute;bottom:6%;left:0;right:0;text-align:center;color:#fff;font-weight:900;font-size:0;letter-spacing:.12em;opacity:0;pointer-events:none;z-index:5}.gm-rbtap::before{content:'- 탭하여 계속 -';font-size:17px;display:inline-block;padding:7px 20px;border-radius:20px;background:rgba(20,8,40,.62);box-shadow:0 0 0 1px rgba(255,255,255,.35),0 4px 18px rgba(60,0,100,.35)}
 .gm-rbcut.ok .gm-rbtap{animation:gmRbBlink 1.1s ease-in-out infinite}
-@keyframes gmRbBg{from{opacity:0}to{opacity:1}}@keyframes gmRbOut{to{opacity:0;transform:scale(1.06)}}
-@keyframes gmRbFlash{0%{opacity:1}100%{opacity:0}}
-@keyframes gmRbShake{0%,100%{transform:none}15%{transform:translate(-9px,5px)}30%{transform:translate(8px,-6px)}45%{transform:translate(-6px,-4px)}60%{transform:translate(5px,4px)}80%{transform:translate(-2px,2px)}}
-@keyframes gmRbIn{from{transform:translateX(110vw) skewX(-25deg) scaleX(1.6)}to{transform:translateX(0) skewX(-8deg)}}
-@keyframes gmRbSlam{0%{transform:skewX(-8deg) scale(1.45)}100%{transform:skewX(-6deg) scale(1)}}
-@keyframes gmRbHolo{0%{background-position:-150% 0,0 0,.3em .4em,0 0}100%{background-position:250% 0,0 0,.3em .4em,-200% 0}}
-@keyframes gmRbZoom{from{transform:scale(.08);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes gmRbBg{from{opacity:0}to{opacity:1}}
+@keyframes gmRbFlash{0%{opacity:1}12%{opacity:.15}20%{opacity:.75}45%{opacity:0}100%{opacity:0}}
+@keyframes gmRbShake{0%,100%{transform:none}8%{transform:translate(-18px,12px) rotate(-.6deg)}18%{transform:translate(16px,-14px) rotate(.5deg)}30%{transform:translate(-12px,-8px)}42%{transform:translate(10px,8px)}56%{transform:translate(-6px,4px)}72%{transform:translate(3px,-2px)}}
+@keyframes gmRbDrop{0%{opacity:0;transform:translateY(-.5em) scale(2.8)}60%{opacity:1;transform:translateY(.04em) scale(.88)}100%{opacity:1;transform:none}}
+@keyframes gmRbGlint{0%{background-position:150% 0}45%,100%{background-position:-50% 0}}
+@keyframes gmRbHue{to{filter:hue-rotate(360deg)}}
+@keyframes gmRbWave{0%{transform:scale(.6);opacity:1}100%{transform:scale(4.2);opacity:0}}
+@keyframes gmRbCnt{from{opacity:0;transform:skewX(-7deg) scale(2.2)}to{opacity:1;transform:skewX(-7deg) scale(1)}}
+@keyframes gmRbPop{0%{transform:scale(1)}40%{transform:scale(1.35)}100%{transform:scale(1)}}
 @keyframes gmRbPulse{from{transform:scale(.9);opacity:.7}to{transform:scale(1.12);opacity:1}}
 @keyframes gmRbRot{0%{transform:rotateY(0)}25%,50%{transform:rotateY(180deg)}75%,100%{transform:rotateY(360deg)}}
 @keyframes gmRbBlink{0%,100%{opacity:.35}50%{opacity:1}}
@@ -259,6 +273,10 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
         tick() { noise(0.035, 0.7, 2400, 'bandpass'); tone(170, 0.05, 'square', 0.1, 90); },
         clunk() { if (thr('cl', 300)) return; tone(95, 0.13, 'sine', 0.6, 48); noise(0.06, 0.35, 380, 'lowpass'); },
         fanfare() { [523, 659, 784, 1047, 1319, 1568].forEach((f, i) => tone(f, 0.22, 'triangle', 0.2, null, i * 0.07)); [1047, 1319, 1568, 2093].forEach((f) => tone(f, 1.3, 'sawtooth', 0.05, null, 0.45)); tone(2093, 1.5, 'sine', 0.14, null, 0.45); noise(0.5, 0.35, 5000, 'highpass'); },
+        riser() { const a = C(); if (!a) return; tone(180, 0.95, 'sawtooth', 0.07, 1400); tone(360, 0.95, 'triangle', 0.08, 2800); noise(0.95, 0.12, 1800, 'bandpass'); },
+        boom() { tone(55, 0.9, 'sine', 1, 28); tone(110, 0.35, 'square', 0.18, 40); noise(0.5, 0.9, 700, 'lowpass'); noise(0.25, 0.4, 6000, 'highpass'); },
+        thud(big) { tone(big ? 90 : 130, 0.18, 'sine', big ? 0.7 : 0.45, 50); noise(0.06, big ? 0.5 : 0.3, 1600, 'bandpass'); },
+        tickUp(p) { tone(900 + p * 1500, 0.04, 'square', 0.05); },
         slam() { tone(70, 0.45, 'sine', 0.9, 38); noise(0.2, 0.6, 900, 'lowpass'); },
         chipPop() { tone(2400, 0.16, 'triangle', 0.22); tone(3600, 0.26, 'sine', 0.14, null, 0.03); tone(5100, 0.2, 'sine', 0.07, null, 0.05); noise(0.03, 0.3, 6500, 'highpass'); },
         chipIn(u) { if (thr('ci', 28)) return; const f = 1500 + 1700 * (u || 0); tone(f, 0.07, 'triangle', 0.13); tone(f * 1.5, 0.1, 'sine', 0.07, null, 0.01); },
@@ -529,22 +547,43 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
       if (from && from.style) from.style.visibility = 'hidden'; /* 그 자리의 칩이 직접 날아오름 */
       if (src && window.doroChips) { chipPendR += 1; window.doroChips.add({ r: 1 }, src); } /* 바로 저장, 잔고 숫자는 칩이 도착할 때 올라감 */
       (S.cutQ = S.cutQ || []).push(it); if (S.cut) return;
-      if (!document.getElementById('gm-rbfont')) { const l = document.createElement('link'); l.id = 'gm-rbfont'; l.rel = 'stylesheet'; l.href = 'https://fonts.googleapis.com/css2?family=Bungee&display=swap&text=RAINBOW!'; document.head.appendChild(l); }
+      if (!document.getElementById('gm-rbfont')) { const l = document.createElement('link'); l.id = 'gm-rbfont'; l.rel = 'stylesheet'; l.href = 'https://fonts.googleapis.com/css2?family=Bungee&display=swap&text=RAINBOW!0123456789,'; document.head.appendChild(l); }
       const next = () => {
         const cur = S.cutQ.shift(); if (!cur) { S.cut = false; return; } S.cut = true;
         const ov = document.createElement('div'); ov.className = 'gm-rbcut';
-        const T = 'RAINBOW!!', N = 18; let edge = '';
+        const T = 'RAINBOW!!', N = 18, IMP = 1000; let edge = '';
         for (let i = 0; i < N; i++) { const f = i / (N - 1) - 0.5, sc = 1 - 0.075 * (1 - Math.sqrt(Math.max(0, 1 - Math.pow(2 * f, 2)))), dk = (0.08 + Math.abs(f) * 0.75).toFixed(2); edge += '<i style="transform:translateZ(calc(var(--ct) * ' + f.toFixed(3) + ')) scale(' + sc.toFixed(3) + ');--dk:' + dk + '"></i>'; }
+        /* 몇 뽑 만의 무지개인지 (이 기계 기준). 뽑기 없이 얻었으면 보유 개수 */
+        const pulls = S.stats.n - (S.rbFrom || 0); S.rbFrom = S.stats.n;
+        const own = window.doroChips ? window.doroChips.get().r : 0, cntV = pulls > 0 ? pulls : own, cntT = pulls > 0 ? '뽑 만의 무지개!' : '번째 무지개칩!';
+        const lay = ['a', 'b', 'c', 'd', 'e', 'f'].map((x) => '<span class="t' + x + '">' + T.split('').map((ch, i) => '<b style="--i:' + i + '">' + ch + '</b>').join('') + '</span>').join('');
         ov.innerHTML = '<canvas class="gm-rbcv"></canvas><div class="gm-rbfl"></div>' +
-          '<div class="gm-rbtx">' + ['a', 'b', 'c', 'd', 'e'].map((x) => '<span class="t' + x + '">' + T + '</span>').join('') + '</div>' +
-          '<div class="gm-rbch"><div class="gm-rbtl"><div class="gm-rbsp">' + edge + '<div class="gm-rbf">' + chipSvg('r', 260, true) + '</div><div class="gm-rbf gm-rbbk">' + chipSvg('r', 260, true) + '</div></div></div></div><div class="gm-rbtap">- 탭하여 계속 -</div>';
+          '<div class="gm-rbtx">' + lay + '</div>' +
+          '<div class="gm-rbch"><div class="gm-rbsw"></div><div class="gm-rbsw"></div><div class="gm-rbsw"></div><div class="gm-rbtl"><div class="gm-rbsp">' + edge + '<div class="gm-rbf">' + chipSvg('r', 260, true) + '</div><div class="gm-rbf gm-rbbk">' + chipSvg('r', 260, true) + '</div></div></div></div>' +
+          '<div class="gm-rbcnt"><b>0</b><span>' + cntT + '</span></div><div class="gm-rbtap">- 탭하여 계속 -</div>';
         (document.fullscreenElement || document.body).appendChild(ov);
-        const stop = rbBg(ov.querySelector('canvas')), ch = ov.querySelector('.gm-rbch'), fr = ch.getBoundingClientRect(), fx = fr.left + fr.width / 2, fy = fr.top + fr.height / 2;
-        /* 얻은 칩이 제자리에서 화면 가운데로 날아와 커짐 */
-        ch.animate([{ transform: 'translate(' + (cur.cx - fx) + 'px,' + (cur.cy - fy) + 'px) scale(' + Math.max(0.05, cur.size / fr.width) + ')' }, { transform: 'translate(0,0) scale(1.15)', offset: 0.85 }, { transform: 'none' }], { duration: 650, easing: 'cubic-bezier(.45,0,.25,1)', fill: 'both' });
+        const bg = rbBg(ov.querySelector('canvas'), IMP), stop = bg.stop, ch = ov.querySelector('.gm-rbch'), fr = ch.getBoundingClientRect(), fx = fr.left + fr.width / 2, fy = fr.top + fr.height / 2;
+        /* 칩: 제자리에서 가운데로 날아와 → 크게 부풀었다가 → 쿵! 하고 작아지며 멈춤 */
+        const dx = cur.cx - fx, dy = cur.cy - fy, s0 = Math.max(0.05, cur.size / fr.width);
+        ch.animate([
+          { transform: 'translate(' + dx + 'px,' + dy + 'px) scale(' + s0 + ') rotate(0deg)', easing: 'cubic-bezier(.45,0,.3,1)' },
+          { transform: 'translate(0,0) scale(1) rotate(-8deg)', offset: 0.45, easing: 'cubic-bezier(.2,.7,.3,1)' },
+          { transform: 'translate(0,-2%) scale(1.85) rotate(4deg)', offset: 0.8, easing: 'linear' },
+          { transform: 'translate(0,-2%) scale(1.95) rotate(0deg)', offset: 0.88, easing: 'cubic-bezier(.75,0,1,.6)' },
+          { transform: 'translate(0,0) scale(1)' }], { duration: IMP, fill: 'both' });
         try { snd.flip(); } catch (e) { /* 무시 */ }
-        setTimeout(() => { try { snd.slam(); } catch (e) { /* 무시 */ } vib([60, 40, 60, 40, 260], true); }, 600); setTimeout(() => { try { snd.fanfare(); } catch (e) { /* 무시 */ } }, 980); /* 칩이 가운데 닿는 순간 터짐 */
-        let ok = false; setTimeout(() => { ok = true; ov.classList.add('ok'); }, 3600);
+        setTimeout(() => { try { snd.riser(); } catch (e) { /* 무시 */ } }, 380);
+        setTimeout(() => { /* 쿵! */
+          ov.classList.add('hit'); bg.hit(); vib([90, 30, 140, 40, 300], true);
+          try { snd.boom(); snd.chipBurst(true); } catch (e) { /* 무시 */ }
+          T.split('').forEach((c2, i) => setTimeout(() => { try { snd.thud(i >= 7); } catch (e) { /* 무시 */ } }, 120 + i * 70));
+          setTimeout(() => { try { snd.fanfare(); } catch (e) { /* 무시 */ } }, 120 + T.length * 70 + 60);
+          /* 숫자 굴리기 */
+          setTimeout(() => { const el = ov.querySelector('.gm-rbcnt b'), D = Math.min(1400, 500 + cntV * 0.4), t0 = performance.now(); let lastP = -1;
+            const run = (now) => { const p = Math.min(1, (now - t0) / D), v = Math.round(cntV * (1 - Math.pow(1 - p, 3))); el.textContent = fmt(v); const q = Math.floor(p * 18); if (q !== lastP) { lastP = q; try { snd.tickUp(p); } catch (e) { /* 무시 */ } } if (p < 1 && ov.isConnected) requestAnimationFrame(run); else { ov.querySelector('.gm-rbcnt').classList.add('done'); try { snd.chipPop(); } catch (e) { /* 무시 */ } } };
+            requestAnimationFrame(run); }, 900);
+        }, IMP);
+        let ok = false; setTimeout(() => { ok = true; ov.classList.add('ok'); }, IMP + 3000);
         ov.addEventListener('pointerdown', (e) => {
           e.preventDefault(); e.stopPropagation(); if (!ok) return; ok = false; ov.classList.add('leave');
           /* 그 칩이 직접 잔고(모바일은 보관함 아이콘)로 날아감 */
@@ -567,7 +606,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     }
     /* 컷인 배경: 무지개 방사 + 빛줄기 + 가운데서 퍼져 나오는 꽃·반짝이 */
     function rbBg(cv) {
-      const c = cv.getContext('2d'); let w = 0, h = 0, dpr = 1, raf = 0, last = performance.now(), t = 0; const fl = [], ln = [], dots = [];
+      const c = cv.getContext('2d'); let w = 0, h = 0, dpr = 1, raf = 0, last = performance.now(), t = 0, boost = 0; const fl = [], ln = [], dots = [], pt = [];
       const fit = () => { dpr = Math.min(1.5, window.devicePixelRatio || 1); w = cv.clientWidth; h = cv.clientHeight; cv.width = w * dpr; cv.height = h * dpr; };
       fit(); window.addEventListener('resize', fit);
       const PAL = ['#ffd1ea', '#fff3a6', '#c9f7ff', '#ffd9a8', '#e3d0ff', '#d6ffd8'];
@@ -588,14 +627,25 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
         let g; if (c.createConicGradient) { g = c.createConicGradient(t * 0.25, cx, cy); ['#ff2f6d', '#ff9a1f', '#ffe838', '#3ff07a', '#22d3ff', '#3a6bff', '#b23dff', '#ff2fb4', '#ff2f6d'].forEach((col, i, A) => g.addColorStop(i / (A.length - 1), col)); } else { g = c.createLinearGradient(0, 0, w, 0); g.addColorStop(0, '#3ff07a'); g.addColorStop(0.5, '#ffe838'); g.addColorStop(1, '#ff2fb4'); }
         c.globalAlpha = 1; c.fillStyle = g; c.fillRect(0, 0, w, h);
         const rg = c.createRadialGradient(cx, cy, 0, cx, cy, R); rg.addColorStop(0, 'rgba(255,255,255,.95)'); rg.addColorStop(0.18, 'rgba(255,255,255,.55)'); rg.addColorStop(0.5, 'rgba(255,255,255,.08)'); rg.addColorStop(1, 'rgba(60,0,90,.25)'); c.fillStyle = rg; c.fillRect(0, 0, w, h);
+        /* 회전하는 굵은 빛기둥 */
+        c.save(); c.translate(cx, cy); c.rotate(t * 0.18); for (let k = 0; k < 16; k++) { c.rotate(TAU / 16); const gw = c.createLinearGradient(0, 0, R, 0); gw.addColorStop(0, 'rgba(255,255,255,.55)'); gw.addColorStop(1, 'rgba(255,255,255,0)'); c.fillStyle = gw; c.beginPath(); c.moveTo(0, 0); c.lineTo(R, -R * (k % 2 ? 0.05 : 0.11)); c.lineTo(R, R * (k % 2 ? 0.05 : 0.11)); c.fill(); } c.restore();
+        boost = Math.max(0, boost - dt * 1.6); const bm = 1 + boost * 5;
         c.globalCompositeOperation = 'lighter';
-        ln.forEach((l, i) => { l.z += l.v * dt * (0.4 + l.z); if (l.z > 1.3) ln[i] = nl(); const d0 = l.z * R, d1 = Math.max(0, l.z - l.len) * R; c.globalAlpha = Math.min(1, l.z * 2) * 0.55; c.strokeStyle = '#fff'; c.lineWidth = l.wd * (0.5 + l.z); c.beginPath(); c.moveTo(cx + Math.cos(l.a) * d1, cy + Math.sin(l.a) * d1); c.lineTo(cx + Math.cos(l.a) * d0, cy + Math.sin(l.a) * d0); c.stroke(); });
-        dots.forEach((d, i) => { d.z += d.v * dt * (0.3 + d.z); if (d.z > 1.2) dots[i] = nd(); const r = d.z * R; c.globalAlpha = Math.min(1, d.z * 3) * 0.8; c.fillStyle = '#fff'; c.beginPath(); c.arc(cx + Math.cos(d.a) * r, cy + Math.sin(d.a) * r, d.r * (0.4 + d.z), 0, TAU); c.fill(); });
+        ln.forEach((l, i) => { l.z += l.v * dt * (0.4 + l.z) * bm; if (l.z > 1.3) ln[i] = nl(); const d0 = l.z * R, d1 = Math.max(0, l.z - l.len) * R; c.globalAlpha = Math.min(1, l.z * 2) * 0.55; c.strokeStyle = '#fff'; c.lineWidth = l.wd * (0.5 + l.z); c.beginPath(); c.moveTo(cx + Math.cos(l.a) * d1, cy + Math.sin(l.a) * d1); c.lineTo(cx + Math.cos(l.a) * d0, cy + Math.sin(l.a) * d0); c.stroke(); });
+        dots.forEach((d, i) => { d.z += d.v * dt * (0.3 + d.z) * bm; if (d.z > 1.2) dots[i] = nd(); const r = d.z * R; c.globalAlpha = Math.min(1, d.z * 3) * 0.8; c.fillStyle = '#fff'; c.beginPath(); c.arc(cx + Math.cos(d.a) * r, cy + Math.sin(d.a) * r, d.r * (0.4 + d.z), 0, TAU); c.fill(); });
         c.globalCompositeOperation = 'source-over';
-        fl.sort((x, y) => x.z - y.z).forEach((f, i) => { f.z += f.v * dt * (0.25 + f.z); f.rot += f.vr * dt; if (f.z > 1.25) Object.assign(f, nf()); const d = f.z * R * 0.95, sc = 0.25 + f.z * f.z * 3.2; flower(cx + Math.cos(f.a) * d, cy + Math.sin(f.a) * d, f.r * sc, f.rot, f.col, f.fill, Math.min(1, f.z * 5) * (f.z > 1 ? Math.max(0, 1.25 - f.z) * 4 : 1) * 0.92); });
+        fl.sort((x, y) => x.z - y.z).forEach((f, i) => { f.z += f.v * dt * (0.25 + f.z) * (1 + boost * 3); f.rot += f.vr * dt; if (f.z > 1.25) Object.assign(f, nf()); const d = f.z * R * 0.95, sc = 0.25 + f.z * f.z * 3.2; flower(cx + Math.cos(f.a) * d, cy + Math.sin(f.a) * d, f.r * sc, f.rot, f.col, f.fill, Math.min(1, f.z * 5) * (f.z > 1 ? Math.max(0, 1.25 - f.z) * 4 : 1) * 0.92); });
+        /* 쿵 할 때 튀어나오는 칩·금화·별 */
+        for (let i = pt.length - 1; i >= 0; i--) { const q = pt[i]; q.vy += 900 * dt; q.vx *= 1 - 0.6 * dt; q.x += q.vx * dt; q.y += q.vy * dt; q.r += q.vr * dt; q.life -= dt; if (q.life <= 0 || q.y > h + 60) { pt.splice(i, 1); continue; }
+          c.save(); c.translate(q.x, q.y); c.rotate(q.r); c.scale(1, Math.abs(Math.cos(q.r * 1.7)) * 0.8 + 0.2); c.globalAlpha = Math.min(1, q.life * 2);
+          if (q.k === 's') { c.fillStyle = q.col; c.beginPath(); for (let k = 0; k < 4; k++) { const a = k * TAU / 4; c.lineTo(Math.cos(a) * q.sz, Math.sin(a) * q.sz); c.lineTo(Math.cos(a + TAU / 8) * q.sz * 0.3, Math.sin(a + TAU / 8) * q.sz * 0.3); } c.fill(); }
+          else { c.fillStyle = q.col; c.beginPath(); c.arc(0, 0, q.sz, 0, TAU); c.fill(); c.lineWidth = q.sz * 0.28; c.strokeStyle = q.rim; c.stroke(); c.fillStyle = 'rgba(255,255,255,.55)'; c.beginPath(); c.arc(-q.sz * 0.3, -q.sz * 0.3, q.sz * 0.3, 0, TAU); c.fill(); }
+          c.restore(); }
       };
       raf = requestAnimationFrame(draw);
-      return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', fit); };
+      const hit = () => { boost = 1; const cx = w / 2, cy = h * 0.56, CC = [['#ff5d8f', '#ffd1e1'], ['#ffb84d', '#fff0c8'], ['#f6f05a', '#fffbd0'], ['#5ef0a0', '#d6ffe8'], ['#5ab8ff', '#d6efff'], ['#b47cff', '#efe2ff'], ['#f6c431', '#a8830f'], ['#f6c431', '#a8830f']];
+        for (let i = 0; i < 150; i++) { const a = Math.random() * TAU, v = 500 + Math.random() * 1100, cc = CC[(Math.random() * CC.length) | 0], st = Math.random() < 0.3; pt.push({ x: cx, y: cy, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 350, r: Math.random() * TAU, vr: (Math.random() - 0.5) * 18, sz: st ? 7 + Math.random() * 10 : 6 + Math.random() * 11, k: st ? 's' : 'c', col: st ? '#fff' : cc[0], rim: cc[1], life: 1.6 + Math.random() * 1.4 }); } };
+      return { stop: () => { cancelAnimationFrame(raf); window.removeEventListener('resize', fit); }, hit };
     }
     function chipSpawn() { const b = body('chip', HUDP.x, HUDP.y - 10, { chip: 'b', count: 1, src: 'label' }); b.vx = rnd(-520, -180); b.vy = rnd(-760, -520); b.w = rnd(-9, 9); S.bask.push(b); wake(S.bask); sparks(HUDP.x, HUDP.y, 16, '#ffc45a', 360); try { snd.chipPop(); } catch (e) { /* 무시 */ } }
     function chipTake(b) { const i = S.bask.indexOf(b); if (i < 0) return; S.bask.splice(i, 1); wake(S.bask); const r = cvRect(), sc = r.width / W; chipAbsorb(b.res.chip, b.res.count, r.left + b.x * sc, r.top + b.y * sc, Math.max(22, OR * 2 * sc), b.res.src || 'cap'); }
