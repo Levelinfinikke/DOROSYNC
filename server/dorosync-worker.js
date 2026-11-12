@@ -325,9 +325,10 @@ const dec = (v) => {
 /* ================= 도로칩 지급 검증 =================
  * 사이트가 칩을 얻을 때마다 기록(source·종류·개수·시각)을 모아 보냄 → 서버가 검사 후 계정의 chipsV에 더함.
  * 계정 문서의 chipsV(검증된 잔고)·chipDay(하루 사용량)는 서버만 쓸 수 있음(Firestore 규칙).
- * 검사: 로그인 토큰 확인 · 출처별 허용 종류 · 1회 요청 최대 건수 · 하루 상한(도로칩 환산 · 무지개 따로) · 시각이 미래/너무 과거면 거절 */
-const CHIP_VAL = { b: 1, s: 5, g: 10 }, CHIP_SRC = { ssr: 'bsgr', label: 'b', cap: 'bsgr', streak: 'bsgr', guest: 'bsgr' };
-const DAY_CAP_D = 3000, DAY_CAP_R = 20, MAX_EV = 300, GUEST_CAP_D = 3000, GUEST_CAP_R = 20;
+ * 검사: 로그인 토큰 확인 · 출처별 허용 종류 · 1회 요청 최대 건수 · 시각이 미래/너무 과거면 거절
+ * 하루 지급 상한 없음(비회원 칩 옮기기만 상한). daily(출석 100)는 하루(한국 시간) 한 번. spend(DORO MODE 뽑기)는 잔고에서 뺌(0 아래로는 안 내려감) */
+const CHIP_VAL = { b: 1, s: 5, g: 10 }, CHIP_SRC = { ssr: 'bsgr', label: 'b', cap: 'bsgr', streak: 'bsgr', guest: 'bsgr', daily: 'b', spend: 'b' };
+const MAX_EV = 300, GUEST_CAP_D = 3000, GUEST_CAP_R = 20, DAILY_D = 100;
 async function chipsClaim(req, env, out) {
   if (!env.FIREBASE_SA) return out(503, { ok: false, error: 'not_ready' });
   const idt = (req.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '');
@@ -342,19 +343,21 @@ async function chipsClaim(req, env, out) {
     const doc = await dr.json(), f = doc.fields || {}, today = kstDay(Date.now());
     let cv = dec(f.chipsV) || null; const old = dec(f.chips) || {};
     if (!cv) cv = { d: Math.max(0, Math.floor(+old.d || 0)), r: Math.max(0, Math.floor(+old.r || 0)) }; /* 처음 1회: 검증 전에 모아 둔 계정 잔고는 그대로 옮김 */
-    let day = dec(f.chipDay) || {}; if (day.d !== today) day = { d: today, n: 0, r: 0, g: 0 };
+    let day = dec(f.chipDay) || {}; if (day.d !== today) day = { d: today, n: 0, r: 0, g: 0, a: 0 };
     let okD = 0, okR = 0, rej = 0; const now = Date.now();
     for (const e of evs) {
       const k = String(e && e.k || ''), n = Math.floor(+(e && e.n) || 0), src = String(e && e.src || ''), t = +(e && e.t) || 0;
       const allow = CHIP_SRC[src] || ''; if (!allow.includes(k) || n < 1 || n > 500 || t > now + 120000 || t < now - 3 * 86400000) { rej++; continue; }
-      if (k === 'r') { const cap = src === 'guest' ? GUEST_CAP_R : DAY_CAP_R; const room = (src === 'guest' ? cap : cap - day.r); const m = Math.max(0, Math.min(n, room)); if (src !== 'guest') day.r += m; okR += m; if (m < n) rej++; continue; }
-      const v = CHIP_VAL[k] * n, room = src === 'guest' ? Math.max(0, GUEST_CAP_D - (day.g || 0)) : Math.max(0, DAY_CAP_D - day.n), m = Math.min(v, room);
+      if (src === 'spend') { const m = Math.min(n, cv.d + okD); okD -= m; day.s = (day.s || 0) + m; continue; } /* 뽑기에 쓴 칩 */
+      if (src === 'daily') { if (day.a) { rej++; continue; } day.a = 1; okD += DAILY_D; continue; } /* 출석: 하루 한 번 100 */
+      if (k === 'r') { const m = src === 'guest' ? Math.max(0, Math.min(n, GUEST_CAP_R - (day.gr || 0))) : n; if (src === 'guest') day.gr = (day.gr || 0) + m; else day.r += m; okR += m; if (m < n) rej++; continue; }
+      const v = CHIP_VAL[k] * n, m = src === 'guest' ? Math.min(v, Math.max(0, GUEST_CAP_D - (day.g || 0))) : v;
       if (src === 'guest') day.g = (day.g || 0) + m; else day.n += m; okD += m; if (m < v) rej++;
     }
-    const nv = { d: cv.d + okD, r: cv.r + okR };
+    const nv = { d: Math.max(0, cv.d + okD), r: cv.r + okR };
     const w = { update: { name: doc.name, fields: { chipsV: fsv(nv), chipDay: fsv(day) } }, updateMask: { fieldPaths: ['chipsV', 'chipDay'] }, currentDocument: { updateTime: doc.updateTime } };
     const cr = await fetch(FS.replace(/\/documents$/, '/documents:commit'), { method: 'POST', headers: H, body: JSON.stringify({ writes: [w] }) });
-    if (cr.ok) return out(200, { ok: true, chips: nv, added: { d: okD, r: okR }, rejected: rej, day: { used: day.n, cap: DAY_CAP_D, r: day.r, capR: DAY_CAP_R } });
+    if (cr.ok) return out(200, { ok: true, chips: nv, added: { d: okD, r: okR }, rejected: rej, day: { used: day.n, spent: day.s || 0, r: day.r, att: !!day.a } });
     if (cr.status !== 400 && cr.status !== 409) return out(502, { ok: false, error: 'write' }); /* 400/409: 그 사이 문서가 바뀜 → 다시 */
   }
   return out(409, { ok: false, error: 'busy' });

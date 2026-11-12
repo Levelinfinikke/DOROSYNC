@@ -2559,7 +2559,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
   const chipSave = (o) => { lsS(CHIP2_K, o); try { localStorage.removeItem(CHIP_K); } catch (e) { /* 무시 */ } try { window.dispatchEvent(new CustomEvent('dorochips', { detail: o })); } catch (e) { /* 무시 */ } };
   const chipGet = () => { const o = chipRaw(); return { b: o.d, s: 0, g: 0, r: o.r }; };
   const qGet = () => lsJ(CHIPQ_K, { o: '', ev: [] }), qSet = (q) => lsS(CHIPQ_K, q);
-  const qSum = (ev) => ev.reduce((a, e) => { if (e.k === 'r') a.r += e.n; else a.d += (CV[e.k] || 0) * e.n; return a; }, { d: 0, r: 0 });
+  const qSum = (ev) => ev.reduce((a, e) => { if (e.k === 'r') a.r += e.n; else a.d += (CV[e.k] || 0) * e.n * (e.src === 'spend' ? -1 : 1); return a; }, { d: 0, r: 0 }); /* spend = DORO MODE에서 뽑기에 쓴 칩 */
   const acctUser = () => { const a = window.doroAccount; return a && a.user ? a : null; };
   const srvChips = () => { const a = acctUser(), c = a && a.doc && (a.doc.chipsV || a.doc.chips); return { d: Math.max(0, Math.floor(+(c && c.d) || 0)), r: Math.max(0, Math.floor(+(c && c.r) || 0)) }; };
   let chipT = 0, chipBusy = false;
@@ -2612,7 +2612,23 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
       chipSave(o); if (a) chipFlush();
       return chipGet();
     },
+    /* DORO MODE: 1뽑 = 1칩. 모자라면 false. 연달아 쓴 칩은 기록 하나로 합침 */
+    spend(n) {
+      n = Math.floor(+n || 0); const o = chipRaw(); if (n <= 0 || o.d < n) return false;
+      o.d -= n; const a = acctUser();
+      if (a) { const q = qGet(), t = Date.now(); if (q.o !== a.user.uid) { q.o = a.user.uid; q.ev = []; } const L = q.ev[q.ev.length - 1]; if (L && L.src === 'spend' && L.n + n <= 500 && t - L.t < 60000) L.n += n; else q.ev.push({ k: 'b', n, src: 'spend', t }); qSet(q); o.o = a.user.uid; }
+      chipSave(o); if (a) chipFlush(); return true;
+    },
   };
+  /* 매일 출석: 하루(한국 시간) 한 번 DORO칩 100개. 로그인 중이면 서버가 하루 한 번만 인정 */
+  const ATT_K = 'dschip-att', kstToday = () => new Date(Date.now() + 9 * 3600000).toISOString().slice(0, 10);
+  function doroDaily() {
+    const a = acctUser(), who = (a ? a.user.uid : 'guest') + '|' + kstToday();
+    let st = null; try { st = localStorage.getItem(ATT_K); } catch (e) { /* 무시 */ } if (st === who) return;
+    try { localStorage.setItem(ATT_K, who); } catch (e) { return; }
+    window.doroChips.add({ b: 100 }, 'daily'); try { toast('출석 보상: DORO칩 100개를 받았습니다.'); } catch (e) { /* 무시 */ }
+  }
+  setTimeout(doroDaily, 1500); window.addEventListener('doroacct', () => setTimeout(doroDaily, 1200)); document.addEventListener('visibilitychange', () => { if (!document.hidden) doroDaily(); });
   /* 카드 우하단의 큰 2.5D 도로칩: 얇은 원판을 겹친 둥근 테두리(가운데가 가장 넓고 앞뒤로 갈수록 좁아짐) + 광택 */
   const chipBig = () => {
     const N = 22, T = 20; let d = '';
