@@ -180,6 +180,21 @@
 .gm-tease{position:fixed;inset:0;z-index:9997;pointer-events:none;box-shadow:inset 0 0 60px 18px rgba(255,93,143,.55),inset 0 0 120px 30px rgba(90,184,255,.35);animation:gmTease .85s ease-out forwards}
 @keyframes gmTease{0%{opacity:0}12%{opacity:1}30%{opacity:.4}42%{opacity:.9}100%{opacity:0}}
 @media (prefers-reduced-motion:reduce){.gm-gpop b,.gm-mpop,.gm-tease{animation-duration:.01s}}
+.gm-stk.out{animation:gmRbOut .26s ease-in forwards}@keyframes gmRbOut{to{opacity:0;transform:scale(1.06)}}
+.gm-stk .gm-rbtx{font-size:clamp(44px,12vw,160px)}
+.gm-stk .gm-rbtx>span b{font-family:Bungee,'Arial Black','Noto Sans KR',sans-serif;font-weight:900}
+.gm-stk-r .gm-rbtx .te b{background:repeating-conic-gradient(from 8deg at 35% 42%,rgba(255,255,255,.42) 0 14deg,rgba(255,255,255,.08) 14deg 31deg,rgba(0,20,60,.2) 31deg 44deg,transparent 44deg 60deg) 0 0/.82em 1.1em,linear-gradient(90deg,#bfe8ff,#4fb0ff,#1f6dff,#7fd8ff,#ffffff,#3a8bff,#bfe8ff) calc(var(--i) * -.95em) 0/8.6em 100%;-webkit-background-clip:text;background-clip:text}
+.gm-stk-sr .gm-rbtx .te b{background:repeating-conic-gradient(from 8deg at 35% 42%,rgba(255,255,255,.42) 0 14deg,rgba(255,255,255,.08) 14deg 31deg,rgba(40,0,60,.2) 31deg 44deg,transparent 44deg 60deg) 0 0/.82em 1.1em,linear-gradient(90deg,#f2d8ff,#c06bff,#7a3bff,#ff7ae0,#ffffff,#a04df0,#f2d8ff) calc(var(--i) * -.95em) 0/8.6em 100%;-webkit-background-clip:text;background-clip:text}
+.gm-stk .gm-rbtx .te{animation:none}
+.gm-stk .gm-rbtx .ta{color:#0d1a3a;-webkit-text-stroke-color:#0d1a3a;text-shadow:0 .03em 0 #0a1430,0 .06em 0 #081028,0 .09em 0 #060c20,0 .12em 0 #040818,0 .2em .25em rgba(0,0,40,.6)}
+.gm-stk .gm-rbtx .tb{color:#dfe6f2;-webkit-text-stroke-color:#b8c2d2;text-shadow:0 -.025em 0 #fff,0 .025em 0 #7d8797}
+.gm-stk .gm-rbtx .tc{color:#fff;-webkit-text-stroke-color:#eef3fa}
+.gm-rbsp.e-b>i{background:linear-gradient(rgba(10,0,25,var(--dk)),rgba(10,0,25,var(--dk))),linear-gradient(90deg,#8a5205,#ffd38a 30%,#e09018 55%,#ffe2ae 75%,#8a5205)}
+.gm-rbsp.e-s>i{background:linear-gradient(rgba(10,0,25,var(--dk)),rgba(10,0,25,var(--dk))),linear-gradient(90deg,#5d6168,#e4e7ec 30%,#9ea4ad 55%,#f1f3f6 75%,#60656d)}
+.gm-rbsp.e-g>i{background:linear-gradient(rgba(10,0,25,var(--dk)),rgba(10,0,25,var(--dk))),linear-gradient(90deg,#7a5a06,#fff3b0 30%,#d9a520 55%,#fff6c8 75%,#7a5a06)}
+.gm-stk .gm-rbcnt b{font-size:clamp(30px,6.5vw,64px)}
+.gm-stk-r .gm-rbcnt b{color:#dff3ff;-webkit-text-stroke-color:#0a3a8a;text-shadow:0 .04em 0 #2f7df6,0 .08em 0 #0a3a8a,0 .14em .2em rgba(0,20,60,.6),0 0 .4em rgba(120,200,255,.8)}
+.gm-stk-sr .gm-rbcnt b{color:#f6e6ff;-webkit-text-stroke-color:#4a1a7a;text-shadow:0 .04em 0 #a04df0,0 .08em 0 #4a1a7a,0 .14em .2em rgba(40,0,60,.6),0 0 .4em rgba(220,150,255,.8)}
 @keyframes gmIn{from{transform:scale(.3);opacity:0}to{transform:none;opacity:1}}
 @keyframes gmMerge{50%{transform:scale(1.22);filter:brightness(1.8)}}
 .gm-float{position:fixed;left:0;top:0;z-index:9999;pointer-events:none;transform:translate(-50%,-50%);filter:drop-shadow(0 8px 12px rgba(0,0,0,.55))}
@@ -409,7 +424,26 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     function pull() { const c = S.cred[0]; if (!c) return; const b = domeTake(); if (!b) return; const res = b.res; c.n--; if (!c.n) S.cred.shift(); S.credN--;
       S.stats.n++; S.stats.gold++; if (res.kind === 'SSR') { S.stats.ssr++; if (res.nk.pu) S.stats.pu++; } S.log.push(0); res.sq = S.sq.length; res.bt = S.btId || 0; S.sq.push({ k: res.kind, d: 0, a: 0 }); gDirty = true; if (!S.auto || performance.now() - (S._tk || 0) > 120) { S._tk = performance.now(); snd.tick(); } uiStat(); }
     /* 10연속 R·SR: 뽑은 순서 기준, 10개가 모두 까졌을 때 확률 고지 */
-    function streak(k) { S.streak = { k, t: 0, p: +(Math.pow(k === 'SR' ? 0.43 : 0.53, 10) * 100).toPrecision(2) }; S.flash = 0.7; snd.burst(2); vib([40, 30, 40, 30, 120], true); sparks(480, 330, 70, k === 'SR' ? '#b06bff' : '#4f9bff', 700, 200); setTimeout(() => dropChip(chipRoll(k === 'SR' ? 'stkSR' : 'stkR'), rnd(BK.x0 + 200, BK.x1 - 200), BK.y0 + 40, 'streak'), 600); } /* 10연속 보상: R → DORO칩, SR → 실버칩 */
+    function streak(k) { const p = +(Math.pow(k === 'SR' ? 0.43 : 0.53, 10) * 100).toPrecision(2), ck = chipRoll(k === 'SR' ? 'stkSR' : 'stkR'); S.flash = 0.7; snd.burst(2); vib([40, 30, 40, 30, 120], true); sparks(480, 330, 70, k === 'SR' ? '#b06bff' : '#4f9bff', 700, 200); setTimeout(() => streakCut(k, p, ck), 260); } /* 10연속 보상: 고유 연출 뒤 보상 칩이 바구니로 */
+    /* R·SR 10연속 컷인: 무지개 컷인과 같은 틀(배경·글자 낙하·두께 있는 칩·3초 뒤 탭하여 계속), 색만 파랑/보라 */
+    function streakCut(k, p, ck, demo) {
+      rbFont(); S.stk = true; const sr = k === 'SR', ov = document.createElement('div'); ov.className = 'gm-rbcut gm-stk ' + (sr ? 'gm-stk-sr' : 'gm-stk-r');
+      const T = k + ' 10연속!', N = 18; let edge = '';
+      for (let i = 0; i < N; i++) { const f = i / (N - 1) - 0.5, sc = 1 - 0.075 * (1 - Math.sqrt(Math.max(0, 1 - Math.pow(2 * f, 2)))), dk = (0.08 + Math.abs(f) * 0.75).toFixed(2); edge += '<i style="transform:translateZ(calc(var(--ct) * ' + f.toFixed(3) + ')) scale(' + sc.toFixed(3) + ');--dk:' + dk + '"></i>'; }
+      const lay = ['a', 'b', 'c', 'd', 'e', 'f'].map((x) => '<span class="t' + x + '">' + T.split('').map((c2, i) => '<b style="--i:' + i + '">' + (c2 === ' ' ? '&nbsp;' : c2) + '</b>').join('') + '</span>').join('');
+      const fx = ck === 'g' || ck === 'r';
+      ov.innerHTML = '<canvas class="gm-rbcv"></canvas><div class="gm-rbfl"></div><div class="gm-rbtx">' + lay + '</div>' +
+        '<div class="gm-rbch"><div class="gm-rbsw"></div><div class="gm-rbsw"></div><div class="gm-rbsw"></div><div class="gm-rbtl"><div class="gm-rbsp e-' + ck + '">' + edge + '<div class="gm-rbf">' + chipSvg(ck, 260, fx, true) + '</div><div class="gm-rbf gm-rbbk">' + chipSvg(ck, 260, fx, true) + '</div></div></div></div>' +
+        '<div class="gm-rbcnt"><b>' + p + '%</b><span>확률 · 보상 ' + CHIP_NM[ck] + '</span></div><div class="gm-rbtap"></div>';
+      (document.fullscreenElement || document.body).appendChild(ov);
+      const bg = rbBg(ov.querySelector('canvas'), sr ? { bg: ['#6a1bff', '#b23dff', '#ff4fd8', '#8a5cff', '#3a1bff', '#c070ff', '#6a1bff'], pal: ['#f0d8ff', '#ffd1f5', '#e3d0ff', '#ffffff', '#d8c8ff'] } : { bg: ['#0a5bff', '#22b8ff', '#5ad1ff', '#1f7dff', '#3a4bff', '#7fe0ff', '#0a5bff'], pal: ['#d8f0ff', '#c9e6ff', '#ffffff', '#bfe8ff', '#e0f4ff'] });
+      const ch = ov.querySelector('.gm-rbch'), IMP = 700;
+      ch.animate([{ transform: 'scale(.1) rotate(-30deg)', opacity: 0 }, { transform: 'scale(1.7) rotate(6deg)', opacity: 1, offset: 0.72, easing: 'cubic-bezier(.75,0,1,.6)' }, { transform: 'scale(1)' }], { duration: IMP, fill: 'both' });
+      try { snd.riser(); } catch (e) { /* 무시 */ }
+      setTimeout(() => { ov.classList.add('hit'); bg.hit(); vib([80, 30, 120, 40, 200], true); try { snd.boom(); snd.chipBurst(true); } catch (e) { /* 무시 */ } T.split('').forEach((c2, i) => setTimeout(() => { try { snd.thud(i >= T.length - 1); } catch (e) { /* 무시 */ } }, 120 + i * 70)); setTimeout(() => { try { snd.fanfare(); } catch (e) { /* 무시 */ } }, 120 + T.length * 70 + 60); }, IMP);
+      let ok = false; setTimeout(() => { ok = true; ov.classList.add('ok'); }, IMP + 3000);
+      ov.addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); if (!ok) return; ok = false; ov.classList.add('out'); setTimeout(() => { bg.stop(); ov.remove(); S.stk = false; if (!demo) dropChip(ck, rnd(BK.x0 + 200, BK.x1 - 200), BK.y0 + 40, 'streak'); }, 260); });
+    }
     function seqDone(res) { const q = S.sq, i = res && res.sq; if (i == null || !q[i] || q[i].d) return; q[i].d = 1; const k = q[i].k; if (k === 'SSR') { if (res.bt) { const B = S.btR || (S.btR = {}); B[res.bt] = (B[res.bt] || 0) + 1; if (B[res.bt] >= 2) setTimeout(() => multiPop(B[res.bt]), 350); } return; } let a = i, b = i; while (a > 0 && q[a - 1].k === k && q[a - 1].d && !q[a - 1].a) a--; while (b < q.length - 1 && q[b + 1].k === k && q[b + 1].d && !q[b + 1].a) b++; if (b - a + 1 >= 10) { for (let j = a; j < a + 10; j++) q[j].a = 1; streak(k); } }
     S.sup = { pick: 0, jw: 0, full: false, acc: 0, key: '' };
     const feedCap = () => Math.max(12, Math.floor(PW * PH * 0.8 / 490));
@@ -585,13 +619,14 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     function capChip(x, y, kind) { const sr = kind === 'SR'; if (Math.random() * 100 >= CAP_RATE[sr ? 'SR' : 'R']) return; dropChip(chipRoll(sr ? 'capSR' : 'capR'), x, y, 'cap'); }
     function dropChip(k, x, y, src) { if (k === 'r') { const r = cvRect(), sx = r.left + clamp(x, BK.x0 + OR, BK.x1 - OR) * r.width / W, sy = r.top + clamp(y, BK.y0 + OR, BK.y1 - OR) * r.height / H; sparks(x, y, 30); setTimeout(() => rainbowCut({ left: sx - 22, top: sy - 22, width: 44, height: 44 }, src || 'cap'), 250); return; } /* 무지개는 바구니에 떨어뜨리지 않고 컷인으로 바로 */ const b = body('chip', clamp(x, BK.x0 + OR, BK.x1 - OR), clamp(y, BK.y0 + OR, BK.y1 - OR), { chip: k, count: 1, src: src || 'cap' }); b.vx = rnd(-160, 160); b.vy = rnd(-620, -420); b.w = rnd(-9, 9); S.bask.push(b); wake(S.bask); sparks(b.x, b.y, k === 'b' ? 14 : 30, k === 'g' ? '#ffe27a' : k === 's' ? '#e9eef5' : '#ffc45a', 380); try { snd.chipPop(); if (k !== 'b') setTimeout(() => snd.chipPop(), 90); } catch (e) { /* 무시 */ } }
     /* 무지개칩 확정 컷인: RAINBOW!! 글자가 화면을 가로질러 박히고, 무지개칩이 가운데서 커져 회전(1초 180도 · 1초 정지). 3초간 못 넘기고 그 뒤 탭하면 닫힘. 그동안 기계는 멈춤 */
+    function rbFont() { if (!document.getElementById('gm-rbfont')) { const l = document.createElement('link'); l.id = 'gm-rbfont'; l.rel = 'stylesheet'; l.href = 'https://fonts.googleapis.com/css2?family=Bungee&display=swap&text=' + encodeURIComponent('RAINBOW!0123456789,.%S'); document.head.appendChild(l); } }
     function rainbowCut(from, src) {
       const r0 = from && from.getBoundingClientRect ? from.getBoundingClientRect() : from, ok0 = r0 && r0.width > 0;
       const it = { cx: ok0 ? r0.left + r0.width / 2 : innerWidth / 2, cy: ok0 ? r0.top + r0.height / 2 : innerHeight / 2, size: ok0 ? r0.width : 40, src };
       if (from && from.style) from.style.visibility = 'hidden'; /* 그 자리의 칩이 직접 날아오름 */
       if (src && window.doroChips) { chipPendR += 1; window.doroChips.add({ r: 1 }, src); } /* 바로 저장, 잔고 숫자는 칩이 도착할 때 올라감 */
       (S.cutQ = S.cutQ || []).push(it); if (S.cut) return;
-      if (!document.getElementById('gm-rbfont')) { const l = document.createElement('link'); l.id = 'gm-rbfont'; l.rel = 'stylesheet'; l.href = 'https://fonts.googleapis.com/css2?family=Bungee&display=swap&text=RAINBOW!0123456789,'; document.head.appendChild(l); }
+      rbFont();
       const next = () => {
         const cur = S.cutQ.shift(); if (!cur) { S.cut = false; return; } S.cut = true;
         const ov = document.createElement('div'); ov.className = 'gm-rbcut';
@@ -649,11 +684,11 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
       next();
     }
     /* 컷인 배경: 무지개 방사 + 빛줄기 + 가운데서 퍼져 나오는 꽃·반짝이 */
-    function rbBg(cv) {
+    function rbBg(cv, th) {
       const c = cv.getContext('2d'); let w = 0, h = 0, dpr = 1, raf = 0, last = performance.now(), t = 0, boost = 0; const fl = [], ln = [], dots = [], pt = [];
       const fit = () => { dpr = Math.min(1.5, window.devicePixelRatio || 1); w = cv.clientWidth; h = cv.clientHeight; cv.width = w * dpr; cv.height = h * dpr; };
       fit(); window.addEventListener('resize', fit);
-      const PAL = ['#ffd1ea', '#fff3a6', '#c9f7ff', '#ffd9a8', '#e3d0ff', '#d6ffd8'];
+      const PAL = (th && th.pal) || ['#ffd1ea', '#fff3a6', '#c9f7ff', '#ffd9a8', '#e3d0ff', '#d6ffd8'], BGC = (th && th.bg) || ['#ff2f6d', '#ff9a1f', '#ffe838', '#3ff07a', '#22d3ff', '#3a6bff', '#b23dff', '#ff2fb4', '#ff2f6d'];
       const nf = (z) => ({ a: Math.random() * TAU, z: z == null ? Math.random() * 0.15 : z, v: 0.25 + Math.random() * 0.35, r: 14 + Math.random() * 22, rot: Math.random() * TAU, vr: (Math.random() - 0.5) * 2, col: PAL[(Math.random() * PAL.length) | 0], fill: Math.random() < 0.3 });
       const nl = () => ({ a: Math.random() * TAU, z: Math.random() * 0.3, v: 1.2 + Math.random() * 1.6, len: 0.15 + Math.random() * 0.35, wd: 0.6 + Math.random() * 2.2 });
       const nd = () => ({ a: Math.random() * TAU, z: Math.random() * 0.2, v: 0.4 + Math.random() * 0.9, r: 1 + Math.random() * 3 });
@@ -668,7 +703,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
       const draw = (now) => {
         raf = requestAnimationFrame(draw); const dt = Math.min(0.05, (now - last) / 1000); last = now; t += dt;
         c.setTransform(dpr, 0, 0, dpr, 0, 0); const cx = w / 2, cy = h * 0.56, R = Math.hypot(w, h) * 0.62;
-        let g; if (c.createConicGradient) { g = c.createConicGradient(t * 0.25, cx, cy); ['#ff2f6d', '#ff9a1f', '#ffe838', '#3ff07a', '#22d3ff', '#3a6bff', '#b23dff', '#ff2fb4', '#ff2f6d'].forEach((col, i, A) => g.addColorStop(i / (A.length - 1), col)); } else { g = c.createLinearGradient(0, 0, w, 0); g.addColorStop(0, '#3ff07a'); g.addColorStop(0.5, '#ffe838'); g.addColorStop(1, '#ff2fb4'); }
+        let g; if (c.createConicGradient) { g = c.createConicGradient(t * 0.25, cx, cy); BGC.forEach((col, i, A) => g.addColorStop(i / (A.length - 1), col)); } else { g = c.createLinearGradient(0, 0, w, 0); g.addColorStop(0, '#3ff07a'); g.addColorStop(0.5, '#ffe838'); g.addColorStop(1, '#ff2fb4'); }
         c.globalAlpha = 1; c.fillStyle = g; c.fillRect(0, 0, w, h);
         const rg = c.createRadialGradient(cx, cy, 0, cx, cy, R); rg.addColorStop(0, 'rgba(255,255,255,.95)'); rg.addColorStop(0.18, 'rgba(255,255,255,.55)'); rg.addColorStop(0.5, 'rgba(255,255,255,.08)'); rg.addColorStop(1, 'rgba(60,0,90,.25)'); c.fillStyle = rg; c.fillRect(0, 0, w, h);
         /* 회전하는 굵은 빛기둥 */
@@ -904,9 +939,9 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
       else if (k === 'flipall') flipAll();
       else if (k === 'odds') chipOdds();
       else if (k === 'demo') { const tr = $('.gm-tray'); let m = tr.querySelector('.gm-demob'); if (m) { m.remove(); return; } m = document.createElement('div'); m.className = 'gm-demob';
-        m.innerHTML = '<b>연출 시안</b>' + [['rb', '무지개 컷인'], ['gold', '골드 확정'], ['dbl', 'DOUBLE'], ['tri', 'TRIPLE'], ['tease', '가짜 무지개 예고'], ['shard', '깨트리기 파편'], ['tap', '다음 개봉 = 깨트리기'], ['roll', '잔고 굴러가기']].map((x) => '<button type="button" class="gm-tb" data-d="' + x[0] + '">' + x[1] + '</button>').join('');
+        m.innerHTML = '<b>연출 시안</b>' + [['rb', '무지개 컷인'], ['gold', '골드 확정'], ['dbl', 'DOUBLE'], ['tri', 'TRIPLE'], ['stkR', 'R 10연속'], ['stkSR', 'SR 10연속'], ['tease', '가짜 무지개 예고'], ['shard', '깨트리기 파편'], ['tap', '다음 개봉 = 깨트리기'], ['roll', '잔고 굴러가기']].map((x) => '<button type="button" class="gm-tb" data-d="' + x[0] + '">' + x[1] + '</button>').join('');
         m.addEventListener('click', (e2) => { const d = e2.target.closest('[data-d]'); if (!d) return; e2.stopPropagation(); const v = d.dataset.d, o1 = panEl.querySelector('.gm-orb.top, .gm-orb') || balEl;
-          if (v === 'rb') rainbowCut(o1 && o1.closest('.gm-well') ? o1 : null); else if (v === 'gold') goldPop(o1); else if (v === 'dbl') multiPop(2); else if (v === 'tri') multiPop(3); else if (v === 'tease') teasePop();
+          if (v === 'rb') rainbowCut(o1 && o1.closest('.gm-well') ? o1 : null); else if (v === 'gold') goldPop(o1); else if (v === 'dbl') multiPop(2); else if (v === 'tri') multiPop(3); else if (v === 'tease') teasePop(); else if (v === 'stkR') streakCut('R', 0.17, 'b', true); else if (v === 'stkSR') streakCut('SR', 0.022, 's', true);
           else if (v === 'shard') { S.flash = 0.6; snd.crack(); shards(RV.x, RV.y, RV.r, COL.SSR); sparks(RV.x, RV.y, 60, () => pick(['#fff3b0', '#ffd24d', '#ffffff']), 650, 260); }
           else if (v === 'tap') { S.openM = 'tap'; uiOpt(); say('다음 캡슐은 깨트려서 엽니다.'); }
           else if (v === 'roll') { const el = balEl.querySelector('.gm-cbn'), cur = el._v || 0; rollNum(el, cur + 1234); setTimeout(() => uiBal(), 1600); } });
@@ -1205,7 +1240,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
 
     /* ---------- 루프 ---------- */
     let lastT = 0, raf = 0;
-    function frame(ts) { raf = requestAnimationFrame(frame); if (!root.isConnected) { cancelAnimationFrame(raf); return; } if (!cv.offsetParent) { lastT = ts; return; } const dt = Math.min(0.034, (ts - lastT) / 1000 || 0.016); lastT = ts; const want = Math.round(cvRect().width * Math.min(1.5, window.devicePixelRatio || 1)); if (Math.abs(want - cv.width) > 2) resize(); if (S.paused || S.cut) { if (S.peek || dirty) draw(); return; } for (let k = 0; k < (S.auto || 1); k++) update(dt); draw(); drawPile(); if (gDirty) drawGraph(); }
+    function frame(ts) { raf = requestAnimationFrame(frame); if (!root.isConnected) { cancelAnimationFrame(raf); return; } if (!cv.offsetParent) { lastT = ts; return; } const dt = Math.min(0.034, (ts - lastT) / 1000 || 0.016); lastT = ts; const want = Math.round(cvRect().width * Math.min(1.5, window.devicePixelRatio || 1)); if (Math.abs(want - cv.width) > 2) resize(); if (S.paused || S.cut || S.stk) { if (S.peek || dirty) draw(); return; } for (let k = 0; k < (S.auto || 1); k++) update(dt); draw(); drawPile(); if (gDirty) drawGraph(); }
     window.addEventListener('resize', () => { resize(); gDirty = true; });
     trayLoad(); domeInit(); uiWal(); uiOpt(); uiStat(); uiTray(); uiLab(); resize(); requestAnimationFrame(resize); pileSync(); for (let k = 0; k < 500; k++) step(S.pile, 1 / 120, wallsPile);
     raf = requestAnimationFrame(frame);
