@@ -1636,3 +1636,6 @@ button:not(.tr-clr):not(.tabs button):not(.tr-f):not(.pk-t):not(.pk-r){border-ra
 /* 패키지 조합 목록: 머리줄 위 틈 없애기(스크롤 시 아래 줄이 비쳐 보이던 것) */
 :root .optgrid .rightcol .tscroll:has(#t-pareto){padding-top:0!important}
 #t-pareto thead th{top:0;box-shadow:0 1px 0 var(--line)}
+/* 목록 머리줄을 좌우 여백까지 덮음(둥근 모서리 쪽으로 아래 줄이 비쳐 튀어나오던 것) */
+#t-pareto thead th:first-child{box-shadow:-12px 0 0 var(--card),-12px 1px 0 var(--line),0 1px 0 var(--line)}
+#t-pareto thead th:last-child{box-shadow:12px 0 0 var(--card),12px 1px 0 var(--line),0 1px 0 var(--line)}
