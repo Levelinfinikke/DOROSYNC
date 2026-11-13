@@ -1888,7 +1888,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     if (!M) { $('#opt-status').textContent = '입력을 먼저 확인하세요.'; return; }
     const rank = E.rankPackages(M, st, true, eligible);
     const cand = rank.map((x) => x.j), forced = forcedList();
-    const snap = JSON.parse(JSON.stringify(st));
+    const snap = JSON.parse(JSON.stringify(st)); snap.pk.forEach((p) => { if (p.trim) { p.max = 0; delete p.trim; } }); /* 전에 고른 조합이 줄인 구매 횟수는 새 탐색을 제한하지 않게 */
     const mm = E.buildModel(snap, D), op = E.optSetup(mm, cand, snap, true, forced), total = op.total;
     const id = ++optRun;
     const btn = $('#opt-run'), bar = $('#opt-bar'), fill = $('i', bar), status = $('#opt-status');
