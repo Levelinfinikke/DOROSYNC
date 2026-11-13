@@ -499,7 +499,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     { const q = by.get('일간퀘스트'); if (q && !by.has('일일퀘스트')) by.set('일일퀘스트', Object.assign({}, q, { name: '일일퀘스트' })); } // 이름 변경(일간퀘스트 → 일일퀘스트) // 이름 변경(파견 → 파견 리롤) 이전 저장값 이어받기
     const out = D.inc.map((d) => by.get(d.name) || JSON.parse(JSON.stringify(d)));
     out.forEach((r) => { if (r.cyc === 1 && !r.use && !r.custom && NEWINC.indexOf(r.name) >= 0 && [].concat(r.h, r.fx).every((v) => !v)) r.cyc = 0; }); // 새 기본 항목은 주기 0(1회성)이 기본값
-    by.forEach((r, n) => { if (!D.inc.some((d) => d.name === n) && ['미니게임', '리딤코드', '레벨 달성', '타워 클리어', '파견', '일반상점(쥬얼)', '이벤트(스테,상점,미션)'].indexOf(n) < 0) out.push(r); });
+    by.forEach((r, n) => { if (!D.inc.some((d) => d.name === n) && ['미니게임', '리딤코드', '레벨 달성', '타워 클리어', '파견', '일간퀘스트', '일반상점(쥬얼)', '이벤트(스테,상점,미션)'].indexOf(n) < 0) out.push(r); }); // 옛 이름(일간퀘스트)은 일일퀘스트로 이어받았으니 따로 남기지 않음 (보상 이중 계산 방지)
     { const oe = by.get('이벤트(스테,상점,미션)'); if (oe && !oe.use && !by.has('이벤트 스테이지')) out.forEach((r) => { if (['이벤트 스테이지', '이벤트 상점', '이벤트 미션'].indexOf(r.name) >= 0) r.use = false; }); }
     out.forEach((r) => { if (r.name === '파견 리롤' && !r.custom) rrApply(r); if (r.name === '일반상점' && !r.custom) shApply(r); });
     return out.concat(arr.filter((r) => r && r.custom));
