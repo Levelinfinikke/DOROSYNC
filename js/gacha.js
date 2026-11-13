@@ -551,6 +551,8 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
         const fl2 = ov.querySelector('.gm-rbfl'); fl2.style.animation = 'none'; void fl2.offsetWidth; fl2.style.animation = 'gmRbFlash .9s ease-out both';
         try { snd.chipBurst(ck === 'r' || ck === 'g'); snd.chipPop(); if (ck === 'g' || ck === 'r') setTimeout(() => snd.fanfare(), 200); } catch (e) { /* 무시 */ } vib(ck === 'b' ? [40] : [60, 30, 120], true);
         cnt.textContent = '확률 · 보상 ' + CHIP_NM[ck] + '!';
+        if (ck === 'r') { /* 무지개: 이 화면을 끝내지 않고 바로 무지개 컷인으로 이어감(칩은 컷인이 잔고로 옮김) */
+          closed = true; setTimeout(() => { const q = ch.getBoundingClientRect(); rainbowCut({ left: q.left, top: q.top, width: q.width, height: q.height }, demo ? null : 'streak', demo ? { jp: false } : undefined); setTimeout(() => { bg.stop(); ov.remove(); S.stk = false; }, 350); }, 380); return; }
         setTimeout(() => { ov.classList.add('ok'); okNow = true; }, 450); if (S.auto) setTimeout(close, 1400);
       }
       let okNow = false, closed = false;
@@ -1031,7 +1033,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     }
     function chipSpawn() { const ck = chipRoll('lab'); if (ck === 'r') { dropChip('r', HUDP.x, HUDP.y, 'label'); return; } /* 바디라벨 무지개 → DORO TIME */ const b = body('chip', HUDP.x, HUDP.y - 10, { chip: ck, count: 1, src: 'label' }); b.vx = rnd(-520, -180); b.vy = rnd(-760, -520); b.w = rnd(-9, 9); S.bask.push(b); wake(S.bask); sparks(HUDP.x, HUDP.y, 16, '#ffc45a', 360); try { snd.chipPop(); } catch (e) { /* 무시 */ } }
     function chipTake(b) { const i = S.bask.indexOf(b); if (i < 0) return; S.bask.splice(i, 1); wake(S.bask); const r = cvRect(), sc = r.width / W; chipAbsorb(b.res.chip, b.res.count, r.left + b.x * sc, r.top + b.y * sc, Math.max(22, OR * 2 * sc), b.res.src || 'cap'); }
-    if (location.hostname === 'localhost') (window.__gms = window.__gms || []).push({ S, root, rbCut: () => rainbowCut(), rbCutEl: (el) => rainbowCut(el), dropChip: (k) => dropChip(k, 300, 600, "cap"), trayAdd: (n, c, m) => trayAdd(n, c, null, null, null, m), multiPop: (n) => multiPop(n), edgeTo: (k, ms) => edgeTo(k, ms), cht: () => CHT, setStock: (st) => { Object.assign(S.stock, st); pileSync(); uiWal(); }, P, chipSpawn, capChip: (x, y) => capChip(x, y), streak: (k) => streak(k), uiTray: () => uiTray(), addLab: (v) => { S.lab += v; labChips(); uiLab(true); } });
+    if (location.hostname === 'localhost') (window.__gms = window.__gms || []).push({ S, root, rbCut: () => rainbowCut(), rbCutEl: (el) => rainbowCut(el), dropChip: (k) => dropChip(k, 300, 600, "cap"), trayAdd: (n, c, m) => trayAdd(n, c, null, null, null, m), multiPop: (n) => multiPop(n), stkCut: (k, ck) => streakCut(k, 1, ck, true), edgeTo: (k, ms) => edgeTo(k, ms), cht: () => CHT, setStock: (st) => { Object.assign(S.stock, st); pileSync(); uiWal(); }, P, chipSpawn, capChip: (x, y) => capChip(x, y), streak: (k) => streak(k), uiTray: () => uiTray(), addLab: (v) => { S.lab += v; labChips(); uiLab(true); } });
     function labChips() { let n = 0; while (S.lab >= 10000 && n < 20) { S.lab -= 10000; n++; setTimeout(chipSpawn, (n - 1) * 140); } }
     /* 보관함은 빈칸을 그대로 둠(배열에 null). 끌어서 다른 니케 위에 놓으면 그 니케가 원래 칸으로 자리 바꿈 */
     const trayFree = () => { const i = S.tray.findIndex((x) => !x); return i < 0 ? S.tray.length : i; };
@@ -1118,14 +1120,14 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     /* 모두 뒤집기: SSS를 뺀 칸마다 맨 위 한 장만 차례로 뒤집고, 잠시 뒤 그 장들만 한꺼번에 잔고로 (겹친 나머지는 그대로) */
     function flipAll() {
       if (S.flipAllBusy) return; 
-      const isPU = (nk) => !!(nk && (nk.pu || (P.pickup && nk.n === P.pickup.n))), list = S.tray.filter((e) => e && !isPU(e.nk) && !busyE(e) && !(e.top && (e.top.anim || e.top.flipping))); /* 픽업은 직접 */
+      const isPU = (nk) => !!(nk && (nk.pu || (P.pickup && nk.n === P.pickup.n))), list = S.tray.filter((e) => e && !isPU(e.nk) && !busyE(e) && !(e.top && (e.top.anim || (e.top.flipping && performance.now() - (e.top.ft || 0) < 950)))); /* 픽업은 직접 */
       if (!list.length) { say(S.tray.some(Boolean) ? '픽업은 직접 뒤집어 주세요.' : '보관함이 비어 있습니다.'); return; }
       S.flipAllBusy = true; let changed = false;
       list.forEach((e) => { if (!e.top) { e.top = mkTop(e); changed = true; } e.top.noAuto = true; });
       if (changed) uiTray();
       const step = 90; /* 개수와 상관없이 일정한 속도(시간 상한 없음) */
       list.forEach((e, n) => setTimeout(() => { const i = S.tray.indexOf(e), o = i >= 0 && panEl.children[i] && panEl.children[i].querySelector('.gm-orb.top'); if (!o || !e.top || e.top.flip) return;
-        const t = e.top, a = rnd(0, TAU), m = rnd(2, 4), k = chipE(t); t.flip = true; t.tilt = [Math.round(Math.cos(a) * m), Math.round(Math.sin(a) * m)]; o.style.setProperty('--tx', t.tilt[0] + 'deg'); o.style.setProperty('--ty', t.tilt[1] + 'deg'); void o.offsetWidth;
+        const t = e.top, a = rnd(0, TAU), m = rnd(2, 4), k = chipE(t); t.flip = true; t._el = o; t.flipping = true; t.ft = performance.now(); /* 정산될 때까지 이 칸은 다시 그리지 않음(새 SSR이 들어와도 애니메이션 유지) */ t.tilt = [Math.round(Math.cos(a) * m), Math.round(Math.sin(a) * m)]; o.style.setProperty('--tx', t.tilt[0] + 'deg'); o.style.setProperty('--ty', t.tilt[1] + 'deg'); void o.offsetWidth;
         requestAnimationFrame(() => { o.classList.add('flip'); if (k !== 'b') setTimeout(() => o.classList.add('shine', 'shine-' + k), 700); }); if (k === 'r' && !t.cutR) { t.cutR = true; setTimeout(() => rainbowCut(o, 'ssr', { n: Math.max(1, cmv(t.cm)) }), 800); } if (k === 'g') setTimeout(() => { if (o.isConnected) goldPop(o); }, 600); try { snd.flip(); } catch (er) { /* 무시 */ } }, 60 + n * step));
       setTimeout(() => {
         S.lite = (S.lite || 0) + 1; list.forEach((e, n) => setTimeout(() => { if (e.top) e.top.noAuto = false; absorbTop(e); }, n * 40));
@@ -1200,7 +1202,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
       {
         t.flip = true; { const a = rnd(0, TAU), m = rnd(2, 4); t.tilt = [Math.round(Math.cos(a) * m), Math.round(Math.sin(a) * m)]; orb.style.setProperty('--tx', t.tilt[0] + 'deg'); orb.style.setProperty('--ty', t.tilt[1] + 'deg'); }
         orb.title = CHIP_NM[chipE(t)] + ' · 누르면 잔고로';
-        if (wantSlow(t, chipE(t))) { t.busy = true; t.anim = true; t._el = orb; t.owner = en; slowFlip(orb, chipE(t), t); setTimeout(() => { t.busy = false; }, 1000); /* 클릭 막는 시간 1초 */ } else { snd.flip(); t._el = orb; t.flipping = true; setTimeout(() => { t.flipping = false; t._el = null; }, 950); void orb.offsetWidth; requestAnimationFrame(() => orb.classList.add('flip')); if (chipE(t) === 'g') setTimeout(() => { if (orb.isConnected) goldPop(orb); try { snd.chipBurst(true); } catch (er) { /* 무시 */ } }, 520); autoAbsorb(en, t, 900); }
+        if (wantSlow(t, chipE(t))) { t.busy = true; t.anim = true; t._el = orb; t.owner = en; slowFlip(orb, chipE(t), t); setTimeout(() => { t.busy = false; }, 1000); /* 클릭 막는 시간 1초 */ } else { snd.flip(); t._el = orb; t.flipping = true; t.ft = performance.now(); /* 정산될 때까지 유지 */ void orb.offsetWidth; requestAnimationFrame(() => orb.classList.add('flip')); if (chipE(t) === 'g') setTimeout(() => { if (orb.isConnected) goldPop(orb); try { snd.chipBurst(true); } catch (er) { /* 무시 */ } }, 520); autoAbsorb(en, t, 900); }
       }
     }
     /* 도로칩 잔고를 누르면: 어디서 어떤 칩이 몇 %로 나오는지 */
@@ -1235,7 +1237,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     function absorbTop(en) {
       const i = S.tray.indexOf(en), t = en && en.top; if (i < 0 || !t || !t.flip || t.anim) return;
       const w = panEl.children[i], orb = w && w.querySelector('.gm-orb.top'), r = orb ? orb.getBoundingClientRect() : null;
-      en.count -= 1; en.top = null; en.ck = null; if (en.count <= 0) { S.tray[i] = null; while (S.tray.length && !S.tray[S.tray.length - 1]) S.tray.pop(); }
+      t.flipping = false; t._el = null; en.count -= 1; en.top = null; en.ck = null; if (en.count <= 0) { S.tray[i] = null; while (S.tray.length && !S.tray[S.tray.length - 1]) S.tray.pop(); }
       renderWell(i); if (t.cutR) return; /* 무지개 컷인이 직접 잔고로 옮김 */ if (r && r.width) chipAbsorb(chipE(t), 1, r.left + r.width / 2, r.top + r.height / 2, r.width, 'ssr', t.cm); else window.doroChips.add({ [chipE(t)]: chipE(t) === 'r' ? 1 : fevMul() * Math.max(1, cmv(t.cm)) }, 'ssr');
     }
     /* 뒤집히고 0.5초 뒤 스스로 잔고로 (실버·골드·무지개는 그 사이 커지며 빛남) */
