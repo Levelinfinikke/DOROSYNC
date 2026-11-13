@@ -911,7 +911,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
       const next = () => {
         const cur = S.cutQ.shift(); if (!cur) { S.cut = false; return; } S.cut = true;
         const ov = document.createElement('div'); ov.className = 'gm-rbcut';
-        const T = 'JACKPOT!!!', N = cur.n > 1 ? 3 : 8, IMP = cur.n > 1 ? 1500 : 1000; /* 무지개칩 = 항상 JACKPOT · 여러 개면 날아와 뜸 들인 뒤 첫 칩이 박히는 때 */ let edge = '';
+        const T = 'JACKPOT!!!', N = 8, IMP = cur.n > 1 ? 1500 : 1000; /* 무지개칩 = 항상 JACKPOT · 여러 개면 날아와 뜸 들인 뒤 첫 칩이 박히는 때 */ let edge = '';
         for (let i = 0; i < N; i++) { const f = i / (N - 1) - 0.5, sc = 1 - 0.075 * (1 - Math.sqrt(Math.max(0, 1 - Math.pow(2 * f, 2)))), dk = (0.08 + Math.abs(f) * 0.75).toFixed(2); edge += '<i style="transform:translateZ(calc(var(--ct) * ' + f.toFixed(3) + ')) scale(' + sc.toFixed(3) + ');--dk:' + dk + '"></i>'; }
         /* 몇 뽑 만의 무지개인지 (이 기계 기준). 뽑기 없이 얻었으면 보유 개수 */
         const pulls = S.stats.n - (S.rbFrom || 0); S.rbFrom = S.stats.n;
@@ -919,7 +919,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
         const lay = ['a', 'b', 'c', 'd', 'e', 'f'].map((x) => '<span class="t' + x + '">' + T.split('').map((ch, i) => '<b style="--i:' + i + '">' + ch + '</b>').join('') + '</span>').join('');
         ov.innerHTML = '<canvas class="gm-rbcv"></canvas><div class="gm-rbfl"></div>' +
           '<div class="gm-rbtx">' + lay + '</div>' +
-          '<div class="gm-rbch"><div class="gm-rbsw"></div><div class="gm-rbsw"></div><div class="gm-rbsw"></div><div class="gm-rbtl"><div class="gm-rbsp">' + edge + '<div class="gm-rbf">' + chipSvg('r', 260, true, true) + '</div><div class="gm-rbf gm-rbbk">' + chipSvg('r', 260, false, true) + '</div></div></div></div>' +
+          '<div class="gm-rbch"><div class="gm-rbsw"></div><div class="gm-rbsw"></div><div class="gm-rbsw"></div><div class="gm-rbtl"><div class="gm-rbsp">' + edge + '<div class="gm-rbf">' + chipSvg('r', 260, true, true) + '</div><div class="gm-rbf gm-rbbk">' + chipSvg('r', 260, true, true) + '</div></div></div></div>' +
           '<div class="gm-rbcnt"><b>0</b><span>' + cntT + '</span></div><div class="gm-rbtap">- 탭하여 계속 -</div>' + (cur.n > 1 ? '<div class="gm-rbn"><b>1</b></div>' : '');
         (document.fullscreenElement || document.body).appendChild(ov);
         const bg = rbBg(ov.querySelector('canvas'), IMP), stop = bg.stop, ch = ov.querySelector('.gm-rbch'), fr = ch.getBoundingClientRect(), fx = fr.left + fr.width / 2, fy = fr.top + fr.height / 2;
@@ -949,7 +949,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
           ch.style.visibility = 'hidden'; const gap = Math.min(fr.width * 1.04, (innerWidth * 0.92) / cur.n), k = Math.min(1, gap / (fr.width * 1.04)), GAPS = [], host2 = ov;
           let tt = IMP; for (let j = 1; j <= cur.n; j++) { GAPS.push(tt); tt += Math.max(110, Math.round(560 * Math.pow(0.74, j - 1))); } HEND = GAPS[GAPS.length - 1];
           for (let j = 0; j < cur.n; j++) {
-            const el = document.createElement('div'); el.className = 'gm-rbch wait'; el.innerHTML = '<div class="gm-rbtl"><div class="gm-rbsp">' + edge + '<div class="gm-rbf">' + chipSvg('r', 260, true, true) + '</div><div class="gm-rbf gm-rbbk">' + chipSvg('r', 260, false, true) + '</div></div></div>'; /* 복제하지 않고 칩마다 새로 그림(복제하면 SVG id가 겹쳐 무늬가 사라짐) */ el.style.zIndex = '7'; el.style.position = 'fixed'; el.style.left = fr.left + 'px'; el.style.top = fr.top + 'px'; el.style.width = fr.width + 'px'; el.style.height = fr.height + 'px'; el.style.margin = '0'; host2.appendChild(el); RCH.push(el);
+            const el = document.createElement('div'); el.className = 'gm-rbch wait'; el.innerHTML = '<div class="gm-rbtl"><div class="gm-rbsp">' + edge + '<div class="gm-rbf">' + chipSvg('r', 260, true, true) + '</div><div class="gm-rbf gm-rbbk">' + chipSvg('r', 260, true, true) + '</div></div></div>'; /* 복제하지 않고 칩마다 새로 그림(복제하면 SVG id가 겹쳐 무늬가 사라짐) */ el.style.zIndex = '7'; el.style.position = 'fixed'; el.style.left = fr.left + 'px'; el.style.top = fr.top + 'px'; el.style.width = fr.width + 'px'; el.style.height = fr.height + 'px'; el.style.margin = '0'; host2.appendChild(el); RCH.push(el);
             const ox = (j - (cur.n - 1) / 2) * gap, dx0 = cur.cx - fx, dy0 = cur.cy - fy, hs = k * 0.82, hy = -fr.height * 0.04, SL = 420;
             el.animate([{ transform: 'translate(' + dx0 + 'px,' + dy0 + 'px) scale(' + s0 + ') rotate(-25deg)' }, { transform: 'translate(' + ox + 'px,' + hy + 'px) scale(' + hs + ') rotate(0deg)' }], { duration: 650, delay: j * 40, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'both' });
             el.animate([{ transform: 'translate(' + ox + 'px,' + hy + 'px) scale(' + hs + ')' }, { transform: 'translate(' + ox + 'px,' + (hy - 8) + 'px) scale(' + hs * 1.04 + ')' }, { transform: 'translate(' + ox + 'px,' + hy + 'px) scale(' + hs + ')' }], { duration: 420, delay: 650 + j * 40, iterations: Infinity, easing: 'ease-in-out', composite: 'replace' }).id = 'bob'; /* 뜸: 둥실 */
