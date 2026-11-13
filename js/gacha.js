@@ -630,7 +630,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     const puP = (nk) => { const a = CHIP_P[tierGrp(nk)], k = (100 - PU_RB) / (100 - a[3]); return [a[0] * k, a[1] * k, a[2] * k, PU_RB]; };
     const puRoll = (nk) => { const p = puP(nk), u = Math.random() * 100; let a = 0; for (let i = 0; i < 4; i++) { a += p[i]; if (u < a) return KS[i]; } return 'b'; };
     const fevMul = () => (feverOn() ? fevLvN() + 1 : 1), fevLvN = () => { try { return +localStorage.getItem('dsgm-dorotime-lv') || 1; } catch (e) { return 1; } };
-    const isSSSn = (nk) => CHT[nk.n] === 'SSS', chipOf = (nk) => (nk.pu ? puRoll(nk) : chipRoll(tierGrp(nk))), chipE = (en) => { if (!en.ck || en.ck === 'x') en.ck = chipOf(en.nk); return en.ck; }, chipSvg = (k, px, fx, flat) => (window.doroChipSvg ? window.doroChipSvg(k, px, fx, flat) : '');
+    const isSSSn = (nk) => CHT[nk.n] === 'SSS', chipOf = (nk) => (nk.pu || (P.pickup && nk.n === P.pickup.n) ? puRoll(nk) : chipRoll(tierGrp(nk))), chipE = (en) => { if (!en.ck || en.ck === 'x') en.ck = chipOf(en.nk); return en.ck; }, chipSvg = (k, px, fx, flat) => (window.doroChipSvg ? window.doroChipSvg(k, px, fx, flat) : '');
     /* 2.5D 도로칩(두께 있는 원판, 기울어진 채 회전): 날아가는 칩용 */
     const C3E = (() => { let h = ''; for (let i = 0; i < 9; i++) { const f = i / 8 - 0.5, sc = 1 - 0.07 * (1 - Math.sqrt(Math.max(0, 1 - Math.pow(2 * f, 2)))); h += '<i style="transform:translateZ(calc(var(--ct) * ' + f.toFixed(3) + ')) scale(' + sc.toFixed(3) + ');--dk:' + (0.05 + Math.abs(f) * 0.7).toFixed(2) + '"></i>'; } return h; })();
     const C3T = {}; /* 칩 노드 틀: 같은 칩은 한 번만 만들고 복제(렉 방지, 모양·움직임은 그대로) */
@@ -1071,7 +1071,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     function uiTray() { uiTray0(); S.tray.forEach((e, i) => {  const t = e && e.top; if (!t || !(t.anim || t.flipping) || !t._el) return; const w = panEl.children[i], o = w && w.querySelector('.gm-orb.top'); if (o && o !== t._el) o.replaceWith(t._el); }); }
     /* SSR 보관함은 이 기기에 저장(머신별). 다시 열면 그대로 */
     const TRAY_K = 'dsgm-tray-' + String(o.title || 'std').replace(/\s+/g, '');
-    const trayFind = (n) => { for (const k of Object.keys(P)) { const a = P[k]; if (Array.isArray(a)) { const x = a.find((y) => y && y.n === n); if (x) return x; } else if (a && a.n === n) return a; } return null; };
+    const trayFind = (n) => { for (const k of Object.keys(P)) { const a = P[k]; if (Array.isArray(a)) { const x = a.find((y) => y && y.n === n); if (x) return x; } else if (a && a.n === n) return k === 'pickup' ? Object.assign({}, a, { pu: true }) : a; } return null; }; /* 저장된 보관함을 불러올 때 픽업 표시도 복구 */
     function traySave() { try { localStorage.setItem(TRAY_K, JSON.stringify(S.tray.map((e) => { if (!e) return 0; const q = (e.cq || []).slice(); if (e.top && e.top.cm > 1) q.unshift(e.top.cm); return q.length ? [e.nk.n, e.count, q] : [e.nk.n, e.count]; }))); } catch (er) { /* 무시 */ } }
     function trayLoad() { try { const a = JSON.parse(localStorage.getItem(TRAY_K) || '[]'); if (!Array.isArray(a)) return; S.tray = a.map((x) => { if (!x) return null; const nk = trayFind(x[0]); const n = Math.max(1, x[1] | 0), q = Array.isArray(x[2]) ? x[2].filter((v) => v > 1).slice(0, n) : []; if (!nk) return null; const out = [], by = {}; q.forEach((v) => { (by[v % 1000] = by[v % 1000] || []).push(v); }); Object.keys(by).forEach((v) => out.push({ nk, count: by[v].length, tc: +v, cq: by[v] })); if (n > q.length) out.push({ nk, count: n - q.length, tc: 0, cq: [] }); return out; }).reduce((A, x) => A.concat(x == null ? [null] : x), []); /* 예전 저장값: 태그별로 칸 나눔 */ while (S.tray.length && !S.tray[S.tray.length - 1]) S.tray.pop(); } catch (er) { /* 무시 */ } }
     /* 한 칸만 다시 그림(다른 칸의 뒤집기·빛남이 끊기지 않게) */
@@ -1118,7 +1118,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     /* 모두 뒤집기: SSS를 뺀 칸마다 맨 위 한 장만 차례로 뒤집고, 잠시 뒤 그 장들만 한꺼번에 잔고로 (겹친 나머지는 그대로) */
     function flipAll() {
       if (S.flipAllBusy) return; 
-      const list = S.tray.filter((e) => e && !e.nk.pu && !busyE(e) && !(e.top && (e.top.anim || e.top.flipping))); /* 픽업은 직접 */
+      const isPU = (nk) => !!(nk && (nk.pu || (P.pickup && nk.n === P.pickup.n))), list = S.tray.filter((e) => e && !isPU(e.nk) && !busyE(e) && !(e.top && (e.top.anim || e.top.flipping))); /* 픽업은 직접 */
       if (!list.length) { say(S.tray.some(Boolean) ? '픽업은 직접 뒤집어 주세요.' : '보관함이 비어 있습니다.'); return; }
       S.flipAllBusy = true; let changed = false;
       list.forEach((e) => { if (!e.top) { e.top = mkTop(e); changed = true; } e.top.noAuto = true; });
