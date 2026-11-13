@@ -120,7 +120,9 @@
 .gm-orb i,.gm-float.orb i{position:absolute;right:-7px;bottom:-4px;z-index:2;font-style:normal;font-size:12px;font-weight:800;background:#11141b;border:1px solid #ffc21a;color:#ffc21a;border-radius:9px;padding:0 6px;white-space:nowrap}
 .gm-orb u{position:absolute;left:-6px;top:-4px;z-index:2;text-decoration:none;font-size:11px;font-weight:900;background:#11141b;border-radius:8px;padding:0 5px;border:1px solid currentColor}
 .gm-orb.merge{animation:gmMerge .4s}
-.gm-ccf{position:absolute;left:50%;bottom:-13%;transform:translateX(-50%);z-index:5;padding:1px 6px;border-radius:9px;font:italic 900 10.5px/1.45 system-ui,sans-serif;letter-spacing:.02em;color:#fff6c0;background:linear-gradient(90deg,#c41a00,#ff7a00);border:1px solid #ffd27a;box-shadow:0 0 8px rgba(255,100,0,.7);white-space:nowrap;pointer-events:none}.gm-ccf small{font-size:.85em;margin-left:2px;opacity:.85}
+.gm-ccf{position:absolute;left:50%;bottom:-13%;transform:translateX(-50%);z-index:5;padding:1px 6px;border-radius:9px;font:italic 900 10.5px/1.45 system-ui,sans-serif;letter-spacing:.02em;color:#fff6c0;background:linear-gradient(90deg,#c41a00,#ff7a00);border:1px solid #ffd27a;box-shadow:0 0 8px rgba(255,100,0,.7);white-space:nowrap;pointer-events:none}.gm-cmul{position:fixed;z-index:9998;pointer-events:none;transform:translate(-50%,-50%);font:italic 900 20px/1 system-ui,sans-serif;color:#ffe14a;-webkit-text-stroke:1.5px #7a1600;paint-order:stroke fill;animation:gmCmul .9s ease-out forwards}
+@keyframes gmCmul{0%{transform:translate(-50%,-30%) scale(.6);opacity:0}25%{transform:translate(-50%,-60%) scale(1.15);opacity:1}100%{transform:translate(-50%,-150%) scale(1);opacity:0}}
+.gm-ccf small{font-size:.85em;margin-left:2px;opacity:.85}
 .gm-ccf.rb{color:#fff;border-color:#fff;text-shadow:0 1px 0 #3a1070,0 0 4px rgba(90,20,160,.8);background:linear-gradient(90deg,#ff5d8f,#ffb84d,#f6f05a,#5ef0a0,#5ab8ff,#b47cff,#ff5d8f) 0 0/200% 100%;box-shadow:0 0 6px rgba(255,255,255,.9),0 0 14px rgba(180,124,255,.9),0 0 22px rgba(90,184,255,.6);animation:gmCcfRb 1.6s linear infinite}
 @keyframes gmCcfRb{to{background-position:200% 0}}
 .gm-rbedge{position:fixed;inset:0;z-index:2147483100;pointer-events:none;opacity:0;--w:20px;--a:0deg;background:conic-gradient(from var(--a),#ff5d8f,#ffb84d,#f6f05a,#5ef0a0,#5ab8ff,#b47cff,#ff5d8f);-webkit-mask:linear-gradient(90deg,#000,transparent var(--w),transparent calc(100% - var(--w)),#000),linear-gradient(#000,transparent var(--w),transparent calc(100% - var(--w)),#000);mask:linear-gradient(90deg,#000,transparent var(--w),transparent calc(100% - var(--w)),#000),linear-gradient(#000,transparent var(--w),transparent calc(100% - var(--w)),#000)}
@@ -562,7 +564,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
       if (hid) { const T2 = S.blkT || (S.blkT = {}); T2[i] = { tot: ssr, seen: (T2[i] && T2[i].seen) || 0, said: (T2[i] && T2[i].said) || 0 }; blkSay(i); } /* 가려진 모드: 그 묶음의 SSR이 열릴 때마다 두 번째에 DOUBLE, 마지막에 TRIPLE… */
       else if (ssr >= 2) setTimeout(() => multiPop(ssr), 250); if (B.c.R === 10) setTimeout(() => streak('R'), 400); else if (B.c.SR === 10) setTimeout(() => streak('SR'), 400); return i; }
     /* 태그 달기: 아직 열기 전이면 캡슐에, 이미 열려 바구니·보관함에 있으면 그 초상화에 */
-    function tagCm(r, m) { m = m + (feverOn() ? 100 : 0); r.cm = m; if (!r.opened || !r.nk) return; const ob = S.bask.find((b) => b.kind === 'orb' && b.res.nk === r.nk && !(b.res.cm > 1)); if (ob) { ob.res.cm = m; return; } const e = S.tray.find((x) => x && x.nk.n === r.nk.n && (x.cq || []).length + (x.top && x.top.cm > 1 ? 1 : 0) < x.count); if (e) { e.cq = (e.cq || []).concat([m]).sort((a, b) => b - a); uiTray(); } }
+    function tagCm(r, m) { m = m + (feverOn() ? 100 : 0); r.cm = m; if (!r.opened || !r.nk) return; const ob = S.bask.find((b) => b.kind === 'orb' && b.res.nk === r.nk && !(b.res.cm > 1)); if (ob) { ob.res.cm = m; return; } const e = S.tray.find((x) => x && x.nk.n === r.nk.n && !(x.tc > 1) && !x.top); if (e) { if (e.count > 1) { e.count--; } else { const i = S.tray.indexOf(e); S.tray[i] = null; } trayAdd(r.nk, 1, null, null, null, m); uiTray(); } } /* 이미 보관함에 있으면 한 장을 떼어 태그 칸으로 */
     function blkSay(i) { const q = S.blkT && S.blkT[i]; if (!q || q.tot < 2) return; const n = Math.min(q.seen, q.tot); if (n >= 2 && n > q.said) { q.said = n; setTimeout(() => multiPop(n), 300); } }
     S.sup = { pick: 0, jw: 0, full: false, acc: 0, key: '' };
     const feedCap = () => Math.max(12, Math.floor(PW * PH * 0.8 / 490));
@@ -646,7 +648,20 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     /* 칩이 잔고 숫자로 빨려 들어감. 실버칩은 도로칩 5개, 골드칩은 10개로 쪼개진 뒤 들어감 */
     let flyN = 0, sndT = 0, balQ = 0, balB = null; /* 날아가는 칩 수 · 효과음/잔고 갱신은 프레임당 한 번 */
     const balSoon = (b) => { if (b) balB = b === 'r' || balB === 'r' ? 'r' : b; if (balQ) return; balQ = requestAnimationFrame(() => { balQ = 0; const x = balB; balB = null; uiBal(x); }); };
+    let rainV = 0, rainK = 'b', rainT = 0;
+    function rainAdd(v, k) { rainV += v; if ((CHIP_VAL[k] || 0) > (CHIP_VAL[rainK] || 0)) rainK = k; clearTimeout(rainT); rainT = setTimeout(() => { const n = Math.max(8, Math.min(160, Math.round(rainV * 1.2))); coinRain(false, null, { n, k: rainK }); rainV = 0; rainK = 'b'; }, 350); } /* 칩 비: 실제로 얻은 칩만큼(몰리면 한 번에) */
+    function multiBurst(k, n, m, cx, cy, size, src) {
+      const host = document.fullscreenElement || document.body, cnt = n * m, ps = Math.max(18, size * 0.72), rad = Math.max(60, size * 1.5) * Math.min(1.8, 1 + cnt * 0.06);
+      cmulPop(cx, cy - size * 0.4, m); try { snd.chipBurst(true); } catch (e) { /* 무시 */ } rainAdd((CHIP_VAL[k] || 1) * cnt * fevMul(), k);
+      for (let i = 0; i < cnt; i++) {
+        const d = document.createElement('div'); d.className = 'gm-chipfly'; flyN++; d.innerHTML = chip3d(k, Math.round(ps), k === 'g', 0.8); d.style.left = (cx - ps / 2) + 'px'; d.style.top = (cy - ps / 2) + 'px'; host.appendChild(d);
+        const a = i * TAU / cnt + rnd(-0.3, 0.3), rr = rad * rnd(0.7, 1), ex = Math.cos(a) * rr, ey = Math.sin(a) * rr * 0.8;
+        const an = d.animate([{ transform: 'translate(0,0) scale(.5)' }, { transform: 'translate(' + ex.toFixed(1) + 'px,' + ey.toFixed(1) + 'px) scale(1)' }], { duration: 380, delay: i * 25, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'forwards' });
+        an.onfinish = () => setTimeout(() => { d.remove(); flyN--; chipAbsorb(k, 1, cx + ex, cy + ey, ps, src, 0); }, 160 + i * 30); /* 각 자리에서 잔고로(실버·골드는 거기서 DORO칩으로 한 번 더 분열) */
+      }
+    }
     function chipAbsorb(k, n, cx, cy, size, src, cm) {
+      if (k !== 'r' && cmv(cm) > 1 && window.doroChips) { multiBurst(k, n || 1, cmv(cm), cx, cy, size, src); return; } /* DOUBLE·TRIPLE…: 먼저 사방으로 ×n 분열 */
       if (!window.doroChips) { say('DORO칩을 불러오지 못했습니다.'); return; }
       n = (n || 1) * (k === 'r' ? 1 : fevMul() * Math.max(1, cmv(cm))); /* DORO TIME 배수 × DOUBLE·TRIPLE 배수 */ const host = document.fullscreenElement || document.body, isR = k === 'r', unit = CHIP_VAL[k] || 0, total = isR ? n : unit * n;
       if (isR) chipPendR += n; else chipPend += total;
@@ -698,7 +713,12 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     function goldPop(el) { const host = document.fullscreenElement || document.body, r = el && el.getBoundingClientRect ? el.getBoundingClientRect() : null, cx = r && r.width ? r.left + r.width / 2 : innerWidth / 2, cy = r && r.width ? r.top + r.height / 2 : innerHeight / 2, sz = r && r.width ? r.width : 60;
       const d = document.createElement('div'); d.className = 'gm-gpop'; d.style.cssText = 'left:' + cx + 'px;top:' + cy + 'px;--sz:' + sz + 'px'; d.innerHTML = '<i></i><i></i><b>GOLD!</b>'; host.appendChild(d); setTimeout(() => d.remove(), 1300); vib([30, 20, 50]); }
     /* 한 번의 10연속에서 SSR이 2장 이상: DOUBLE! / TRIPLE! … */
-    function multiPop(n) { const host = document.fullscreenElement || document.body, r = cvRect(), W2 = (feverOn() ? DNM : CNM)[n] || n + 'x';
+    function quake(m) { /* 지진처럼 축 없이 흔들림. 배수가 클수록 세고 길게 */ const A = Math.min(14, 1.2 + (m - 1) * 1.3), D = Math.min(1300, 450 + m * 70), N = Math.round(D / 45), kf = [{ transform: 'none' }];
+      for (let i = 1; i < N; i++) { const f = 1 - i / N, a = A * f; kf.push({ transform: 'translate(' + rnd(-a, a).toFixed(1) + 'px,' + rnd(-a * 0.7, a * 0.7).toFixed(1) + 'px)' }); } kf.push({ transform: 'none' });
+      leftEl.animate(kf, { duration: D, easing: 'linear' }); try { snd.thud(m >= 4); } catch (e) { /* 무시 */ } vib(m >= 4 ? [30, 20, 30, 20, 60] : [30, 20, 40], true); }
+    function cmulPop(x, y, m) { if (!(x > 0)) return; const d = document.createElement('div'); d.className = 'gm-cmul'; d.style.cssText = 'left:' + x + 'px;top:' + y + 'px'; d.textContent = '×' + m; (document.fullscreenElement || document.body).appendChild(d); setTimeout(() => d.remove(), 950); }
+    function cmulPop(x, y, m) { if (!(x > 0)) return; const d = document.createElement('div'); d.className = 'gm-cmul'; d.style.cssText = 'left:' + x + 'px;top:' + y + 'px'; d.textContent = '×' + m; (document.fullscreenElement || document.body).appendChild(d); setTimeout(() => d.remove(), 950); }
+    function multiPop(n) { const host = document.fullscreenElement || document.body, r = cvRect(), W2 = (feverOn() ? DNM : CNM)[n] || n + 'x'; quake(n); /* 기계 전체가 지진처럼 흔들림 */
       const d = document.createElement('div'); d.className = 'gm-mpop gm-mp' + Math.min(n, 4); d.style.cssText = 'left:' + (r.left + r.width / 2) + 'px;top:' + (r.top + r.height * 0.24) + 'px'; d.innerHTML = '<b>' + W2 + '!</b><small>SSR ×' + n + '</small>'; host.appendChild(d); setTimeout(() => d.remove(), 1900);
       try { snd.burst(3); if (n >= 3) setTimeout(() => snd.fanfare(), 250); } catch (e) { /* 무시 */ } S.flash = Math.max(S.flash || 0, 0.6); sparks(RV.x, RV.y - 120, 40 + n * 20, () => pick(['#fff3b0', '#ffd24d', '#ffffff', '#ff9ad5']), 700, 200); vib([50, 30, 50, 30, 50 + n * 40], true); }
     /* 가짜 무지개 예고: 무지개 단계까지 갔다가 떨어질 때 가끔 화면 가장자리가 무지개로 번쩍 */
@@ -716,24 +736,31 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
       cancelAnimationFrame(feverTick.raf); if (on) feverTick.raf = requestAnimationFrame(feverTick);
     }
     /* 픽업 표지 = 화면: DORO TIME 중에는 표지 위에 무지개 타이머를 띄움. 끝나면 회색으로 멈췄다가 천천히 흐려짐 */
+    let SB = null;
+    function scrBg(on) {
+      if (!on) { if (SB) { SB.bg.stop(); SB.cv.remove(); SB = null; } return null; }
+      if (!SB) { const cv0 = document.createElement('canvas'); cv0.style.cssText = 'position:fixed;left:-9999px;top:0;width:470px;height:264px;pointer-events:none;visibility:hidden'; document.body.appendChild(cv0); SB = { cv: cv0, bg: rbBg(cv0, { burst: false }) }; }
+      return SB.cv;
+    }
     function drawScreen(c) {
       const on = feverOn(), endT = window.__fevEndT || 0, nowP = performance.now(); let al = 1;
-      if (!on) { if (!endT || nowP - endT > 2600) return; al = 1 - (nowP - endT) / 2600; }
+      if (!on) { if (!endT || nowP - endT > 2600) { if (SB) scrBg(false); return; } al = 1 - (nowP - endT) / 2600; }
       const x0 = BAN.cx - BAN.w / 2, y0 = BAN.cy - BAN.h / 2, w = BAN.w, h = BAN.h, gray = !on, left = on ? Math.max(0, fevEnd() - Date.now()) : 0, t = gray ? endT / 1000 : S.time, last = on && left <= 10000;
       c.save(); c.globalAlpha = al;
       { let rb; if (gray) rb = '#8a8f99'; else if (c.createConicGradient) { rb = c.createConicGradient(t * 1.2, BAN.cx, BAN.cy); ['#ff5d8f', '#ffb84d', '#f6f05a', '#5ef0a0', '#5ab8ff', '#b47cff', '#ff5d8f'].forEach((col, i, A) => rb.addColorStop(i / (A.length - 1), col)); } else rb = '#ff5d8f'; c.fillStyle = rb; if (!gray) { c.shadowColor = 'rgba(255,255,255,.7)'; c.shadowBlur = 12; } stkPath(c, 6); c.fill(); c.shadowBlur = 0; } /* 표지 테두리 → 무지개 테두리 */
       stkPath(c, 0); c.clip();
       let g = c.createLinearGradient(0, y0, 0, y0 + h); g.addColorStop(0, gray ? '#1a1b20' : '#0c0620'); g.addColorStop(1, gray ? '#26272e' : '#1a0b33'); c.fillStyle = g; c.fillRect(x0, y0, w, h);
-      if (!gray) { c.globalCompositeOperation = 'lighter'; for (let k = 0; k < 10; k++) { const a = t * 0.6 + k * TAU / 10; c.fillStyle = 'hsla(' + ((k * 36 + t * 80) % 360) + ',90%,60%,.10)'; c.beginPath(); c.moveTo(BAN.cx, BAN.cy); c.arc(BAN.cx, BAN.cy, w, a, a + 0.22); c.closePath(); c.fill(); } c.globalCompositeOperation = 'source-over'; }
+      { const sb = gray ? null : scrBg(true); if (sb) c.drawImage(sb, x0, y0, w, h); else if (gray) scrBg(false); } /* DORO TIME 화면 배경 = 무지개칩 획득 배경 */
       c.fillStyle = 'rgba(255,255,255,.035)'; for (let yy = y0; yy < y0 + h; yy += 4) c.fillRect(x0, yy, w, 1.4); /* 화면 주사선 */
       const rg = (yy) => { if (gray) return '#8a8f99'; const sh = (t * 160) % w, gg = c.createLinearGradient(x0 + sh - w, yy, x0 + sh + w, yy); ['#ff5d8f', '#ffb84d', '#f6f05a', '#5ef0a0', '#5ab8ff', '#b47cff', '#ff5d8f', '#ffb84d', '#f6f05a', '#5ef0a0', '#5ab8ff', '#b47cff', '#ff5d8f'].forEach((col, i, A) => gg.addColorStop(i / (A.length - 1), col)); return gg; };
       let lv = 1; try { lv = +localStorage.getItem(FEV_LV) || 1; } catch (e) { /* 무시 */ }
       c.textAlign = 'center'; c.textBaseline = 'middle'; c.lineJoin = 'round';
       const txt = (s2, yy, sz, fill, sc) => { c.save(); c.translate(BAN.cx, yy); if (sc) c.scale(sc, sc); c.font = sz + 'px Bungee, "Arial Black", Impact, sans-serif'; c.lineWidth = sz * 0.14; c.strokeStyle = gray ? '#2a2c33' : '#12062a'; c.strokeText(s2, 0, 0); c.fillStyle = fill; if (!gray) { c.shadowColor = 'rgba(255,255,255,.55)'; c.shadowBlur = 14; } c.fillText(s2, 0, 0); c.restore(); };
-      txt('DORO TIME', y0 + h * 0.24, 58, rg(y0 + h * 0.24));
+      { const T = 'DOR' + 'O'.repeat(Math.max(1, lv)) + ' TIME', sz = 52, yy = y0 + h * 0.24; c.save(); c.font = sz + 'px Bungee, "Arial Black", Impact, sans-serif'; const tw = c.measureText(T).width + 90; c.restore(); /* DORO TIME → DOROO TIME → DOROOO TIME… 왼쪽으로 흐름 */
+        if (gray) txt(T, yy, sz, rg(yy)); else { const off = (S.time * 120) % tw; for (let xx = x0 - off + tw / 2; xx < x0 + w + tw; xx += tw) { c.save(); c.translate(xx - BAN.cx, 0); txt(T, yy, sz, rg(yy)); c.restore(); } } }
       const m = Math.floor(left / 60000), sec = Math.floor(left / 1000) % 60, cs = Math.floor(left / 10) % 100, z = (n) => String(n).padStart(2, '0'), pul = last ? 1 + 0.1 * Math.max(0, Math.sin((left / 1000) * TAU)) : 1;
       txt(z(m) + ':' + z(sec) + ':' + z(cs), y0 + h * 0.58, 84, last ? '#ff5d6c' : rg(y0 + h * 0.58), pul);
-      c.font = '800 20px system-ui, sans-serif'; c.fillStyle = gray ? '#6b6f78' : '#ffe28a'; c.fillText(gray ? 'DORO TIME 종료' : 'DORO칩 ' + (lv + 1) + '배', BAN.cx, y0 + h * 0.88);
+      c.font = '900 22px system-ui, sans-serif'; c.fillStyle = gray ? '#6b6f78' : '#ffe28a'; { const bt = gray ? 'DORO TIME 종료' : 'DORO칩 ' + (lv + 1) + '배'; c.lineJoin = 'round'; c.lineWidth = 5; c.strokeStyle = 'rgba(18,6,42,.9)'; c.strokeText(bt, BAN.cx, y0 + h * 0.88); c.fillText(bt, BAN.cx, y0 + h * 0.88); }
       c.strokeStyle = 'rgba(0,0,0,.35)'; c.lineWidth = 2; stkPath(c, 0); c.stroke();
       c.restore();
     }
@@ -756,12 +783,12 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     /* 칩 비: 캔버스 한 장에 칩 그림을 찍어 그림(두께는 옆면 띠로 흉내). DOM 수백 개보다 훨씬 가벼움 */
     const RAIN_IMG = {};
     const rainImg = (k) => { if (RAIN_IMG[k]) return RAIN_IMG[k]; const im = new Image(); im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(chipSvg(k, 96, false, true).replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ')); RAIN_IMG[k] = im; return im; };
-    function coinRain(gold, host0) {
+    function coinRain(gold, host0, opt) {
       const host = host0 || document.fullscreenElement || document.body, cv2 = document.createElement('canvas'), dpr = Math.min(1.5, window.devicePixelRatio || 1), W2 = innerWidth, H2 = innerHeight;
       cv2.className = 'gm-rain'; cv2.width = W2 * dpr; cv2.height = H2 * dpr; host.appendChild(cv2); const c = cv2.getContext('2d');
       const ks = gold ? ['g', 'g', 'g', 'g', 'g', 'g', 'r'] : ['b', 'b', 'b', 's', 's', 'g', 'g', 'r'], EC = { b: '#a86405', s: '#8b9097', g: '#b8860b', r: '#7d5fc0' };
-      ks.forEach(rainImg); const N = gold ? 90 : 60, ps = [];
-      for (let i = 0; i < N; i++) { const k = pick(ks); ps.push({ k, x: rnd(0, W2), y: -rnd(30, H2 * 0.9), vy: rnd(380, 720), vx: rnd(-40, 40), sz: rnd(26, 56), sp: rnd(0, TAU), vs: rnd(5, 12) * (Math.random() < 0.5 ? -1 : 1), tl: rnd(-0.5, 0.5), d: i * (gold ? 18 : 30) }); }
+      const ko = opt ? (opt.k === 'g' ? ['g', 'g', 's'] : opt.k === 's' ? ['s', 's', 'b'] : ['b', 'b', 'b', 's']) : null; if (ko) ks.splice(0, ks.length, ...ko); ks.forEach(rainImg); const N = opt ? opt.n : gold ? 90 : 60, ps = [];
+      for (let i = 0; i < N; i++) { const k = pick(ks); ps.push({ k, x: rnd(0, W2), y: -rnd(30, H2 * 0.9), vy: rnd(380, 720), vx: rnd(-40, 40), sz: rnd(26, 56), sp: rnd(0, TAU), vs: rnd(5, 12) * (Math.random() < 0.5 ? -1 : 1), tl: rnd(-0.5, 0.5), d: i * (opt ? 12 : gold ? 18 : 30) }); }
       const t0 = performance.now(); let last = t0;
       const step = (now) => { const dt = Math.min(0.05, (now - last) / 1000); last = now; c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, W2, H2); let alive = 0;
         for (const q of ps) { if (now - t0 < q.d) { alive++; continue; } q.vy += 600 * dt; q.y += q.vy * dt; q.x += q.vx * dt; q.sp += q.vs * dt; if (q.y > H2 + 60) continue; alive++;
@@ -950,11 +977,11 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     }
     function chipSpawn() { const ck = chipRoll('lab'); if (ck === 'r') { dropChip('r', HUDP.x, HUDP.y, 'label'); return; } /* 바디라벨 무지개 → DORO TIME */ const b = body('chip', HUDP.x, HUDP.y - 10, { chip: ck, count: 1, src: 'label' }); b.vx = rnd(-520, -180); b.vy = rnd(-760, -520); b.w = rnd(-9, 9); S.bask.push(b); wake(S.bask); sparks(HUDP.x, HUDP.y, 16, '#ffc45a', 360); try { snd.chipPop(); } catch (e) { /* 무시 */ } }
     function chipTake(b) { const i = S.bask.indexOf(b); if (i < 0) return; S.bask.splice(i, 1); wake(S.bask); const r = cvRect(), sc = r.width / W; chipAbsorb(b.res.chip, b.res.count, r.left + b.x * sc, r.top + b.y * sc, Math.max(22, OR * 2 * sc), b.res.src || 'cap'); }
-    if (location.hostname === 'localhost') (window.__gms = window.__gms || []).push({ S, root, rbCut: () => rainbowCut(), rbCutEl: (el) => rainbowCut(el), dropChip: (k) => dropChip(k, 300, 600, "cap"), trayAdd: (n, c) => trayAdd(n, c), P, chipSpawn, capChip: (x, y) => capChip(x, y), streak: (k) => streak(k), uiTray: () => uiTray(), addLab: (v) => { S.lab += v; labChips(); uiLab(true); } });
+    if (location.hostname === 'localhost') (window.__gms = window.__gms || []).push({ S, root, rbCut: () => rainbowCut(), rbCutEl: (el) => rainbowCut(el), dropChip: (k) => dropChip(k, 300, 600, "cap"), trayAdd: (n, c, m) => trayAdd(n, c, null, null, null, m), P, chipSpawn, capChip: (x, y) => capChip(x, y), streak: (k) => streak(k), uiTray: () => uiTray(), addLab: (v) => { S.lab += v; labChips(); uiLab(true); } });
     function labChips() { let n = 0; while (S.lab >= 10000 && n < 20) { S.lab -= 10000; n++; setTimeout(chipSpawn, (n - 1) * 140); } }
     /* 보관함은 빈칸을 그대로 둠(배열에 null). 끌어서 다른 니케 위에 놓으면 그 니케가 원래 칸으로 자리 바꿈 */
     const trayFree = () => { const i = S.tray.findIndex((x) => !x); return i < 0 ? S.tray.length : i; };
-    function trayAdd(nk, count, at, from, ent, cm) { const add = Array.isArray(cm) ? cm.filter((v) => v > 1) : cm > 1 ? Array(count || 1).fill(cm) : []; /* DOUBLE·TRIPLE 배수는 장마다 따로 기억 */ const e = ent ? null : S.tray.find((x) => x && x.nk.n === nk.n && !x.top); /* DORO칩으로 뒤집힌 칸에는 쌓지 않고 새 칸 */ if (e) { e.count += count || 1; e.merge = true; if (add.length) e.cq = (e.cq || []).concat(add).sort((a, b) => b - a); snd.merge(); } else { const en = ent || { nk, count: count || 1, fresh: true, cq: add.sort((a, b) => b - a) };
+    function trayAdd(nk, count, at, from, ent, cm) { const tc = Array.isArray(cm) ? (cm.find((v) => v > 1) || 0) : cm > 1 ? cm : 0, add = tc ? Array(count || 1).fill(tc) : []; /* 같은 초상화라도 태그(DOUBLE·DOROO…)가 다르면 다른 칸 */ const e = ent ? null : S.tray.find((x) => x && x.nk.n === nk.n && !x.top && (x.tc || 0) === tc); /* DORO칩으로 뒤집힌 칸에는 쌓지 않고 새 칸 */ if (e) { e.count += count || 1; e.merge = true; if (add.length) e.cq = (e.cq || []).concat(add); snd.merge(); } else { const en = ent || { nk, count: count || 1, fresh: true, tc, cq: add };
         if (at != null && at >= 0) { const occ = S.tray[at]; if (occ) { const back = from != null && from >= 0 && !S.tray[from] ? from : trayFree(); S.tray[back] = occ; } S.tray[at] = en; } else S.tray[trayFree()] = en; snd.collect(); }
       while (S.tray.length && !S.tray[S.tray.length - 1]) S.tray.pop(); uiTray(); }
 
@@ -992,7 +1019,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     const TRAY_K = 'dsgm-tray-' + String(o.title || 'std').replace(/\s+/g, '');
     const trayFind = (n) => { for (const k of Object.keys(P)) { const a = P[k]; if (Array.isArray(a)) { const x = a.find((y) => y && y.n === n); if (x) return x; } else if (a && a.n === n) return a; } return null; };
     function traySave() { try { localStorage.setItem(TRAY_K, JSON.stringify(S.tray.map((e) => { if (!e) return 0; const q = (e.cq || []).slice(); if (e.top && e.top.cm > 1) q.unshift(e.top.cm); return q.length ? [e.nk.n, e.count, q] : [e.nk.n, e.count]; }))); } catch (er) { /* 무시 */ } }
-    function trayLoad() { try { const a = JSON.parse(localStorage.getItem(TRAY_K) || '[]'); if (!Array.isArray(a)) return; S.tray = a.map((x) => { if (!x) return null; const nk = trayFind(x[0]); return nk ? { nk, count: Math.max(1, x[1] | 0), cq: Array.isArray(x[2]) ? x[2].filter((v) => v > 1).slice(0, Math.max(1, x[1] | 0)) : [] } : null; }); while (S.tray.length && !S.tray[S.tray.length - 1]) S.tray.pop(); } catch (er) { /* 무시 */ } }
+    function trayLoad() { try { const a = JSON.parse(localStorage.getItem(TRAY_K) || '[]'); if (!Array.isArray(a)) return; S.tray = a.map((x) => { if (!x) return null; const nk = trayFind(x[0]); const n = Math.max(1, x[1] | 0), q = Array.isArray(x[2]) ? x[2].filter((v) => v > 1).slice(0, n) : []; if (!nk) return null; const out = [], by = {}; q.forEach((v) => { by[v] = (by[v] || 0) + 1; }); Object.keys(by).forEach((v) => out.push({ nk, count: by[v], tc: +v, cq: Array(by[v]).fill(+v) })); if (n > q.length) out.push({ nk, count: n - q.length, tc: 0, cq: [] }); return out; }).reduce((A, x) => A.concat(x == null ? [null] : x), []); /* 예전 저장값: 태그별로 칸 나눔 */ while (S.tray.length && !S.tray[S.tray.length - 1]) S.tray.pop(); } catch (er) { /* 무시 */ } }
     /* 한 칸만 다시 그림(다른 칸의 뒤집기·빛남이 끊기지 않게) */
     function renderWell(i) {
       const w = panEl.children[i]; if (!w) { uiTray(); return; }
@@ -1037,8 +1064,8 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     /* 모두 뒤집기: SSS를 뺀 칸마다 맨 위 한 장만 차례로 뒤집고, 잠시 뒤 그 장들만 한꺼번에 잔고로 (겹친 나머지는 그대로) */
     function flipAll() {
       if (S.flipAllBusy) return; 
-      const list = S.tray.filter((e) => e && !busyE(e) && !(e.top && (e.top.anim || e.top.flipping)));
-      if (!list.length) { say('보관함이 비어 있습니다.'); return; }
+      const list = S.tray.filter((e) => e && !e.nk.pu && !busyE(e) && !(e.top && (e.top.anim || e.top.flipping))); /* 픽업은 직접 */
+      if (!list.length) { say(S.tray.some(Boolean) ? '픽업은 직접 뒤집어 주세요.' : '보관함이 비어 있습니다.'); return; }
       S.flipAllBusy = true; let changed = false;
       list.forEach((e) => { if (!e.top) { e.top = mkTop(e); changed = true; } e.top.noAuto = true; });
       if (changed) uiTray();
@@ -1047,8 +1074,10 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
         const t = e.top, a = rnd(0, TAU), m = rnd(2, 4), k = chipE(t); t.flip = true; t.tilt = [Math.round(Math.cos(a) * m), Math.round(Math.sin(a) * m)]; o.style.setProperty('--tx', t.tilt[0] + 'deg'); o.style.setProperty('--ty', t.tilt[1] + 'deg'); void o.offsetWidth;
         requestAnimationFrame(() => { o.classList.add('flip'); if (k !== 'b') setTimeout(() => o.classList.add('shine', 'shine-' + k), 700); }); if (k === 'r' && !t.cutR) { t.cutR = true; setTimeout(() => rainbowCut(o, 'ssr'), 800); } if (k === 'g') setTimeout(() => { if (o.isConnected) goldPop(o); }, 600); try { snd.flip(); } catch (er) { /* 무시 */ } }, 60 + n * step));
       setTimeout(() => {
-        S.lite = (S.lite || 0) + 1; list.forEach((e, n) => setTimeout(() => { if (e.top) e.top.noAuto = false; absorbTop(e); if (e.count > 0 && S.tray.includes(e)) absorbRest(e); }, n * 40)); /* 겹친 나머지도 한꺼번에 */
-        setTimeout(() => { S.flipAllBusy = false; S.lite = Math.max(0, S.lite - 1); }, list.length * 40 + 200);
+        S.lite = (S.lite || 0) + 1; list.forEach((e, n) => setTimeout(() => { if (e.top) e.top.noAuto = false; absorbTop(e); }, n * 40));
+        setTimeout(() => { S.lite = Math.max(0, S.lite - 1); const q = list.filter((e) => e.count > 0 && S.tray.includes(e)); /* 겹친 칸: 느리더라도 한 칸씩, 한 장씩 차례로 */
+          const next = () => { const e = q.shift(); if (!e) { S.flipAllBusy = false; return; } if (!(e.count > 0) || !S.tray.includes(e)) { next(); return; } e.all = true; if (!e.top) flipTop(e); const wt = () => { if (!S.tray.includes(e) || e.count <= 0) { e.all = false; setTimeout(next, 120); } else setTimeout(wt, 150); }; setTimeout(wt, 300); };
+          next(); }, list.length * 40 + 200);
       }, 60 + list.length * step + 1100);
     }
     panEl.addEventListener('pointerdown', (e) => { const well = e.target.closest('.gm-well'); if (!well || fl || S.spread || S.flipAllBusy) return; const en = S.tray[+well.dataset.i]; if (!en) return; e.preventDefault(); if (busyE(en)) return; /* SSS 뒤집는 중: 누르기·끌기 막음 */ tpd = { en, well, x: e.clientX, y: e.clientY }; });
