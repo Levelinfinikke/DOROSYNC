@@ -343,7 +343,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
       tr.bill = bill;
       return tr;
     }
-    return { days: reached || 9999, bill };
+    return { days: reached || 9999, bill, cnt };
   }
 
   /** 효율 순위 (코더:배데:크레딧 비율 반영, 고정 재화 제외, 월정액은 적용일수 배) */
@@ -434,7 +434,39 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     };
   }
 
-  const api = { optSetup, RES, BOXH, MAXD, periodOf, buildModel, simulate, rankPackages, bossTable, totAt, lupd, CLR };
+  /** 남는 재화 줄이기: 도달 일수는 그대로 두고, 끝에 남는 재화만 주던 구매를 뒤에서부터 뺌(비싼 패키지부터).
+   * 반환 { caps: [[j, 최대 구매 횟수], ...], bill, days } · 줄일 게 없으면 caps 는 빈 배열 */
+  function trimBuys(m, use, days) {
+    const np = m.Pk.length, cap0 = m.Pk.map((p) => p.cap), r0 = simulate(m, use, false);
+    if (!(r0.days <= days) || !r0.cnt) return { caps: [], bill: r0.bill, days: r0.days };
+    const cnt = Array.from(r0.cnt), ord = [], caps = [];
+    for (let j = 0; j < np; j++) if (use[j] && cnt[j] > 0) ord.push(j);
+    ord.sort((a, b) => m.Pk[b].price - m.Pk[a].price || a - b);
+    try {
+      for (let pass = 0; pass < 2; pass++) {
+        for (const j of ord) {
+          const pk = m.Pk[j], hi0 = Math.min(cnt[j], isFinite(pk.cap) ? pk.cap : cnt[j]);
+          let lo = 0, hi = hi0;
+          while (lo < hi) { const mid = (lo + hi) >> 1; pk.cap = mid; if (simulate(m, use, false).days <= days) hi = mid; else lo = mid + 1; }
+          pk.cap = lo < hi0 ? lo : (isFinite(cap0[j]) ? cap0[j] : (lo < cnt[j] ? lo : Infinity));
+        }
+      }
+      const r1 = simulate(m, use, false);
+      for (const j of ord) if (isFinite(m.Pk[j].cap) && m.Pk[j].cap < cnt[j] && m.Pk[j].cap !== cap0[j]) caps.push([j, m.Pk[j].cap]);
+      return r1.days <= days ? { caps, bill: r1.bill, days: r1.days } : { caps: [], bill: r0.bill, days: r0.days };
+    } finally { for (let j = 0; j < np; j++) m.Pk[j].cap = cap0[j]; }
+  }
+  /** 파레토 점마다 남는 구매를 빼고(과금 최소화) 다시 파레토로 추림. P: [bill, days, idx] → [bill, days, idx, caps] */
+  function trimPareto(m, op, P) {
+    const use = new Array(m.Pk.length).fill(false), out = [];
+    for (const r of P) { op.apply(r[2], use); const t = trimBuys(m, use, r[1]); out.push([Math.min(r[0], t.bill), r[1], r[2], t.bill < r[0] ? t.caps : []]); }
+    out.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+    const Q = []; let bd = 1e9;
+    for (const r of out) if (r[1] < bd) { Q.push(r); bd = r[1]; }
+    return Q;
+  }
+
+  const api = { trimBuys, trimPareto, optSetup, RES, BOXH, MAXD, periodOf, buildModel, simulate, rankPackages, bossTable, totAt, lupd, CLR };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.DoroEngine = api;
 })(typeof self !== 'undefined' ? self : this);
@@ -534,7 +566,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     st.ver = SET_VER;
     try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) { /* ignore */ }
   }
-  st.pk.forEach((p) => { p.max = 0; }); // 접속할 때마다 구매 횟수(최대)는 0(무제한)에서 시작
+  st.pk.forEach((p) => { if (!p.trim) p.max = 0; }); // 최적 조합이 줄인 횟수(trim)는 유지 · 접속할 때마다 구매 횟수(최대)는 0(무제한)에서 시작
   st.cfg = Object.assign({}, st.cfg, { mlen: 30, ratio: [1, 1, 3] });
   st.must = false;
   st.pk.forEach((p) => { if (p.name === '월간 스텝업 패키지5') p.name = '월간 스텝업5'; });
@@ -1893,7 +1925,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
           i++; c++;
         }
         prog(c);
-        if (i < total) setTimeout(step, 0); else finish(R);
+        if (i < total) setTimeout(step, 0); else { R.sort((a, b) => a[0] - b[0] || a[1] - b[1]); const P = []; let bd = 1e9; R.forEach((r) => { if (r[1] < bd) { P.push(r); bd = r[1]; } }); status.textContent = '남는 재화를 주는 구매 빼는 중…'; setTimeout(() => finish(E.trimPareto(m, o2, P)), 30); }
       })();
     };
     const nw = Math.max(1, Math.min(8, (navigator.hardwareConcurrency || 2) - 1));
@@ -1906,6 +1938,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
         wk.onmessage = (e) => {
           if (id !== optRun) { wk.terminate(); return; }
           if (e.data.type === 'progress') prog(e.data.n);
+          else if (e.data.type === 'trim') { if (finished === 0) status.textContent = '남는 재화를 주는 구매 빼는 중…'; }
           else {
             results.push(...e.data.pareto);
             wk.terminate();
@@ -2000,9 +2033,13 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     });
     return best;
   }
+  /* 조합의 구매 횟수 상한(남는 재화를 주던 마지막 구매를 뺀 것): j → 횟수 */
+  const capMap = (r) => { const o = {}; (r && r[3] || []).forEach((x) => { o[x[0]] = x[1]; }); return o; };
+  const listOf = (r) => { const cm = capMap(r); return OPT.op.decode(r[2]).filter((x) => cm[x.j] !== 0); }; /* 0회로 줄어든 패키지는 빼고 보여 줌 */
+  function applyCaps(pk, r) { pk.forEach((p) => { if (p.trim) { p.max = 0; delete p.trim; } }); const cm = capMap(r); Object.keys(cm).forEach((j) => { const p = pk[j]; if (!p) return; if (cm[j] === 0) p.use = false; else { p.max = cm[j]; p.trim = true; } }); }
   function comboTag(r, c, idx) {
     let t = '', k = '', per = '';
-    const isNP = idx === 0 && OPT.np0, list = isNP ? [] : OPT.op.decode(r[2]), mo = r[1] > 0 ? r[0] / r[1] * 30 : 0;
+    const isNP = idx === 0 && OPT.np0, list = isNP ? [] : listOf(r), mo = r[1] > 0 ? r[0] / r[1] * 30 : 0;
     if (isNP) { t = '무과금'; k = 'c0'; }
     else {
       if (idx === OPT.par.length - 1 && OPT.par.length > 1) { t = '👑 부르주아'; k = 'cb'; }
@@ -2021,15 +2058,18 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     return (t ? tg(k, t) : '') + (isNP ? tg('c0', '현명한 청년') : '') + (ssal ? tg('cs', '쌀먹') : '') + (per ? tg('c0', per) : '') + (idx === OPT.knee ? tg('cr', '<svg class="star" viewBox="0 0 24 24" width="11" height="11" aria-hidden="true"><polygon points="12.00,2.00 15.29,7.47 21.51,8.91 17.33,13.73 17.88,20.09 12.00,17.60 6.12,20.09 6.67,13.73 2.49,8.91 8.71,7.47" fill="#ffcc00" stroke="#ffcc00" stroke-width="3.4" stroke-linejoin="round"/></svg> 추천') : '');
   }
   function dropRow(list, open) {
-    const body = list.length
-      ? list.map((x) => '<span class="pkchip">' + esc(st.pk[x.j].name) + (x.k >= 0 ? ' <em>' + RES[x.k] + '</em>' : '') + (x.forced ? ' <em class="req">필수</em>' : '') + (TR && TR.cnt && TR.cnt[x.j] != null ? ' <em class="cnt">' + TR.cnt[x.j] + '회</em>' : '') + '</span>').join('')
-      : '<span class="pkchip none">구매 없음 (일일 수급만)</span>';
+    /* 고른 조합의 패키지: 주기별로 묶고 한 줄에 [이름 · 고른 재화 · 횟수 · 금액] */
+    const cm = OPT && OPT.sel >= 0 && OPT.par[OPT.sel] ? capMap(OPT.par[OPT.sel]) : {}, GR = ['월정액', '월간', '주간', '일일', '기간', '3주', '1회'], by = {};
+    const row = (nm, k, tag, c, pr, cut) => '<div class="pkr"><span class="pkn">' + esc(nm) + (tag || '') + '</span><span class="pkk">' + (k || '') + '</span><span class="pkc">' + (c != null ? c + '회' + (cut ? '<i title="남는 재화를 주던 마지막 구매를 뺐습니다">−' + cut + '</i>' : '') : '') + '</span><span class="pkw">' + (c != null && pr ? won(c * pr) : '') + '</span></div>';
+    list.forEach((x) => { const p = st.pk[x.j], g = E.periodOf(p.name); (by[GR.indexOf(g) >= 0 ? g : '기타'] = by[GR.indexOf(g) >= 0 ? g : '기타'] || []).push(x); });
+    let body = '';
+    GR.concat(['기타']).forEach((g) => { const L = by[g]; if (!L) return;
+      body += '<div class="pkg"><div class="pkgh">' + g + '<b>' + L.length + '</b></div>' + L.map((x) => { const p = st.pk[x.j], c = TR && TR.cnt && TR.cnt[x.j] != null ? TR.cnt[x.j] : null; return row(p.name, x.k >= 0 ? RES[x.k] : '', x.forced ? '<em class="req">필수</em>' : '', c, p.price, 0); }).join('') + '</div>'; });
+    if (!list.length) body = '<div class="pkg"><div class="pknone">구매 없음 (일일 수급만)</div></div>';
     const eu = ((OPT && OPT.snap && OPT.snap.etc) || st.etc || []).filter((e) => e.use);
-    const ebody = eu.map((e) => {
-      const i = M && M.Oth ? M.Oth.findIndex((o) => o.name === e.name) : -1, c = i >= 0 && TR && TR.ocnt ? TR.ocnt[i] : null;
-      return '<span class="pkchip">' + esc(e.name) + ' <em class="req">기타·필수</em>' + (c != null ? ' <em class="cnt">' + c + '회</em>' : '') + '</span>';
-    }).join('');
-    return '<tr class="pkdrop"><td colspan="4"><div class="pkd' + (open ? ' open' : '') + '"><div><div class="pkin">' + body + ebody + '</div><div class="pkok"><button type="button" class="pkdec"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M2.5 8.5l3.5 3.5 7.5-8" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>결정</button></div></div></div></td></tr>';
+    if (eu.length) body += '<div class="pkg"><div class="pkgh">기타 · 필수<b>' + eu.length + '</b></div>' + eu.map((e) => { const i = M && M.Oth ? M.Oth.findIndex((o) => o.name === e.name) : -1, c = i >= 0 && TR && TR.ocnt ? TR.ocnt[i] : null; return row(e.name, '', '', c, e.price, 0); }).join('') + '</div>';
+    const nCut = Object.keys(cm).length, tot = TR && TR.bill != null ? TR.bill : null;
+    return '<tr class="pkdrop"><td colspan="4"><div class="pkd' + (open ? ' open' : '') + '"><div><div class="pkin">' + body + '</div><div class="pkok">' + (nCut ? '<span class="pktrim">남는 재화를 주던 구매 ' + nCut + '개 패키지에서 뺌</span>' : '<span></span>') + (tot != null ? '<span class="pktot">총 ' + won(tot) + '</span>' : '') + '<button type="button" class="pkdec"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M2.5 8.5l3.5 3.5 7.5-8" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>결정</button></div></div></div></td></tr>';
   }
   function toggleDrop(i) {
     const tb = $('#t-pareto'); if (!tb) return;
@@ -2039,7 +2079,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
       OPT.dropOpen = false; cur.querySelector('.pkd').classList.remove('open'); setTimeout(() => cur.remove(), 280);
     } else {
       OPT.dropOpen = true;
-      row.insertAdjacentHTML('afterend', dropRow(OPT.op.decode(OPT.par[i][2]), false));
+      row.insertAdjacentHTML('afterend', dropRow(listOf(OPT.par[i]), false));
       const nd = row.nextElementSibling.querySelector('.pkd'); void nd.offsetWidth; requestAnimationFrame(() => nd.classList.add('open'));
     }
   }
@@ -2067,7 +2107,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
       if (only && !good[i]) return;
       const c = costPerDay(par, i);
       h += '<tr class="click' + (good[i] ? ' good' : '') + (i === OPT.sel ? ' sel' : '') + '" data-i="' + i + '"><td><span class="won5">' + won(r[0]) + '</span>' + comboTag(r, c, i) + '</td><td>' + mwon(r[0] / r[1] * 30) + '</td><td>' + r[1] + '일</td><td>' + OPT.dd(r[1]) + '</td></tr>';
-      if (i === OPT.sel && OPT.dropOpen !== false) h += dropRow(OPT.op.decode(r[2]), true);
+      if (i === OPT.sel && OPT.dropOpen !== false) h += dropRow(listOf(r), true);
     });
     $('#t-pareto').innerHTML = h + '</tbody>';
   }
@@ -2090,10 +2130,11 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     if (OPT.sel === i) { toggleDrop(i); return; }
     const i0 = i;
     OPT.sel = i; OPT.dropOpen = true;
-    const r = OPT.par[i], list = OPT.op.decode(r[2]);
+    const r = OPT.par[i], list = listOf(r);
     const useNow = new Array(st.pk.length).fill(false);
     list.forEach((x) => { useNow[x.j] = true; if (x.k >= 0) st.pk[x.j].sel = RES[x.k]; });
     st.pk.forEach((p, j) => (p.use = useNow[j]));
+    applyCaps(st.pk, r); /* 남는 재화를 주던 마지막 구매는 빼고(구매 횟수 상한) */
     buildPkg();
     onChange('apply');
     clearTimeout(tmr); recalc();
@@ -3144,9 +3185,9 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
     if (ok) OPT.par.forEach((r, i) => {
       if (!pick.has(i)) return;
       try {
-        const list = OPT.op.decode(r[2]), s2 = JSON.parse(JSON.stringify(st)), use = new Array(s2.pk.length).fill(false);
+        const list = listOf(r), s2 = JSON.parse(JSON.stringify(st)), use = new Array(s2.pk.length).fill(false);
         list.forEach((x) => { use[x.j] = true; if (x.k >= 0) s2.pk[x.j].sel = RES[x.k]; });
-        s2.pk.forEach((p, j) => { p.use = use[j]; });
+        s2.pk.forEach((p, j) => { p.use = use[j]; }); applyCaps(s2.pk, r);
         const m2 = E.buildModel(s2, D), tr = E.simulate(m2, null, true), rows = tr.rows || [], lt = rows.length ? rows[rows.length - 1].t : 0;
         if ((tr.bill || 0) === bill0 && lt === days0) return; /* 확정한 조합 자체는 제외 */
         out.push({ id: 'w' + i + '-' + Date.now().toString(36), bill: tr.bill || 0, days: lt, S0: st.S0, pts: trPts(tr, st.S0), pk: list.map((x) => [x.j, x.k]), buys: buysOf(m2, tr, s2.pk) });
@@ -3580,7 +3621,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
     const MOON = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.7 6.7 0 0 0 10.5 10.5z"/></svg>';
     const isDark = () => (root.dataset.theme ? root.dataset.theme === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches);
     const paint = () => { btn.innerHTML = isDark() ? SUN : MOON; btn.setAttribute('aria-label', isDark() ? '일반 모드로' : '다크 모드로'); btn.title = isDark() ? '일반 모드' : '다크 모드'; };
-    try { const sv = localStorage.getItem(KEY); if (sv === 'dark' || sv === 'light') root.dataset.theme = sv; } catch (e) { /* 저장 불가 환경 */ }
+    try { const sv = localStorage.getItem(KEY); root.dataset.theme = sv === 'dark' || sv === 'light' ? sv : 'dark'; } catch (e) { root.dataset.theme = 'dark'; } /* 처음 접속하면 다크 모드 */
     paint();
     btn.addEventListener('click', () => {
       const t = isDark() ? 'light' : 'dark';

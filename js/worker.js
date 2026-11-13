@@ -340,7 +340,7 @@ self.DATA={"boxes":[[20.24,6437.98,3456],[21.93,9221.99,3935.98],[23.39,12353.99
       tr.bill = bill;
       return tr;
     }
-    return { days: reached || 9999, bill };
+    return { days: reached || 9999, bill, cnt };
   }
 
   /** 효율 순위 (코더:배데:크레딧 비율 반영, 고정 재화 제외, 월정액은 적용일수 배) */
@@ -431,7 +431,39 @@ self.DATA={"boxes":[[20.24,6437.98,3456],[21.93,9221.99,3935.98],[23.39,12353.99
     };
   }
 
-  const api = { optSetup, RES, BOXH, MAXD, periodOf, buildModel, simulate, rankPackages, bossTable, totAt, lupd, CLR };
+  /** 남는 재화 줄이기: 도달 일수는 그대로 두고, 끝에 남는 재화만 주던 구매를 뒤에서부터 뺌(비싼 패키지부터).
+   * 반환 { caps: [[j, 최대 구매 횟수], ...], bill, days } · 줄일 게 없으면 caps 는 빈 배열 */
+  function trimBuys(m, use, days) {
+    const np = m.Pk.length, cap0 = m.Pk.map((p) => p.cap), r0 = simulate(m, use, false);
+    if (!(r0.days <= days) || !r0.cnt) return { caps: [], bill: r0.bill, days: r0.days };
+    const cnt = Array.from(r0.cnt), ord = [], caps = [];
+    for (let j = 0; j < np; j++) if (use[j] && cnt[j] > 0) ord.push(j);
+    ord.sort((a, b) => m.Pk[b].price - m.Pk[a].price || a - b);
+    try {
+      for (let pass = 0; pass < 2; pass++) {
+        for (const j of ord) {
+          const pk = m.Pk[j], hi0 = Math.min(cnt[j], isFinite(pk.cap) ? pk.cap : cnt[j]);
+          let lo = 0, hi = hi0;
+          while (lo < hi) { const mid = (lo + hi) >> 1; pk.cap = mid; if (simulate(m, use, false).days <= days) hi = mid; else lo = mid + 1; }
+          pk.cap = lo < hi0 ? lo : (isFinite(cap0[j]) ? cap0[j] : (lo < cnt[j] ? lo : Infinity));
+        }
+      }
+      const r1 = simulate(m, use, false);
+      for (const j of ord) if (isFinite(m.Pk[j].cap) && m.Pk[j].cap < cnt[j] && m.Pk[j].cap !== cap0[j]) caps.push([j, m.Pk[j].cap]);
+      return r1.days <= days ? { caps, bill: r1.bill, days: r1.days } : { caps: [], bill: r0.bill, days: r0.days };
+    } finally { for (let j = 0; j < np; j++) m.Pk[j].cap = cap0[j]; }
+  }
+  /** 파레토 점마다 남는 구매를 빼고(과금 최소화) 다시 파레토로 추림. P: [bill, days, idx] → [bill, days, idx, caps] */
+  function trimPareto(m, op, P) {
+    const use = new Array(m.Pk.length).fill(false), out = [];
+    for (const r of P) { op.apply(r[2], use); const t = trimBuys(m, use, r[1]); out.push([Math.min(r[0], t.bill), r[1], r[2], t.bill < r[0] ? t.caps : []]); }
+    out.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+    const Q = []; let bd = 1e9;
+    for (const r of out) if (r[1] < bd) { Q.push(r); bd = r[1]; }
+    return Q;
+  }
+
+  const api = { trimBuys, trimPareto, optSetup, RES, BOXH, MAXD, periodOf, buildModel, simulate, rankPackages, bossTable, totAt, lupd, CLR };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.DoroEngine = api;
 })(typeof self !== 'undefined' ? self : this);
@@ -456,5 +488,6 @@ onmessage = function (e) {
   const P = [];
   let bd = 1e9;
   for (const r of R) if (r[1] < bd) { P.push(r); bd = r[1]; }
-  postMessage({ type: 'done', pareto: P, valid: R.length });
+  postMessage({ type: 'trim' });
+  postMessage({ type: 'done', pareto: E.trimPareto(m, op, P), valid: R.length }); /* 남는 재화를 주는 구매 빼기 */
 };
