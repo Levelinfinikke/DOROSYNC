@@ -3244,6 +3244,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   }
   function autoTipOff() { try { localStorage.setItem('dorosync-auto-tip', '1'); } catch (e) { /* 무시 */ } const t = $('#auto-tip'); if (t) t.hidden = true; }
   const kstDate = (ms) => new Date(ms + 9 * 3600000).toISOString().slice(0, 10);
+  window.addEventListener('doroacct', () => { try { const a = acct(), d = a && a.user && a.doc, au = d && d.auto; if (!au || !au.on) return; const l = au.last || {}; if (!(l.code === 'E_OPENID' || !blOpenId(au.openid || ''))) return; const k = 'dorosync-auto-fixnag', t = kstDate(Date.now()); if (localStorage.getItem(k) === t) return; localStorage.setItem(k, t); setTimeout(autoOpen, 1500); } catch (e) { /* 무시 */ } });
   function autoOpen() {
     let m = $('#auto-modal');
     if (!m) {
@@ -3281,10 +3282,12 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
     }
     if (au.on) {
       const l = au.last || {};
+      const bad = l.code === 'E_OPENID' || !blOpenId(au.openid || ''); /* 닉네임·아이디를 넣은 경우: 여기서 바로 고치게 */
       body.innerHTML = '<p class="rapisay">매일 <b>오전 5시~6시</b> 사이에 싱크로 레벨을 기록하고 있습니다, 지휘관.</p>' +
         '<div class="acct-row"><span class="acct-k">상태</span><span><span class="acct-ok">● 기록 중</span></span></div>' +
         '<div class="acct-row"><span class="acct-k">마지막 자동 기록</span><span>' + (l.at ? new Date(l.at).toLocaleString('ko-KR') + (l.ok ? ' · 싱크로 ' + l.s + ' · 전초기지 ' + l.o : ' · <span class="acct-no">실패</span>' + (l.err || l.code ? ' <span class="muted sm">(' + esc(l.err || '') + (l.code ? ' · ' + esc(l.code) : '') + ')</span>' : '')) : '아직 없음 (내일 오전 5~6시에 첫 기록)') + '</span></div>' +
-        (l.at && !l.ok ? '<p class="rapisay">기록에 실패했습니다. 블라블라링크 프로필 공개 설정과 서버를 확인해 주십시오. (' + esc(l.err || '') + ')</p>' : '') +
+        (bad ? '<p class="rapisay acct-no">저장된 프로필 주소가 공유 링크가 아니라서 기록하지 못했습니다, 지휘관. 블라블라링크 프로필의 공유 링크(…?openid=…)를 다시 넣어 주십시오.</p><div class="acct-f"><label>블라블라링크 프로필 주소<input id="auto-url" type="url" placeholder="https://www.blablalink.com/shiftyspad/home?openid=…" autocomplete="off"></label><button type="button" class="primary pad" data-ax="fix">프로필 주소 고치기</button></div>' : '') +
+        (l.at && !l.ok && !bad ? '<p class="rapisay">기록에 실패했습니다. 블라블라링크 프로필 공개 설정과 서버를 확인해 주십시오. (' + esc(l.err || '') + ')</p>' : '') +
         '<div class="auto-acts"><button type="button" class="ghost pad" data-ax="stop">자동 기록 중지</button></div>';
       return;
     }
@@ -3312,6 +3315,13 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
         await a.patch({ auto: { on: true, area, openid: raw, since: Date.now() }, autoDue: kstDate(Date.now()) });
         try { localStorage.setItem('dorosync-bl-area', area); localStorage.setItem('dorosync-bl-purl', raw); } catch (er) { /* 무시 */ }
         autoMsg('설정을 마쳤습니다. 내일 오전 5시~6시부터 매일 기록하겠습니다, 지휘관.'); autoRender(); renderProg();
+      } else if (b.dataset.ax === 'fix') {
+        const raw = $('#auto-url').value.trim(), au = (a.doc && a.doc.auto) || {};
+        if (!blOpenId(raw)) { autoMsg('닉네임이나 아이디가 아니라, 블라블라링크 프로필의 공유 링크(…?openid=…)를 붙여 넣어 주십시오, 지휘관.', 1); return; }
+        b.disabled = true;
+        await a.patch({ auto: { on: true, area: au.area || '83', openid: raw, since: au.since || Date.now() }, autoDue: kstDate(Date.now()) });
+        try { localStorage.setItem('dorosync-bl-purl', raw); } catch (er) { /* 무시 */ }
+        autoMsg('프로필 주소를 고쳤습니다. 내일 오전 5시~6시부터 다시 기록하겠습니다, 지휘관.'); autoRender();
       } else if (b.dataset.ax === 'stop') {
         if (!confirm('매일 자동 기록을 중지할까요? 저장된 프로필 주소는 삭제되고, 지금까지의 기록은 남습니다.')) return;
         await a.patch({ auto: { on: false }, autoDue: '' });
