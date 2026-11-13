@@ -156,7 +156,8 @@
 .gm-rbcnt b{font:400 clamp(34px,8vw,84px)/1 Bungee,'Arial Black',Impact,sans-serif;color:#ffe680;-webkit-text-stroke:.05em #7a4a03;paint-order:stroke fill;text-shadow:0 .04em 0 #b8790c,0 .08em 0 #7a4a03,0 .14em .2em rgba(40,0,60,.6),0 0 .4em rgba(255,230,120,.8);font-variant-numeric:tabular-nums}
 .gm-rbcnt span{font:900 clamp(17px,3.4vw,34px)/1 system-ui,sans-serif;color:#fff;-webkit-text-stroke:.14em #3a145e;paint-order:stroke fill;text-shadow:0 .1em .2em rgba(40,0,60,.6)}
 .gm-rbcnt.done b{animation:gmRbPop .4s cubic-bezier(.3,1.8,.5,1)}
-.gm-rbcut:not(.hit) .gm-rbn{opacity:0}.gm-rbcut .gm-rbch.wait::before{opacity:0!important;animation:none!important}.gm-rbcut .gm-rbch.wait .gm-rbsp{animation:none!important}.gm-rbn{position:absolute;right:4%;top:9%;transform:skewX(-7deg);transition:opacity .2s;z-index:6;display:flex;align-items:baseline;gap:.3em;pointer-events:none}.gm-rbn small{font:900 clamp(16px,3vw,30px)/1 system-ui,sans-serif;color:#fff;-webkit-text-stroke:.14em #3a145e;paint-order:stroke fill}.gm-rbn b{font:400 clamp(44px,9vw,110px)/1 Bungee,'Arial Black',Impact,sans-serif;color:#fff;-webkit-text-stroke:.06em #3a145e;paint-order:stroke fill;text-shadow:0 0 .3em #ff5d8f,0 0 .5em #5ab8ff}.gm-rbn b::before{content:'×';font-size:.6em;margin-right:.05em}.gm-rbn.pop b{animation:gmRbPop .45s cubic-bezier(.3,1.8,.5,1)}.gm-rbcut.leave .gm-rbn{opacity:0;transition:opacity .35s}
+.gm-rbcut:not(.hit) .gm-rbn{opacity:0}.gm-rbsp.c2d{transform-style:flat;animation:none!important}.gm-rbsp.c2d>.gm-rbf{backface-visibility:visible;-webkit-backface-visibility:visible;transform:scale(.925);will-change:transform}.gm-rbsp.c2d>.gm-rbbk{opacity:0}.gm-rbsp.c2d>i.c2f{--dk:.5;will-change:transform}.gm-rbsp.c2d>i.c2b{left:50%;right:auto;top:8.4%;bottom:8.4%;width:0;transform:translateX(-50%);border-radius:0;opacity:0;background:linear-gradient(90deg,rgba(10,0,25,.7),rgba(10,0,25,.05) 45%,rgba(255,255,255,.25) 52%,rgba(10,0,25,.1) 60%,rgba(10,0,25,.75)),linear-gradient(180deg,#ff5d8f,#ffb84d 20%,#f6f05a 38%,#5ef0a0 55%,#5ab8ff 75%,#b47cff);box-shadow:none}
+.gm-rbcut .gm-rbch.wait::before{opacity:0!important;animation:none!important}.gm-rbcut .gm-rbch.wait .gm-rbsp{animation:none!important}.gm-rbn{position:absolute;right:4%;top:9%;transform:skewX(-7deg);transition:opacity .2s;z-index:6;display:flex;align-items:baseline;gap:.3em;pointer-events:none}.gm-rbn small{font:900 clamp(16px,3vw,30px)/1 system-ui,sans-serif;color:#fff;-webkit-text-stroke:.14em #3a145e;paint-order:stroke fill}.gm-rbn b{font:400 clamp(44px,9vw,110px)/1 Bungee,'Arial Black',Impact,sans-serif;color:#fff;-webkit-text-stroke:.06em #3a145e;paint-order:stroke fill;text-shadow:0 0 .3em #ff5d8f,0 0 .5em #5ab8ff}.gm-rbn b::before{content:'×';font-size:.6em;margin-right:.05em}.gm-rbn.pop b{animation:gmRbPop .45s cubic-bezier(.3,1.8,.5,1)}.gm-rbcut.leave .gm-rbn{opacity:0;transition:opacity .35s}
 .gm-rbtap{position:absolute;bottom:6%;left:0;right:0;text-align:center;color:#fff;font-weight:900;font-size:0;letter-spacing:.12em;opacity:0;pointer-events:none;z-index:5}.gm-rbtap::before{content:'- 탭하여 계속 -';font-size:17px;display:inline-block;padding:7px 20px;border-radius:20px;background:rgba(20,8,40,.62);box-shadow:0 0 0 1px rgba(255,255,255,.35),0 4px 18px rgba(60,0,100,.35)}
 .gm-rbcut.ok .gm-rbtap{animation:gmRbBlink 1.1s ease-in-out infinite}
 @keyframes gmRbBg{from{opacity:0}to{opacity:1}}
@@ -912,17 +913,17 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
         const cur = S.cutQ.shift(); if (!cur) { S.cut = false; return; } S.cut = true;
         const ov = document.createElement('div'); ov.className = 'gm-rbcut';
         const T = 'JACKPOT!!!', N = cur.n > 1 ? 3 : 8, IMP = cur.n > 1 ? 1500 : 1000; /* 무지개칩 = 항상 JACKPOT · 여러 개면 날아와 뜸 들인 뒤 첫 칩이 박히는 때 */ let edge = '';
-        for (let i = 0; i < N; i++) { const f = i / (N - 1) - 0.5, sc = 1 - 0.075 * (1 - Math.sqrt(Math.max(0, 1 - Math.pow(2 * f, 2)))), dk = (0.08 + Math.abs(f) * 0.75).toFixed(2); edge += '<i style="transform:translateZ(calc(var(--ct) * ' + f.toFixed(3) + ')) scale(' + sc.toFixed(3) + ');--dk:' + dk + '"></i>'; }
+        for (let i = 0; i < N; i++) { const f = i / (N - 1) - 0.5, sc = 1 - 0.075 * (1 - Math.sqrt(Math.max(0, 1 - Math.pow(2 * f, 2)))), dk = (0.08 + Math.abs(f) * 0.75).toFixed(2); edge += '<i style="transform:translateZ(calc(var(--ct) * ' + f.toFixed(3) + ')) scale(' + sc.toFixed(3) + ');--dk:' + dk + '"></i>'; } edge = '<i class="c2f"></i><i class="c2b"></i>'; /* 두께: 3D 조각 대신 2D 세 겹(뒷면 원 · 둥근 옆띠 · 앞면)을 JS로 돌림(렉 없음) */
         /* 몇 뽑 만의 무지개인지 (이 기계 기준). 뽑기 없이 얻었으면 보유 개수 */
         const pulls = S.stats.n - (S.rbFrom || 0); S.rbFrom = S.stats.n;
         const own = window.doroChips ? window.doroChips.get().r : 0, cntV = pulls > 0 ? pulls : own, cntT = pulls > 0 ? '뽑 만의 무지개!' : '번째 무지개칩!';
         const lay = ['a', 'b', 'c', 'd', 'e', 'f'].map((x) => '<span class="t' + x + '">' + T.split('').map((ch, i) => '<b style="--i:' + i + '">' + ch + '</b>').join('') + '</span>').join('');
         ov.innerHTML = '<canvas class="gm-rbcv"></canvas><div class="gm-rbfl"></div>' +
           '<div class="gm-rbtx">' + lay + '</div>' +
-          '<div class="gm-rbch"><div class="gm-rbsw"></div><div class="gm-rbsw"></div><div class="gm-rbsw"></div><div class="gm-rbtl"><div class="gm-rbsp">' + edge + '<div class="gm-rbf">' + chipSvg('r', 260, true, true) + '</div><div class="gm-rbf gm-rbbk">' + chipSvg('r', 260, false, true) + '</div></div></div></div>' +
+          '<div class="gm-rbch"><div class="gm-rbsw"></div><div class="gm-rbsw"></div><div class="gm-rbsw"></div><div class="gm-rbtl"><div class="gm-rbsp c2d">' + edge + '<div class="gm-rbf">' + chipSvg('r', 260, true, true) + '</div><div class="gm-rbf gm-rbbk">' + chipSvg('r', 260, false, true) + '</div></div></div></div>' +
           '<div class="gm-rbcnt"><b>0</b><span>' + cntT + '</span></div><div class="gm-rbtap">- 탭하여 계속 -</div>' + (cur.n > 1 ? '<div class="gm-rbn"><b>1</b></div>' : '');
         (document.fullscreenElement || document.body).appendChild(ov);
-        const bg = rbBg(ov.querySelector('canvas'), IMP), stop = bg.stop, ch = ov.querySelector('.gm-rbch'), fr = ch.getBoundingClientRect(), fx = fr.left + fr.width / 2, fy = fr.top + fr.height / 2;
+        coinSpin(ov); const bg = rbBg(ov.querySelector('canvas'), IMP), stop = bg.stop, ch = ov.querySelector('.gm-rbch'), fr = ch.getBoundingClientRect(), fx = fr.left + fr.width / 2, fy = fr.top + fr.height / 2;
         /* 칩: 제자리에서 가운데로 날아와 → 크게 부풀었다가 → 쿵! 하고 작아지며 멈춤 */
         const dx = cur.cx - fx, dy = cur.cy - fy, s0 = Math.max(0.05, cur.size / fr.width);
         if (cur.n === 1) ch.animate([
@@ -949,7 +950,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
           ch.style.visibility = 'hidden'; const gap = Math.min(fr.width * 1.04, (innerWidth * 0.92) / cur.n), k = Math.min(1, gap / (fr.width * 1.04)), GAPS = [], host2 = ov;
           let tt = IMP; for (let j = 1; j <= cur.n; j++) { GAPS.push(tt); tt += Math.max(110, Math.round(560 * Math.pow(0.74, j - 1))); } HEND = GAPS[GAPS.length - 1];
           for (let j = 0; j < cur.n; j++) {
-            const el = document.createElement('div'); el.className = 'gm-rbch wait'; el.innerHTML = '<div class="gm-rbtl"><div class="gm-rbsp">' + edge + '<div class="gm-rbf">' + chipSvg('r', 260, true, true) + '</div><div class="gm-rbf gm-rbbk">' + chipSvg('r', 260, false, true) + '</div></div></div>'; /* 복제하지 않고 칩마다 새로 그림(복제하면 SVG id가 겹쳐 무늬가 사라짐) */ el.style.zIndex = '7'; el.style.position = 'fixed'; el.style.left = fr.left + 'px'; el.style.top = fr.top + 'px'; el.style.width = fr.width + 'px'; el.style.height = fr.height + 'px'; el.style.margin = '0'; host2.appendChild(el); RCH.push(el);
+            const el = document.createElement('div'); el.className = 'gm-rbch wait'; el.innerHTML = '<div class="gm-rbtl"><div class="gm-rbsp c2d">' + edge + '<div class="gm-rbf">' + chipSvg('r', 260, true, true) + '</div><div class="gm-rbf gm-rbbk">' + chipSvg('r', 260, false, true) + '</div></div></div>'; /* 복제하지 않고 칩마다 새로 그림(복제하면 SVG id가 겹쳐 무늬가 사라짐) */ el.style.zIndex = '7'; el.style.position = 'fixed'; el.style.left = fr.left + 'px'; el.style.top = fr.top + 'px'; el.style.width = fr.width + 'px'; el.style.height = fr.height + 'px'; el.style.margin = '0'; host2.appendChild(el); RCH.push(el);
             const ox = (j - (cur.n - 1) / 2) * gap, dx0 = cur.cx - fx, dy0 = cur.cy - fy, hs = k * 0.82, hy = -fr.height * 0.04, SL = 420;
             el.animate([{ transform: 'translate(' + dx0 + 'px,' + dy0 + 'px) scale(' + s0 + ') rotate(-25deg)' }, { transform: 'translate(' + ox + 'px,' + hy + 'px) scale(' + hs + ') rotate(0deg)' }], { duration: 650, delay: j * 40, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'both' });
             el.animate([{ transform: 'translate(' + ox + 'px,' + hy + 'px) scale(' + hs + ')' }, { transform: 'translate(' + ox + 'px,' + (hy - 8) + 'px) scale(' + hs * 1.04 + ')' }, { transform: 'translate(' + ox + 'px,' + hy + 'px) scale(' + hs + ')' }], { duration: 420, delay: 650 + j * 40, iterations: Infinity, easing: 'ease-in-out', composite: 'replace' }).id = 'bob'; /* 뜸: 둥실 */
@@ -987,6 +988,23 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
       next();
     }
     /* 컷인 배경: 무지개 방사 + 빛줄기 + 가운데서 퍼져 나오는 꽃·반짝이 */
+    /* 2D로 그리는 두꺼운 칩: 앞·뒷면은 가로로 줄이고(cos), 옆띠는 두 면 사이(sin)를 이어 둥근 두께처럼 보이게. 회전은 예전 gmRbRot과 같은 박자 */
+    function coinSpin(ov) {
+      const ez = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+      const ang = (p) => { p -= Math.floor(p); if (p < 0.25) return ez(p / 0.25) * Math.PI; if (p < 0.5) return Math.PI; if (p < 0.75) return Math.PI + ez((p - 0.5) / 0.25) * Math.PI; return 0; };
+      const tick = (now) => { if (!ov.isConnected) return; requestAnimationFrame(tick);
+        ov.querySelectorAll('.gm-rbsp.c2d').forEach((sp) => {
+          const on = ov.classList.contains('hit') && !sp.closest('.wait'); if (!on) sp._t0 = 0; else if (!sp._t0) sp._t0 = now + 1600;
+          const th = on && now > sp._t0 ? ang((now - sp._t0) / 4000) : 0; if (sp._th === th && sp._d) return; sp._th = th;
+          if (!sp._d) { sp._d = { f: sp.querySelector('.gm-rbf:not(.gm-rbbk)'), b: sp.querySelector('.gm-rbbk'), far: sp.querySelector('.c2f'), band: sp.querySelector('.c2b'), w: sp.offsetWidth || 260 }; }
+          const D = sp._d, c = Math.cos(th), s = Math.sin(th), d = D.w * 0.12, k = 0.925, hx = (s * d) / 2;
+          D.f.style.transform = 'translateX(' + hx.toFixed(2) + 'px) scale(' + (c * k).toFixed(4) + ',' + k + ')'; D.f.style.opacity = c >= 0 ? '1' : '0';
+          D.b.style.transform = 'translateX(' + (-hx).toFixed(2) + 'px) scale(' + (-c * k).toFixed(4) + ',' + k + ')'; D.b.style.opacity = c < 0 ? '1' : '0';
+          D.far.style.transform = 'translateX(' + (c >= 0 ? -hx : hx).toFixed(2) + 'px) scale(' + (Math.abs(c) * k * 0.985).toFixed(4) + ',' + (k * 0.985).toFixed(4) + ')';
+          D.band.style.width = Math.max(0, Math.abs(s) * d).toFixed(2) + 'px'; D.band.style.opacity = Math.abs(s) > 0.02 ? '1' : '0';
+        }); };
+      requestAnimationFrame(tick);
+    }
     function rbBg(cv, th) {
       const c = cv.getContext('2d'); let w = 0, h = 0, dpr = 1, raf = 0, last = performance.now(), t = 0, boost = 0; const fl = [], ln = [], dots = [], pt = [];
       let RG = null; const fit = () => { dpr = Math.min(0.75, (window.devicePixelRatio || 1) * 0.6); w = cv.clientWidth; h = cv.clientHeight; cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); RG = null; }; /* 배경은 흐릿해도 되니 낮은 해상도로(렉 방지) */

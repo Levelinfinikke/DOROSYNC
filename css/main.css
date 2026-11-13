@@ -1639,3 +1639,5 @@ button:not(.tr-clr):not(.tabs button):not(.tr-f):not(.pk-t):not(.pk-r){border-ra
 /* 목록 머리줄을 좌우 여백까지 덮음(둥근 모서리 쪽으로 아래 줄이 비쳐 튀어나오던 것) */
 #t-pareto thead th:first-child{box-shadow:-12px 0 0 var(--card),-12px 1px 0 var(--line),0 1px 0 var(--line)}
 #t-pareto thead th:last-child{box-shadow:12px 0 0 var(--card),12px 1px 0 var(--line),0 1px 0 var(--line)}
+/* 목록 머리줄을 조금 더 길게(좌상단으로 아래 줄이 튀어나와 보이던 것 가림) */
+#t-pareto thead th{padding-top:11px !important;padding-bottom:11px !important}
