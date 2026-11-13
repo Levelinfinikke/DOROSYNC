@@ -2064,12 +2064,12 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     list.forEach((x) => { const p = st.pk[x.j], g = E.periodOf(p.name); (by[GR.indexOf(g) >= 0 ? g : '기타'] = by[GR.indexOf(g) >= 0 ? g : '기타'] || []).push(x); });
     let body = '';
     GR.concat(['기타']).forEach((g) => { const L = by[g]; if (!L) return;
-      body += '<div class="pkg"><div class="pkgh">' + g + '<b>' + L.length + '</b></div>' + L.map((x) => { const p = st.pk[x.j], c = TR && TR.cnt && TR.cnt[x.j] != null ? TR.cnt[x.j] : null; return row(p.name, x.k >= 0 ? RES[x.k] : '', x.forced ? '<em class="req">필수</em>' : '', c, p.price, 0); }).join('') + '</div>'; });
+      body += '<div class="pkg"><div class="pkgh">' + g + '</div>' + L.map((x) => { const p = st.pk[x.j], c = TR && TR.cnt && TR.cnt[x.j] != null ? TR.cnt[x.j] : null; return row(p.name, x.k >= 0 ? RES[x.k] : '', x.forced ? '<em class="req">필수</em>' : '', c, p.price, 0); }).join('') + '</div>'; });
     if (!list.length) body = '<div class="pkg"><div class="pknone">구매 없음 (일일 수급만)</div></div>';
     const eu = ((OPT && OPT.snap && OPT.snap.etc) || st.etc || []).filter((e) => e.use);
-    if (eu.length) body += '<div class="pkg"><div class="pkgh">기타 · 필수<b>' + eu.length + '</b></div>' + eu.map((e) => { const i = M && M.Oth ? M.Oth.findIndex((o) => o.name === e.name) : -1, c = i >= 0 && TR && TR.ocnt ? TR.ocnt[i] : null; return row(e.name, '', '', c, e.price, 0); }).join('') + '</div>';
+    if (eu.length) body += '<div class="pkg"><div class="pkgh">기타 · 필수</div>' + eu.map((e) => { const i = M && M.Oth ? M.Oth.findIndex((o) => o.name === e.name) : -1, c = i >= 0 && TR && TR.ocnt ? TR.ocnt[i] : null; return row(e.name, '', '', c, e.price, 0); }).join('') + '</div>';
     const nCut = Object.keys(cm).length, tot = TR && TR.bill != null ? TR.bill : null;
-    return '<tr class="pkdrop"><td colspan="4"><div class="pkd' + (open ? ' open' : '') + '"><div><div class="pkin">' + body + '</div><div class="pkok">' + (nCut ? '<span class="pktrim">남는 재화를 주던 구매 ' + nCut + '개 패키지에서 뺌</span>' : '<span></span>') + (tot != null ? '<span class="pktot">총 ' + won(tot) + '</span>' : '') + '<button type="button" class="pkdec"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M2.5 8.5l3.5 3.5 7.5-8" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>결정</button></div></div></div></td></tr>';
+    return '<tr class="pkdrop"><td colspan="4"><div class="pkd' + (open ? ' open' : '') + '"><div><div class="pkin">' + body + '</div><div class="pkok">' + '<span></span>' + (tot != null ? '<span class="pktot">총 ' + won(tot) + '</span>' : '') + '<button type="button" class="pkdec"><svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M2.5 8.5l3.5 3.5 7.5-8" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>결정</button></div></div></div></td></tr>';
   }
   function toggleDrop(i) {
     const tb = $('#t-pareto'); if (!tb) return;

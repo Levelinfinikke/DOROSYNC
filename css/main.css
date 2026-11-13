@@ -1633,3 +1633,6 @@ button:not(.tr-clr):not(.tabs button):not(.tr-f):not(.pk-t):not(.pk-r){border-ra
 .pkdec{display:inline-flex;align-items:center;gap:5px;font:inherit;font-size:12.5px;font-weight:800;letter-spacing:1px;padding:4px 16px;border:1px solid var(--accent);border-radius:6px;background:var(--card);color:var(--accent-text);cursor:pointer}
 .pkdec:hover{background:var(--accent);color:var(--accent-ink)}
 @media (max-width:560px){.pkin{grid-template-columns:1fr}.pkr{grid-template-columns:minmax(0,1fr) auto 3.2em 5.2em}}
+/* 패키지 조합 목록: 머리줄 위 틈 없애기(스크롤 시 아래 줄이 비쳐 보이던 것) */
+:root .optgrid .rightcol .tscroll:has(#t-pareto){padding-top:0!important}
+#t-pareto thead th{top:0;box-shadow:0 1px 0 var(--line)}
