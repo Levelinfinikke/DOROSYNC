@@ -3555,12 +3555,12 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') $('#nk-modal').hidden = true; });
 
   /* ---------- 탭 ---------- */
-  const GRP = { main: 'main', daily: 'main', pkg: 'main', inc: 'main', rules: 'main', boss: 'boss', data: 'boss', ol: 'ol', olrules: 'ol', jw: 'jw', jwrules: 'jw', gc: 'gc', gcm: 'gc', gccs: 'gc', gcco: 'gc', gcdata: 'gc', gctier: 'gc', gcrules: 'gc', me: 'me' }; let lastGrp = { main: 'main', boss: 'boss', ol: 'ol', jw: 'jw', gc: 'gcm', me: 'me' };
+  const GRP = { main: 'main', daily: 'main', pkg: 'main', inc: 'main', rules: 'main', boss: 'boss', data: 'boss', ol: 'ol', olrules: 'ol', jw: 'jw', jwrules: 'jw', gc: 'gc', gcm: 'gc', gccs: 'gc', gcco: 'gc', gcdata: 'gc', gctier: 'gc', gcrules: 'gc', me: 'me', dex: 'dex' }; let lastGrp = { main: 'main', boss: 'boss', ol: 'ol', jw: 'jw', gc: 'gcm', me: 'me' };
   const OLV = { ol: 'calc', olrules: 'rules' };
   let curGrp = 'main';
   function previewSub(grp) {
     $$('#subtabs button').forEach((b) => { b.hidden = b.dataset.grp !== grp; });
-    $('#subtabs').classList.toggle('show', grp !== 'me');
+    $('#subtabs').classList.toggle('show', grp !== 'me' && grp !== 'dex');
     subAlign(grp);
   }
   /* 하위 탭을 상위 탭 바로 아래 가운데에 맞춤 */
@@ -3589,7 +3589,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
     if (lastGrp[grp]) lastGrp[grp] = name;
     $$('#tabs button').forEach((b) => b.classList.toggle('on', b.dataset.tab === grp));
     $$('#subtabs button').forEach((b) => { b.classList.toggle('on', b.dataset.tab === name); b.hidden = b.dataset.grp !== grp; });
-    $('#subtabs').classList.toggle('show', grp !== 'me');
+    $('#subtabs').classList.toggle('show', grp !== 'me' && grp !== 'dex');
     curGrp = grp; subAlign(grp);
     $$('.tab').forEach((s) => s.classList.toggle('on', s.id === 'tab-' + (OLV[name] ? 'ol' : name)));
     if (name === 'gcm') gmMount();
@@ -3598,6 +3598,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
     if (name === 'data') renderData();
     if (name === 'me') { renderMe(); try { invCard(); } catch (e) { /* 초기화 전 */ } }
     if (name === 'jw') renderJw();
+    if (name === 'dex') renderDex();
     if (name === 'jwrules') renderJwRules();
     if (name === 'gc') renderGc();
     if (name === 'gcrules') renderGcRules();
@@ -4307,6 +4308,63 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   const nkNorm = (x) => String(x).replace(/[\s:·.()]/g, '');
   const NK_CODE = (() => { const m = {}; Object.keys(BLN).forEach((k) => { m[nkNorm(BLN[k])] = k; }); Object.assign(m, { [nkNorm('메어리 : 베이 갓데스')]: '5064', [nkNorm('리틀 머메이드')]: '5137', [nkNorm('아르카나 : 포츈 메이트')]: '5167', [nkNorm('솔져 E.G.')]: '1013', [nkNorm('솔져 F.A.')]: '1014', [nkNorm('솔져 O.W.')]: '1025', [nkNorm('맥스웰 : 오디너리 미케닉')]: '5178', [nkNorm('브래디')]: '5135', [nkNorm('iDoll 플라워')]: '1017', [nkNorm('iDoll 오션')]: '1018', [nkNorm('iDoll 썬')]: '1023', [nkNorm('사쿠라')]: '1012' }); return m; })();
   const nkCode = (name) => NK_CODE[nkNorm(GC_AL[name] || name)] || NK_CODE[nkNorm(name)] || '';
+  /* ===== 도감 (관리자 전용·미공개): 니케마다 0~11장. 1장 명함, 4장 풀돌(★3), 11장 풀코강(코강 7) ===== */
+  const DEX_ADMIN = ['bAdQg5xtIsbCntzxuEjBoSB93T22', 'PdkjvEMLcaR76Ie7h13N6cnpDvT2'], DEX_KEY = 'dorosync-dex', DEX_MAX = 11;
+  const DEX_ELK = { 작: 'Fire', 수: 'Water', 전: 'Electronic', 풍: 'Wind', 철: 'Iron' }, DEX_BU = ['', 'I', 'II', 'III'];
+  const dexOk = () => { const a = window.doroAccount, u = a && a.user; return !!(u && DEX_ADMIN.includes(u.uid)) || !/github\.io$/.test(location.hostname); }; /* 배포 사이트에선 관리자만, 미리보기·로컬은 항상 */
+  let dexSt = null, dexF = { r: 'SSR', c: '', t: '', own: 0, q: '' };
+  const dexLoad = () => { if (dexSt) return dexSt; try { dexSt = JSON.parse(localStorage.getItem(DEX_KEY)) || {}; } catch (e) { dexSt = {}; } if (!dexSt.n) dexSt.n = {}; return dexSt; };
+  const dexSave = () => { try { localStorage.setItem(DEX_KEY, JSON.stringify(dexSt)); } catch (e) { /* 저장 공간 없음 */ } };
+  const dexCnt = (n) => Math.max(0, Math.min(DEX_MAX, dexLoad().n[n] || 0));
+  const dexLv = (c) => ({ g: c > 0 ? Math.min(3, c - 1) : 0, k: Math.max(0, Math.min(7, c - 4)) }); /* 장수 → 돌파·코강 */
+  const dexStage = (c) => (!c ? '미보유' : c === 1 ? '명함' : c < 4 ? (c - 1) + '돌파' : c === 4 ? '풀돌' : c < DEX_MAX ? '코강 ' + (c - 4) : '풀코강');
+  const dexList = () => { const seen = {}; return GC_NK.filter((r) => { if (seen[r[0]]) return false; seen[r[0]] = 1; return true; }); };
+  function dexGate() {
+    const b = document.querySelector('#tabs button[data-tab="dex"]'); if (!b) return; const on = dexOk();
+    if (b.hidden === on) b.hidden = !on;
+    if (!on && curGrp === 'dex') showTab('main');
+  }
+  function dexAdd(n, d) { const s = dexLoad(), c = Math.max(0, Math.min(DEX_MAX, (s.n[n] || 0) + d)); if (c) s.n[n] = c; else delete s.n[n]; dexSave(); return c; }
+  window.doroDex = { add: (n, k) => dexAdd(n, k || 1), count: dexCnt, list: () => dexList().map((r) => r[0]) }; /* 이후 게임(복권·플링코·2048·팩·포커)에서 당첨 시 1장씩 지급 */
+  function dexCard(r, tiers) {
+    const n = r[0], c = dexCnt(n), lv = dexLv(c), k = nkCode(n), el = BL_EL[DEX_ELK[r[3]]], tr = tiers[n] || '';
+    const ico = '<span class="nk-top">' + (el ? '<span class="nk-ic" style="color:' + el[0] + '"><svg viewBox="0 0 24 24"><path d="' + el[1] + '"/></svg></span>' : '') + (r[5] ? '<span class="nk-ic">' + DEX_BU[r[5]] + '</span>' : '') + '</span>';
+    const bd = c ? '<span class="nk-bd"><img class="nk-lb" alt="' + dexStage(c) + '" src="' + blLbImg(lv.g, lv.k).src + '"></span>' : '';
+    let seg = ''; for (let i = 1; i <= DEX_MAX; i++) seg += '<i class="' + (i <= c ? (i === 1 ? 'a' : i <= 4 ? 'b' : 'c') : '') + '"></i>';
+    return '<div class="nk dx-c' + (c ? '' : ' dx-no') + (c === DEX_MAX ? ' dx-max' : '') + '" data-dx="' + esc(n) + '"><div class="nk-pic">' + (k ? '<img loading="lazy" alt="" src="' + BL_IMG(k) + '" onerror="this.remove()">' : '') + ico + bd +
+      (tr ? '<span class="dx-tr dx-t' + esc(tr) + '">' + esc(tr) + '</span>' : '') + '</div><div class="nk-in"><b class="nk-nm">' + esc(n) + '</b>' +
+      '<div class="dx-seg" title="1장 명함 · 4장 풀돌 · 11장 풀코강">' + seg + '</div>' +
+      '<div class="nk-ft"><span class="dx-st">' + dexStage(c) + '</span><span class="dx-ctl"><button type="button" class="ghost sm" data-dxd="-1" aria-label="1장 빼기">−</button><b>' + c + '<small>/' + DEX_MAX + '</small></b><button type="button" class="ghost sm" data-dxd="1" aria-label="1장 더하기">+</button></span></div></div></div>';
+  }
+  function renderDex() {
+    const root = $('#tab-dex'); if (!root) return; if (!dexOk()) { root.innerHTML = ''; return; }
+    const T = tierData(), tiers = (T && T.boss) || {}, all = dexList(), f = dexF, TORD = ['SSS', 'SS', 'S', 'A', 'B', 'C', 'D'];
+    const pool = all.filter((r) => r[2] === f.r), have = pool.filter((r) => dexCnt(r[0]) > 0);
+    const full = pool.filter((r) => dexCnt(r[0]) >= 4).length, max = pool.filter((r) => dexCnt(r[0]) >= DEX_MAX).length, cards = pool.reduce((a, r) => a + dexCnt(r[0]), 0);
+    let L = pool.filter((r) => (!f.c || r[1] === f.c) && (!f.t || (tiers[r[0]] || '-') === f.t) && (!f.own || dexCnt(r[0]) > 0) && (!f.q || r[0].replace(/\s/g, '').includes(f.q.replace(/\s/g, ''))));
+    L = L.slice().sort((a, b) => { const ta = TORD.indexOf(tiers[a[0]]), tb = TORD.indexOf(tiers[b[0]]); return (ta < 0 ? 99 : ta) - (tb < 0 ? 99 : tb) || dexCnt(b[0]) - dexCnt(a[0]) || a[0].localeCompare(b[0]); });
+    const corps = [...new Set(pool.map((r) => r[1]))], ts = f.r === 'SSR' ? TORD.filter((t) => pool.some((r) => tiers[r[0]] === t)) : [];
+    const seg = (key, vals, lab) => '<div class="gm-seg dx-f">' + vals.map((v, i) => '<button type="button" data-dxf="' + key + '" data-v="' + esc(v) + '"' + (String(f[key]) === String(v) ? ' class="on"' : '') + '>' + esc(lab ? lab[i] : v) + '</button>').join('') + '</div>';
+    const pct = pool.length ? Math.round(cards / (pool.length * DEX_MAX) * 1000) / 10 : 0;
+    root.innerHTML = '<div class="card dx-hd"><div class="row-ctl sp"><h2 class="inline dx-h">' + window.doroChipSvg('b', 26) + '도감 <span class="muted sm">관리자 전용 · 미공개</span></h2></div>' +
+      '<div class="dx-kpi"><div class="dx-k"><div class="l">수집</div><b class="num">' + have.length + '<small>/' + pool.length + '</small></b></div><div class="dx-k"><div class="l">풀돌 이상</div><b class="num">' + full + '</b></div><div class="dx-k"><div class="l">풀코강</div><b class="num">' + max + '</b></div><div class="dx-k"><div class="l">카드 · 완성도</div><b class="num">' + fmt(cards) + '<small> · ' + pct + '%</small></b></div></div>' +
+      '<div class="dx-bar"><i style="width:' + pct + '%"></i></div>' +
+      '<p class="muted sm dx-leg"><i class="a"></i>1장 명함 <i class="b"></i>+3장 풀돌(★3) <i class="c"></i>+7장 풀코강 — 게임에서 당첨될 때마다 1장. 지금은 테스트용으로 ± 버튼으로 조정합니다.</p>' +
+      '<div class="dx-fs">' + seg('r', ['SSR', 'SR', 'R']) + seg('c', [''].concat(corps), ['전체 기업'].concat(corps)) + (ts.length ? seg('t', [''].concat(ts), ['전체 티어'].concat(ts)) : '') +
+      '<label class="chk"><input type="checkbox" id="dx-own"' + (f.own ? ' checked' : '') + '> 보유만</label><input type="search" id="dx-q" placeholder="이름 검색" value="' + esc(f.q) + '"></div></div>' +
+      '<div class="megrid dx-grid">' + (L.length ? L.map((r) => dexCard(r, tiers)).join('') : '<p class="muted">해당하는 니케가 없습니다.</p>') + '</div>';
+  }
+  (() => {
+    const root = $('#tab-dex'); if (!root) return;
+    root.addEventListener('click', (e) => {
+      const fb = e.target.closest('[data-dxf]'); if (fb) { const k = fb.dataset.dxf; dexF[k] = fb.dataset.v; if (k === 'r') { dexF.c = ''; dexF.t = ''; } renderDex(); return; }
+      const d = e.target.closest('[data-dxd]'); if (d) { const c = d.closest('[data-dx]'); dexAdd(c.dataset.dx, +d.dataset.dxd); renderDex(); }
+    });
+    root.addEventListener('change', (e) => { if (e.target.id === 'dx-own') { dexF.own = e.target.checked ? 1 : 0; renderDex(); } });
+    root.addEventListener('input', (e) => { if (e.target.id === 'dx-q') { dexF.q = e.target.value; clearTimeout(renderDex.t); renderDex.t = setTimeout(() => { renderDex(); const q = $('#dx-q'); if (q) { q.focus(); q.setSelectionRange(q.value.length, q.value.length); } }, 200); } });
+    { const tb = document.querySelector('#tabs button[data-tab="dex"]'); if (tb && window.doroChipSvg) tb.innerHTML = window.doroChipSvg('b', 18, false, true) + '도감'; }
+    window.addEventListener('doroacct', dexGate); setTimeout(dexGate, 0); setInterval(dexGate, 5000);
+  })();
   /* 가챠 머신: 독립 모듈(DoroGacha)을 실제 풀·보유 재화와 연결 */
   let gmInst = null; const gmStock = { jw: 0, pick: 0 };
   function gmStockSync() { let v = null; try { const c = jwCalc(); v = c.at(c.today).v; } catch (e) { /* 쥬얼 탭 미입력 */ } const jw = v ? Math.max(0, Math.floor(v.jw || 0)) : 0, pk = v ? Math.max(0, Math.floor(v.pick || 0)) : 0; if (jw < 300 && pk < 1) { gmStock.jw = 30000; gmStock.pick = 100; } else { gmStock.jw = jw; gmStock.pick = pk; } }
