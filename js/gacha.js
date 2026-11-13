@@ -833,16 +833,17 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     function edgeLoop(now) {
       const el = edgeEl(), k = Math.max(0, edgeNow());
       if (k <= 0.002 && edgeK <= 0) { el.remove(); edgeRaf = 0; edgeM = null; return; }
-      const W2 = innerWidth, H2 = innerHeight, d = Math.min(1.5, window.devicePixelRatio || 1); if (el.width !== Math.round(W2 * d) || el.height !== Math.round(H2 * d)) { el.width = Math.round(W2 * d); el.height = Math.round(H2 * d); }
-      const c = el.getContext('2d'); c.setTransform(d, 0, 0, d, 0, 0); c.clearRect(0, 0, W2, H2);
-      const wd = (14 + 150 * k) * (1 + 0.12 * k * Math.sin(now / 90)), al = Math.min(1, 0.25 + k * 1.1), h0 = now / 8, per = 2 * (W2 + H2), N = 120, LY = 16, li = 50 + 18 * Math.max(0, k - 0.4);
-      const pt = (u, ins) => { const w = W2 - 2 * ins, h = H2 - 2 * ins; let s2 = u * 2 * (w + h); if (s2 < w) return [ins + s2, ins]; s2 -= w; if (s2 < h) return [W2 - ins, ins + s2]; s2 -= h; if (s2 < w) return [W2 - ins - s2, H2 - ins]; s2 -= w; return [ins, H2 - ins - s2]; };
-      c.lineCap = 'butt';
-      for (let L = 0; L < LY; L++) { const ins = wd * (L + 0.5) / LY, a = al * Math.pow(1 - L / LY, 1.6); if (a < 0.01) continue; c.globalAlpha = a; c.lineWidth = wd / LY + 0.8; const w = W2 - 2 * ins, h = H2 - 2 * ins, P2 = 2 * (w + h);
-        let u = 0; [[ins, ins, W2 - ins, ins, w], [W2 - ins, ins, W2 - ins, H2 - ins, h], [W2 - ins, H2 - ins, ins, H2 - ins, w], [ins, H2 - ins, ins, ins, h]].forEach(([xa, ya, xb, yb, len]) => { /* 변마다 그라데이션 하나: 둘레를 따라 색이 이어짐 */
-          const g = c.createLinearGradient(xa, ya, xb, yb), u0 = u / P2, du = len / P2; for (let q = 0; q <= 8; q++) g.addColorStop(q / 8, 'hsl(' + ((h0 + (u0 + du * q / 8) * 360) % 360).toFixed(1) + ',100%,' + li.toFixed(0) + '%)'); u += len;
-          const ex = (xb - xa) / (len || 1), ey = (yb - ya) / (len || 1), hw = c.lineWidth / 2; c.strokeStyle = g; c.beginPath(); c.moveTo(xa - ex * hw, ya - ey * hw); c.lineTo(xb + ex * hw * 0, yb + ey * hw * 0); c.stroke(); }); }
-      c.globalAlpha = 1; edgeRaf = requestAnimationFrame(edgeLoop); /* 둘레를 따라 색이 이어져 꼭짓점에서도 부드러움 */
+      const RS = 0.5, W2 = innerWidth, H2 = innerHeight, cw = Math.max(2, Math.round(W2 * RS)), chh = Math.max(2, Math.round(H2 * RS)); if (el.width !== cw || el.height !== chh) { el.width = cw; el.height = chh; }
+      const c = el.getContext('2d'); c.setTransform(RS, 0, 0, RS, 0, 0); c.globalCompositeOperation = 'source-over'; c.globalAlpha = 1; c.clearRect(0, 0, W2, H2);
+      const wd = (14 + 150 * k) * (1 + 0.12 * k * Math.sin(now / 90)), al = Math.min(1, 0.25 + k * 1.1), h0 = now / 8, li = 52 + 16 * Math.max(0, k - 0.4), P2 = 2 * (W2 + H2);
+      let u = 0; c.lineCap = 'butt'; c.lineWidth = wd * 2; /* 무지개 띠: 둘레를 따라 색이 이어짐 */
+      [[0, 0, W2, 0, W2], [W2, 0, W2, H2, H2], [W2, H2, 0, H2, W2], [0, H2, 0, 0, H2]].forEach(([xa, ya, xb, yb, len]) => { const g = c.createLinearGradient(xa, ya, xb, yb), u0 = u / P2, du = len / P2; for (let q = 0; q <= 10; q++) g.addColorStop(q / 10, 'hsl(' + ((h0 + (u0 + du * q / 10) * 360) % 360).toFixed(1) + ',100%,' + li.toFixed(0) + '%)'); u += len; const ex = (xb - xa) / len, ey = (yb - ya) / len; c.strokeStyle = g; c.beginPath(); c.moveTo(xa - ex * wd, ya - ey * wd); c.lineTo(xb + ex * wd, yb + ey * wd); c.stroke(); });
+      /* 안쪽으로 부드럽게 사라지는 투명도(계단 없음) */
+      const mk = edgeLoop.mk || (edgeLoop.mk = document.createElement('canvas')); if (mk.width !== cw || mk.height !== chh) { mk.width = cw; mk.height = chh; } const m = mk.getContext('2d'); m.setTransform(RS, 0, 0, RS, 0, 0); m.globalCompositeOperation = 'source-over'; m.clearRect(0, 0, W2, H2); m.globalCompositeOperation = 'lighter';
+      const fade = (x0, y0, x1, y1) => { const g = m.createLinearGradient(x0, y0, x1, y1); [[0, 1], [0.15, 0.82], [0.35, 0.5], [0.6, 0.2], [0.82, 0.05], [1, 0]].forEach(([o2, a2]) => g.addColorStop(o2, 'rgba(0,0,0,' + (a2 * al).toFixed(3) + ')')); return g; };
+      m.fillStyle = fade(0, 0, 0, wd); m.fillRect(0, 0, W2, wd); m.fillStyle = fade(0, H2, 0, H2 - wd); m.fillRect(0, H2 - wd, W2, wd); m.fillStyle = fade(0, 0, wd, 0); m.fillRect(0, 0, wd, H2); m.fillStyle = fade(W2, 0, W2 - wd, 0); m.fillRect(W2 - wd, 0, wd, H2);
+      c.setTransform(1, 0, 0, 1, 0, 0); c.globalCompositeOperation = 'destination-in'; c.drawImage(mk, 0, 0); c.globalCompositeOperation = 'source-over';
+      edgeRaf = requestAnimationFrame(edgeLoop);
     }
     function edgeTo(k, ms, col) { const el0 = edgeEl(); if (col) el0.dataset.c = col; else if (k > 0 && edgeK <= 0) delete el0.dataset.c; edgeM = { k0: edgeNow(), k1: k, t0: performance.now(), ms: Math.max(16, ms) }; edgeK = k; if (!edgeRaf) edgeRaf = requestAnimationFrame(edgeLoop); }
     const edgeSet = (k) => edgeTo(k, 16);
@@ -949,17 +950,18 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
           let tt = IMP; for (let j = 1; j <= cur.n; j++) { GAPS.push(tt); tt += Math.max(110, Math.round(560 * Math.pow(0.74, j - 1))); } HEND = GAPS[GAPS.length - 1];
           for (let j = 0; j < cur.n; j++) {
             const el = ch.cloneNode(true); el.style.visibility = 'visible'; el.style.position = 'fixed'; el.style.left = fr.left + 'px'; el.style.top = fr.top + 'px'; el.style.width = fr.width + 'px'; el.style.height = fr.height + 'px'; el.style.margin = '0'; host2.appendChild(el); RCH.push(el);
-            const ox = (j - (cur.n - 1) / 2) * gap, dx0 = cur.cx - fx, dy0 = cur.cy - fy, hs = k * 0.62, hy = -fr.height * 0.18;
+            const ox = (j - (cur.n - 1) / 2) * gap, dx0 = cur.cx - fx, dy0 = cur.cy - fy, hs = k * 0.82, hy = -fr.height * 0.04, SL = 420;
             el.animate([{ transform: 'translate(' + dx0 + 'px,' + dy0 + 'px) scale(' + s0 + ') rotate(-25deg)' }, { transform: 'translate(' + ox + 'px,' + hy + 'px) scale(' + hs + ') rotate(0deg)' }], { duration: 650, delay: j * 40, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'both' });
             el.animate([{ transform: 'translate(' + ox + 'px,' + hy + 'px) scale(' + hs + ')' }, { transform: 'translate(' + ox + 'px,' + (hy - 8) + 'px) scale(' + hs * 1.04 + ')' }, { transform: 'translate(' + ox + 'px,' + hy + 'px) scale(' + hs + ')' }], { duration: 420, delay: 650 + j * 40, iterations: Infinity, easing: 'ease-in-out', composite: 'replace' }).id = 'bob'; /* 뜸: 둥실 */
-            setTimeout(() => { if (!ov.isConnected) return; el.getAnimations().forEach((a) => a.cancel());
-              el.animate([{ transform: 'translate(' + ox + 'px,' + hy + 'px) scale(' + hs + ')', easing: 'cubic-bezier(.75,0,1,.6)' }, { transform: 'translate(' + ox + 'px,0) scale(' + k * 1.3 + ')', offset: 0.55 }, { transform: 'translate(' + ox + 'px,0) scale(' + k + ')' }], { duration: 200, fill: 'both' });
+            setTimeout(() => { if (!ov.isConnected) return; el.getAnimations().forEach((a) => a.cancel()); /* 기존 연출처럼: 크게 부풀어 떠올랐다가 → 쿵! 떨어지며 박힘 */
+              el.animate([{ transform: 'translate(' + ox + 'px,' + hy + 'px) scale(' + hs + ') rotate(0deg)', easing: 'linear' }, { transform: 'translate(' + ox + 'px,-2%) scale(' + k * 1.85 + ') rotate(4deg)', offset: 0.72, easing: 'linear' }, { transform: 'translate(' + ox + 'px,-2%) scale(' + k * 1.95 + ') rotate(0deg)', offset: 0.8, easing: 'cubic-bezier(.75,0,1,.6)' }, { transform: 'translate(' + ox + 'px,0) scale(' + k + ')' }], { duration: SL, fill: 'both' });
+              el.style.zIndex = String(10 + j);
               if (j === 0) return; /* 첫 칩: 원래의 JACKPOT 쿵 */
               setTimeout(() => { if (!ov.isConnected) return; const word = MNM[j + 1] || (j + 1) + 'x', fsz = (0.5 + 0.13 * (j - 1)).toFixed(2), tx2 = ov.querySelector('.gm-rbtx');
                 tx2.innerHTML = ['a', 'b', 'c', 'd', 'e', 'f'].map((x) => '<span class="t' + x + '">' + word.split('').map((c3, i) => '<b style="--i:' + (i * 0.5) + ';font-size:' + fsz + 'em">' + c3 + '</b>').join('') + '<br>' + T.split('').map((c3) => '<b style="animation:none;opacity:1">' + c3 + '</b>').join('') + '</span>').join('');
                 tx2.style.top = '2%'; ov.classList.remove('hit'); void ov.offsetWidth; ov.classList.add('hit'); bg.hit(); vib([60, 20, 110], true); try { snd.boom(); snd.chipBurst(true); } catch (e) { /* 무시 */ }
-                const nb = ov.querySelector('.gm-rbn'); if (nb) { nb.querySelector('b').textContent = j + 1; nb.classList.remove('pop'); void nb.offsetWidth; nb.classList.add('pop'); } }, 120);
-            }, GAPS[j] - 120);
+                const nb = ov.querySelector('.gm-rbn'); if (nb) { nb.querySelector('b').textContent = j + 1; nb.classList.remove('pop'); void nb.offsetWidth; nb.classList.add('pop'); } }, SL);
+            }, GAPS[j] - SL);
           }
           setTimeout(() => { try { snd.riser(); } catch (e) { /* 무시 */ } }, 700);
         }
