@@ -3244,7 +3244,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   }
   function autoTipOff() { try { localStorage.setItem('dorosync-auto-tip', '1'); } catch (e) { /* 무시 */ } const t = $('#auto-tip'); if (t) t.hidden = true; }
   const kstDate = (ms) => new Date(ms + 9 * 3600000).toISOString().slice(0, 10);
-  window.addEventListener('doroacct', () => { try { const a = acct(), d = a && a.user && a.doc, au = d && d.auto; if (!au || !au.on) return; const l = au.last || {}; if (!(l.code === 'E_OPENID' || !blOpenId(au.openid || ''))) return; const k = 'dorosync-auto-fixnag', t = kstDate(Date.now()); if (localStorage.getItem(k) === t) return; localStorage.setItem(k, t); setTimeout(autoOpen, 1500); } catch (e) { /* 무시 */ } });
+  window.addEventListener('doroacct', () => { try { const a = acct(), d = a && a.user && a.doc, au = d && d.auto; if (!au || !au.on) return; const l = au.last || {}; if (blOpenId(au.openid || '')) return; const k = 'dorosync-auto-fixnag', t = kstDate(Date.now()); if (localStorage.getItem(k) === t) return; localStorage.setItem(k, t); setTimeout(autoOpen, 1500); } catch (e) { /* 무시 */ } });
   function autoOpen() {
     let m = $('#auto-modal');
     if (!m) {
@@ -3282,7 +3282,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
     }
     if (au.on) {
       const l = au.last || {};
-      const bad = l.code === 'E_OPENID' || !blOpenId(au.openid || ''); /* 닉네임·아이디를 넣은 경우: 여기서 바로 고치게 */
+      const bad = !blOpenId(au.openid || ''); /* 저장된 주소 자체로 판단(관리자가 고쳐 둔 경우 지난 오류 코드는 무시) */ /* 닉네임·아이디를 넣은 경우: 여기서 바로 고치게 */
       body.innerHTML = '<p class="rapisay">매일 <b>오전 5시~6시</b> 사이에 싱크로 레벨을 기록하고 있습니다, 지휘관.</p>' +
         '<div class="acct-row"><span class="acct-k">상태</span><span><span class="acct-ok">● 기록 중</span></span></div>' +
         '<div class="acct-row"><span class="acct-k">마지막 자동 기록</span><span>' + (l.at ? new Date(l.at).toLocaleString('ko-KR') + (l.ok ? ' · 싱크로 ' + l.s + ' · 전초기지 ' + l.o : ' · <span class="acct-no">실패</span>' + (l.err || l.code ? ' <span class="muted sm">(' + esc(l.err || '') + (l.code ? ' · ' + esc(l.code) : '') + ')</span>' : '')) : '아직 없음 (내일 오전 5~6시에 첫 기록)') + '</span></div>' +
