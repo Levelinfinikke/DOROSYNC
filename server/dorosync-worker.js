@@ -51,6 +51,7 @@ export default {
       if (!okOrigin) return out(403, { ok: false, error: 'origin' });
       return idLogin(req, env, out);
     }
+    if (url.pathname === '/admin') { if (!okOrigin) return out(403, { ok: false, error: '허용되지 않은 사이트입니다.' }); return adminView(req, env, out); }
     if (req.method !== 'GET') return out(405, { ok: false, error: 'method' });
     if (url.pathname === '/' || url.pathname === '/health') {
       let auto = null; /* 마지막 자동 기록(AUTO) 실행 결과: 성공·실패 수와 오류 코드 */
@@ -58,7 +59,6 @@ export default {
       return out(200, { ok: true, cookie: !!env.BLA_COOKIE, login: !!env.FIREBASE_SA, auto });
     }
     if (!okOrigin) return out(403, { ok: false, error: '허용되지 않은 사이트입니다.' });
-    if (url.pathname === '/admin') return adminView(req, env, out);
     if (url.pathname !== '/sync') return out(404, { ok: false, error: 'not found' });
 
     const area = Number(url.searchParams.get('area'));
@@ -375,6 +375,20 @@ async function adminView(req, env, out) {
   const lk = await (await fetch('https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=' + FB_API_KEY, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ idToken: idt }) })).json();
   const uid = lk && lk.users && lk.users[0] && lk.users[0].localId; if (!uid || !ADMIN_UIDS.includes(uid)) return out(403, { ok: false, error: 'admin' });
   const sa = JSON.parse(env.FIREBASE_SA), at = await saToken(sa, 'https://www.googleapis.com/auth/datastore'), H = { Authorization: 'Bearer ' + at };
+  if (req.method === 'POST') { /* 관리자 대리 수정: 자동 기록 프로필 주소·서버만 고침 { fix: { id: 문서ID 앞 6자, openid, area } } */
+    let b = {}; try { b = await req.json(); } catch (e) { /* 빈 요청 */ }
+    const fx = b.fix || {}, area = Number(fx.area), raw = String(fx.openid || '').trim();
+    if (!/^[A-Za-z0-9]{6,40}$/.test(String(fx.id || '')) || !toIntlId(raw) || !AREAS.includes(area)) return out(400, { ok: false, error: 'bad' });
+    const ids = []; let p2 = '';
+    for (let i = 0; i < 20; i++) { const r = await (await fetch(FS + '/users?pageSize=300&mask.fieldPaths=auto' + (p2 ? '&pageToken=' + encodeURIComponent(p2) : ''), { headers: H })).json(); (r.documents || []).forEach((d) => { if (d.name.split('/').pop().startsWith(fx.id)) ids.push(d); }); p2 = r.nextPageToken; if (!p2) break; }
+    if (ids.length !== 1) return out(404, { ok: false, error: ids.length ? 'ambiguous' : 'notfound' });
+    const d = ids[0], au = (d.fields && d.fields.auto && d.fields.auto.mapValue && d.fields.auto.mapValue.fields) || {};
+    if (!(au.on && au.on.booleanValue)) return out(409, { ok: false, error: 'auto_off' }); /* 자동 기록을 켠 계정만 */
+    const today = new Date(Date.now() + 9 * 3600000).toISOString().slice(0, 10);
+    const q = ['auto.openid', 'auto.area', 'autoDue'].map((f) => 'updateMask.fieldPaths=' + encodeURIComponent(f)).join('&');
+    const w = await fetch('https://firestore.googleapis.com/v1/' + d.name + '?' + q, { method: 'PATCH', headers: Object.assign({ 'Content-Type': 'application/json' }, H), body: JSON.stringify({ fields: { autoDue: { stringValue: today }, auto: { mapValue: { fields: { openid: { stringValue: raw }, area: { stringValue: String(area) } } } } } }) });
+    return out(w.ok ? 200 : 502, { ok: w.ok, error: w.ok ? undefined : 'write_' + w.status });
+  }
   const mask = ['nickname', 'username', 'chipsV', 'chipDay', 'createdAt', 'updatedAt', 'auto', 'autoDue'].map((f) => 'mask.fieldPaths=' + f).join('&');
   const users = []; let pt = '';
   for (let i = 0; i < 20; i++) {
