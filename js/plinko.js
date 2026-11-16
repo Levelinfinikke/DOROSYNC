@@ -58,7 +58,7 @@
     if (window.doroChips.total() - 0 < cost) { msg.textContent = '싱크칩이 부족합니다.'; return; }
     busy = true; ui(); let res;
     try {
-      if (PROD && window.doroAccount && window.doroAccount.user) { const j = await window.doroRaid.api('plinko', { rows: S.rows, risk: S.risk, bet: ch[0], n: S.n }); res = j.balls; const win = res.reduce((a, b) => a + b[1], 0), wr = res.reduce((a, b) => a + b[2], 0); pend += win; pendR += wr; window.doroChips.sync(j.chips); }
+      if (PROD && window.doroAccount && window.doroAccount.user) { const j = await window.doroRaid.api('plinko', { rows: S.rows, risk: S.risk, bet: ch[0], n: S.n }); res = j.balls; const win = res.reduce((a, b) => a + b[1], 0), wr = res.reduce((a, b) => a + b[2], 0); pend += win; pendR += wr; window.doroChips.sync(j.chips); try { window.doroStat.add({ cd: win, cr: wr }); } catch (e2) { /* 무시 */ } }
       else { if (!window.doroChips.spend(cost)) throw new Error('chips'); res = []; for (let i = 0; i < S.n; i++) res.push(roll(S.rows, ch[2], T)); const win = res.reduce((a, b) => a + b[1], 0), wr = res.reduce((a, b) => a + b[2], 0); pend += win; pendR += wr; const add = {}; if (win) add.b = win; if (wr) add.r = wr; if (win || wr) window.doroChips.add(add, 'cap'); }
     } catch (e) { busy = false; ui(); msg.textContent = ({ chips: '싱크칩이 부족합니다.', login: '로그인이 필요합니다.', closed: '아직 공개 전입니다. (관리자 전용)' })[e && e.message] || '서버와 연결하지 못했습니다. (' + ((e && e.message) || e) + ')'; return; }
     const g = geo(), now = performance.now(), gap = S.n > 10 ? 70 : 130;

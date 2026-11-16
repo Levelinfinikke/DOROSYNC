@@ -2595,7 +2595,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
   const STAT_K = 'dorosync-stats'; let statMem = null, statT = 0;
   const statGet = () => { if (!statMem) { try { statMem = JSON.parse(localStorage.getItem(STAT_K) || 'null') || {}; } catch (e) { statMem = {}; } } return statMem; };
   const statSave = () => { clearTimeout(statT); statT = setTimeout(() => { try { localStorage.setItem(STAT_K, JSON.stringify(statMem)); } catch (e) { /* 저장 불가 */ } }, 2500); };
-  window.doroStat = { get: () => Object.assign({}, statGet()), add(o) { const s = statGet(); Object.keys(o || {}).forEach((k) => { const n = Math.floor(+o[k] || 0); if (n > 0) s[k] = (s[k] || 0) + n; }); statSave(); },
+  window.doroStat = { get: () => Object.assign({}, statGet()), base(d, r) { const s = statGet(); if (s.cd == null) { s.cd = Math.max(0, Math.floor(+d || 0)); s.cr = Math.max(0, Math.floor(+r || 0)); statSave(); } }, add(o) { const s = statGet(); Object.keys(o || {}).forEach((k) => { const n = Math.floor(+o[k] || 0); if (n > 0) s[k] = (s[k] || 0) + n; }); statSave(); },
     raid(sid, rank, total, score) { const s = statGet(); if (rank > 0 && (!s.rk || rank < s.rk)) { s.rk = rank; s.rkS = String(sid || ''); s.rkN = total || 0; } if (score > (s.rs || 0)) s.rs = score; statSave(); } };
   window.addEventListener('pagehide', () => { if (statMem && statT) { try { localStorage.setItem(STAT_K, JSON.stringify(statMem)); } catch (e) { /* 무시 */ } } });
   const lsJ = (k, d) => { try { return JSON.parse(localStorage.getItem(k) || 'null') || d; } catch (e) { return d; } };
@@ -2654,7 +2654,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
       const o = chipRaw(), a = acctUser(), t = Date.now();
       ['b', 's', 'g', 'r'].forEach((k) => {
         const n = Math.floor(+(dl && dl[k]) || 0); if (n <= 0) return;
-        if (k === 'r') o.r = a ? o.r + n : Math.max(o.r, Math.min(GUEST_R, o.r + n)); else o.d = a ? o.d + CV[k] * n : Math.max(o.d, Math.min(GUEST_D, o.d + CV[k] * n)); /* 비회원 소지 상한: 싱크칩 3,000 · DORO칩 5 (서버도 같은 만큼만 받음) */
+        const pd = o.d, pr = o.r; if (k === 'r') o.r = a ? o.r + n : Math.max(o.r, Math.min(GUEST_R, o.r + n)); else o.d = a ? o.d + CV[k] * n : Math.max(o.d, Math.min(GUEST_D, o.d + CV[k] * n)); if (src !== 'guest') window.doroStat.add({ cd: o.d - pd, cr: o.r - pr }); /* 통합 기록: 누적 획득 */ /* 비회원 소지 상한: 싱크칩 3,000 · DORO칩 5 (서버도 같은 만큼만 받음) */
         if (a) { const q = qGet(); if (q.o !== a.user.uid) { q.o = a.user.uid; q.ev = []; } q.ev.push({ k, n, src: src || 'ssr', t }); qSet(q); }
       });
       if (a) o.o = a.user.uid;
@@ -2697,7 +2697,8 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
   /* 전초기지 다섯 번째 칸: 내 카드 수집 현황(누르면 내 카드로) */
   const meDexCard = () => { try { const pool = dexList().filter((r) => r[2] === 'SSR'), have = pool.filter((r) => dexCntAll(r[0]) > 0).length, mx = pool.filter((r) => dexCntAll(r[0]) >= DEX_MAX).length, p = pool.length ? have / pool.length * 100 : 0;
       const st = window.doroStat.get(), n = st.n || 0, row = (l, v) => '<div><span>' + l + '</span><b class="num">' + v + '</b></div>';
-      return '<div class="kpi dexk"><div class="l">통합 기록</div><div class="recs">' + row('가챠', fmt(n) + '회') + row('SSR', fmt(st.ssr || 0) + (n ? ' <small>(' + ((st.ssr || 0) / n * 100).toFixed(2) + '%)</small>' : '')) + row('픽업 획득', fmt(st.pu || 0)) + row('카드팩', fmt(st.packs || 0) + '팩') +
+      if (st.cd == null) { const o0 = chipRaw(); window.doroStat.base(o0.d, o0.r); } /* 누적은 처음 한 번 지금 잔고에서 시작 */ const s3 = window.doroStat.get();
+      return '<div class="kpi chipk dexk">' + chipBig() + '<div class="l">통합 기록</div><div class="chipv"><span class="cv-d" title="지금까지 얻은 싱크칩 (실버칩 1 = 5, 골드칩 1 = 10)">' + window.doroChipSvg('b', 30) + '<b class="num">' + fmt(s3.cd || 0) + '</b><small>누적 싱크칩</small></span><span class="cv-r" title="지금까지 얻은 DORO칩">' + window.doroChipSvg('r', 30) + '<b class="num">' + fmt(s3.cr || 0) + '</b><small>누적 DORO칩</small></span></div><div class="recs">' + row('가챠', fmt(n) + '회') + row('SSR', fmt(st.ssr || 0) + (n ? ' <small>(' + ((st.ssr || 0) / n * 100).toFixed(2) + '%)</small>' : '')) + row('픽업 획득', fmt(st.pu || 0)) + row('카드팩', fmt(st.packs || 0) + '팩') +
         row('레이드 최고 등수', st.rk ? fmt(st.rk) + '위 <small>(' + esc(st.rkS || '') + ')</small>' : '-') + row('레이드 최고 점수', st.rs ? fmt(st.rs) + '억' : '-') + row('내 카드', have + '<small>/' + pool.length + '</small>') + row('풀코강', mx + '명') + '</div></div>'; } catch (e) { return ''; } };
   const chipCard = () => {
     const o = chipRaw(), tot = o.d;
@@ -2706,7 +2707,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
       '<span class="cv-r" title="DORO칩">' + window.doroChipSvg('r', 30) + '<b class="num">' + fmt(o.r) + '</b></span></div></div>';
   };
   window.addEventListener('doroacct', () => { if (!(doroBL && doroBL.data)) { try { renderMe(); } catch (e) { /* 초기화 전 */ } } });
-  window.addEventListener('dorochips', () => { const el = document.querySelector('#tab-me .chipk'); if (el) el.outerHTML = chipCard(); });
+  window.addEventListener('dorochips', () => { const el = document.querySelector('#tab-me .chipk'); if (el) el.outerHTML = el.classList.contains('dexk') ? meDexCard() : chipCard(); });
   /* 싱크칩이 퍼져 나왔다가 목표로 빨려 들어가는 연출(가챠 머신의 칩 연출과 같은 흐름): from·to = 요소, n = 칩 개수 */
   const C3E = (() => { let h = ''; for (let i = 0; i < 7; i++) { const f = i / 6 - 0.5, sc = 1 - 0.07 * (1 - Math.sqrt(Math.max(0, 1 - Math.pow(2 * f, 2)))); h += '<i style="transform:translateZ(calc(var(--ct) * ' + f.toFixed(3) + ')) scale(' + sc.toFixed(3) + ');--dk:' + (0.05 + Math.abs(f) * 0.7).toFixed(2) + '"></i>'; } return h; })();
   const c3T = {}; /* 가챠 머신의 3D 칩(옆면 두께 + 회전)과 같은 구조 */
@@ -3044,7 +3045,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     const pf = blPfp(), cb = pk.best || (pk.cand || []).find((x) => x.c && x.c.chapter != null) || null;
     let html = '<div class="card"><div class="row-ctl sp"><h2 class="inline me-who"><span class="pfw"><button type="button" class="me-pfp" id="me-pfp" title="프로필 니케·테두리 바꾸기" aria-label="프로필 니케·테두리 바꾸기" aria-expanded="' + !!renderMe.pick + '">' + (pf ? '<img src="' + BL_IMG(pf.code) + '" alt="" onerror="this.remove()">' : '') + '</button>' + frmHtml() + '</span>' + esc(m.role || '전초기지') + '</h2><button class="ghost sm icb" id="me-apply" type="button" title="싱크로 탭에 다시 적용" aria-label="싱크로 탭에 다시 적용"><svg class="icb-i" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2.5" width="14" height="19" rx="2.5"/><rect x="8" y="5.5" width="8" height="3.5" rx=".8"/><path d="M8.5 13h.01M12 13h.01M15.5 13h.01M8.5 16.5h.01M12 16.5h.01M15.5 16.5h.01"/></svg></button></div>' +
       '<div class="mekpis">' + kpB('현재 싱크로', fmt(m.synchro || 0)) + kpB('전초기지 레벨', fmt(m.outpost || 0), peer.l) + kpB('1군 전투력', fmt(m.top5 || 0), peer.p) +
-      chipCard() + meDexCard() + '</div>' +
+      meDexCard() + '</div>' +
       (renderMe.pick ? (frmOwned().length ? '<div class="frm-pick" aria-label="프로필 테두리 선택"><span class="muted sm">테두리</span><button type="button" data-frm="0" class="' + (frmNow() ? '' : 'on') + '" title="없음">없음</button>' + frmOwned().map((t) => '<button type="button" data-frm="' + esc(t) + '" class="' + (frmNow() === t ? 'on' : '') + '" title="포커레이드 ' + esc(frmName(t)) + '"><img alt="' + esc(frmName(t)) + '" src="' + esc(FRM_IMG(t)) + '"></button>').join('') + '</div>' : '') + '<div class="pfp-pick" role="listbox" aria-label="프로필 니케 선택">' + d.nikkes.slice().sort((x, y) => y.combat - x.combat).map((n) => '<button type="button" role="option" data-pfp="' + n.code + '" class="' + (pf && pf.code === n.code ? 'on' : '') + '" title="' + esc(BL_NM(n)) + '" aria-selected="' + !!(pf && pf.code === n.code) + '"><img src="' + BL_IMG(n.code) + '" alt="' + esc(BL_NM(n)) + '" loading="lazy" onerror="this.parentNode.remove()"></button>').join('') + '</div>' : '') +
       '<p class="muted" id="me-fixnote"></p>' +
       '</div>';
@@ -4604,7 +4605,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   window.doroPickupList = () => { const now = Date.now(), L = cfgGet().gacha.filter((x) => (x.s || x.e) && (!x.s || now >= x.s) && (!x.e || now < x.e)), U = L.length ? L : [cfgFeat().m]; return U.map((m) => { const k = nkCode(m.n); return { n: m.n, code: k, img: m.face ? cfgImg(m.face) : k ? BL_IMG(k) : cfgImg(m.cover) }; }); };
   window.doroPickup = () => { const m = cfgFeat().m, k = nkCode(m.n); return { n: m.n, code: k, img: m.face ? cfgImg(m.face) : k ? BL_IMG(k) : cfgImg(m.cover) }; };
   function gmMount() {
-    if (gmInst) return; if (!window.DoroGacha) { /* 가챠 엔진은 가챠 탭을 처음 열 때 불러옴 */ if (!gmMount.w) { gmMount.w = 1; const sc = document.createElement('script'); sc.src = 'js/gacha.js?v=20261117l'; sc.onload = () => { gmMount.w = 0; const go = () => { if (curTab === 'gcm') gmMount(); }; if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go(); }; sc.onerror = () => { gmMount.w = 0; const r = document.getElementById('gm-root'); if (r) r.innerHTML = '<p class="muted" style="padding:20px">가챠 머신을 불러오지 못했습니다. 새로고침해 주세요.</p>'; }; document.head.appendChild(sc); } return; } let D; try { D = window.GM_ASSETS; if (!D) throw 0; } catch (e) { return; }
+    if (gmInst) return; if (!window.DoroGacha) { /* 가챠 엔진은 가챠 탭을 처음 열 때 불러옴 */ if (!gmMount.w) { gmMount.w = 1; const sc = document.createElement('script'); sc.src = 'js/gacha.js?v=20261117m'; sc.onload = () => { gmMount.w = 0; const go = () => { if (curTab === 'gcm') gmMount(); }; if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go(); }; sc.onerror = () => { gmMount.w = 0; const r = document.getElementById('gm-root'); if (r) r.innerHTML = '<p class="muted" style="padding:20px">가챠 머신을 불러오지 못했습니다. 새로고침해 주세요.</p>'; }; document.head.appendChild(sc); } return; } let D; try { D = window.GM_ASSETS; if (!D) throw 0; } catch (e) { return; }
     const corp = {}; GC_NK.forEach((r) => { if (r[2] === 'SSR') corp[r[0]] = r[1]; });
     const mk = (L, p, cp) => L.map((n) => { const k = nkCode(n) || nkCode({ '리틀 머메이드': '세이렌' }[n] || ''); return { n, c: corp[n] || cp || '', k, p, img: k ? BL_IMG(k) : '', tall: 1 }; });
     gmStockSync(); const fix = (L) => { L.forEach((x) => { if (!x.img) { x.img = nkFace(x.n); const g = cfgGet().gacha.find((q) => q.n === x.n); if (g && g.corp) x.c = g.corp; if (g && !g.face) x.tall = 0; } }); return L; }, M = (m) => { const PL = gmPoolOf(m), std = fix(mk(PL.std, 0)), pil = fix(mk(PL.pil, 1)); const two = +m.rate === 2, pu = mk([m.n], two ? 0 : 1, m.corp || (two ? '' : '필그림'))[0]; if (m.corp) pu.c = m.corp; if (m.face) pu.img = cfgImg(m.face); else if (!pu.img) { pu.img = cfgImg(m.cover); pu.tall = 0; } /* 픽업 2% = 일반 니케, 1% = 필그림·오버스펙 */

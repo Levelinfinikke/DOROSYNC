@@ -1912,3 +1912,14 @@ button:not(.tr-clr):not(.tabs button):not(.tr-f):not(.pk-t):not(.pk-r){border-ra
 #tab-me .mekpis>.kpi.big .l{left:10px;bottom:7px;color:var(--ink);font-weight:700}#tab-me .mekpis>.kpi.big .s{right:8px;bottom:7px;color:var(--muted)}
 #tab-me .mekpis>.kpi.big{container-type:inline-size}
 @container (max-width:235px){#tab-me .mekpis>.kpi.big .s{display:none}}
+
+/* 내 정보: 싱크칩 칸을 통합 기록에 합침(금빛 디자인, 세 칸 폭). 맨 위에 누적 싱크칩·DORO칩 */
+#tab-me .mekpis:not(.mekpis-pre){grid-template-areas:"sy op rec rec rec" "cb cb rec rec rec"}
+#tab-me .mekpis:not(.mekpis-pre)>.kpi.chipk.dexk{grid-area:rec!important;display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;cursor:default;padding:14px 18px 12px 22px}
+#tab-me .mekpis .kpi.chipk.dexk .l{text-align:left;margin-bottom:6px;font-weight:700;color:var(--ink)}
+#tab-me .mekpis:not(.mekpis-pre)>.kpi.chipk.dexk .chipv{flex-direction:row!important;justify-content:flex-start!important;align-items:center;gap:10px 34px!important}
+#tab-me .mekpis .kpi.chipk.dexk .chipv b{font-size:26px}#tab-me .mekpis .kpi.chipk.dexk .chipv small{font-size:11.5px;color:var(--muted);align-self:flex-end;margin:0 0 5px 2px;border:0;background:none;padding:0}
+#tab-me .mekpis .kpi.chipk.dexk .recs{position:relative;z-index:1;grid-template-columns:repeat(4,minmax(0,1fr));gap:0 20px;margin-top:10px}
+#tab-me .mekpis .kpi.chipk.dexk .recs div{flex-direction:column;align-items:flex-start;gap:0;padding:7px 0;border-bottom:0;border-top:1px solid rgba(140,100,10,.22)}
+@media(max-width:1200px){#tab-me .mekpis .kpi.chipk.dexk .recs{grid-template-columns:1fr 1fr}}
+@media(max-width:900px){#tab-me .mekpis:not(.mekpis-pre){grid-template-areas:"sy op" "cb cb" "rec rec"}}

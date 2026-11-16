@@ -46,7 +46,7 @@
   }
   async function fetchTix(n, reset) {
     if (!PROD || !(window.doroAccount && window.doroAccount.user)) return local(n, reset); /* 로그인하지 않았으면 이 기기에서 뽑음 */
-    const j = await window.doroRaid.api('tabs', reset ? { n: 0, reset: 1 } : { n }); const a = window.doroAccount; if (a && a.doc && j.dex) a.doc.dex = j.dex; if (n && window.doroChips.sync) window.doroChips.sync(j.chips); return { tix: j.tix || [], left: j.left };
+    const j = await window.doroRaid.api('tabs', reset ? { n: 0, reset: 1 } : { n }); const a = window.doroAccount; if (a && a.doc && j.dex) a.doc.dex = j.dex; if (n && window.doroChips.sync) window.doroChips.sync(j.chips); try { let cd = 0, cr = 0; (j.tix || []).forEach((t) => { const k = t[0]; if (k === 'r') cr++; else if (k && k[0] === 'g') cd += 10 * +k.slice(1); else if (k && t[2]) cd += 10 * DUP[TV[k]]; }); window.doroStat.add({ cd, cr }); } catch (e2) { /* 무시 */ } return { tix: j.tix || [], left: j.left };
   }
   /* ---------- 표 한 장 ---------- */
   const CO = { E: '엘리시온', M: '미실리스', T: '테트라', A: '어브노멀', P: '필그림' };

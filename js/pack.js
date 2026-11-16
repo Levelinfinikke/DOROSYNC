@@ -49,7 +49,7 @@
   }
   async function buy(kind, n) {
     const k = KINDS.find((x) => x.k === kind), price = n > 1 ? k.box : k.price;
-    if (PROD && window.doroAccount && window.doroAccount.user) { const j = await window.doroRaid.api('pack', { kind, n }); const a = window.doroAccount; if (a && a.doc) a.doc.dex = j.dex; if (window.doroChips.sync) window.doroChips.sync(j.chips); return j.packs; }
+    if (PROD && window.doroAccount && window.doroAccount.user) { const j = await window.doroRaid.api('pack', { kind, n }); const a = window.doroAccount; if (a && a.doc) a.doc.dex = j.dex; if (window.doroChips.sync) window.doroChips.sync(j.chips); try { window.doroStat.add({ cd: (j.gold || 0) * 10 }); } catch (e2) { /* 무시 */ } return j.packs; }
     /* 로그인하지 않았으면 이 기기에서 뽑음(칩·카드는 이 브라우저에 저장). 미리보기에서는 DORO칩 팩을 차감 없이 체험 */
     if (k.r ? (PROD && !window.doroChips.spendR(price)) : !window.doroChips.spend(price)) throw new Error('chips');
     const packs = []; let gold = 0; for (let i = 0; i < n; i++) { const p = rollLocal(kind); gold += p.filter((c) => c[1]).length; packs.push(p); }
