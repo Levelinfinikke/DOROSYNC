@@ -449,10 +449,10 @@ async function raid(req, env, out) {
     const ok = await commit([{ update: { name: docName('meta/raid'), fields: fsv(sn).mapValue.fields } }]);
     return out(ok ? 200 : 502, { ok, season: sn });
   }
-  if (a === 'pack') { /* 카드팩: 서버가 뽑아 계정에 기록. 1팩 5장 · 박스 30팩 · 일반/기업 100싱크칩(일반 박스 2,700) · 필그림 5 DORO칩 · 풀코강 초과분은 골드칩(싱크칩 10) */
+  if (a === 'pack') { /* 카드팩: 서버가 뽑아 계정에 기록. 1팩 5장 · 박스 30팩 · 일반/기업 100싱크칩(일반 박스 2,700) · 필그림 1 DORO칩 · 풀코강 초과분은 골드칩(싱크칩 10) */
     const kind = String(B.kind || 'std'), n = +B.n === 30 ? 30 : 1, pil = kind === 'pil', co = kind.startsWith('co:') ? kind.slice(3) : '';
     if (!pil && kind !== 'std' && !['엘리시온', '미실리스', '테트라', '어브노멀'].includes(co)) return out(400, { ok: false, error: 'bad' });
-    const price = pil ? 5 * n : kind === 'std' && n === 30 ? 2700 : 100 * n, TW = { 9: 2, 8: 5, 7: 10, 6: 16, 5: 20, 4: 18, 3: 14, 2: 9, 1: 6 }, by = {};
+    const price = pil ? n : kind === 'std' && n === 30 ? 2700 : 100 * n, TW = { 9: 2, 8: 5, 7: 10, 6: 16, 5: 20, 4: 18, 3: 14, 2: 9, 1: 6 }, by = {};
     Object.keys(RAID_NK).forEach((k) => { const x = RAID_NK[k]; if (pil ? x[0] !== '필그림' : co ? x[0] !== co : x[0] === '필그림') return; const tv = Math.max(1, Math.min(9, +x[4] || 1)); (by[tv] = by[tv] || []).push(k); });
     const tvs = Object.keys(by), tot = tvs.reduce((s2, t) => s2 + TW[t], 0); if (!tvs.length) return out(400, { ok: false, error: 'bad' });
     const one = () => { let u = Math.random() * tot; for (const t of tvs) { u -= TW[t]; if (u <= 0) return by[t][Math.floor(Math.random() * by[t].length)]; } return by[tvs[0]][0]; };

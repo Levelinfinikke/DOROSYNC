@@ -3629,7 +3629,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') $('#nk-modal').hidden = true; });
 
   /* ---------- 탭 ---------- */
-  const GRP = { main: 'main', daily: 'main', pkg: 'main', inc: 'main', rules: 'main', boss: 'boss', data: 'boss', ol: 'ol', olrules: 'ol', jw: 'jw', jwrules: 'jw', gc: 'gc', gcm: 'game', gccs: 'gc', gcco: 'gc', gcdata: 'gc', gctier: 'gc', gcrules: 'gc', me: 'me', game: 'game', dex: 'game', pack: 'game', raid: 'game' }; let lastGrp = { main: 'main', boss: 'boss', ol: 'ol', jw: 'jw', gc: 'gctier', me: 'me', game: 'game' };
+  const GRP = { main: 'main', daily: 'main', pkg: 'main', inc: 'main', rules: 'main', boss: 'boss', data: 'boss', ol: 'ol', olrules: 'ol', jw: 'jw', jwrules: 'jw', gc: 'gc', gcm: 'gc', gcmg: 'game', gccs: 'gc', gcco: 'gc', gcdata: 'gc', gctier: 'gc', gcrules: 'gc', me: 'me', game: 'game', dex: 'game', pack: 'game', raid: 'game' }; let lastGrp = { main: 'main', boss: 'boss', ol: 'ol', jw: 'jw', gc: 'gcm', me: 'me', game: 'game' };
   const OLV = { ol: 'calc', olrules: 'rules' };
   let curGrp = 'main', curTab = 'main';
   function previewSub(grp) {
@@ -3658,16 +3658,16 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   })();
   (() => { const top = document.querySelector('.top'); if (!top) return; const f = () => document.documentElement.style.setProperty('--toph', top.offsetHeight + 'px'); f(); addEventListener('resize', f); if (window.ResizeObserver) new ResizeObserver(f).observe(top); })();
   function showTab(name) {
-    if (name === 'gc' || name === 'gccs' || name === 'gcco' || name === 'gcdata') name = 'gctier'; // 숨긴 하위 탭 대신 티어표(가챠 머신은 니슬렁 탭으로 옮김)
-    if (name === 'raid' || name === 'dex' || name === 'pack') { let ok = false; try { ok = dexOk(); } catch (e) { /* 초기화 전 */ } if (!ok) name = 'game'; } curTab = name;
+    if (name === 'gc' || name === 'gccs' || name === 'gcco' || name === 'gcdata') name = 'gcm'; // 숨긴 하위 탭 대신 가챠 머신
+    if (name === 'raid' || name === 'dex' || name === 'pack') { let ok = false; try { ok = dexOk(); } catch (e) { /* 초기화 전 */ } if (!ok) name = 'game'; } const sec = name === 'gcmg' ? 'gcm' : name; curTab = sec; /* gcmg: 니슬렁 탭에서 여는 가챠 머신(같은 화면) */
     const grp = GRP[name] || name;
     if (lastGrp[grp]) lastGrp[grp] = name;
     $$('#tabs button').forEach((b) => b.classList.toggle('on', b.dataset.tab === grp));
     $$('#subtabs button').forEach((b) => { b.classList.toggle('on', b.dataset.tab === name); b.hidden = b.dataset.grp !== grp; });
     $('#subtabs').classList.toggle('show', grp !== 'me');
     curGrp = grp; subAlign(grp);
-    $$('.tab').forEach((s) => s.classList.toggle('on', s.id === 'tab-' + (OLV[name] ? 'ol' : name)));
-    if (name === 'gcm') gmMount();
+    $$('.tab').forEach((s) => s.classList.toggle('on', s.id === 'tab-' + (OLV[name] ? 'ol' : sec)));
+    if (sec === 'gcm') gmMount();
     if (name === 'daily') renderDaily();
     if (name === 'boss') renderBoss();
     if (name === 'data') renderData();
@@ -4403,7 +4403,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   /* 니슬렁(게임) 로비: 각 게임으로 들어가는 입구. 게임 본체는 들어갈 때 불러옴 */
   function renderLobby() {
     const root = $('#tab-game'); if (!root) return; const adm = dexOk(), o = chipRaw();
-    const G = [['gcm', '가챠 머신', '캡슐을 뽑고 싱크칩을 모으세요', 'lb-gc', 1], ['raid', '포커레이드', '니케 카드로 족보를 만들어 보스를 공략', 'lb-rd', adm], ['pack', '카드팩', '팩을 뜯어 니케 카드를 모으세요', 'lb-pk', adm], ['dex', '카드', '모은 카드와 수집 보상', 'lb-dx', adm],
+    const G = [['gcmg', '가챠 머신', '캡슐을 뽑고 싱크칩을 모으세요', 'lb-gc', 1], ['raid', '포커레이드', '니케 카드로 족보를 만들어 보스를 공략', 'lb-rd', adm], ['pack', '카드팩', '팩을 뜯어 니케 카드를 모으세요', 'lb-pk', adm], ['dex', '카드', '모은 카드와 수집 보상', 'lb-dx', adm],
       ['', 'PULL-TABS', '준비 중', 'lb-pt', 0], ['', '2048', '준비 중', 'lb-48', 0], ['', 'PLINKO', '준비 중', 'lb-pl', 0]].filter((g) => g[4] || !g[0]);
     root.innerHTML = '<div class="lb"><div class="lb-hero"><div class="lb-t"><small>DOROSYNC</small>니슬렁</div><div class="lb-bal"><span>' + window.doroChipSvg('b', 26) + '<b class="num">' + fmt(o.d) + '</b></span><span>' + window.doroChipSvg('r', 26) + '<b class="num">' + fmt(o.r) + '</b></span></div></div>' +
       '<div class="lb-grid">' + G.map((g, i) => '<button type="button" class="lb-g ' + g[3] + (g[0] ? '' : ' soon') + '"' + (g[0] ? ' data-go="' + g[0] + '"' : ' disabled') + ' style="--i:' + i + '"><span class="lb-art" aria-hidden="true"></span><b>' + g[1] + '</b><small>' + g[2] + '</small>' + (g[0] ? '<i>입장 ▶</i>' : '<i>COMING SOON</i>') + '</button>').join('') + '</div></div>';

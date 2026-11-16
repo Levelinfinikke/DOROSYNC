@@ -111,7 +111,7 @@
 .pk-bt{position:absolute;left:0;right:0;bottom:0;z-index:4;padding:1.8em .4em .35em;background:linear-gradient(transparent,rgba(8,10,12,.9) 50%);text-align:right}
 .pk-lb{height:1.5em;width:auto;display:block;margin:0 0 .12em auto}
 .pk-nm{display:block;font-size:.92em;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pk-bk{position:absolute;inset:0;z-index:9;border-radius:.75em;overflow:hidden;background:#111 url(${BACK}) center/cover;border:.2em solid #2c3136;transform:scaleX(-1)}
+.pk-bk{position:absolute;inset:0;z-index:9;border-radius:.75em;overflow:hidden;background:url(${BACK}) center/cover padding-box,linear-gradient(150deg,#f4f6f8 0,#8a929a 16%,#e8ecef 30%,#59616a 48%,#d3d9de 64%,#737b83 80%,#eef1f3 100%) border-box;border:.26em solid transparent;transform:scaleX(-1)}
 .pk-pop{position:absolute;left:50%;top:-1.2em;transform:translateX(-50%);z-index:12;font-size:1.3em;font-family:"Arial Black",Arial,sans-serif;color:#4db5ff;text-shadow:0 2px 0 #06335c,0 0 8px rgba(0,0,0,.6);white-space:nowrap;pointer-events:none;animation:pkPop .7s cubic-bezier(.2,1.6,.4,1) both}
 @keyframes pkPop{0%{transform:translate(-50%,80%) scale(.3);opacity:0}25%{transform:translate(-50%,0) scale(1.3);opacity:1}70%{transform:translate(-50%,-70%) scale(1);opacity:1}100%{transform:translate(-50%,-150%) scale(.9);opacity:0}}
 .pk-pop.big{font-size:1.7em;color:#ffd24a;text-shadow:0 2px 0 #6b4a00,0 0 10px rgba(0,0,0,.7)}
@@ -237,7 +237,7 @@
 .rd-pl{display:flex;gap:4px;overflow-x:auto;padding:2px 0 6px;--cw:46px}.rd-pl .pk{cursor:default;touch-action:auto;transform:none}.rd-pl .pk-nm{display:none}
 .rd-deck{position:relative;flex:none;align-self:center;z-index:1;width:calc(var(--cw)*.8);margin-left:calc(var(--cw)*.22);text-align:center;font-size:10.5px}
 .rd-main.atk .rd-deck{display:none}
-.rd-deck i{display:block;width:100%;aspect-ratio:9/16;border-radius:6px;border:2px solid #2c3136;background:#111 url(${BACK}) center/cover;box-shadow:3px 3px 0 #0c0e10,6px 6px 0 rgba(0,0,0,.3);margin-bottom:9px}
+.rd-deck i{display:block;width:100%;aspect-ratio:9/16;border-radius:6px;border:3px solid transparent;background:url(${BACK}) center/cover padding-box,linear-gradient(150deg,#f4f6f8 0,#8a929a 16%,#e8ecef 30%,#59616a 48%,#d3d9de 64%,#737b83 80%,#eef1f3 100%) border-box;box-shadow:3px 3px 0 #0c0e10,6px 6px 0 rgba(0,0,0,.3);margin-bottom:9px}
 .rd-tag{display:none;position:absolute;left:10px;top:8px;z-index:7;font-size:10px;letter-spacing:.06em;background:rgba(0,0,0,.45);border-radius:6px;padding:2px 7px;font-family:"Pretendard","Malgun Gothic",sans-serif;font-weight:700}
 .rd-x{position:absolute;right:8px;top:6px;z-index:9;width:30px;height:30px;border-radius:50%;border:0;background:rgba(0,0,0,.55);color:#fff;font-size:15px;cursor:pointer;display:none}
 .rd.fs .rd-x{display:block}
