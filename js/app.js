@@ -4365,7 +4365,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   const dexObj = (r, tiers) => { const k = nkCode(r[0]); return { n: r[0], c: r[1], rar: r[2], e: r[3], w: r[4], b: r[5], t: r[2] === 'SSR' ? (tiers[r[0]] || 'F') : '', code: k, img: k ? BL_IMG(k) : '', cnt: dexCntAll(r[0]) }; };
   /* 포커레이드(js/raid.js)가 쓰는 데이터 */
   window.doroRaidData = () => { const tiers = dexTier0(); let purl = '', area = ''; try { purl = localStorage.getItem('dorosync-bl-purl') || ''; area = localStorage.getItem('dorosync-bl-area') || ''; } catch (e) { /* 무시 */ }
-    return { ok: dexOk(), list: window.GM_ASSETS ? dexList().filter((r) => r[2] === 'SSR').map((r) => dexObj(r, tiers)) : [], lb: (g, c) => blLbImg(g, c).src, elIco: TR_ICO, elCol: TR_EL, tierCol: TR_COL, purl, area, linked: !!(doroBL && doroBL.data) }; };
+    return { ok: dexOk(), list: window.GM_ASSETS ? dexList().filter((r) => r[2] === 'SSR').map((r) => dexObj(r, tiers)) : [], lb: (g, c) => blLbImg(g, c).src, elIco: TR_ICO, elCol: TR_EL, tierCol: TR_COL, coIco: ((em) => ({ 엘리시온: em.ely, 미실리스: em.mis, 테트라: em.tet, 필그림: em.pil, 어브노멀: GC_ABN }))((window.GM_ASSETS && window.GM_ASSETS.assets && window.GM_ASSETS.assets.emb) || {}), purl, area, linked: !!(doroBL && doroBL.data) }; };
   function renderDex() {
     const root = $('#tab-dex'); if (!root) return; if (!dexOk()) { root.innerHTML = ''; return; }
     if (!window.doroRaid || !window.GM_ASSETS) { setTimeout(renderDex, 300); return; }
