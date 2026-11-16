@@ -4961,10 +4961,12 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   });
   let invDragN = 0; const invDropEl = () => { let o = $('#inv-drop'); if (!o) { o = document.createElement('div'); o.id = 'inv-drop'; o.className = 'invdrop'; o.hidden = true; o.innerHTML = '<div>여기에 놓으면 인벤토리 사진을 읽어요</div>'; document.body.appendChild(o); } return o; };
   const isFileDrag = (e) => e.dataTransfer && [...e.dataTransfer.types].indexOf('Files') >= 0;
-  document.addEventListener('dragenter', (e) => { if (!isFileDrag(e)) return; invDragN++; invDropEl().hidden = false; });
-  document.addEventListener('dragover', (e) => { if (isFileDrag(e)) e.preventDefault(); });
+  /* 끌어 놓기는 '사진으로 채우기' 버튼을 눌러 안내·결과 창이 열려 있을 때만 받음 */
+  const invArmed = () => { const g = $('#inv-guide'); return !!(g && !g.hidden) || invOpen(); };
+  document.addEventListener('dragenter', (e) => { if (!isFileDrag(e) || !invArmed()) return; invDragN++; invDropEl().hidden = false; });
+  document.addEventListener('dragover', (e) => { if (isFileDrag(e) && invArmed()) e.preventDefault(); });
   document.addEventListener('dragleave', (e) => { if (!isFileDrag(e)) return; invDragN = Math.max(0, invDragN - 1); if (!invDragN) invDropEl().hidden = true; });
-  document.addEventListener('drop', (e) => { if (!isFileDrag(e)) return; e.preventDefault(); invDragN = 0; invDropEl().hidden = true; const fs = invImgs(e.dataTransfer); if (fs.length) { const g = $('#inv-guide'); if (g) g.hidden = true; invRun(fs, invOpen()); } });
+  document.addEventListener('drop', (e) => { if (!isFileDrag(e) || !invArmed()) return; e.preventDefault(); invDragN = 0; invDropEl().hidden = true; const fs = invImgs(e.dataTransfer); if (fs.length) { const g = $('#inv-guide'); if (g) g.hidden = true; invRun(fs, invOpen()); } });
   document.addEventListener('change', (e) => { const t = e.target; if (t && t.dataset && (t.dataset.invk || t.dataset.invb)) invEdit(t); });
   invCard();
 
