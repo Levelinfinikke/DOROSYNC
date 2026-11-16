@@ -1837,7 +1837,8 @@ button:not(.tr-clr):not(.tabs button):not(.tr-f):not(.pk-t):not(.pk-r){border-ra
 /* 싱크칩 제작소(계산 버튼과 같은 장치) */
 .idle-fx{position:relative;width:62%;max-width:150px;aspect-ratio:1;margin:0 auto 4px}.idle-fx img{position:absolute;inset:0;width:100%;height:100%;display:block}
 .idle-fx.work .idle-ring{animation:idleSpin var(--left,10s) cubic-bezier(.45,0,.4,1) both}@keyframes idleSpin{to{transform:rotate(1080deg)}}
-.idle-chip{position:absolute;left:50%;top:50%;width:30%;height:30%;transform:translate(-50%,-50%);display:block;opacity:.35;filter:grayscale(.6);transition:opacity .5s,filter .5s}.idle-chip svg{width:100%;height:100%;display:block}
-.idle-fx.work .idle-chip{opacity:1;filter:none;animation:idlePress .5s ease-in-out infinite}@keyframes idlePress{50%{transform:translate(-50%,-50%) scale(.82) rotate(20deg)}}
-.idle-fx.work:after{content:"";position:absolute;inset:27%;border-radius:50%;box-shadow:0 0 18px 6px rgba(255,210,90,.7);animation:idleHot .5s ease-in-out infinite alternate;pointer-events:none}@keyframes idleHot{from{opacity:.3}to{opacity:1}}
+.idle-pit{position:absolute;left:50%;top:50%;width:33%;height:33%;transform:translate(-50%,-50%);border-radius:50%;overflow:hidden;background:radial-gradient(circle at 50% 62%,#1a1410 0,#050403 62%,#000 100%);box-shadow:inset 0 5px 9px #000,inset 0 -2px 3px rgba(255,180,60,.25),0 1px 0 rgba(255,230,160,.55)} /* 가운데 버튼의 검은 홈 */
+.idle-chip{position:absolute;inset:9%;display:block;opacity:0;transform:translateY(85%) scale(.7)}.idle-chip svg{width:100%;height:100%;display:block}
+.idle-fx.work .idle-chip{animation:idleRise 2.6s cubic-bezier(.2,.8,.3,1) calc(var(--left,10s) - 2.6s) both}@keyframes idleRise{0%{opacity:0;transform:translateY(85%) scale(.7);filter:brightness(.2)}60%{opacity:1;transform:translateY(8%) scale(.95);filter:brightness(.7)}100%{opacity:1;transform:none;filter:brightness(1.15)}} /* 회전이 끝날 무렵 어둠 속에서 칩이 올라옴 */
+.idle-fx.work .idle-pit{animation:idleHot 0.6s ease-in-out infinite alternate}@keyframes idleHot{from{box-shadow:inset 0 5px 9px #000,inset 0 -2px 3px rgba(255,180,60,.25),0 1px 0 rgba(255,230,160,.55)}to{box-shadow:inset 0 5px 9px #000,inset 0 -3px 8px rgba(255,190,70,.75),0 1px 0 rgba(255,230,160,.55),0 0 12px rgba(255,200,90,.6)}}
 #tab-game .lb-g.idlek{background:radial-gradient(ellipse at 50% 28%,rgba(255,170,40,.16),transparent 65%),#14161c}

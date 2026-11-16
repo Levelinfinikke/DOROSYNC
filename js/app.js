@@ -2725,7 +2725,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
   const idleNow = () => Math.max(0, Math.min(IDLE_MAX, Math.floor((Date.now() - idleT0()) / 60000)));
   /* 니슬렁 로비의 싱크칩 제작소: 계산 버튼과 같은 장치. 1분 주기 — 50초 쉬고, 10초 동안 고리가 돌며 칩을 찍어 낸 뒤 한 개가 튀어나옴 */
   const idleCard = () => { const n = idleNow();
-    return '<div class="lb-g idlek" style="--i:0"><div class="idle-fx"><img class="idle-base" alt="" src="assets/img/calc-base.webp"><img class="idle-ring" alt="" src="assets/img/calc-ring.webp"><span class="idle-chip">' + window.doroChipSvg('b', 64, false, true) + '</span></div><b>싱크칩 제작소</b><small>1분에 1개씩 만듭니다</small><div class="idle-v">' + window.doroChipSvg('b', 20) + '<span class="num">' + fmt(n) + '</span><em>/ ' + fmt(IDLE_MAX) + '</em></div><div class="idle-bar"><u style="width:' + Math.round(n / IDLE_MAX * 100) + '%"></u></div>' +
+    return '<div class="lb-g idlek" style="--i:0"><div class="idle-fx"><img class="idle-base" alt="" src="assets/img/calc-base.webp"><img class="idle-ring" alt="" src="assets/img/calc-ring.webp"><img class="idle-frame" alt="" src="assets/img/calc-frame.webp"><span class="idle-pit"><span class="idle-chip">' + window.doroChipSvg('b', 64, false, true) + '</span></span></div><b>싱크칩 제작소</b><small>1분에 1개씩 만듭니다</small><div class="idle-v">' + window.doroChipSvg('b', 20) + '<span class="num">' + fmt(n) + '</span><em>/ ' + fmt(IDLE_MAX) + '</em></div><div class="idle-bar"><u style="width:' + Math.round(n / IDLE_MAX * 100) + '%"></u></div>' +
       '<button type="button" class="idle-go" id="idle-get"' + (n < 1 ? ' disabled' : '') + '>수령</button></div>'; };
   let idleLast = -1; /* 화면을 다시 그리지 않고 숫자와 동작만 갱신 */
   function idleTick() {
