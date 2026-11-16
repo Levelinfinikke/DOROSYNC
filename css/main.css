@@ -1891,3 +1891,14 @@ button:not(.tr-clr):not(.tabs button):not(.tr-f):not(.pk-t):not(.pk-r){border-ra
 
 .mekpis .kpi.dexk{cursor:default}.recs{display:grid;grid-template-columns:1fr 1fr;gap:3px 12px;margin-top:6px}.recs div{display:flex;justify-content:space-between;align-items:baseline;gap:6px;font-size:12px;min-width:0}.recs span{color:var(--muted);white-space:nowrap}.recs b{font-size:13px;font-weight:800;white-space:nowrap}.recs small{font-weight:600;color:var(--muted);font-size:11px}
 @media(max-width:900px){.mekpis .kpi.dexk{grid-column:1/-1}}
+
+/* 전초기지 내 정보 배치: [싱크로][전초기지][싱크칩][통합 기록 ×2] / [1군 전투력 ×2] — 좁은 화면은 2칸 */
+#tab-me .mekpis:not(.mekpis-pre){grid-template-columns:repeat(5,minmax(0,1fr))!important;grid-template-areas:"sy op chip rec rec" "cb cb chip rec rec";align-items:stretch}
+#tab-me .mekpis:not(.mekpis-pre)>.kpi:nth-child(1){grid-area:sy}#tab-me .mekpis:not(.mekpis-pre)>.kpi:nth-child(2){grid-area:op}#tab-me .mekpis:not(.mekpis-pre)>.kpi:nth-child(3){grid-area:cb}
+#tab-me .mekpis:not(.mekpis-pre)>.kpi.chipk{grid-area:chip!important;min-height:0;justify-content:center}#tab-me .mekpis:not(.mekpis-pre)>.kpi.dexk{grid-area:rec!important;display:flex;flex-direction:column}
+#tab-me .mekpis:not(.mekpis-pre)>.kpi.chipk .chipv{flex-direction:column;align-items:flex-start;gap:8px!important}
+#tab-me .mekpis .kpi.dexk .recs{flex:1;grid-template-columns:1fr 1fr;gap:0 22px;margin-top:8px;align-content:space-evenly}
+#tab-me .mekpis .kpi.dexk .recs div{padding:7px 0;border-bottom:1px solid var(--line);font-size:13px}#tab-me .mekpis .kpi.dexk .recs div:nth-last-child(-n+2){border-bottom:0}#tab-me .mekpis .kpi.dexk .recs b{font-size:15px}
+@media(max-width:900px){#tab-me .mekpis:not(.mekpis-pre){grid-template-columns:1fr 1fr!important;grid-template-areas:"sy op" "cb cb" "chip chip" "rec rec"}#tab-me .mekpis:not(.mekpis-pre)>.kpi.chipk .chipv{flex-direction:row;justify-content:center;gap:10px 30px!important}}
+@media(max-width:420px){#tab-me .mekpis .kpi.dexk .recs{grid-template-columns:1fr}#tab-me .mekpis .kpi.dexk .recs div:nth-last-child(2){border-bottom:1px solid var(--line)}}
+#tab-me .mekpis .kpi.dexk .recs span{color:var(--muted)!important;font-weight:500}#tab-me .mekpis .kpi.dexk .recs b{color:var(--ink)!important}#tab-me .mekpis .kpi.dexk .recs small{display:inline;color:var(--muted)!important;border:0!important;text-decoration:none!important;background:none!important;padding:0;margin-left:3px;font-size:11.5px}
