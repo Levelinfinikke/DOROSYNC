@@ -2698,12 +2698,18 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     let c = ''; try { c = localStorage.getItem(PFP_K) || ''; } catch (e) { /* 무시 */ }
     return n.find((x) => x.code === c) || n.slice().sort((a, b) => b.combat - a.combat)[0];
   };
+  /* 프로필 테두리: 포커레이드 순위 보상(1 = 상위 3%, 2 = 10%, 3 = 30%). 가진 테두리만 고를 수 있음 */
+  const FRM_K = 'dorosync-frame', FRM_NM = { 1: '상위 3%', 2: '상위 10%', 3: '상위 30%' }, FRM_IMG = (t) => 'assets/img/raid-frame-' + t + '.png';
+  const frmOwned = () => { const a = window.doroAccount, d = a && a.user && a.doc, m = (d && d.raidFrames) || {}; const own = Array.from(new Set(Object.values(m).map(Number).filter((t) => t >= 1 && t <= 3))).sort(); return /github\.io$/.test(location.hostname) ? own : [1, 2, 3]; }; /* 미리보기·로컬은 모두 보임 */
+  const frmNow = () => { let t = 0; try { t = +localStorage.getItem(FRM_K) || 0; } catch (e) { /* 무시 */ } return frmOwned().includes(t) ? t : 0; };
+  const frmHtml = () => { const t = frmNow(); return t ? '<img class="pff" alt="" src="' + FRM_IMG(t) + '">' : ''; };
   /* 계정(사람 모양) 버튼: 로그인 중이면 프로필 니케 초상화로 표시 */
   const acctPfp = () => {
     const b = $('#btn-acct'); if (!b) return;
     const a = window.doroAccount, on = !!(a && a.user), pf = on ? blPfp() : null; let im = b.querySelector('img.bl-pfp');
     if (pf) { if (!im) { im = document.createElement('img'); im.className = 'bl-pfp'; im.alt = ''; im.onerror = () => { im.remove(); b.classList.remove('has-pfp'); }; b.prepend(im); } im.src = BL_IMG(pf.code); b.classList.add('has-pfp'); }
     else { if (im) im.remove(); b.classList.remove('has-pfp'); }
+    const t = pf ? frmNow() : 0; b.classList.toggle('has-frm', !!t); b.style.setProperty('--frm', t ? 'url(' + FRM_IMG(t) + ')' : 'none'); /* 프로필 테두리 */
   };
   window.addEventListener('doroacct', () => setTimeout(acctPfp, 0));
   const blNick = () => {
@@ -2894,9 +2900,9 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
       '<linearGradient id="g" x1="0" y1="0" x2=".35" y2="1"><stop offset="0" stop-color="#4f5962"/><stop offset="1" stop-color="#b9bcbf"/></linearGradient>' +
       '<linearGradient id="p" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d23fe0"/><stop offset="1" stop-color="#b21fc0"/></linearGradient></defs>';
     for (let i = 0; i < 3; i++) h += '<path d="' + blStar(12 + i * 27, 12, 11, 0.22) + '" fill="url(#' + (i < g ? 'o' : 'g') + ')" stroke="#3a3a3a" stroke-width=".8" stroke-linejoin="miter"/>';
-    if (c > 0) { const t = String(c);
+    if (c > 0) { const t = c >= 7 ? 'MAX' : String(c); /* 코어 강화 7 = MAX */
       h += '<path d="' + blStar(92, 12, 12.5, 0.16) + '" fill="url(#p)"/><circle cx="92" cy="12" r="10.4" fill="#c42ed2"/><circle cx="92" cy="12" r="8.4" fill="#2b2731"/>' +
-        '<text x="92" y="' + (t.length > 1 ? 15.6 : 16.3) + '" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="900" font-size="' + (t.length > 1 ? 10 : 12) + '" fill="#fff">' + t + '</text>'; }
+        '<text x="92" y="' + (t.length > 2 ? 14.4 : t.length > 1 ? 15.6 : 16.3) + '" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="900" font-size="' + (t.length > 2 ? 6.6 : t.length > 1 ? 10 : 12) + '" fill="#fff">' + t + '</text>'; }
     return (BL_LBC[k] = { src: 'data:image/svg+xml,' + encodeURIComponent(h + '</svg>'), w: w });
   }
   function blBd(n) {
@@ -2954,10 +2960,10 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
       }
     } catch (e) { /* 비교 생략 */ }
     const pf = blPfp(), cb = pk.best || (pk.cand || []).find((x) => x.c && x.c.chapter != null) || null;
-    let html = '<div class="card"><div class="row-ctl sp"><h2 class="inline me-who"><button type="button" class="me-pfp" id="me-pfp" title="프로필 니케 바꾸기" aria-label="프로필 니케 바꾸기" aria-expanded="' + !!renderMe.pick + '">' + (pf ? '<img src="' + BL_IMG(pf.code) + '" alt="" onerror="this.remove()">' : '') + '</button>' + esc(m.role || '전초기지') + '</h2><button class="ghost sm icb" id="me-apply" type="button" title="싱크로 탭에 다시 적용" aria-label="싱크로 탭에 다시 적용"><svg class="icb-i" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2.5" width="14" height="19" rx="2.5"/><rect x="8" y="5.5" width="8" height="3.5" rx=".8"/><path d="M8.5 13h.01M12 13h.01M15.5 13h.01M8.5 16.5h.01M12 16.5h.01M15.5 16.5h.01"/></svg></button></div>' +
+    let html = '<div class="card"><div class="row-ctl sp"><h2 class="inline me-who"><span class="pfw"><button type="button" class="me-pfp" id="me-pfp" title="프로필 니케·테두리 바꾸기" aria-label="프로필 니케·테두리 바꾸기" aria-expanded="' + !!renderMe.pick + '">' + (pf ? '<img src="' + BL_IMG(pf.code) + '" alt="" onerror="this.remove()">' : '') + '</button>' + frmHtml() + '</span>' + esc(m.role || '전초기지') + '</h2><button class="ghost sm icb" id="me-apply" type="button" title="싱크로 탭에 다시 적용" aria-label="싱크로 탭에 다시 적용"><svg class="icb-i" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2.5" width="14" height="19" rx="2.5"/><rect x="8" y="5.5" width="8" height="3.5" rx=".8"/><path d="M8.5 13h.01M12 13h.01M15.5 13h.01M8.5 16.5h.01M12 16.5h.01M15.5 16.5h.01"/></svg></button></div>' +
       '<div class="mekpis">' + kp('현재 싱크로', fmt(m.synchro || 0)) + kp('전초기지 레벨', fmt(m.outpost || 0), peer.l) + kp('1군 전투력', fmt(m.top5 || 0), peer.p) +
       kp('클리어 투력', cb && cb.c.power ? fmt(cb.c.power) : '-', cb ? esc(BL_MODE[cb.k] + ' ' + (cb.row ? cb.row[2] : cb.c.chapter + '챕터 보스')) + (cb.c.clearedAt ? ' · ' + blDate(cb.c.clearedAt) : '') : '') + chipCard() + '</div>' +
-      (renderMe.pick ? '<div class="pfp-pick" role="listbox" aria-label="프로필 니케 선택">' + d.nikkes.slice().sort((x, y) => y.combat - x.combat).map((n) => '<button type="button" role="option" data-pfp="' + n.code + '" class="' + (pf && pf.code === n.code ? 'on' : '') + '" title="' + esc(BL_NM(n)) + '" aria-selected="' + !!(pf && pf.code === n.code) + '"><img src="' + BL_IMG(n.code) + '" alt="' + esc(BL_NM(n)) + '" loading="lazy" onerror="this.parentNode.remove()"></button>').join('') + '</div>' : '') +
+      (renderMe.pick ? (frmOwned().length ? '<div class="frm-pick" aria-label="프로필 테두리 선택"><span class="muted sm">테두리</span><button type="button" data-frm="0" class="' + (frmNow() ? '' : 'on') + '" title="없음">없음</button>' + frmOwned().map((t) => '<button type="button" data-frm="' + t + '" class="' + (frmNow() === t ? 'on' : '') + '" title="포커레이드 ' + FRM_NM[t] + '"><img alt="' + FRM_NM[t] + '" src="' + FRM_IMG(t) + '"></button>').join('') + '</div>' : '') + '<div class="pfp-pick" role="listbox" aria-label="프로필 니케 선택">' + d.nikkes.slice().sort((x, y) => y.combat - x.combat).map((n) => '<button type="button" role="option" data-pfp="' + n.code + '" class="' + (pf && pf.code === n.code ? 'on' : '') + '" title="' + esc(BL_NM(n)) + '" aria-selected="' + !!(pf && pf.code === n.code) + '"><img src="' + BL_IMG(n.code) + '" alt="' + esc(BL_NM(n)) + '" loading="lazy" onerror="this.parentNode.remove()"></button>').join('') + '</div>' : '') +
       '<p class="muted" id="me-fixnote"></p>' +
       (man ? '<p class="note me-mannote">프로필 URL 연동은 클리어 당시 덱 정보를 가져올 수 없습니다. 최근에 잡은 보스는 <button type="button" class="linkbtn" id="me-fixgo">[작전날짜] 탭의 \'예측이 빗나갔나요?\'</button>에 기입해 주십시오.</p>' : '') +
       '</div>';
@@ -2969,6 +2975,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     { const iv = $('#me-inv'), nk = $('#me-nk'), pg = $('#me-prog'); if (iv && nk) nk.before(iv); if (iv && pg) iv.before(pg); }
     $('#me-apply').addEventListener('click', () => { blApplyUser(); toast('싱크로 탭에 적용했습니다.'); });
     $('#me-pfp').addEventListener('click', () => { renderMe.pick = !renderMe.pick; renderMe(); });
+    root.querySelectorAll('[data-frm]').forEach((b) => b.addEventListener('click', () => { try { localStorage.setItem(FRM_K, b.dataset.frm); } catch (e) { /* 무시 */ } acctPfp(); renderMe(); }));
     root.querySelectorAll('[data-pfp]').forEach((b) => b.addEventListener('click', () => { try { localStorage.setItem(PFP_K, b.dataset.pfp); } catch (e) { /* 무시 */ } renderMe.pick = false; blNick(); renderMe(); }));
     { const g = $('#me-fixgo'); if (g) g.addEventListener('click', () => { const tb = document.querySelector('#tabs button[data-tab="boss"]'); if (tb) tb.click(); setTimeout(() => { const f = $('#btn-boss-fix'); if (f && f.getAttribute('aria-expanded') !== 'true') f.click(); if (f) f.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 150); }); }
     $('#me-oc').addEventListener('change', renderMe);
@@ -4365,7 +4372,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   const dexObj = (r, tiers) => { const k = nkCode(r[0]); return { n: r[0], c: r[1], rar: r[2], e: r[3], w: r[4], b: r[5], t: r[2] === 'SSR' ? (tiers[r[0]] || 'F') : '', code: k, img: k ? BL_IMG(k) : '', cnt: dexCntAll(r[0]) }; };
   /* 포커레이드(js/raid.js)가 쓰는 데이터 */
   window.doroRaidData = () => { const tiers = dexTier0(); let purl = '', area = ''; try { purl = localStorage.getItem('dorosync-bl-purl') || ''; area = localStorage.getItem('dorosync-bl-area') || ''; } catch (e) { /* 무시 */ }
-    return { ok: dexOk(), list: window.GM_ASSETS ? dexList().filter((r) => r[2] === 'SSR').map((r) => dexObj(r, tiers)) : [], lb: (g, c) => blLbImg(g, c).src, elIco: TR_ICO, elCol: TR_EL, tierCol: TR_COL, coIco: ((em) => ({ 엘리시온: em.ely, 미실리스: em.mis, 테트라: em.tet, 필그림: em.pil, 어브노멀: GC_ABN }))((window.GM_ASSETS && window.GM_ASSETS.assets && window.GM_ASSETS.assets.emb) || {}), purl, area, linked: !!(doroBL && doroBL.data) }; };
+    return { ok: dexOk(), list: window.GM_ASSETS ? dexList().filter((r) => r[2] === 'SSR').map((r) => dexObj(r, tiers)) : [], lb: (g, c) => blLbImg(g, c).src, elIco: TR_ICO, elCol: TR_EL, tierCol: TR_COL, pf: (blPfp() || {}).code || '', fr: frmNow(), frImg: FRM_IMG, pfImg: BL_IMG, coIco: ((em) => ({ 엘리시온: em.ely, 미실리스: em.mis, 테트라: em.tet, 필그림: em.pil, 어브노멀: GC_ABN }))((window.GM_ASSETS && window.GM_ASSETS.assets && window.GM_ASSETS.assets.emb) || {}), purl, area, linked: !!(doroBL && doroBL.data) }; };
   function renderDex() {
     const root = $('#tab-dex'); if (!root) return; if (!dexOk()) { root.innerHTML = ''; return; }
     if (!window.doroRaid || !window.GM_ASSETS) { setTimeout(renderDex, 300); return; }
