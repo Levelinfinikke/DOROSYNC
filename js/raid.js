@@ -77,6 +77,29 @@
   const acct = () => window.doroAccount || null;
 
   const CSS = `
+/* ---- 입장 연출: 승강기 게이트가 위아래로 닫히고, 톱니 장치가 내려와 박힌 뒤 모의전/도전 선택 → 보스가 올라오고 게이트가 열림 ---- */
+.rd-in{position:absolute;inset:0;z-index:60;overflow:hidden;font-family:"Arial Black","Pretendard","Malgun Gothic",sans-serif;container-type:size}.rd-in[hidden]{display:none}
+.rd-in-g{position:absolute;left:0;right:0;height:50.3%;background:radial-gradient(circle,rgba(0,0,0,.75) 1.2px,transparent 1.8px) 0 0/7px 7px,linear-gradient(90deg,rgba(0,0,0,.55),transparent 12%,transparent 88%,rgba(0,0,0,.55)),linear-gradient(#25272b,#18191c);box-shadow:inset 0 0 60px rgba(0,0,0,.7)}
+.rd-in-g.t{top:0;transform:translateY(-101%);border-bottom:3px solid #0a0b0c}.rd-in-g.b{bottom:0;transform:translateY(101%);border-top:2px solid #3a3d42}
+.rd-in-g:before{content:"";position:absolute;left:0;right:0;height:24%;background:repeating-linear-gradient(-55deg,#17181a 0 30px,#56533a 30px 60px);opacity:.75;border-top:3px solid #0c0d0e;border-bottom:3px solid #0c0d0e;box-shadow:0 0 0 1px rgba(255,255,255,.06)}
+.rd-in-g.t:before{bottom:14%}.rd-in-g.b:before{top:14%}
+.rd-in-g:after{content:"";position:absolute;left:0;right:0;height:9%;background:repeating-linear-gradient(-55deg,#141516 0 16px,#3c3a2c 16px 32px);opacity:.6}.rd-in-g.t:after{top:8%}.rd-in-g.b:after{bottom:10%}
+.rd-in-sil{position:absolute;inset:0;opacity:0;background:var(--rd-boss,url(${BOSS_IMG})) 50% 12%/cover;filter:grayscale(1) contrast(1.6) brightness(.8);-webkit-mask-image:radial-gradient(circle,#000 1.5px,transparent 2.1px);mask-image:radial-gradient(circle,#000 1.5px,transparent 2.1px);-webkit-mask-size:6px 6px;mask-size:6px 6px}
+.rd-in-gear{position:absolute;left:50%;top:40%;height:min(58cqh,70cqw);aspect-ratio:1;transform:translate(-50%,-260%);filter:drop-shadow(0 14px 18px rgba(0,0,0,.7))}
+.rd-in-gear svg{position:absolute;inset:0;width:100%;height:100%}
+.rd-in-scr{position:absolute;inset:17%;border-radius:50%;overflow:hidden;background:radial-gradient(circle at 50% 45%,#2a0505,#0a0202 75%);box-shadow:inset 0 0 26px #000;display:grid;place-items:center;text-align:center;color:#ff2a22;container-type:inline-size}
+.rd-in-scr:after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(0,0,0,.28) 0 2px,transparent 2px 4px);pointer-events:none}
+.rd-in-scr>div{grid-area:1/1;opacity:0}
+.rd-in-scr .es{font-size:15cqw;line-height:1.05;font-style:italic;letter-spacing:-.02em;transform:rotate(-7deg);text-shadow:0 0 14px #ff1a12;border-top:.5cqw dashed #ff2a22;border-bottom:.5cqw dashed #ff2a22;padding:3cqw 0}
+.rd-in-scr.on{background:radial-gradient(circle at 50% 45%,#8c0d0a,#3a0504 55%,#120202 85%)}.rd-in-scr.on .es{animation:rdInFl .9s steps(1) forwards}.rd-in-scr.nm .es{animation:none;opacity:0}
+@keyframes rdInFl{0%{opacity:0}8%{opacity:1}16%{opacity:.2}24%{opacity:1}100%{opacity:1}}
+.rd-in-scr .bn{display:flex;flex-direction:column;align-items:center;gap:2cqw;transition:opacity .35s}.rd-in-scr.nm .bn{opacity:1}
+.rd-in-scr .bn small{font-size:5cqw;letter-spacing:.3em;color:#ff7a6e;opacity:.8}.rd-in-scr .bn b{font-size:15cqw;line-height:1.1;text-shadow:0 0 16px #ff1a12;font-family:"Pretendard","Malgun Gothic",sans-serif;font-weight:900;word-break:keep-all;max-width:88cqw}.rd-in-scr .bn span{font-size:5.4cqw;color:#ffb3a8;font-family:"Pretendard","Malgun Gothic",sans-serif;font-weight:700}
+.rd-in-p{position:absolute;left:0;right:0;bottom:0;padding:12px 14px 16px;text-align:center;color:#fff;background:repeating-linear-gradient(-55deg,rgba(255,255,255,.035) 0 22px,transparent 22px 44px),#26282d;border-top:2px dashed #b9a24a;box-shadow:0 -10px 30px rgba(0,0,0,.6);transform:translateY(105%)}
+.rd-in-p em{display:block;font-style:italic;font-size:12px;letter-spacing:.2em;color:#ff4a3d}.rd-in-p p{margin:4px 0 10px;font:700 12.5px/1.5 "Pretendard","Malgun Gothic",sans-serif;color:#d7dbe2}
+.rd-in-p>div{display:flex;gap:10px;justify-content:center;align-items:stretch;flex-wrap:wrap}
+.rd-in-b{min-width:150px;padding:10px 18px;border-radius:8px;color:#fff;cursor:pointer;font:inherit;font-size:17px;border:3px solid #0a4f8c;background:#0d8bf2;box-shadow:0 4px 0 rgba(0,0,0,.45),inset 0 0 0 2px rgba(255,255,255,.18);transition:transform .06s}.rd-in-b:active{transform:translateY(3px)}
+.rd-in-b.red{border-color:#7a1a12;background:repeating-linear-gradient(55deg,rgba(255,255,255,0) 0 14px,rgba(255,255,255,.07) 14px 28px),#e33a2c}.rd-in-b small{display:block;font:700 11.5px "Pretendard","Malgun Gothic",sans-serif;opacity:.9;margin-top:2px}
 /* ---- 카드 (포커레이드·도감 공용) ---- */
 .pk{width:var(--cw);aspect-ratio:9/16;flex:none;position:relative;font-size:calc(var(--cw)/8.4);perspective:520px;font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",sans-serif;color:#fff;user-select:none;-webkit-user-select:none}
 .pk *{box-sizing:border-box}
@@ -725,7 +748,39 @@
   const pracMode = () => (data().list.filter((x) => x.cnt > 0).length >= 7 ? 'mine' : 'test');
   const realChips = () => { try { return window.doroChips ? window.doroChips.total() : 0; } catch (e) { return 0; } };
   function setMode(m) { S.mode = m; S.boss = null; S.tries = 0; S.max = 3; if (m === 'live') enterLive(); else { S.chips = PROD ? realChips() : 10000; deal(true); } }
+  function goChal() { const ac2 = acct(); if (ac2 && ac2.user) setMode('live'); else { S.mode = 'live'; clearTable(); S.phase = 'idle'; place(); ui(); gate('<h3>도전하기</h3><div class="rd-fd">로그인이 필요합니다.</div><button type="button" class="rb blue" data-r="prac">모의전</button>'); } }
+  /* 입장 연출(솔로레이드 입장처럼): 게이트 닫힘 → 톱니 장치 하강 → 모의전/도전 선택 → 보스 실루엣이 올라오고 장치 상승 → 게이트 열리며 시작 */
+  let introPick = null;
+  function introRem() { const e = $('.rd-in-rem'); if (!e || !S) return; const a0 = acct(), i = S.info || {}; e.textContent = a0 && a0.user ? '남은 기록 횟수 ' + Math.max(0, (i.max || 3) - (i.tries || 0)) + '/' + (i.max || 3) : '로그인 필요'; }
+  async function intro() {
+    const I = $('.rd-in'); if (!I || S.introOn) return; S.introOn = true; I.querySelectorAll('*').forEach((e) => e.getAnimations().forEach((x) => x.cancel())); I.hidden = false;
+    const gt = $('.rd-in-g.t'), gb = $('.rd-in-g.b'), gear = $('.rd-in-gear'), scr = $('.rd-in-scr'), pnl = $('.rd-in-p'), sil = $('.rd-in-sil'), A = (el, kf, ms, ez) => el.animate(kf, { duration: ms, fill: 'forwards', easing: ez || 'ease-in' }).finished.catch(() => {});
+    scr.classList.remove('on', 'nm'); scr.querySelector('.bn b').textContent = bossNm(); introRem();
+    { let t = ''; try { const sn = window.doroCfg.get().season, now = Date.now(); if (sn && now >= sn.start && now < sn.end) { const h = Math.floor((sn.end - now) / 3600000); t = '시즌 종료까지 ' + (h >= 24 ? Math.floor(h / 24) + '일 ' : '') + (h % 24) + '시간'; } else if (sn && now < sn.start) t = '시즌 준비 중'; } catch (e) { /* 설정 전 */ } scr.querySelector('.bn span').textContent = t; }
+    const snd = (f) => { try { if (sndMode) f(); } catch (e) { /* 소리 실패는 무시 */ } };
+    snd(() => { noise(0.38, 0.12, 0, 600); tone(70, 0.4, 'sawtooth', 0.05, 45); });
+    A(gt, [{ transform: 'translateY(-101%)' }, { transform: 'translateY(0)' }], 380, 'cubic-bezier(.6,0,.9,.5)'); await A(gb, [{ transform: 'translateY(101%)' }, { transform: 'translateY(0)' }], 380, 'cubic-bezier(.6,0,.9,.5)');
+    snd(() => { noise(0.3, 0.5, 0, 300); tone(55, 0.45, 'sine', 0.6, 28); metal(420, 0.25, 0.05, 0.02); });
+    I.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(5px)' }, { transform: 'translateY(-3px)' }, { transform: 'translateY(0)' }], { duration: 200 }); await sleep(260);
+    snd(() => { for (let q = 0; q < 7; q++) { noise(0.03, 0.12, q * 0.06, 2400); tone(160, 0.04, 'square', 0.03, 120, q * 0.06); } });
+    await A(gear, [{ transform: 'translate(-50%,-260%) rotate(-150deg)' }, { transform: 'translate(-50%,-50%) rotate(0deg)' }], 520, 'cubic-bezier(.3,.9,.4,1)');
+    gear.style.transform = 'translate(-50%,-50%)'; snd(() => { noise(0.22, 0.45, 0, 500); tone(80, 0.3, 'sine', 0.5, 40); metal(900, 0.18, 0.06, 0.01); });
+    gear.animate([{ transform: 'translate(-50%,-50%) scale(1.04)' }, { transform: 'translate(-50%,-50%) scale(1)' }], { duration: 180 }); scr.classList.add('on'); snd(() => { [0, 0.22, 0.44].forEach((d) => tone(520, 0.12, 'square', 0.035, 0, d)); });
+    await sleep(1000); scr.classList.add('nm'); await sleep(200);
+    snd(() => { noise(0.18, 0.1, 0, 1500); }); await A(pnl, [{ transform: 'translateY(105%)' }, { transform: 'translateY(0)' }], 300, 'cubic-bezier(.2,.9,.3,1)');
+    const pick = await new Promise((res) => { introPick = res; }); introPick = null; sfx.tap();
+    await A(pnl, [{ transform: 'translateY(0)' }, { transform: 'translateY(105%)' }], 220);
+    snd(() => { tone(60, 0.9, 'sawtooth', 0.04, 110); noise(0.8, 0.06, 0, 400); });
+    await A(sil, [{ opacity: 0, transform: 'translateY(22%)' }, { opacity: 0.5, transform: 'translateY(0)' }], 700, 'cubic-bezier(.2,.7,.3,1)'); await sleep(150);
+    snd(() => { for (let q = 0; q < 6; q++) noise(0.03, 0.1, q * 0.06, 2400); });
+    await A(gear, [{ transform: 'translate(-50%,-50%) rotate(0deg)' }, { transform: 'translate(-50%,-320%) rotate(150deg)' }], 460, 'cubic-bezier(.6,0,.8,.4)'); await sleep(120);
+    if (pick === 'chal') goChal(); else setMode(pracMode()); /* 게이트가 열리는 동안 판이 깔림 */
+    snd(() => { noise(0.5, 0.3, 0, 350); tone(50, 0.5, 'sine', 0.4, 90); });
+    A(sil, [{ opacity: 0.5 }, { opacity: 0 }], 380); A(gt, [{ transform: 'translateY(0)' }, { transform: 'translateY(-101%)' }], 560, 'cubic-bezier(.5,0,.6,1)'); await A(gb, [{ transform: 'translateY(0)' }, { transform: 'translateY(101%)' }], 560, 'cubic-bezier(.5,0,.6,1)');
+    I.hidden = true; gear.style.transform = ''; I.querySelectorAll('*').forEach((e) => e.getAnimations().forEach((x) => x.cancel())); S.introOn = false;
+  }
   function onClick(ev) {
+    { const ib = ev.target.closest('[data-in]'); if (ib) { if (introPick) introPick(ib.dataset.in); return; } if (S && S.introOn) return; }
     const t = ev.target, rb = t.closest('[data-r]'), fp = $('.rd-flt');
     if (!fp.hidden && !t.closest('.rd-flt') && !(rb && rb.dataset.r === 'flt')) { fp.hidden = true; } /* 아무 곳이나 누르면 지정 드로우 창만 닫힘(고른 조건은 버리기 전까지 유지) */
     const hh = $('.rd-half'), armed = hh.classList.contains('arm'); if (armed) hh.classList.remove('arm'); /* 다른 곳을 누르면 말풍선이 들어감 */
@@ -747,7 +802,7 @@
       else if (a === 'start') deal(false);
       else if (a === 'boss') deal(true);
       else if (a === 'prac') { setMode(pracMode()); } /* 모의전: 내 도감 덱(7장 이상일 때), 아니면 테스트 덱. 기록·싱크칩 차감 없음 */
-      else if (a === 'chal') { const ac2 = acct(); if (ac2 && ac2.user) setMode('live'); else { S.mode = 'live'; clearTable(); S.phase = 'idle'; place(); ui(); gate('<h3>도전하기</h3><div class="rd-fd">로그인이 필요합니다.</div><button type="button" class="rb blue" data-r="prac">모의전</button>'); } }
+      else if (a === 'chal') goChal();
       else if (a === 'open') { busy = true; api('set', { days: 5 }).then(() => { busy = false; enterLive(); }).catch((e) => { busy = false; gate('<h3>실전</h3><div class="rd-fd">' + esc(errMsg(e)) + '</div><button type="button" class="rb blue" data-r="prac">모의전</button>'); }); }
       else if (a === 'flt') { fp.hidden = !fp.hidden; poolKey = ''; sfx.open(); ui(); }
       else if (a === 'chips' && S.mode !== 'live' && !PROD) { S.chips = 10000; ui(); }
@@ -821,6 +876,7 @@
     if (on) { try { const p = document.documentElement.requestFullscreen && document.documentElement.requestFullscreen(); if (p && p.then) p.then(() => { try { screen.orientation.lock('landscape').catch(() => {}); } catch (e) { /* 미지원 */ } fit(); }).catch(() => {}); } catch (e) { /* 미지원 */ } }
     else { try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) { /* 무시 */ } }
     fit(); setTimeout(fit, 350);
+    if (on && S && S.needIntro) { S.needIntro = 0; setTimeout(intro, 250); }
   }
   function build() {
     addCss();
@@ -828,7 +884,8 @@
     const d0 = data(), smp = d0.list.slice().sort((a, b) => (TS[b.t] || 0) - (TS[a.t] || 0)).slice(0, 5).map((x, i) => cardHtml(Object.assign({}, x, { cnt: [4, 11, 11, 7, 1][i] }), BOSS0)).join('');
     const hx = (inner, cls) => '<span class="pk-hx ' + (cls || '') + '">' + inner + '</span>', wpi = (w) => '<img alt="' + w + '" src="assets/img/wp-' + w + '.png">';
     root.innerHTML = '<div class="rd-launch" hidden><div class="rd-lt"><small>POKER RAID</small>' + bossNm() + '</div><div class="rd-lc">' + smp + '</div><button type="button" class="rd-go" data-fs="1" aria-label="플레이">▶</button><div class="rd-lp">가로 화면으로 시작</div></div>' +
-      '<div class="rd"><aside class="rd-side">' +
+      '<div class="rd"><div class="rd-in" hidden><div class="rd-in-g t"></div><div class="rd-in-g b"></div><div class="rd-in-sil"></div><div class="rd-in-gear"><svg viewBox="-104 -104 208 208" aria-hidden="true">' + Array.from({ length: 16 }, (_, i) => '<rect x="-9" y="-100" width="18" height="16" rx="2" fill="#4a4e55" transform="rotate(' + i * 22.5 + ')"/>').join('') + '<circle r="88" fill="#2b2e33" stroke="#6a6f77" stroke-width="5"/><circle r="76" fill="#1b1d20" stroke="#8f949b" stroke-width="2"/><circle r="72" fill="none" stroke="#101112" stroke-width="8"/><circle r="72" fill="none" stroke="#e0b62f" stroke-width="7" stroke-dasharray="7 7.14"/><circle r="66" fill="none" stroke="#9aa0a8" stroke-width="2"/></svg><div class="rd-in-scr"><div class="es">EMERGENCY<br>SCRAMBLE</div><div class="bn"><small>POKER RAID</small><b></b><span></span></div></div></div>' +
+      '<div class="rd-in-p"><em>CHALLENGE MODE</em><p>도전하기는 기록이 순위에 남습니다 · 모의전은 기록과 싱크칩 차감 없이 연습합니다</p><div><button type="button" class="rd-in-b" data-in="prac">모의전</button><button type="button" class="rd-in-b red" data-in="chal">도전하기<small class="rd-in-rem"></small></button></div></div></div><aside class="rd-side">' +
       '<div class="pn rd-boss"><div class="rd-bn"></div><div class="rd-bi"></div></div>' +
       '<div class="pn rd-hp"><div class="rd-hn"></div><div class="rd-cm"><b class="rd-chips">0</b><i>×</i><b class="rd-mult">0</b></div><div class="rd-ex"><span>예상 점수</span><b>0억</b></div></div>' +
       '<div class="pn rd-row rd-best"><span>최고 점수</span><b>0</b></div>' +
@@ -878,9 +935,10 @@
       S = { mode: 'test', boss: null, cards: {}, hand: [], squad: [null, null, null, null, null], sel: new Set(), redraws: 3, tries: 0, max: 3, phase: 'idle', chips: 10000, sort: 'c', flt: { e: '', c: '', b: '', r: '' }, deckLeft: 0, deckN: 0, liveBest: 0 };
       S.mode = pracMode(); if (PROD) S.chips = realChips(); S.info = { tries: 0, max: 3 };
       build(); setInterval(() => { if (root && root.isConnected && S && !busy) ui(); }, 30000);
-      { const a0 = acct(); if (a0 && a0.user) api('state').then((j) => { S.info = { tries: j.tries || 0, max: j.max || 3 }; if (S.mode !== 'live') ui(); }).catch(() => {}); } /* 남은 기록 횟수 */
+      { const a0 = acct(); if (a0 && a0.user) api('state').then((j) => { S.info = { tries: j.tries || 0, max: j.max || 3 }; if (S.mode !== 'live') ui(); introRem(); }).catch(() => {}); } /* 남은 기록 횟수 */
       if (isMobile()) { rd().hidden = true; root.querySelector('.rd-launch').hidden = false; }
-      fit(); deal(true);
+      fit(); setBoss(BOSS0); S.phase = 'idle'; place(); ui(); /* 판은 입장 연출에서 모의전/도전을 고른 뒤에 깔림 */
+      if (isMobile()) S.needIntro = 1; else intro();
     },
     _eval: evalSquad,
     /* 추천 효율 측정(로컬 전용): 같은 패로 ① 안 버림 ② 추천(필터 없이) ③ 추천(필터 포함)을 n판씩 */
