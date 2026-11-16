@@ -62,7 +62,7 @@
 .pp-bal{display:flex;gap:14px;align-items:center;font-weight:800}.pp-bal span{display:inline-flex;align-items:center;gap:4px}
 .pp-odds{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:12px;margin-top:10px;color:var(--muted)}.pp-odds b{font-weight:900}
 .pp-wrap{perspective:900px}
-.pp{position:relative;width:var(--pw);aspect-ratio:9/14.6;transform-style:preserve-3d;transform:rotateY(calc(var(--fy,0deg) + var(--ry,0deg))) rotateX(var(--rx,0deg));transition:transform .35s cubic-bezier(.3,1.3,.5,1);touch-action:none;user-select:none;-webkit-user-select:none}
+.pp{position:relative;width:var(--pw);aspect-ratio:9/17.6;transform-style:preserve-3d;transform:rotateY(calc(var(--fy,0deg) + var(--ry,0deg))) rotateX(var(--rx,0deg));transition:transform .35s cubic-bezier(.3,1.3,.5,1);touch-action:none;user-select:none;-webkit-user-select:none}
 .pp.flip{--fy:180deg}.pp.live{transition:transform .08s linear}
 .pp-f,.pp-b{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;filter:drop-shadow(0 14px 18px rgba(0,0,0,.55))}.pp-b{transform:rotateY(180deg);display:flex}
 .pp-skin{background:
@@ -180,6 +180,8 @@ svg.pp-strap{display:block;position:absolute;inset:0;width:100%;height:100%;over
 .pp-it{padding-top:44px}
 .pp-pin{display:block;position:absolute;left:50%;bottom:calc(100% - 5.7% - 1px);width:5px;height:24px;margin-left:-2.5px;border-radius:3px 3px 2px 2px;background:linear-gradient(90deg,#5b636c,#f4f6f8 45%,#8a929a);box-shadow:0 1px 2px rgba(0,0,0,.6);z-index:7;border-radius:2px}.pp-pin:before,.pp-pin:after{display:none!important;content:none!important} /* 걸쇠: 펀치홀을 지나 위로 올라가는 짧은 금속 막대 하나 */
 .pp-sum{scrollbar-width:none;overflow-x:hidden}.pp-sum::-webkit-scrollbar{display:none}
+.pp-body{box-shadow:inset 7px 0 9px -5px rgba(0,0,0,.45),inset -7px 0 9px -5px rgba(0,0,0,.45)} /* 속에 카드 뭉치가 든 것처럼: 가운데가 카드 모양으로 도드라지고 가장자리는 눌려 있음 */
+.pp-body:before{content:"";position:absolute;inset:4.5% 7.5%;border-radius:5%/3.2%;pointer-events:none;z-index:1;background:linear-gradient(100deg,rgba(255,255,255,.13),rgba(255,255,255,0) 28%,rgba(0,0,0,0) 62%,rgba(0,0,0,.16));box-shadow:inset 1.5px 1.5px 2px rgba(255,255,255,.34),inset -1.5px -2px 3px rgba(0,0,0,.38),2px 3px 5px rgba(0,0,0,.3),-1px -1px 2px rgba(255,255,255,.16)}
 .pp.pil .pp-body:after{content:"";position:absolute;left:-150%;width:400%;top:-60%;height:220%;pointer-events:none;mix-blend-mode:color-dodge;opacity:.42;transform:rotate(24deg);background:repeating-linear-gradient(90deg,#ff5d8f 0,#ffb84d 4.17%,#f6f05a 8.33%,#5ef0a0 12.5%,#5ab8ff 16.67%,#b07aff 20.83%,#ff5d8f 25%);animation:ppHolo 9s linear infinite;will-change:transform}@keyframes ppHolo{from{transform:rotate(24deg) translateX(0)}to{transform:rotate(24deg) translateX(-25%)}} /* 니케 카드의 폴리크롬과 같은 방식: 한 주기만큼만 밀어 이음매가 없음 */
 .pp-bx{position:relative;width:150px;font-family:"Arial Black",Arial,sans-serif;color:#fff;filter:drop-shadow(0 12px 16px rgba(0,0,0,.6))}
 .pp-bx.big{position:absolute;left:50%;top:48%;width:min(360px,74vw);transform:translate(-50%,-50%);z-index:6}

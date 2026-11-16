@@ -1870,3 +1870,6 @@ button:not(.tr-clr):not(.tabs button):not(.tr-f):not(.pk-t):not(.pk-r){border-ra
 .lb-gcimg u{position:absolute;left:50%;top:30%;width:max(100cqw,128cqh);aspect-ratio:640/500;transform:translate(-50%,-30%);background:url(../assets/img/lobby-gacha.webp) 0 0/100% 100%;text-decoration:none}
 .lb-gcimg s{position:absolute;left:16%;top:3.4%;width:68%;height:49.6%;border-radius:4%/7%;background:#05070c 50% 50%/cover;filter:brightness(.62) saturate(.9);-webkit-mask-image:radial-gradient(ellipse 25% 44% at 50% 97%,transparent 96%,#000 100%);mask-image:radial-gradient(ellipse 25% 44% at 50% 97%,transparent 96%,#000 100%);text-decoration:none}
 #tabs button[hidden]{display:none!important}
+
+.lb-x em.nx{margin-top:4px;font-weight:800;color:#8fc7ff}
+.tr-row.pu .tr-lb{box-shadow:inset 0 0 0 2px #f5a400}

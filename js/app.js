@@ -4452,7 +4452,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
       } catch (e) { /* 그림 없이 */ }
     if (adm && !L.length && !renderLobby.w) { renderLobby.w = setTimeout(() => { renderLobby.w = 0; if (curTab === 'game') renderLobby(); }, 600); }
     idleLast = -1;
-    const ex = {}, sty = {}, C = cfgGet(); { const ft = cfgFeat(), m = ft.m; ex.gcmg = '<span class="lb-x"><em>' + (ft.st === 'next' ? '다음 픽업' : '현재 픽업') + ': ' + esc(m.n) + '</em>' + (m.s || m.e ? '<em>' + cfgDate(m.s) + ' ~ ' + cfgDate(m.e) + '</em>' : '') + '</span>'; ex.raid = '<span class="lb-x lb-cd"></span>'; if (C.raid.img) sty.raid = ';--art:url(&quot;' + esc(new URL(cfgImg(C.raid.img), location.href).href) + '&quot;)'; }
+    const ex = {}, sty = {}, C = cfgGet(); { const ft = cfgFeat(), m = ft.m; ex.gcmg = '<span class="lb-x"><em>' + (ft.st === 'next' ? '다음 픽업' : '현재 픽업') + ': ' + esc(m.n) + '</em>' + (m.s || m.e ? '<em>' + cfgDate(m.s) + ' ~ ' + cfgDate(m.e) + '</em>' : '') + ((nx) => (nx ? '<em class="nx">다음 픽업: ' + esc(nx.n) + '</em><em>' + cfgDate(nx.s) + ' ~ ' + cfgDate(nx.e) + '</em>' : ''))(cfgNext()) + '</span>'; ex.raid = '<span class="lb-x lb-cd"></span>'; if (C.raid.img) sty.raid = ';--art:url(&quot;' + esc(new URL(cfgImg(C.raid.img), location.href).href) + '&quot;)'; }
     root.innerHTML = '<div class="lb"><div class="lb-hero"><div class="lb-t">니슬렁 모음</div><div class="lb-bal"><span>' + window.doroChipSvg('b', 26) + '<b class="num">' + fmt(o.d) + '</b></span><span>' + window.doroChipSvg('r', 26) + '<b class="num">' + fmt(o.r) + '</b></span></div></div>' + (C.notice ? '<div class="lb-nt"><b>공지</b>' + esc(C.notice) + '</div>' : '') +
       '<div class="lb-grid">' + idleCard() + G.map((g, i) => '<button type="button" class="lb-g ' + g[3] + (g[0] ? '' : ' soon') + '"' + (g[0] ? ' data-go="' + g[0] + '"' : ' disabled') + ' style="--i:' + (i + 1) + (sty[g[0]] || '') + '"><span class="lb-art" aria-hidden="true">' + (art[g[0]] || '') + '</span><b>' + g[1] + '</b><small>' + g[2] + '</small>' + (ex[g[0]] || '') + (g[0] ? '<i>입장 ▶</i>' : '<i>COMING SOON</i>') + '</button>').join('') + '</div></div>';
     lbCd();
@@ -4530,16 +4530,18 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
       { id: 'mq', n: '마리안 : 퀸', rate: 1, corp: '필그림', cover: 'assets/img/27f563d98449.webp', face: '', s: K(2026, 10, 29, 15), e: K(2026, 11, 19, 4, 59, 59) }],
       raid: { nm: '승리의 여신', img: '' }, notice: '', season: { id: 'S43', e: '', r: '', start: K(2026, 11, 19, 5), end: K(2026, 11, 24, 5) } }; }
   function cfgMerge(d, s) { const c = (s && s.cfg) || {}, now = Date.now(), ss = s && s.srv ? s.season : null; /* 시즌: 서버 것이 아직 안 끝났으면 그것, 아니면 기본 일정(안 끝난 경우만) */
-    return { gacha: Array.isArray(c.gacha) && c.gacha.length ? c.gacha : d.gacha, raid: { nm: (c.raid && c.raid.nm) || d.raid.nm, img: (c.raid && c.raid.img) || '' }, notice: c.notice || '', frames: c.frames || {}, season: ss && ss.end > now ? ss : d.season.end > now ? d.season : ss, srvSeason: ss, srv: !!(s && s.srv), saved: !!(s && s.cfg) }; }
+    return { gacha: Array.isArray(c.gacha) && c.gacha.length ? c.gacha : d.gacha, raid: { nm: (c.raid && c.raid.nm) || d.raid.nm, img: (c.raid && c.raid.img) || '' }, notice: c.notice || '', frames: c.frames || {}, tiers: c.tiers || null, season: ss && ss.end > now ? ss : d.season.end > now ? d.season : ss, srvSeason: ss, srv: !!(s && s.srv), saved: !!(s && s.cfg) }; }
   function cfgGet() { if (!cfgGet.c) { let s = null; try { s = JSON.parse(localStorage.getItem('dorosync-cfg') || 'null'); } catch (e) { /* 저장 불가 */ } cfgGet.c = cfgMerge(cfgDef(), s); } return cfgGet.c; }
   function cfgImg(v) { v = String(v || ''); return v.startsWith('img:') ? BL_WORKER + '/img/' + v.slice(4) : v; }
   function cfgCss() { const c = cfgGet(), st = document.documentElement.style; if (c.raid.img) st.setProperty('--rd-boss', 'url("' + new URL(cfgImg(c.raid.img), location.href).href + '")'); else st.removeProperty('--rd-boss'); }
-  function cfgApply(s) { try { localStorage.setItem('dorosync-cfg', JSON.stringify(s)); } catch (e) { /* 저장 불가 */ } cfgGet.c = cfgMerge(cfgDef(), s); cfgCss(); window.dispatchEvent(new Event('dorocfg')); try { acctPfp(); } catch (e) { /* 초기화 전 */ } if (curTab === 'game') renderLobby(); }
+  function cfgApply(s) { try { localStorage.setItem('dorosync-cfg', JSON.stringify(s)); } catch (e) { /* 저장 불가 */ } cfgGet.c = cfgMerge(cfgDef(), s); cfgCss(); window.dispatchEvent(new Event('dorocfg')); try { acctPfp(); } catch (e) { /* 초기화 전 */ } try { trRebuild(); } catch (e) { /* 초기화 전 */ } if (curTab === 'game') renderLobby(); }
   function cfgLoad() { return fetch(BL_WORKER + '/config').then((r) => (r.ok ? r.json() : null)).then((j) => { if (j && j.ok) cfgApply({ cfg: j.cfg, season: j.season, srv: 1 }); return j; }).catch(() => null); }
   /* 대표 픽업: 고정한 것 > 진행 중(가장 최근에 시작) > 곧 시작 > 목록 첫째. 니슬렁 표지·2048 타일이 함께 씀 */
   function cfgFeat() { const L = cfgGet().gacha, now = Date.now(), pin = L.find((x) => x.pin); if (pin) return { m: pin, st: pin.s && now < pin.s ? 'next' : 'now' };
     const act = L.filter((x) => (x.s || x.e) && (!x.s || now >= x.s) && (!x.e || now < x.e)).sort((a, b) => (b.s || 0) - (a.s || 0)); if (act[0]) return { m: act[0], st: 'now' };
     const nx = L.filter((x) => x.s && now < x.s).sort((a, b) => a.s - b.s); if (nx[0]) return { m: nx[0], st: 'next' }; return { m: L[0], st: 'now' }; }
+  function cfgNext() { const L = cfgGet().gacha, now = Date.now(), ft = cfgFeat().m; return L.filter((x) => x.s && now < x.s && x !== ft).sort((a, b) => a.s - b.s)[0] || null; } /* 대표 다음으로 시작할 픽업 */
+  window.doroTierAdmin = () => { tierData(); return { nikkes: trNikkes(), base: trBase(), builtin: trBuiltin(), LV: TR_LV, COL: TR_COL, code: nkCode }; };
   function cfgDate(ms) { if (!ms) return ''; const k = new Date(ms + 9 * 3600000); return (k.getUTCMonth() + 1) + '/' + k.getUTCDate() + '(' + '일월화수목금토'[k.getUTCDay()] + ') ' + String(k.getUTCHours()).padStart(2, '0') + ':' + String(k.getUTCMinutes()).padStart(2, '0'); }
   window.doroCfg = { get: cfgGet, img: cfgImg, feat: cfgFeat, apply: cfgApply, load: cfgLoad, def: cfgDef, date: cfgDate }; cfgCss(); cfgLoad();
   window.doroPickup = () => { const m = cfgFeat().m, k = nkCode(m.n); return { n: m.n, code: k, img: m.face ? cfgImg(m.face) : k ? BL_IMG(k) : cfgImg(m.cover) }; };
@@ -4562,17 +4564,26 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   let trDef = null, trSt = null;
   /* 기본 티어 + 사용자 편집본. window.doroTiers는 가챠 머신이 그대로 참조하는 살아 있는 객체 */
   /* 싱크칩 판정용 기본 티어표(유저 편집 무관) */
-  function chipTierData() {
-    let D = {}; try { D = (window.GM_ASSETS && window.GM_ASSETS.tiers) || {}; } catch (e) { /* 무시 */ }
-    const b = Object.assign({}, D.boss || {}); Object.keys(TR_ADD).forEach((n) => { const v = TR_ADD[n]; if (!b[n] && v[0]) b[n] = v[0]; });
-    return { boss: b };
-  }
+  /* 절대 티어표: 관리 탭에서 저장한 표(cfg.tiers)가 있으면 그것, 없으면 코드에 든 기본표. 가챠 칩 확률·카드 등급·기본 티어표가 모두 이 표를 따름.
+     픽업(★) = 출시 직후라 티어가 정해지지 않은 니케: SSS로 취급하고 티어표에서는 ★ 줄에 따로 보임. 티어가 없는 가챠 머신 픽업 니케는 자동으로 ★ */
+  function trBuiltin() { let D = {}; try { D = (window.GM_ASSETS && window.GM_ASSETS.tiers) || {}; } catch (e) { /* 무시 */ }
+    const b = Object.assign({}, D.boss || {}), v2 = Object.assign({}, D.pvp || {}); Object.keys(TR_ADD).forEach((n) => { const v = TR_ADD[n]; if (!b[n] && v[0]) b[n] = v[0]; if (!v2[n] && v[1]) v2[n] = v[1]; }); return { boss: b, pvp: v2 }; }
+  function trBase() { const B = trBuiltin(); let C = null, G = []; try { const c = cfgGet(); C = c.tiers; G = c.gacha || []; } catch (e) { /* 설정 전 */ }
+    const ok = (m) => { const o = {}; Object.keys(m || {}).forEach((n) => { if (TR_LV.includes(m[n])) o[n] = m[n]; }); return o; };
+    const boss = C && C.boss ? ok(C.boss) : B.boss, pvp = C && C.pvp ? ok(C.pvp) : B.pvp, pu = new Set((C && Array.isArray(C.pu) ? C.pu : []).filter((n) => boss[n] === 'SSS'));
+    G.forEach((m) => { if (m && m.n && !boss[m.n] && !(C && C.boss)) { boss[m.n] = 'SSS'; pu.add(m.n); if (!pvp[m.n]) pvp[m.n] = 'SSS'; } else if (m && m.n && !boss[m.n] && !nkCode(m.n)) { boss[m.n] = 'SSS'; pu.add(m.n); if (!pvp[m.n]) pvp[m.n] = 'SSS'; } });
+    return { boss, pvp, pu }; }
+  const chipTB = { boss: {} }; let trPuSet = new Set();
+  function chipTierData() { const b = trBase().boss; Object.keys(chipTB.boss).forEach((n) => delete chipTB.boss[n]); Object.assign(chipTB.boss, b); return chipTB; }
+  /* 설정(절대 티어표)이 바뀌면: 기본값을 다시 만들고, 사용자가 손대지 않은 표는 새 기본값으로 */
+  function trRebuild() { if (!window.doroTiers || !trDef) return; let s = null; try { s = JSON.parse(localStorage.getItem(TR_KEY) || 'null'); } catch (e) { /* 무시 */ }
+    const B = trBase(); trPuSet = B.pu; const nd = { boss: B.boss, pvp: B.pvp }; TR_SUBS.forEach((sk) => { const m = Object.assign({}, B.boss); if (TR_RH[sk]) m['레드 후드'] = TR_RH[sk]; nd['boss_' + sk] = m; });
+    Object.keys(nd).forEach((k) => { trDef[k] = nd[k]; if (!(s && s[k])) { const m = window.doroTiers[k]; Object.keys(m).forEach((n) => delete m[n]); Object.assign(m, nd[k]); } });
+    chipTierData(); trList = null; trSync(); if (curTab === 'gctier') renderTier(); }
   function tierData() {
     if (window.doroTiers) return window.doroTiers;
     if (!window.GM_ASSETS) return null; /* 아직 문서 로딩 중 */
-    let D = {}; try { D = window.GM_ASSETS.tiers || {}; } catch (e) { /* 무시 */ }
-    trDef = { boss: Object.assign({}, D.boss || {}), pvp: Object.assign({}, D.pvp || {}) };
-    Object.keys(TR_ADD).forEach((n) => { const v = TR_ADD[n]; if (!trDef.boss[n] && v[0]) trDef.boss[n] = v[0]; if (!trDef.pvp[n] && v[1]) trDef.pvp[n] = v[1]; });
+    { const B = trBase(); trPuSet = B.pu; trDef = { boss: B.boss, pvp: B.pvp }; }
     TR_SUBS.forEach((sk) => { const m = Object.assign({}, trDef.boss); if (TR_RH[sk]) m['레드 후드'] = TR_RH[sk]; trDef['boss_' + sk] = m; });
     const T = {}; Object.keys(trDef).forEach((k) => { T[k] = Object.assign({}, trDef[k]); });
     trSt = { ord: {} }; Object.keys(trDef).forEach((k) => { trSt.ord[k] = []; });
@@ -4604,7 +4615,8 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   let trList = null;
   function trNikkes() {
     if (trList) return trList;
-    trList = GC_NK.filter((r) => r[2] === 'SSR').map((r) => { const k = nkCode(r[0]) || nkCode({ '리틀 머메이드': '세이렌' }[r[0]] || ''); return { n: r[0], el: r[3], bu: String(r[5]), k, img: k ? BL_IMG(k) : '' }; });
+    trList = GC_NK.filter((r) => r[2] === 'SSR').map((r) => { const k = nkCode(r[0]) || nkCode({ '리틀 머메이드': '세이렌' }[r[0]] || ''); return { n: r[0], el: r[3], bu: String(r[5]), k, img: k ? BL_IMG(k) : '', corp: r[1] }; });
+    try { cfgGet().gacha.forEach((m) => { if (m && m.n && !trList.some((x) => x.n === m.n)) trList.push({ n: m.n, el: '', bu: 'A', k: '', img: m.face ? cfgImg(m.face) : cfgImg(m.cover), corp: m.corp || '', nw: 1 }); }); } catch (e) { /* 설정 전 */ } /* 도감에 아직 없는 픽업 니케 */
     return trList;
   }
   const trBuOk = (x) => !trV.bu.size || x.bu === 'A' || trV.bu.has(x.bu);
@@ -4630,8 +4642,10 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
     const T = tierData(); if (!T) { if (!renderTier.w) { renderTier.w = 1; document.addEventListener('DOMContentLoaded', () => { renderTier.w = 0; renderTier(); }); } return; }
     const k = trKey(), map = T[k], L = trNikkes().filter(trInSub);
     const ord = trSt.ord[k], pos = (n) => { const i = ord.indexOf(n); return i < 0 ? 1e6 : i; };
-    const rows = TR_LV.map((t) => {
-      const items = L.filter((x) => map[x.n] === t).sort((a, b) => pos(a.n) - pos(b.n));
+    const isPu = (x) => trPuSet.has(x.n) && map[x.n] === 'SSS', puL = L.filter(isPu).sort((a, b) => pos(a.n) - pos(b.n));
+    const puRow = puL.length ? '<div class="tr-row pu" data-t="PU"><div class="tr-lb" style="background:#fff3b0" title="픽업: 출시 직후라 티어가 정해지지 않은 니케. SSS로 취급합니다"><svg viewBox="0 0 24 24" width="26" height="26" aria-label="픽업"><path d="M12 2l3 6.6 7.1.8-5.3 4.9 1.5 7L12 17.7 5.7 21.3l1.5-7L1.9 9.4 9 8.6z" fill="#f5a400" stroke="#7a4a00" stroke-width="1.2" stroke-linejoin="round"/></svg></div><div class="tr-dz" data-t="PU">' + puL.map(trCard).join('') + '</div><span class="tr-clr" style="visibility:hidden"></span></div>' : '';
+    const rows = puRow + TR_LV.map((t) => {
+      const items = L.filter((x) => map[x.n] === t && !(t === 'SSS' && isPu(x))).sort((a, b) => pos(a.n) - pos(b.n));
       return '<div class="tr-row" data-t="' + t + '"><div class="tr-lb" style="background:' + TR_COL[t] + '">' + t + '</div><div class="tr-dz" data-t="' + t + '">' + items.map(trCard).join('') + '</div>' +
         '<button type="button" class="tr-clr" data-clr="' + t + '" title="' + t + ' 티어 비우기" aria-label="' + t + ' 티어 비우기"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg></button></div>';
     }).join('');
@@ -4667,7 +4681,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
     $$('#tab-gctier .tr-tools .tr-f').forEach((b) => { const g = b.dataset.bu ? 'bu' : 'el', v = b.dataset.bu || b.dataset.el, on = trV[g].has(v); b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
   }
   function trSet(name, t, before) {
-    const k = trKey(), m = window.doroTiers[k], ord = trSt.ord[k];
+    const k = trKey(), m = window.doroTiers[k], ord = trSt.ord[k]; if (t === 'PU') t = 'SSS'; /* ★ 줄 = SSS 취급 */
     if (t) m[name] = t; else delete m[name];
     const i = ord.indexOf(name); if (i >= 0) ord.splice(i, 1);
     if (t) { const j = before ? ord.indexOf(before) : -1; if (j >= 0) ord.splice(j, 0, name); else ord.push(name); }
