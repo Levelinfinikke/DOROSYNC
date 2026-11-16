@@ -11,7 +11,7 @@
   const order = (seed) => { const r = mulb(seed), a = OUT.map((_, i) => i); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; };
   const $ = (s, r) => (r || document).querySelector(s), esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const fmt = (n) => Math.round(n).toLocaleString('ko-KR'), chip = (k, px) => (window.doroChipSvg ? window.doroChipSvg(k, px, false, true) : ''), data = () => window.doroRaidData();
-  let link = false, root = null, Q = [], cur = null, left = null, busy = false, auto = false, AC = null, pendG = 0, pendR = 0;
+  let inMc = 0, link = false, root = null, Q = [], cur = null, left = null, busy = false, auto = false, AC = null, pendG = 0, pendR = 0;
   /* ---------- 소리: 절취선이 '드르륵' 뜯기는 소리 = 아주 짧은 종이 파열음이 10ms 안팎 간격으로 이어짐 ---------- */
   const ac = () => { try { if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === 'suspended') AC.resume(); } catch (e) { AC = null; } return AC; };
   let NB = null; const nbuf = (a) => { if (!NB) { NB = a.createBuffer(1, a.sampleRate * 0.5, a.sampleRate); const ch = NB.getChannelData(0); for (let i = 0; i < ch.length; i++) ch[i] = Math.random() * 2 - 1; } return NB; };
@@ -51,15 +51,15 @@
     return 'url("data:image/svg+xml;charset=utf-8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="260" height="84"><g font-family="Arial Black,Arial,sans-serif" font-size="12" font-style="italic" fill="#7a1418" fill-opacity=".13">' + rows + '</g></svg>') + '")'; })(); /* DOROROC… 길이가 제각각인 글자를 한 번 정해 모든 덮개에 */
   const PAPER_URI = PAPER.slice(5, -2); let cvN = 0;
   const cover = (p) => { /* 덮개 모양: 뜯긴 쪽이 휘어 올라가 오른쪽으로 젖혀짐(말리지 않음). 앞면 a · 안쪽 얇은 테두리 c · 뒷면 b */
-    const W = 240, H = 76, R = 26, TM = 2.967, xf = p * W, xb = xf - R * Math.PI / 2, pt = (x, top, ins) => { let X = x, z = 0; if (x < xf) { const s2 = xf - x, th = Math.min(s2 / R, TM), e = Math.max(0, s2 - R * TM); X = xf - R * Math.sin(th) - Math.cos(TM) * e; z = R * (1 - Math.cos(th)) + Math.sin(TM) * e; }
-      const tp = x < 20 ? (20 - x) / 20 * 17 : 0, y = top ? ins + tp : H - ins - tp, k = 1 + z / 320; return X.toFixed(1) + ' ' + (H / 2 + (y - H / 2) * k - z * 0.4).toFixed(1); };
+    const W = 240, H = 76, R = 44, TM = 1.22, xf = p * W, xb = -1, pt = (x, top, ins) => { let X = x, z = 0; if (x < xf) { const s2 = xf - x, th = Math.min(s2 / R, TM), e = Math.max(0, s2 - R * TM); X = xf - R * Math.sin(th) - Math.cos(TM) * e; z = R * (1 - Math.cos(th)) + Math.sin(TM) * e; } /* 뜯긴 쪽은 접히지 않고 위로 들림: 왼쪽 끝이 떠오르고 오른쪽 변은 붙어 있음 */
+      const tp = x < 20 ? (20 - x) / 20 * 17 : 0, y = top ? ins + tp : H - ins - tp, k = 1 + z / 420; return X.toFixed(1) + ' ' + (H / 2 + (y - H / 2) * k - z * 0.2).toFixed(1); };
     const poly = (x0, x1, ins) => { if (x1 - x0 < 0.5) return ''; const T = [], B = [], n = Math.max(2, Math.ceil((x1 - x0) / 5)); for (let i = 0; i <= n; i++) { const x = x1 - (x1 - x0) * i / n; T.push(pt(x, 1, ins)); B.push(pt(x, 0, ins)); } return 'M' + T.join('L') + 'L' + B.reverse().join('L') + 'Z'; };
     return { a: poly(Math.max(0, xb), W, 0), c: p < 0.02 ? poly(6, W - 5, 5) : '', b: xb > 0 ? poly(0, xb, 0) : '' }; };
   const coverSvg = (p) => { const id = 'tbp' + (++cvN), d = cover(p); return '<svg class="tb-cv" viewBox="0 0 240 76" preserveAspectRatio="none"><defs><pattern id="' + id + '" patternUnits="userSpaceOnUse" width="260" height="84"><rect width="260" height="84" fill="#efe6cd"/><image href="' + PAPER_URI + '" width="260" height="84"/></pattern></defs><path class="b" d="' + d.b + '"/><path class="a" fill="url(#' + id + ')" d="' + d.a + '"/><path class="c" d="' + d.c + '"/><text x="130" y="44" text-anchor="middle">PULL ▶▶▶</text></svg>'; };
   const setP = (row, p) => { row.dataset.p = String(p); const d = cover(p), sv = $('.tb-cv', row); $('.a', sv).setAttribute('d', d.a); $('.b', sv).setAttribute('d', d.b); $('.c', sv).setAttribute('d', d.c); };
   const CSS = `
 .tb{display:grid;grid-template-columns:290px 1fr;border-radius:16px;overflow:hidden;background:#141018;color:#fff;font-family:"Pretendard","Malgun Gothic",sans-serif;border:1px solid #3a2a2a;min-height:620px}
-.tb-mc{background:linear-gradient(180deg,#7a1418,#4a0c10);padding:14px;display:flex;flex-direction:column;gap:10px;box-shadow:inset -6px 0 12px rgba(0,0,0,.35)}
+.tb-mc{position:relative;z-index:1;background:linear-gradient(180deg,#7a1418,#4a0c10);padding:14px;display:flex;flex-direction:column;gap:10px;box-shadow:inset -6px 0 12px rgba(0,0,0,.35)}
 .tb-ttl{font-family:"Arial Black",Arial,sans-serif;font-style:italic;font-size:30px;line-height:.95;text-align:center;color:#ffe58a;text-shadow:0 3px 0 #5a2a00,0 0 16px rgba(255,200,80,.6);border:3px solid #ffd24a;border-radius:12px;padding:8px 4px;background:#2a0608}
 .tb-ttl small{display:block;font-size:.4em;letter-spacing:.3em;color:#fff;font-style:normal;margin-top:4px}
 .tb-win{background:#0d0d10;border:3px solid #1c1c22;border-radius:10px;padding:8px;font-size:12px;line-height:1.7}.tb-win b{color:#ffd24a}.tb-win .n{font:900 22px "Arial Black",Arial,sans-serif;color:#5ef0a0}
@@ -67,7 +67,7 @@
 .tb-btn{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.tb-btn button{border:0;border-radius:12px;padding:12px 2px 9px;font:inherit;font-weight:900;font-size:15px;color:#14161c;cursor:pointer;background:linear-gradient(180deg,#fff3b0,#ffb21c 60%,#d98600);box-shadow:0 5px 0 #6a3d00;display:flex;flex-direction:column;align-items:center;gap:2px}
 .tb-btn button:active{transform:translateY(4px);box-shadow:0 1px 0 #6a3d00}.tb-btn button:disabled{filter:grayscale(.7);opacity:.6;cursor:default}.tb-btn small{display:inline-flex;align-items:center;gap:2px;font-size:11px}
 .tb-slot{height:16px;border-radius:5px;background:#000;box-shadow:inset 0 3px 5px #000,0 1px 0 rgba(255,255,255,.2);margin:6px 18px 0}.tb-msg{min-height:16px;font-size:12px;color:#ffd0c0;font-weight:700;text-align:center}
-.tb-st{position:relative;background:radial-gradient(ellipse at 50% 40%,#3a2a22,#17110f 75%);overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:14px;user-select:none;-webkit-user-select:none}
+.tb-st{position:relative;z-index:2;background:radial-gradient(ellipse at 50% 40%,#3a2a22,#17110f 75%);overflow:visible;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:14px;user-select:none;-webkit-user-select:none}
 .tb-pile{position:relative;width:260px;height:340px}
 .tb-tk{position:absolute;left:0;top:0;width:260px;border-radius:5px;background:#f6efdc;color:#7a1418;box-shadow:0 2px 0 #cfc5a8,0 6px 14px rgba(0,0,0,.5);padding:8px 10px 9px;font-family:"Arial Black",Arial,sans-serif}
 .tb-tk.bk{height:330px;background:repeating-linear-gradient(45deg,#b3161c 0 9px,#9a1016 9px 18px);border:5px solid #f6efdc}
@@ -75,7 +75,7 @@
 .tb-row{position:relative;height:76px;margin-bottom:7px;border-radius:4px;background:#fff;box-shadow:inset 0 0 0 1.5px #7a1418;display:flex;align-items:center;justify-content:space-around;padding:0 8px;overflow:hidden}
 .tb-row.win{background:#fff3b0;box-shadow:inset 0 0 0 3px #f59e0b,0 0 16px rgba(255,190,60,.9);overflow:visible;z-index:2}.tb-row.win .tb-s{animation:tbHop .5s cubic-bezier(.2,1.8,.4,1)}@keyframes tbHop{40%{transform:translateY(-10px) scale(1.15)}}
 .tb-s{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;background:#22252c center 12%/cover;box-shadow:inset 0 0 0 2px #7a1418,0 1px 2px rgba(0,0,0,.4);overflow:hidden;flex:none}.tb-s.co img{width:62%;height:62%;object-fit:contain}.tb-s.ch{background:#fff8e0}.tb-s.ch svg{width:82%;height:82%}
-.tb-row{overflow:visible}.tb-row:before,.tb-row:after{content:"";position:absolute;left:0;right:0;height:0;border-top:2px dotted rgba(122,20,24,.6);z-index:0}.tb-row:before{top:1px}.tb-row:after{bottom:1px}
+.tb-row{overflow:visible;background:none!important;box-shadow:none!important}.tb-bg{position:absolute;inset:0;background:#fff;clip-path:polygon(0 22.4%,8.3% 0,100% 0,100% 100%,8.3% 100%,0 77.6%);z-index:0}.tb-row.win .tb-bg{background:#fff3b0}.tb-row .tb-s{position:relative;z-index:1}.tb-row.win{filter:drop-shadow(0 0 8px rgba(255,190,60,.9))}.tb-row:before,.tb-row:after{content:"";position:absolute;left:0;right:0;height:0;border-top:2px dotted rgba(122,20,24,.6);z-index:0}.tb-row:before{top:1px}.tb-row:after{bottom:1px}
 svg.tb-cv{position:absolute;inset:0;width:100%;height:100%;overflow:visible;z-index:3;cursor:grab;touch-action:none;filter:drop-shadow(0 1px 1px rgba(0,0,0,.25))}
 .tb-cv .a{stroke:#7a1418;stroke-width:3;stroke-linejoin:round}.tb-cv .b{fill:#ddd2b4;stroke:#7a1418;stroke-width:3;stroke-linejoin:round}.tb-cv .c{fill:none;stroke:#7a1418;stroke-width:1;opacity:.75;pointer-events:none}
 .tb-cv text{font:900 15px "Arial Black",Arial,sans-serif;letter-spacing:.2em;fill:#7a1418;pointer-events:none}.tb-row.pull .tb-cv text,.tb-row.done .tb-cv text{display:none}
@@ -93,13 +93,13 @@ svg.tb-cv{position:absolute;inset:0;width:100%;height:100%;overflow:visible;z-in
 .tb-empty{opacity:.6;font-weight:700;font-size:14px;text-align:center;line-height:1.7}
 @media(max-width:760px){.tb{grid-template-columns:1fr}.tb-st{order:-1;min-height:480px}}
 `;
-  const tkHtml = (T, z, ps) => '<div class="tb-tk" style="z-index:' + z + '"><div class="tb-hd"><span>DOROROC</span><small>' + chip('b', 13) + '10</small></div>' + T.rows.map((r, i) => '<div class="tb-row' + (ps && ps[i] ? ' pull' : '') + '" data-i="' + i + '">' + r.map(symHtml).join('') + coverSvg(ps ? ps[i] : 0) + '</div>').join('') + '<div class="tb-ft">같은 무늬 3개 = 당첨 · 골드칩 · DORO칩 · S~SSS 카드</div></div>';
+  const tkHtml = (T, z, ps) => '<div class="tb-tk" style="z-index:' + z + '"><div class="tb-hd"><span>DOROROC</span><small>' + chip('b', 13) + '10</small></div>' + T.rows.map((r, i) => '<div class="tb-row' + (ps && ps[i] ? ' pull' : '') + '" data-i="' + i + '"><i class="tb-bg"></i>' + r.map(symHtml).join('') + coverSvg(ps ? ps[i] : 0) + '</div>').join('') + '<div class="tb-ft">같은 무늬 3개 = 당첨 · 골드칩 · DORO칩 · S~SSS 카드</div></div>';
   function ui() {
     if (!root) return; const o = window.doroChips.get();
     $('.tb-bal', root).innerHTML = '<span>' + chip('b', 18) + fmt(Math.max(0, window.doroChips.total() - pendG * 10)) + '</span><span>' + chip('r', 18) + fmt(Math.max(0, ((o && o.r) || 0) - pendR)) + '</span>';
     root.querySelectorAll('.tb-btn button').forEach((b) => { b.disabled = busy || !!cur || Q.length > 0; });
     const L = left; $('.tb-win', root).innerHTML = L ? '이 상자에 남은 표 <span class="n">' + fmt(L.n) + '</span> / ' + fmt(BOX) + '<br><b>SSS</b> ' + (L.SSS || 0) + ' · <b>SS</b> ' + (L.SS || 0) + ' · <b>S</b> ' + (L.S || 0) + '<br>' + chip('r', 14) + ' ' + (L.r || 0) + ' · ' + chip('g', 14) + ' 20×' + (L.g20 || 0) + ' 10×' + (L.g10 || 0) + ' 3×' + (L.g3 || 0) : '상자를 확인하는 중…';
-    { const v = $('.tb-view', root), n = L ? L.n : 0; if (v) v.innerHTML = [0, 1, 2, 3, 4].map((q) => '<i style="--h:' + Math.max(0, Math.min(100, (n - q * BOX / 5) / (BOX / 5) * 100)).toFixed(0) + '"></i>').join(''); } /* 200장씩 다섯 더미: 남은 만큼만 쌓여 있음 */
+    { const v = $('.tb-view', root), n = L ? L.n + inMc : 0; if (v) v.innerHTML = [0, 1, 2, 3, 4].map((q) => '<i style="--h:' + Math.max(0, Math.min(100, (n - q * BOX / 5) / (BOX / 5) * 100)).toFixed(0) + '"></i>').join(''); } /* 200장씩 다섯 더미: 남은 만큼만 쌓여 있음 */
     root.querySelectorAll('.tb-opt [data-tb=link]').forEach((b) => b.classList.toggle('on', link));
     const ct = $('.tb-ctl', root); if (ct) ct.innerHTML = cur || Q.length ? '<span>남은 표 ' + (Q.length + (cur ? 1 : 0)) + '장</span><button type="button" data-tb="all">모두 뜯기</button>' : '';
   }
@@ -110,7 +110,7 @@ svg.tb-cv{position:absolute;inset:0;width:100%;height:100%;overflow:visible;z-in
     catch (e) { busy = false; ui(); msg.textContent = ({ chips: '싱크칩이 부족합니다.', login: '로그인이 필요합니다.', closed: '아직 공개 전입니다. (관리자 전용)' })[e && e.message] || '서버와 연결하지 못했습니다. (' + ((e && e.message) || e) + ')'; return; }
     if (!res.tix.length) { busy = false; ui(); return; }
     res.tix.forEach((t) => { if (t[0] === 'r') pendR++; else if (t[0] && t[0][0] === 'g') pendG += +t[0].slice(1); else if (t[2]) pendG += DUP[TV[t[0]]]; }); ui();
-    Q = res.tix.map(compose); const pile = $('.tb-pile', root), e0 = $('.tb-empty', root); if (e0) e0.remove(); pile.innerHTML = ''; const sl = $('.tb-slot', root).getBoundingClientRect(), pr = pile.getBoundingClientRect(), N = Q.length, gap = N > 5 ? 70 : 110;
+    Q = res.tix.map(compose); inMc = Q.length; ui(); Q.forEach((T0, i0) => setTimeout(() => { inMc = Math.max(0, inMc - 1); ui(); }, 350 + i0 * (Q.length > 5 ? 70 : 110))); const pile = $('.tb-pile', root), e0 = $('.tb-empty', root); if (e0) e0.remove(); pile.innerHTML = ''; const sl = $('.tb-slot', root).getBoundingClientRect(), pr = pile.getBoundingClientRect(), N = Q.length, gap = N > 5 ? 70 : 110;
     Q.forEach((T, i) => { const d = document.createElement('div'); d.className = 'tb-tk bk'; const rx = (Math.random() * 2 - 1) * 46, ry = (Math.random() * 2 - 1) * 30, rr = (Math.random() * 2 - 1) * 24; d.style.zIndex = String(i + 1); d.dataset.r = rx + ',' + ry + ',' + rr; pile.appendChild(d);
       d.animate([{ transform: 'translate(' + (sl.left + sl.width / 2 - pr.left - 130) + 'px,' + (sl.top + sl.height / 2 - pr.top - 165) + 'px) rotate(-90deg) scale(.22)' }, /* 사출구에서 튀어나옴 */ { transform: 'translate(' + rx + 'px,' + ry + 'px) rotate(' + rr + 'deg)' }], { duration: 260, delay: 350 + i * gap, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'both' }); sfx.out(0.35 + i * gap / 1000); });
     setTimeout(() => { if (N > 1) sfx.tidy(); [...pile.children].forEach((d, i) => { const r = d.dataset.r.split(','); d.animate([{ transform: 'translate(' + r[0] + 'px,' + r[1] + 'px) rotate(' + r[2] + 'deg)' }, { transform: 'translate(0,' + (-i * 1.5) + 'px) rotate(0deg)' }], { duration: 320, easing: 'cubic-bezier(.3,1.4,.5,1)', fill: 'forwards' }); }); }, 350 + N * gap + 320); /* 탁탁 가지런히 */
@@ -145,7 +145,7 @@ svg.tb-cv{position:absolute;inset:0;width:100%;height:100%;overflow:visible;z-in
       else if (k[0] === 'g') { const g = +k.slice(1); pendG -= g; sfx.win(g >= 10 ? 2 : 1); if (window.doroChipFly && row) window.doroChipFly(row, bal[0], g * 10, { size: 18 }); hold = auto ? 500 : 1100; }
       else { sfx.win(TV[k] - 6); if (t[2]) pendG -= DUP[TV[k]]; const x = data().list.find((y) => String(y.code) === String(t[1])); if (x) { const c = document.createElement('div'); c.className = 'tb-card'; c.style.setProperty('--gc', (data().tierCol || {})[k] || '#fff'); c.innerHTML = window.doroRaid.card(Object.assign({}, x, { cnt: t[3] || 1 })); st.appendChild(c); setTimeout(() => c.remove(), 1650); } hold = auto ? 900 : 1700; }
       setTimeout(ui, 900); }
-    else { res.innerHTML = '<span style="opacity:.55">꽝</span>'; }
+    else { res.innerHTML = '<span style="opacity:.55">꽝</span>'; T.lose = 1; }
     setTimeout(() => { if (cur !== T) return; if (tk) tk.animate([{ transform: 'none', opacity: 1 }, { transform: 'translate(' + (k ? 240 : -240) + 'px,60px) rotate(' + (k ? 24 : -24) + 'deg)', opacity: 0 }], { duration: 200, easing: 'ease-in', fill: 'forwards' }); setTimeout(() => { if (cur === T) next(); }, 190); }, hold);
   }
   function build() {
@@ -155,7 +155,7 @@ svg.tb-cv{position:absolute;inset:0;width:100%;height:100%;overflow:visible;z-in
       '<main class="tb-st"><div class="tb-res"></div><div class="tb-pile"><div class="tb-empty">표를 뽑으세요<br>덮개를 오른쪽으로 끌거나 누르면 뜯깁니다</div></div><div class="tb-ctl"></div></main></div>';
     ui(); if (!left) fetchTix(0).then((r) => { left = r.left; ui(); }).catch(() => { /* 다음에 */ });
   }
-  function onClick(e) { const b = e.target.closest('.tb-btn button'); if (b) { buyN(+b.dataset.n); return; } const a = e.target.closest('[data-tb]'); if (!a) return;
+  function onClick(e) { const b = e.target.closest('.tb-btn button'); if (b) { buyN(+b.dataset.n); return; } const a = e.target.closest('[data-tb]'); if (!a) { if (cur && cur.fin && cur.lose && e.target.closest('.tb-st')) next(); /* 꽝: 누르면 기다리지 않고 바로 다음 */ return; }
     if (a.dataset.tb === 'link') { link = !link; ui(); return; }
     if (a.dataset.tb === 'odds') { const o = $('.tb-odds', root); o.hidden = !o.hidden; return; }
     if (a.dataset.tb === 'reset') { if (busy || cur || Q.length) return; if (a.dataset.ok !== '1') { a.dataset.ok = '1'; a.textContent = '한 번 더 누르면 교체'; setTimeout(() => { a.dataset.ok = ''; a.textContent = '상자 교체'; }, 2500); return; } a.dataset.ok = ''; a.textContent = '상자 교체'; busy = true; fetchTix(0, true).then((r) => { left = r.left; busy = false; sfx.tidy(); ui(); }).catch(() => { busy = false; ui(); }); return; }

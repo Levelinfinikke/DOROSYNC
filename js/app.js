@@ -4414,14 +4414,14 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   function renderLobby() {
     const root = $('#tab-game'); if (!root) return; const adm = dexOk(), o = chipRaw();
     const G = [['gcmg', '가챠 머신', '캡슐을 뽑고 싱크칩을 모으세요', 'lb-gc', 1], ['raid', '포커레이드', '니케 카드로 족보를 만들어 보스를 공략', 'lb-rd', adm], ['pack', '카드팩', '팩을 뜯어 니케 카드를 모으세요', 'lb-pk', adm], ['dex', '카드', '모은 카드와 수집 보상', 'lb-dx', adm],
-      ['plinko', '도로드롭', '칩을 떨어뜨려 배수와 DORO칩을 노리세요', 'lb-pl', adm], ['tabs', '도로록', '표를 뽑아 드르륵 뜯으세요', 'lb-pt', adm], ['g48', '2048', '타일을 합쳐 2048을 만드세요', 'lb-48', adm]].filter((g) => g[4] || !g[0]);
+      ['plinko', '도로드롭', '칩을 떨어뜨려 배수와 DORO칩을 노리세요', 'lb-pl', adm], ['tabs', '도로록', '표를 뽑아 드르륵 뜯으세요', 'lb-pt', adm], ['g48', '2048', '명함을 합쳐 풀코강을 만드세요', 'lb-48', adm]].filter((g) => g[4] || !g[0]);
     /* 입구 그림 = 실제 게임 화면의 요소(카드·팩·보스) */
     const art = {}, rd = window.doroRaid && window.doroRaidData ? window.doroRaidData() : null, L = rd && rd.list ? rd.list.slice().sort((a, b) => (b.t === 'SSS') - (a.t === 'SSS')) : [];
     try { if (L.length >= 5 && adm) { const cd = (x, cnt) => window.doroRaid.card(Object.assign({}, x, { cnt }));
         art.raid = '<span class="lb-sc"><span class="lb-hud"><i class="c">42</i>×<i class="m">7</i></span><span class="lb-row">' + [0, 1, 2, 3, 4].map((k) => cd(L[k], [4, 11, 7, 4, 1][k])).join('') + '</span></span>';
         art.dex = '<span class="lb-fan">' + [5, 6, 7].map((k, q) => cd(L[k % L.length], [1, 11, 4][q])).join('') + '</span>';
         if (window.doroTabs && window.doroTabs.art) art.tabs = window.doroTabs.art();
-        art.g48 = '<span class="lb-48g">' + [[2, '#3a4252'], [8, '#2f7de0'], [64, '#8bc34a'], [16, '#1fa8c9'], [256, '#ff9a24'], [1024, '#e23c8a'], [4, '#4a5670'], [128, '#f5c63a'], [2048, '#b05cff']].map((v) => '<i style="background:' + v[1] + '">' + v[0] + '</i>').join('') + '</span>';
+        if (window.doro2048 && window.doro2048.art) art.g48 = window.doro2048.art();
         if (window.doroPack && window.doroPack.art) art.pack = '<span class="lb-pks">' + ['co:엘리시온', 'std', 'pil'].map((k) => window.doroPack.art(k)).join('') + '</span>'; }
       { /* 가챠 머신: 필그림 캡슐(살짝 열려 틈에서 빛) · 엘리시온 캡슐 · SR · R 캡슐 */
         const em = (window.GM_ASSETS && window.GM_ASSETS.assets && window.GM_ASSETS.assets.emb) || {};
@@ -4497,12 +4497,14 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   /* 가챠 머신: 독립 모듈(DoroGacha)을 실제 풀·보유 재화와 연결 */
   let gmInst = null; const gmStock = { jw: 0, pick: 0 };
   function gmStockSync() { let v = null; try { const c = jwCalc(); v = c.at(c.today).v; } catch (e) { /* 쥬얼 탭 미입력 */ } const jw = v ? Math.max(0, Math.floor(v.jw || 0)) : 0, pk = v ? Math.max(0, Math.floor(v.pick || 0)) : 0; if (jw < 300 && pk < 1) { gmStock.jw = 30000; gmStock.pick = 100; } else { gmStock.jw = jw; gmStock.pick = pk; } }
+  const GM_PICKUP = ['마리안 : 퀸', '홍련 : 신살']; /* 지금 픽업 중인 니케: 가챠 머신과 2048(타일 초상화)이 함께 씀. 픽업이 바뀌면 여기만 고치면 됨 */
+  window.doroPickup = () => { const n = GM_PICKUP[0], k = nkCode(n); return { n, code: k, img: k ? BL_IMG(k) : '' }; };
   function gmMount() {
     if (gmInst) return; if (!window.DoroGacha) { /* 가챠 엔진은 가챠 탭을 처음 열 때 불러옴 */ if (!gmMount.w) { gmMount.w = 1; const sc = document.createElement('script'); sc.src = 'js/gacha.js'; sc.onload = () => { gmMount.w = 0; const go = () => { if (curTab === 'gcm') gmMount(); }; if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go(); }; sc.onerror = () => { gmMount.w = 0; const r = document.getElementById('gm-root'); if (r) r.innerHTML = '<p class="muted" style="padding:20px">가챠 머신을 불러오지 못했습니다. 새로고침해 주세요.</p>'; }; document.head.appendChild(sc); } return; } let D; try { D = window.GM_ASSETS; if (!D) throw 0; } catch (e) { return; }
     const corp = {}; GC_NK.forEach((r) => { if (r[2] === 'SSR') corp[r[0]] = r[1]; });
     const mk = (L, p, cp) => L.map((n) => { const k = nkCode(n) || nkCode({ '리틀 머메이드': '세이렌' }[n] || ''); return { n, c: corp[n] || cp || '', k, p, img: k ? BL_IMG(k) : '', tall: 1 }; });
     gmStockSync(); const std = mk(GC_POOL.std, 0), pil = mk(GC_POOL.pil, 1), M = (name, cover) => ({ assets: Object.assign({}, D.assets, { cover }), tiers: tierData(), chipTiers: chipTierData(), pools: { std, pil, pickup: mk([name], 1, '필그림')[0] }, stock: gmStock, shared: true, title: name + ' 픽업' });
-    gmInst = window.DoroGacha.mountMulti(document.getElementById('gm-root'), [M('마리안 : 퀸', D.assets.cover), M('홍련 : 신살', D.assets.cover2)]);
+    gmInst = window.DoroGacha.mountMulti(document.getElementById('gm-root'), [M(GM_PICKUP[0], D.assets.cover), M(GM_PICKUP[1], D.assets.cover2)]);
   }
   /* ---------- 가챠 > 티어표 (솔레 / PvP) ---------- */
   const TR_KEY = 'dorosync-tiers-v2', TR_LV = ['SSS', 'SS', 'S', 'A', 'B', 'C', 'D', 'E', 'F'];
