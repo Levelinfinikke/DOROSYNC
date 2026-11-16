@@ -2733,7 +2733,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     if (work !== fx.classList.contains('work')) { fx.classList.toggle('work', work); if (work) { fx.style.setProperty('--left', ((60000 - ph) / 1000).toFixed(2) + 's'); } }
     card.classList.toggle('full', n >= IDLE_MAX);
     if (n !== idleLast) { const up = idleLast >= 0 && n === idleLast + 1; idleLast = n; const num = card.querySelector('.idle-v .num'), set = () => { num.textContent = fmt(n); card.querySelector('.idle-bar u').style.width = Math.round(n / IDLE_MAX * 100) + '%'; card.querySelector('#idle-get').disabled = n < 1; };
-      if (up && window.doroChipFly) { try { window.doroChipFly(card.querySelector('.idle-chip'), num, 1, { size: 22, k: 'b', single: 1 }); } catch (e) { /* 무시 */ } setTimeout(set, 900); } else set(); } /* 다 만든 칩 하나가 튀어나와 쌓임 */
+      if (up && window.doroChipFly) { const fr = fx.getBoundingClientRect(), sz = Math.max(18, fr.width * 0.28), from = { getBoundingClientRect: () => ({ left: fr.left + fr.width / 2 - sz / 2, top: fr.top + fr.height / 2 - sz / 2, width: sz, height: sz }) }; /* 홈이 닫히면 칩의 크기가 0이 되어 출발점을 못 찾던 문제: 장치 한가운데를 출발점으로 */ try { window.doroChipFly(from, num, 1, { size: Math.round(sz), k: 'b', single: 1 }); } catch (e) { /* 무시 */ } setTimeout(set, 900); } else set(); } /* 다 만든 칩 하나가 튀어나와 쌓임 */
   }
   setInterval(idleTick, 200);
   document.addEventListener('click', (e) => {
