@@ -2,12 +2,12 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /users/{uid} {
-      // chipsV(검증된 도로칩 잔고)·chipDay(하루 사용량)는 서버(워커)만 쓸 수 있음
+      // 서버(워커)만 쓸 수 있는 필드: 칩 잔고·하루 사용량·제작소 수령 시각, 카드 보유(dex·dexL), 레이드 테두리, 도로록 상자(pt), 2048 기록(g48·g48b)
       allow read, delete: if request.auth != null && request.auth.uid == uid;
       allow create: if request.auth != null && request.auth.uid == uid
-        && !request.resource.data.keys().hasAny(['chipsV', 'chipDay']);
+        && !request.resource.data.keys().hasAny(['chipsV', 'chipDay', 'idleT', 'dex', 'dexL', 'raidFrames', 'pt', 'g48', 'g48b']);
       allow update: if request.auth != null && request.auth.uid == uid
-        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['chipsV', 'chipDay']);
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['chipsV', 'chipDay', 'idleT', 'dex', 'dexL', 'raidFrames', 'pt', 'g48', 'g48b']);
       // 하위 컬렉션만 (v2의 {doc=**}는 이 문서 자신까지 포함하므로 한 단계 아래부터)
       match /{sub}/{doc=**} {
         allow read, write: if request.auth != null && request.auth.uid == uid;

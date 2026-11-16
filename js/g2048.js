@@ -39,7 +39,7 @@
 .g48-k{display:grid;grid-template-columns:1fr 1fr;gap:6px}.g48-k div{background:#0c0e14;border-radius:10px;padding:7px 9px;font-size:11.5px;color:#9aa5b8}.g48-k b{display:block;color:#fff;font-size:18px;font-weight:800}
 .g48-bal{display:flex;gap:10px;background:#0c0e14;border-radius:10px;padding:8px 10px;font-weight:800}.g48-bal span{display:inline-flex;align-items:center;gap:5px}
 .g48-b{border:0;border-radius:12px;padding:11px;font:inherit;font-weight:900;font-size:15px;cursor:pointer;color:#14161c;background:linear-gradient(180deg,#ffe58a,#ffb21c 55%,#e08a00);box-shadow:0 4px 0 #8a5200;display:flex;align-items:center;justify-content:center;gap:6px}.g48-b.g{background:#3a4252;color:#fff;box-shadow:0 4px 0 #1c212b}.g48-b.on{background:linear-gradient(180deg,#a8f0c8,#22b573);box-shadow:0 4px 0 #0c6a3c}.g48-b:disabled{opacity:.5;cursor:default}.g48-b:active{transform:translateY(3px);box-shadow:0 1px 0 #8a5200}
-.g48-msg{min-height:16px;font-size:12px;color:#ffb0a0;font-weight:700}.g48-hint{font-size:11.5px;line-height:1.7;color:#9aa5b8}
+.g48-msg{min-height:16px;font-size:12px;color:#ffb0a0;font-weight:700}.g48-hint{font-size:11.5px;line-height:1.7;color:#9aa5b8}.g48-ap{display:block;margin-top:4px;color:#ffd24a;font-weight:700}
 .g48-main{display:grid;place-items:center;padding:18px;background:radial-gradient(ellipse at 50% 30%,#2a3147,#0f1118 75%);position:relative;touch-action:none}
 .g48-bd{position:relative;width:min(460px,84vw);aspect-ratio:1;background:#0a0c12;border-radius:14px;box-shadow:inset 0 0 0 3px #2a3147,0 10px 30px rgba(0,0,0,.5)}
 .g48-bd u{position:absolute;width:22%;height:22%;border-radius:10px;background:rgba(255,255,255,.05);left:calc(2.4% + var(--c)*24.4%);top:calc(2.4% + var(--r)*24.4%)}
@@ -72,7 +72,15 @@
       if (x.nw || isNew) { e.classList.add('nw'); x.nw = 0; } if (x.mg) { e.classList.remove('mg'); void e.offsetWidth; e.classList.add('mg'); x.mg = 0; } });
     bd.querySelectorAll('.g48-tl').forEach((e) => { if (e.dataset.id && !have[e.dataset.id]) e.remove(); });
   }
-  function go(d) { if (!G || maxOf(G) >= GOAL) return false; const r = move(G, d); if (!r.moved) return false; paint(r.gone); save(); const mx = maxOf(G);
+  /* 합성한 단계를 서버에 알림(이번 시즌 포커레이드의 픽업 니케 카드 수로 인정). 단계가 오를 때마다 잠깐 뒤에 한 번 */
+  let apT = 0, apMsg = '';
+  const AP_ERR = { noseason: '지금은 열린 시즌이 없어 적용되지 않습니다.', nopick: '픽업 니케가 아직 카드로 등록되지 않아 적용되지 않습니다.', closed: '아직 공개 전입니다.', auth: '로그인하면 포커레이드에 적용됩니다.' };
+  function apShow() { const e = root && $('.g48-ap', root); if (e) e.textContent = apMsg; }
+  function apply2048() { clearTimeout(apT); if (!G) return; const mx = maxOf(G); if (mx < 2 || (G.sent || 0) >= mx) return;
+    apT = setTimeout(async () => { const g = G, a = window.doroAccount; if (!g) return; if (!(a && a.user)) { apMsg = AP_ERR.auth; apShow(); return; } if (!(window.doroRaid && window.doroRaid.api)) return;
+      try { const m0 = maxOf(g), j = await window.doroRaid.api('g48', { seed: g.seed, moves: g.moves, code: pick().code || '' }); g.sent = m0; apMsg = '적용됨: ' + String(pick().n).replace(/[<>&]/g, '') + ' ' + stage(j.v || m0); }
+      catch (e) { apMsg = AP_ERR[e && e.message] || '포커레이드에 적용하지 못했습니다. 잠시 후 다시 합성하면 다시 시도합니다.'; } apShow(); }, 1500); }
+  function go(d) { if (!G || maxOf(G) >= GOAL) return false; const r = move(G, d); if (!r.moved) return false; paint(r.gone); save(); const mx = maxOf(G); if (r.gain) apply2048();
     if (r.gain) { tone(300 + Math.min(1400, r.gain * 70), 0.12, 0.07); if (mx >= GOAL) { stopAuto(); [0, 4, 7, 12, 16, 19, 24].forEach((s2, i) => tone(523 * Math.pow(2, s2 / 12), 0.35, 0.08, i * 0.08)); } } else tone(180, 0.04, 0.035, 0, 'sine'); ui(); return true; }
   const stopAuto = () => { clearInterval(autoT); autoT = 0; if (G) G.on = false; };
   function auto() {
@@ -83,7 +91,7 @@
   }
   function build() {
     let cells = ''; for (let i = 0; i < 16; i++) cells += '<u style="--r:' + (i >> 2) + ';--c:' + (i & 3) + '"></u>';
-    root.innerHTML = '<div class="g48"><aside class="g48-side"><div class="g48-t">2048</div><div class="g48-pk"></div><div class="g48-k"></div><div class="g48-bal"></div><button type="button" class="g48-b" data-g="new">새 판</button><button type="button" class="g48-b g" data-g="auto"></button><div class="g48-msg"></div><div class="g48-hint">합성한 코강은 이번 포커레이드에 적용됩니다.</div></aside>' +
+    root.innerHTML = '<div class="g48"><aside class="g48-side"><div class="g48-t">2048</div><div class="g48-pk"></div><div class="g48-k"></div><div class="g48-bal"></div><button type="button" class="g48-b" data-g="new">새 판</button><button type="button" class="g48-b g" data-g="auto"></button><div class="g48-msg"></div><div class="g48-hint">가장 높이 합성한 단계는 이번 시즌 포커레이드에서 픽업 니케 카드에 적용됩니다.<b class="g48-ap"></b></div></aside>' +
       '<main class="g48-main"><div class="g48-bd">' + cells + '<div class="g48-ov"></div></div></main></div>';
     const mn = $('.g48-main', root); let dn = null;
     mn.addEventListener('pointerdown', (e) => { dn = [e.clientX, e.clientY]; }); mn.addEventListener('pointerup', (e) => { if (!dn) return; const dx = e.clientX - dn[0], dy = e.clientY - dn[1]; dn = null; if (Math.max(Math.abs(dx), Math.abs(dy)) < 24 || (G && G.on)) return; go(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'R' : 'L') : (dy > 0 ? 'D' : 'U')); });

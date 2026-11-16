@@ -36,7 +36,7 @@
   const readImg = (file) => new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = URL.createObjectURL(file); });
   async function upload(pk) { const j = await post({ img: { data: pk.data, type: pk.type } }); return j && j.ok && j.id ? 'img:' + j.id : (upload.err = j, ''); }
   function pull() { const c = cfg(); G = JSON.parse(JSON.stringify(c.gacha)); R = { nm: c.raid.nm, img: c.raid.img }; NT = c.notice || ''; FR = JSON.parse(JSON.stringify(c.frames || {})); NKX = JSON.parse(JSON.stringify(c.nk || [])); PK = JSON.parse(JSON.stringify(c.packs || [])); }
-  async function saveCfg(msgId, okTxt) { const j = await post({ cfg: Object.assign({ gacha: G, raid: R, notice: NT, frames: FR, nk: NKX, packs: PK }, tierPayload()) }); if (j.ok) { const c = cfg(); window.doroCfg.apply({ cfg: j.cfg, season: c.srvSeason, srv: 1 }); pull(); } say(msgId, j, okTxt); return !!j.ok; }
+  async function saveCfg(msgId, okTxt) { try { const A = TA(); G.forEach((m) => { m.code = A.code(m.n) || (NKX.find((x) => x.n === m.n) || {}).code || ''; }); } catch (e) { /* 코드 없이 저장 */ } const j = await post({ cfg: Object.assign({ gacha: G, raid: R, notice: NT, frames: FR, nk: NKX, packs: PK }, tierPayload()) }); if (j.ok) { const c = cfg(); window.doroCfg.apply({ cfg: j.cfg, season: c.srvSeason, srv: 1 }); pull(); } say(msgId, j, okTxt); return !!j.ok; }
 
   function show() {
     const root = document.getElementById('tab-admin'); if (!root) return;

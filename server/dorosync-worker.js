@@ -534,6 +534,22 @@ async function raid(req, env, out) {
   }
   const md = await getDoc('meta/raid'), sn = md && md.f.on && md.f.id ? md.f : null, active = !!(sn && now >= sn.start && now < sn.end);
   const season = sn ? { id: sn.id, e: sn.e, r: sn.r, start: sn.start, end: sn.end, active } : null;
+  if (a === 'g48') { /* 2048에서 합성한 단계를 이번(또는 곧 시작할) 시즌의 픽업 니케 카드 수로 인정. 보낸 씨앗·움직임을 같은 규칙으로 다시 돌려 확인 */
+    if (!sn || now >= sn.end) return out(409, { ok: false, error: 'noseason' });
+    const GL = ((SITE && SITE.gacha) || []).filter((x) => x && x.n); let code = '';
+    if (GL.length) { const pin = GL.find((x) => x.pin), act = GL.filter((x) => (x.s || x.e) && (!x.s || now >= x.s) && (!x.e || now < x.e)).sort((x, y) => (y.s || 0) - (x.s || 0)), nx = GL.filter((x) => x.s && now < x.s).sort((x, y) => x.s - y.s); code = String((pin || act[0] || nx[0] || GL[0]).code || ''); }
+    if (!code) code = String(B.code || '').replace(/\D/g, '').slice(0, 6); /* 가챠 머신 목록을 서버에 저장하기 전: 사이트가 보낸 대표 픽업 */
+    if (!RAID_NK[code]) return out(409, { ok: false, error: 'nopick' });
+    const rr = tabsRng(+B.seed >>> 0), c = Array(16).fill(0), sp = () => { const e = []; for (let i = 0; i < 16; i++) if (!c[i]) e.push(i); if (!e.length) return; const i = e[Math.floor(rr() * e.length)]; c[i] = rr() < 0.9 ? 1 : 2; };
+    const LN = { L: [0, 1, 2, 3].map((r) => [0, 1, 2, 3].map((q) => r * 4 + q)), R: [0, 1, 2, 3].map((r) => [3, 2, 1, 0].map((q) => r * 4 + q)), U: [0, 1, 2, 3].map((q) => [0, 1, 2, 3].map((r) => r * 4 + q)), D: [0, 1, 2, 3].map((q) => [3, 2, 1, 0].map((r) => r * 4 + q)) };
+    sp(); sp(); let mx = 0;
+    for (const ch of String(B.moves || '').slice(0, 30000)) { const L = LN[ch]; if (!L || mx >= 11) continue; let moved = false; L.forEach((ln) => { const t = ln.map((i) => c[i]).filter(Boolean), o = []; for (let i = 0; i < t.length; i++) { if (i + 1 < t.length && t[i] === t[i + 1]) { o.push(t[i] + 1); i++; } else o.push(t[i]); } ln.forEach((ci, k) => { const nv = o[k] || 0; if (nv !== c[ci]) moved = true; c[ci] = nv; }); }); if (moved) { mx = Math.max(mx, Math.max.apply(null, c)); sp(); } }
+    mx = Math.min(11, Math.max(mx, Math.max.apply(null, c)));
+    for (let attempt = 0; attempt < 3; attempt++) { const ud = await getDoc('users/' + uid); if (!ud) return out(404, { ok: false, error: 'nouser' }); const old = ud.f.g48b, v = Math.max(old && old.sid === sn.id && old.code === code ? +old.v || 0 : 0, mx);
+      if (old && old.sid === sn.id && old.code === code && +old.v >= v) return out(200, { ok: true, v, code, sid: sn.id });
+      if (await commit([{ update: { name: ud.name, fields: { g48b: fsv({ sid: sn.id, code, v }) } }, updateMask: { fieldPaths: ['g48b'] }, currentDocument: { updateTime: ud.updateTime } }])) return out(200, { ok: true, v, code, sid: sn.id }); }
+    return out(409, { ok: false, error: 'busy' });
+  }
   if (!sn) return out(200, { ok: true, season: null, admin });
   const col = 'raid_' + sn.id;
   if (a === 'rank') {
@@ -569,6 +585,7 @@ async function raid(req, env, out) {
       const ud = await getDoc('users/' + uid), web = (ud && ud.f.dex) || {}, cnt = {};
       chars.forEach((c) => { const k = String(c.name_code); if (RAID_NK[k]) cnt[k] = 1 + Math.min(3, Number(c.grade) || 0) + Math.min(7, Number(c.core) || 0); }); const dexL = Object.assign({}, cnt); /* 연동 보유 수: 카드팩의 풀코강 초과 판정에 씀 */
       Object.keys(web).forEach((k) => { if (RAID_NK[k]) cnt[k] = Math.min(11, (cnt[k] || 0) + Math.max(0, Math.floor(+web[k] || 0))); });
+      { const gb = ud && ud.f.g48b; if (gb && gb.sid === sn.id && RAID_NK[gb.code]) cnt[gb.code] = Math.max(cnt[gb.code] || 0, Math.min(11, Math.floor(+gb.v || 0))); } /* 2048에서 합성한 픽업 니케 단계(이번 시즌만) */
       const codes = Object.keys(cnt).filter((k) => cnt[k] > 0); if (codes.length < 7) return out(409, { ok: false, error: 'deck', have: codes.length });
       rShuffle(codes);
       const NKN = Object.keys(RAID_NK).length, x1 = codes.length >= NKN ? 1 : 0, rd = 1 + Math.min(3, Math.floor(codes.length / NKN * 4)); /* 버리기: 기본 1, 도감 25%마다 +1(최대 4). 100%는 하루 핸드 +1 */
@@ -674,7 +691,7 @@ async function siteConfig(env, out) {
   return out(200, Object.assign({ ok: true, now }, CFG_MEM.body), { 'Cache-Control': 'public, max-age=30' });
 }
 let TV_MEM = null;
-async function siteTv(env) { const now = Date.now(); if (TV_MEM && now - TV_MEM.t < 30000) return TV_MEM.tv; const st = await fsGet('meta/site', await saHead(env)); let tv = null; try { const c = st && st.f.j ? JSON.parse(st.f.j) : null; tv = c ? { tv: c.tv || null, nk: c.nk || [], packs: c.packs || [] } : null; } catch (e) { tv = null; } TV_MEM = { t: now, tv }; return tv; }
+async function siteTv(env) { const now = Date.now(); if (TV_MEM && now - TV_MEM.t < 30000) return TV_MEM.tv; const st = await fsGet('meta/site', await saHead(env)); let tv = null; try { const c = st && st.f.j ? JSON.parse(st.f.j) : null; tv = c ? { tv: c.tv || null, nk: c.nk || [], packs: c.packs || [], gacha: c.gacha || [] } : null; } catch (e) { tv = null; } TV_MEM = { t: now, tv }; return tv; }
 async function siteImg(id, env, out) {
   if (!/^[a-z0-9]{8,24}$/.test(id) || !env.FIREBASE_SA) return out(404, { ok: false, error: 'not found' });
   const d = await fsGet('img/' + id, await saHead(env)); if (!d || !d.f.b) return out(404, { ok: false, error: 'not found' });
@@ -695,7 +712,7 @@ async function adminSite(b, H0, out) {
   if (b.imgDel) { const id = String(b.imgDel); if (!/^[a-z0-9]{8,24}$/.test(id)) return out(400, { ok: false, error: 'bad' }); const ok = await commit([{ delete: FS_DOC('img/' + id) }]); return out(ok ? 200 : 502, { ok }); }
   if (b.cfg) { /* 가챠 머신 목록·보스 이름/이미지·공지 */
     const nmL = (L) => (Array.isArray(L) ? L : []).slice(0, 400).map((v) => str(v, 40)).filter(Boolean);
-    const c = b.cfg, g = (Array.isArray(c.gacha) ? c.gacha : []).slice(0, 12).map((x) => ({ id: str(x.id, 20).replace(/[^0-9a-zA-Z_-]/g, '') || String(now), n: str(x.n, 40), rate: +x.rate === 2 ? 2 : 1, corp: ['엘리시온', '미실리스', '테트라', '필그림', '어브노멀'].includes(x.corp) ? x.corp : '', cover: ref(x.cover), face: ref(x.face), s: ms(x.s), e: ms(x.e), pin: x.pin ? 1 : 0, el: R_CYC.includes(x.el) ? x.el : '', wp: ['AR', 'SMG', 'SG', 'SR', 'RL', 'MG'].includes(x.wp) ? x.wp : '', cls: ['화력형', '방어형', '지원형'].includes(x.cls) ? x.cls : '', pool: { out: nmL(x.pool && x.pool.out), inc: nmL(x.pool && x.pool.inc) } })).filter((x) => x.n && x.cover);
+    const c = b.cfg, g = (Array.isArray(c.gacha) ? c.gacha : []).slice(0, 12).map((x) => ({ id: str(x.id, 20).replace(/[^0-9a-zA-Z_-]/g, '') || String(now), n: str(x.n, 40), rate: +x.rate === 2 ? 2 : 1, corp: ['엘리시온', '미실리스', '테트라', '필그림', '어브노멀'].includes(x.corp) ? x.corp : '', cover: ref(x.cover), face: ref(x.face), s: ms(x.s), e: ms(x.e), pin: x.pin ? 1 : 0, code: String(x.code || '').replace(/\D/g, '').slice(0, 6), el: R_CYC.includes(x.el) ? x.el : '', wp: ['AR', 'SMG', 'SG', 'SR', 'RL', 'MG'].includes(x.wp) ? x.wp : '', cls: ['화력형', '방어형', '지원형'].includes(x.cls) ? x.cls : '', pool: { out: nmL(x.pool && x.pool.out), inc: nmL(x.pool && x.pool.inc) } })).filter((x) => x.n && x.cover);
     const cfg = { gacha: g, raid: { nm: str(c.raid && c.raid.nm, 30), img: ref(c.raid && c.raid.img) }, notice: str(c.notice, 200), frames: {}, at: now };
     Object.keys(c.frames && typeof c.frames === 'object' ? c.frames : {}).slice(0, 40).forEach((sid) => { if (!/^[0-9a-zA-Z-]{1,20}$/.test(sid)) return; const o = {}; [1, 2, 3].forEach((t) => { const v = ref(c.frames[sid] && c.frames[sid][t]); if (v) o[t] = v; }); if (Object.keys(o).length) cfg.frames[sid] = o; }); /* 시즌별 순위 보상 테두리(1 = 상위 3%, 2 = 10%, 3 = 30%) */
     cfg.nk = (Array.isArray(c.nk) ? c.nk : []).slice(0, 40).map((x) => ({ n: str(x.n, 40), code: String(x.code || '').replace(/\D/g, '').slice(0, 6), corp: ['엘리시온', '미실리스', '테트라', '필그림', '어브노멀'].includes(x.corp) ? x.corp : '', el: R_CYC.includes(x.el) ? x.el : '', wp: ['AR', 'SMG', 'SG', 'SR', 'RL', 'MG'].includes(x.wp) ? x.wp : '', bu: x.bu === 'A' ? 'A' : [1, 2, 3].includes(+x.bu) ? +x.bu : 3, img: ref(x.img) })).filter((x) => x.n && x.code.length >= 3 && x.corp && x.el && x.wp && !RAID_NK0[x.code]); /* 도감에 없는 신규 니케의 카드 정보 */
