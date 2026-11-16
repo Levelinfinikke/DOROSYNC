@@ -21,10 +21,15 @@
   const canMove = (g) => 'LRUD'.split('').some((d) => slide(g.c, d).moved), maxOf = (g) => g.c.reduce((m, x) => Math.max(m, x ? x.v : 0), 0);
   function fresh(seed, moves, auto) { const g = { seed, r: mulb(seed), c: Array(16).fill(null), n: 0, moves: '', auto: !!auto, on: false }; spawn(g); spawn(g); (moves || '').split('').forEach((d) => { if (LINES[d]) move(g, d); }); g.c.forEach((x) => { if (x) { x.nw = 0; x.mg = 0; } }); return g; }
   const save = () => { try { if (G) localStorage.setItem(K, JSON.stringify({ s: G.seed, m: G.moves, a: G.auto ? 1 : 0 })); else localStorage.removeItem(K); } catch (e) { /* 무시 */ } };
-  /* AUTO: 큰 타일을 구석에 모으는 쪽을 고름(두 수 앞까지) */
-  const W8 = [15, 14, 13, 12, 8, 9, 10, 11, 7, 6, 5, 4, 0, 1, 2, 3];
-  const evalC = (c) => { let s = 0, e = 0; for (let i = 0; i < 16; i++) { if (!c[i]) e++; else s += Math.pow(2, c[i].v) * W8[i]; } return s + e * 60; };
-  const best = (c, depth) => { let bd = '', bs = -1e18; 'LDRU'.split('').forEach((d) => { const r = slide(c, d); if (!r.moved) return; const sc = evalC(r.c) + r.gain * 20 + (depth > 0 ? best(r.c, depth - 1).s * 0.6 : 0); if (sc > bs) { bs = sc; bd = d; } }); return { d: bd, s: bd ? bs : -1e6 }; };
+  /* AUTO: 기대값 탐색(expectimax). 내 수 → 새 타일이 나올 모든 자리(명함 90% · 1돌 10%)의 평균 → 내 수 … 를 빈칸 수에 따라 2~3겹 내다봄
+     평가: 큰 타일을 한 구석에서 뱀 모양으로 줄 세움 + 빈칸 + 이웃끼리 단계 차이가 작을수록 좋음 */
+  const SN = [15, 14, 13, 12, 8, 9, 10, 11, 7, 6, 5, 4, 0, 1, 2, 3].map((k) => Math.pow(3.2, k / 2.2)), LN4 = { L: LINES.L, R: LINES.R, U: LINES.U, D: LINES.D };
+  const slN = (c, d) => { const o = c.slice(); let moved = false; const L = LN4[d]; for (let q = 0; q < 4; q++) { const ln = L[q]; let k = 0, last = 0; for (let i = 0; i < 4; i++) { const v = c[ln[i]]; if (!v) continue; if (last === v) { o[ln[k - 1]] = v + 1; last = 0; } else { o[ln[k++]] = v; last = v; } } for (let i = k; i < 4; i++) o[ln[i]] = 0; for (let i = 0; i < 4; i++) if (o[ln[i]] !== c[ln[i]]) moved = true; } return moved ? o : null; };
+  const evN = (c) => { let s = 0, e = 0, sm = 0; for (let i = 0; i < 16; i++) { const v = c[i]; if (!v) { e++; continue; } s += Math.pow(2, v) * SN[i]; if ((i & 3) < 3 && c[i + 1]) sm -= Math.abs(v - c[i + 1]); if (i < 12 && c[i + 4]) sm -= Math.abs(v - c[i + 4]); } return s + e * e * 30 + sm * 12 + (e ? 0 : -4000); };
+  const exMove = (c, depth) => { let b = -1e18, bd = ''; for (const d of 'LURD') { const n = slN(c, d); if (!n) continue; const v = exChance(n, depth); if (v > b) { b = v; bd = d; } } return bd ? { d: bd, s: b } : { d: '', s: evN(c) - 1e7 }; };
+  const exChance = (c, depth) => { if (depth <= 0) return evN(c); const e = []; for (let i = 0; i < 16; i++) if (!c[i]) e.push(i); if (!e.length) return exMove(c, depth - 1).s; let cells = e; if (e.length > 5) { cells = []; for (let i = 0; i < 5; i++) cells.push(e[Math.floor(i * e.length / 5)]); } /* 빈칸이 많으면 다섯 곳만 */
+    let t = 0; for (const i of cells) { c[i] = 1; t += 0.9 * exMove(c, depth - 1).s; if (depth > 1 || e.length <= 3) { c[i] = 2; t += 0.1 * exMove(c, depth - 1).s; } else t += 0.1 * evN(c); c[i] = 0; } return t / cells.length; };
+  const best = (cells) => { const c = cells.map((x) => (x ? x.v : 0)); let e = 0; c.forEach((v) => { if (!v) e++; }); return exMove(c, e <= 3 ? 3 : e <= 7 ? 2 : 2); };
   /* ---------- 화면 ---------- */
   const CSS = `
 .g48{display:grid;grid-template-columns:260px 1fr;border-radius:16px;overflow:hidden;background:#12141a;color:#fff;font-family:"Pretendard","Malgun Gothic",sans-serif;border:1px solid var(--line)}
@@ -74,7 +79,7 @@
     if (!G) return; const msg = $('.g48-msg', root); msg.textContent = '';
     if (!G.auto) { if (!window.doroChips.spend(AUTO_FEE)) { msg.textContent = '싱크칩이 부족합니다. (AUTO ' + AUTO_FEE + ')'; return; } G.auto = true; save(); try { if (window.doroChipFly) window.doroChipFly(root.querySelectorAll('.g48-bal span')[0], $('[data-g=auto]', root), AUTO_FEE, { size: 18 }); } catch (e) { /* 무시 */ } } /* 이 판에서는 다시 내지 않음 */
     if (G.on) { stopAuto(); ui(); return; } G.on = true; ui();
-    autoT = setInterval(() => { if (!G || !root.isConnected || !root.classList.contains('on')) { stopAuto(); if (root.isConnected) ui(); return; } const b = best(G.c, 2); if (!b.d || !go(b.d)) { stopAuto(); ui(); } }, 110);
+    autoT = setInterval(() => { if (!G || !root.isConnected || !root.classList.contains('on')) { stopAuto(); if (root.isConnected) ui(); return; } const b = best(G.c); if (!b.d || !go(b.d)) { stopAuto(); ui(); } }, 90);
   }
   function build() {
     let cells = ''; for (let i = 0; i < 16; i++) cells += '<u style="--r:' + (i >> 2) + ';--c:' + (i & 3) + '"></u>';
@@ -85,7 +90,7 @@
     paint(); ui();
   }
   const KEY = { ArrowLeft: 'L', ArrowRight: 'R', ArrowUp: 'U', ArrowDown: 'D', a: 'L', d: 'R', w: 'U', s: 'D', A: 'L', D: 'R', W: 'U', S: 'D' };
-  window.doro2048 = {
+  window.doro2048 = { _ai(n) { const out = []; for (let k = 0; k < n; k++) { const g = fresh((Math.random() * 4294967296) >>> 0, ''); let mv = 0; for (;;) { if (maxOf(g) >= GOAL) break; const b = best(g.c); if (!b.d || !move(g, b.d).moved) break; mv++; } out.push([maxOf(g), mv]); } return out; }, /* AUTO 실력 측정용 */
     art() { addCss(); const d = document.createElement('div'); return '<span class="lb-48g">' + [1, 2, 4, 3, 6, 8, 1, 5, 11].map((v) => { dress(d, v); return d.outerHTML; }).join('') + '</span>'; }, /* 로비 그림: 지금 픽업 니케의 타일 */
     mount(el) {
       if (!el) return; if (!data().ok) { el.innerHTML = ''; return; } addCss();

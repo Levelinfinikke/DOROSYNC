@@ -2723,23 +2723,28 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
   const IDLE_K = 'dschip-idle', IDLE_MAX = 10000;
   const idleT0 = () => { const a = acctUser(); let t = a && a.doc && +a.doc.idleT || 0; if (!t) { try { t = +localStorage.getItem(IDLE_K + (a ? '-' + a.user.uid : '')) || 0; } catch (e) { /* 무시 */ } } if (!t) { t = Date.now(); try { localStorage.setItem(IDLE_K + (a ? '-' + a.user.uid : ''), String(t)); } catch (e) { /* 무시 */ } } return t; };
   const idleNow = () => Math.max(0, Math.min(IDLE_MAX, Math.floor((Date.now() - idleT0()) / 60000)));
-  const idleCard = () => {
-    const n = idleNow(), p = n / IDLE_MAX, lv = Math.round(p * 100);
-    let chips = ''; const rows = Math.ceil(p * 5 + (n > 0 ? 0.2 : 0)); /* 쌓인 양만큼 상자 속 칩이 차오름 */
-    for (let r = 0; r < rows; r++) for (let c = 0; c < 7; c++) chips += '<ellipse cx="' + (22 + c * 14 + (r % 2) * 7) + '" cy="' + (78 - r * 9) + '" rx="8.5" ry="4.2" fill="#f5c63a" stroke="#8a5a06" stroke-width="1.4"/><ellipse cx="' + (22 + c * 14 + (r % 2) * 7) + '" cy="' + (76.4 - r * 9) + '" rx="5" ry="2" fill="#fff1b0" opacity=".8"/>';
-    return '<div class="kpi idlek"><svg class="idle-box" viewBox="0 0 132 100" aria-hidden="true"><defs><clipPath id="idle-cp"><path d="M10 34h112l-8 54H18z"/></clipPath></defs><path d="M10 34h112l-8 54H18z" fill="#2a1f12" stroke="#8a6a3a" stroke-width="3" stroke-linejoin="round"/><g clip-path="url(#idle-cp)">' + chips + '</g><path d="M10 34h112l-8 54H18z" fill="none" stroke="#b98c4c" stroke-width="3" stroke-linejoin="round"/><path d="M4 26h124v10H4z" fill="#6a4a22" stroke="#b98c4c" stroke-width="2.5" stroke-linejoin="round"/><path d="M30 58h72" stroke="#b98c4c" stroke-width="2" opacity=".5"/></svg>' +
-      '<div class="idle-m"><div class="l">싱크칩 상자 <span class="muted">1분에 1개</span></div><div class="idle-v">' + window.doroChipSvg('b', 22) + '<b class="num">' + fmt(n) + '</b><small>/ ' + fmt(IDLE_MAX) + '</small></div><div class="idle-bar"><i style="width:' + lv + '%"></i></div></div>' +
-      '<button type="button" class="primary pad" id="idle-get"' + (n < 1 ? ' disabled' : '') + '>수령</button></div>';
+  const idleCard = () => { /* 니슬렁 로비의 보상 상자: 쌓인 만큼 칩이 수북해지고, 가득 차면 빛남 */
+    const n = idleNow(), p = n / IDLE_MAX, lv = Math.round(p * 100); let coins = '';
+    const rows = n > 0 ? 1 + Math.floor(p * 5.99) : 0; for (let r = 0; r < rows; r++) { const cnt = 7 - Math.floor(r / 2), w = 13; for (let c = 0; c < cnt; c++) { const x = 100 - (cnt - 1) * w / 2 + c * w + (r % 2 ? 3 : -3), y = 86 - r * 7.5 + Math.sin(c * 1.7 + r) * 1.5; coins += '<ellipse cx="' + x.toFixed(1) + '" cy="' + (y + 2).toFixed(1) + '" rx="8.6" ry="4.4" fill="#8a5a06"/><ellipse cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" rx="8.6" ry="4.4" fill="url(#ibc)" stroke="#7a4d00" stroke-width="1"/><ellipse cx="' + x.toFixed(1) + '" cy="' + (y - 0.6).toFixed(1) + '" rx="4.6" ry="2" fill="#fff6c8" opacity=".75"/>'; } }
+    const svg = '<svg class="idle-box" viewBox="0 0 200 150" aria-hidden="true"><defs><linearGradient id="ibw" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a8703a"/><stop offset=".5" stop-color="#7a4a22"/><stop offset="1" stop-color="#4a2a12"/></linearGradient><linearGradient id="ibm" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff3b0"/><stop offset=".5" stop-color="#e8b52c"/><stop offset="1" stop-color="#9a6a08"/></linearGradient><linearGradient id="ibc" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff6c2"/><stop offset=".4" stop-color="#f9d04a"/><stop offset="1" stop-color="#e2a60f"/></linearGradient><radialGradient id="ibg"><stop offset="0" stop-color="#ffe58a" stop-opacity="' + (0.25 + 0.6 * p).toFixed(2) + '"/><stop offset="1" stop-color="#ffe58a" stop-opacity="0"/></radialGradient><clipPath id="ibp"><path d="M38 78h124v10H38z M30 30h140v60H30z"/></clipPath></defs>' +
+      '<ellipse cx="100" cy="70" rx="92" ry="60" fill="url(#ibg)"/>' +
+      '<path d="M44 34L60 6h80l16 28z" fill="url(#ibw)" stroke="#2a1608" stroke-width="3" stroke-linejoin="round"/><path d="M60 6l-6 28M140 6l6 28M100 6v28" stroke="url(#ibm)" stroke-width="5"/>' + /* 열린 뚜껑(뒤) */
+      '<path d="M36 80h128v-8H36z" fill="#1a0e06"/><g>' + coins + '</g>' +
+      '<path d="M30 78h140l-10 58H40z" fill="url(#ibw)" stroke="#2a1608" stroke-width="3" stroke-linejoin="round"/><path d="M52 80l5 55M148 80l-5 55" stroke="url(#ibm)" stroke-width="6"/><path d="M28 74h144v10H28z" fill="url(#ibm)" stroke="#2a1608" stroke-width="2.5" stroke-linejoin="round"/>' +
+      '<rect x="89" y="84" width="22" height="24" rx="4" fill="url(#ibm)" stroke="#2a1608" stroke-width="2.5"/><circle cx="100" cy="94" r="3.4" fill="#2a1608"/><path d="M100 95v7" stroke="#2a1608" stroke-width="3" stroke-linecap="round"/>' +
+      (p >= 1 ? '<g fill="#fff">' + [[40, 30], [160, 40], [100, 16], [24, 90], [178, 96]].map((q, i) => '<path d="M0-7L1.6-1.6 7 0 1.6 1.6 0 7-1.6 1.6-7 0-1.6-1.6z" transform="translate(' + q[0] + ' ' + q[1] + ')"><animate attributeName="opacity" values="0;1;0" dur="1.4s" begin="' + (i * 0.25) + 's" repeatCount="indefinite"/></path>').join('') + '</g>' : '') + '</svg>';
+    return '<div class="lb-g idlek' + (p >= 1 ? ' full' : '') + '" style="--i:0">' + svg + '<b>싱크칩 상자</b><small>1분에 1개씩 쌓입니다</small><div class="idle-v">' + window.doroChipSvg('b', 20) + '<span class="num">' + fmt(n) + '</span><em>/ ' + fmt(IDLE_MAX) + '</em></div><div class="idle-bar"><u style="width:' + lv + '%"></u></div>' +
+      '<button type="button" class="idle-go" id="idle-get"' + (n < 1 ? ' disabled' : '') + '>수령</button></div>';
   };
   document.addEventListener('click', (e) => {
     const bt = e.target.closest && e.target.closest('#idle-get'); if (!bt || bt.disabled) return; const n = idleNow(); if (n < 1) return;
     const a = acctUser(), now = Date.now(); try { localStorage.setItem(IDLE_K + (a ? '-' + a.user.uid : ''), String(now)); } catch (er) { /* 무시 */ } if (a && a.doc) a.doc.idleT = now;
-    const card = bt.closest('.idlek'), box = card.querySelector('.idle-box'), to = document.querySelector('#tab-me .chipk .cv-d'); bt.disabled = true; idleCard.busy = 1;
-    const ms = window.doroChipFly(box, to, n, { size: 24 }); const c0 = card.querySelector('.idle-v b'), bar = card.querySelector('.idle-bar i'); if (c0) c0.textContent = '0'; if (bar) bar.style.width = '0%';
+    const card = bt.closest('.idlek'), box = card.querySelector('.idle-box'), to = document.querySelector('#tab-game .lb-bal span'); bt.disabled = true; idleCard.busy = 1;
+    const ms = window.doroChipFly(box, to, n, { size: 24 }); const c0 = card.querySelector('.idle-v .num'), bar = card.querySelector('.idle-bar u'); if (c0) c0.textContent = '0'; if (bar) bar.style.width = '0%';
     setTimeout(() => { window.doroChips.add({ b: n }, 'idle'); }, 950); /* 첫 칩이 닿을 때 잔고에 더함 */
-    setTimeout(() => { idleCard.busy = 0; const c2 = document.querySelector('#tab-me .idlek'); if (c2) c2.outerHTML = idleCard(); }, Math.max(1000, ms));
+    setTimeout(() => { idleCard.busy = 0; if (curTab === 'game') renderLobby(); }, Math.max(1000, ms));
   });
-  setInterval(() => { const c = document.querySelector('#tab-me.on .idlek'); if (c && !idleCard.busy) c.outerHTML = idleCard(); }, 20000);
+  setInterval(() => { if (curTab === 'game' && !idleCard.busy && document.querySelector('#tab-game.on .idlek')) renderLobby(); }, 20000);
   const PFP_K = 'dorosync-pfp';
   /* 프로필 니케: 고른 니케, 없으면 전투력 1위 */
   const blPfp = () => {
@@ -2979,7 +2984,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     { const lk = $('#me-link'); if (lk) lk.style.display = d ? 'none' : ''; }
     if (!d) { /* 연동 전: 싱크칩 잔고만 보여 주고, 로그인 안 했으면 로그인 권유 */
       const logged = !!(window.doroAccount && window.doroAccount.user);
-      root.innerHTML = '<div class="card me-pre"><div class="mekpis mekpis-pre">' + chipCard() + idleCard() + '</div>' + (logged ? '' : '<p class="me-login">싱크칩을 안전하게 저장하려면 로그인하세요. <button type="button" class="ghost sm" id="me-login">로그인</button></p>') + '</div>';
+      root.innerHTML = '<div class="card me-pre"' + (logged ? ' hidden' : '') + '>' + (logged ? '' : '<p class="me-login">싱크칩을 안전하게 저장하려면 로그인하세요. <button type="button" class="ghost sm" id="me-login">로그인</button></p>') + '</div>';
       const lb = $('#me-login'); if (lb) lb.addEventListener('click', () => { if (window.doroAccount) window.doroAccount.open(); else { const b = $('#btn-acct'); if (b) b.click(); } });
       return;
     }
@@ -3011,7 +3016,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     const pf = blPfp(), cb = pk.best || (pk.cand || []).find((x) => x.c && x.c.chapter != null) || null;
     let html = '<div class="card"><div class="row-ctl sp"><h2 class="inline me-who"><span class="pfw"><button type="button" class="me-pfp" id="me-pfp" title="프로필 니케·테두리 바꾸기" aria-label="프로필 니케·테두리 바꾸기" aria-expanded="' + !!renderMe.pick + '">' + (pf ? '<img src="' + BL_IMG(pf.code) + '" alt="" onerror="this.remove()">' : '') + '</button>' + frmHtml() + '</span>' + esc(m.role || '전초기지') + '</h2><button class="ghost sm icb" id="me-apply" type="button" title="싱크로 탭에 다시 적용" aria-label="싱크로 탭에 다시 적용"><svg class="icb-i" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2.5" width="14" height="19" rx="2.5"/><rect x="8" y="5.5" width="8" height="3.5" rx=".8"/><path d="M8.5 13h.01M12 13h.01M15.5 13h.01M8.5 16.5h.01M12 16.5h.01M15.5 16.5h.01"/></svg></button></div>' +
       '<div class="mekpis">' + kp('현재 싱크로', fmt(m.synchro || 0)) + kp('전초기지 레벨', fmt(m.outpost || 0), peer.l) + kp('1군 전투력', fmt(m.top5 || 0), peer.p) +
-      chipCard() + idleCard() + '</div>' +
+      chipCard() + '</div>' +
       (renderMe.pick ? (frmOwned().length ? '<div class="frm-pick" aria-label="프로필 테두리 선택"><span class="muted sm">테두리</span><button type="button" data-frm="0" class="' + (frmNow() ? '' : 'on') + '" title="없음">없음</button>' + frmOwned().map((t) => '<button type="button" data-frm="' + t + '" class="' + (frmNow() === t ? 'on' : '') + '" title="포커레이드 ' + FRM_NM[t] + '"><img alt="' + FRM_NM[t] + '" src="' + FRM_IMG(t) + '"></button>').join('') + '</div>' : '') + '<div class="pfp-pick" role="listbox" aria-label="프로필 니케 선택">' + d.nikkes.slice().sort((x, y) => y.combat - x.combat).map((n) => '<button type="button" role="option" data-pfp="' + n.code + '" class="' + (pf && pf.code === n.code ? 'on' : '') + '" title="' + esc(BL_NM(n)) + '" aria-selected="' + !!(pf && pf.code === n.code) + '"><img src="' + BL_IMG(n.code) + '" alt="' + esc(BL_NM(n)) + '" loading="lazy" onerror="this.parentNode.remove()"></button>').join('') + '</div>' : '') +
       '<p class="muted" id="me-fixnote"></p>' +
       '</div>';
@@ -3641,7 +3646,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   let curGrp = 'main', curTab = 'main';
   function previewSub(grp) {
     $$('#subtabs button').forEach((b) => { b.hidden = b.dataset.grp !== grp; });
-    $('#subtabs').classList.toggle('show', grp !== 'me');
+    $('#subtabs').classList.toggle('show', grp !== 'me' && grp !== 'game');
     subAlign(grp);
   }
   /* 하위 탭을 상위 탭 바로 아래 가운데에 맞춤 */
@@ -3671,7 +3676,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
     if (lastGrp[grp]) lastGrp[grp] = name;
     $$('#tabs button').forEach((b) => b.classList.toggle('on', b.dataset.tab === grp));
     $$('#subtabs button').forEach((b) => { b.classList.toggle('on', b.dataset.tab === name); b.hidden = b.dataset.grp !== grp; });
-    $('#subtabs').classList.toggle('show', grp !== 'me');
+    $('#subtabs').classList.toggle('show', grp !== 'me' && grp !== 'game');
     curGrp = grp; subAlign(grp);
     $$('.tab').forEach((s) => s.classList.toggle('on', s.id === 'tab-' + (OLV[name] ? 'ol' : sec)));
     if (sec === 'gcm') gmMount();
@@ -3682,6 +3687,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
     if (name === 'jw') renderJw();
     if (name === 'dex') renderDex();
     if (name === 'game') renderLobby();
+    { let bk = $('#lb-back'); if (!bk) { bk = document.createElement('button'); bk.id = 'lb-back'; bk.type = 'button'; bk.dataset.go = 'game'; bk.textContent = '← 니슬렁'; const tg = $('#tab-game'); tg.parentNode.insertBefore(bk, tg); } bk.hidden = !(grp === 'game' && name !== 'game'); }
     if (name === 'pack' && window.doroPack) window.doroPack.mount($('#tab-pack'));
     if (name === 'plinko' && window.doroPlinko) window.doroPlinko.mount($('#tab-plinko'));
     if (name === 'tabs' && window.doroTabs) window.doroTabs.mount($('#tab-tabs'));
@@ -4434,9 +4440,9 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
       } catch (e) { /* 그림 없이 */ }
     if (adm && !L.length && !renderLobby.w) { renderLobby.w = setTimeout(() => { renderLobby.w = 0; if (curTab === 'game') renderLobby(); }, 600); }
     root.innerHTML = '<div class="lb"><div class="lb-hero"><div class="lb-t"><small>DOROSYNC</small>니슬렁</div><div class="lb-bal"><span>' + window.doroChipSvg('b', 26) + '<b class="num">' + fmt(o.d) + '</b></span><span>' + window.doroChipSvg('r', 26) + '<b class="num">' + fmt(o.r) + '</b></span></div></div>' +
-      '<div class="lb-grid">' + G.map((g, i) => '<button type="button" class="lb-g ' + g[3] + (g[0] ? '' : ' soon') + '"' + (g[0] ? ' data-go="' + g[0] + '"' : ' disabled') + ' style="--i:' + i + '"><span class="lb-art" aria-hidden="true">' + (art[g[0]] || '') + '</span><b>' + g[1] + '</b><small>' + g[2] + '</small>' + (g[0] ? '<i>입장 ▶</i>' : '<i>COMING SOON</i>') + '</button>').join('') + '</div></div>';
+      '<div class="lb-grid">' + idleCard() + G.map((g, i) => '<button type="button" class="lb-g ' + g[3] + (g[0] ? '' : ' soon') + '"' + (g[0] ? ' data-go="' + g[0] + '"' : ' disabled') + ' style="--i:' + (i + 1) + '"><span class="lb-art" aria-hidden="true">' + (art[g[0]] || '') + '</span><b>' + g[1] + '</b><small>' + g[2] + '</small>' + (g[0] ? '<i>입장 ▶</i>' : '<i>COMING SOON</i>') + '</button>').join('') + '</div></div>';
   }
-  (() => { const root = $('#tab-game'); if (!root) return; root.addEventListener('click', (e) => { const b = e.target.closest('[data-go]'); if (b) showTab(b.dataset.go); }); window.addEventListener('dorochips', () => { if (curTab === 'game') renderLobby(); });
+  (() => { const root = $('#tab-game'); if (!root) return; root.addEventListener('click', (e) => { const b = e.target.closest('[data-go]'); if (b) showTab(b.dataset.go); }); window.addEventListener('dorochips', () => { if (curTab === 'game' && !idleCard.busy) renderLobby(); else if (curTab === 'game') { const o2 = chipRaw(), sp = document.querySelectorAll('#tab-game .lb-bal b'); if (sp[0]) sp[0].textContent = fmt(o2.d); if (sp[1]) sp[1].textContent = fmt(o2.r); } });
     const ic = document.querySelector('#tabs .gmtic'); if (ic && window.doroChipSvg) ic.innerHTML = window.doroChipSvg('b', 18, false, true); })();
   function dexGate() {
     const on = dexOk();
