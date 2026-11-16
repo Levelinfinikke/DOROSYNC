@@ -51,6 +51,11 @@ export default {
       if (!okOrigin) return out(403, { ok: false, error: 'origin' });
       return idLogin(req, env, out);
     }
+    if (url.pathname === '/raid') {
+      if (req.method !== 'POST') return out(405, { ok: false, error: 'method' });
+      if (!okOrigin) return out(403, { ok: false, error: 'origin' });
+      return raid(req, env, out);
+    }
     if (url.pathname === '/admin') { if (!okOrigin) return out(403, { ok: false, error: '허용되지 않은 사이트입니다.' }); return adminView(req, env, out); }
     if (req.method !== 'GET') return out(405, { ok: false, error: 'method' });
     if (url.pathname === '/' || url.pathname === '/health') {
@@ -382,6 +387,117 @@ async function chipsClaim(req, env, out) {
     const cr = await fetch(FS.replace(/\/documents$/, '/documents:commit'), { method: 'POST', headers: H, body: JSON.stringify({ writes: [w] }) });
     if (cr.ok) return out(200, { ok: true, chips: nv, added: { d: okD, r: okR }, rejected: rej, day: { used: day.n, spent: day.s || 0, r: day.r, att: !!day.a } });
     if (cr.status !== 400 && cr.status !== 409) return out(502, { ok: false, error: 'write' }); /* 400/409: 그 사이 문서가 바뀜 → 다시 */
+  }
+  return out(409, { ok: false, error: 'busy' });
+}
+
+/* ================= 포커레이드 =================
+ * 카드는 서버가 뽑음: 덱 순서·손패는 서버 문서(raid_시즌/계정)에만 있고, 사이트는 고른 카드 코드만 보냄.
+ * 덱 = 블라블라링크에서 서버가 직접 읽은 보유 SSR(명함 1 + 돌파 + 코강) + 계정 문서 dex(웹에서 얻은 카드), 니케당 최대 11장.
+ * 점수 = 칩 합계 × 배수 합계 × 버스트 보정. 하루(한국 시간) 3회, 시작하는 순간 1회 차감. 진행 중인 판은 다시 들어와도 그대로 이어짐.
+ * RAID_OPEN이 false면 관리자만 사용할 수 있음(미공개). */
+const RAID_OPEN = false, RAID_TRIES = 3;
+const RAID_NK = {"1007":["엘리시온","풍","SMG",3,3],"1010":["미실리스","철","RL",3,6],"1012":["테트라","작","SR",1,5],"1019":["미실리스","풍","AR",3,5],"1020":["미실리스","철","RL",1,2],"1021":["테트라","전","AR",1,8],"1022":["테트라","수","SG",2,5],"3004":["테트라","작","RL",1,3],"5001":["미실리스","철","SR",3,6],"5002":["테트라","철","SG",3,7],"5003":["테트라","전","SR",1,5],"5004":["테트라","작","SR",3,7],"5005":["엘리시온","작","MG",1,1],"5006":["미실리스","작","RL",2,1],"5007":["엘리시온","수","AR",3,8],"5008":["테트라","풍","AR",2,6],"5009":["테트라","풍","SG",3,5],"5010":["테트라","철","SR",1,4],"5011":["미실리스","철","SMG",1,7],"5012":["필그림","철","AR",3,7],"5013":["필그림","전","SG",3,7],"5014":["미실리스","철","AR",3,5],"5015":["엘리시온","작","SMG",2,1],"5016":["엘리시온","수","SG",2,4],"5017":["엘리시온","작","SMG",1,7],"5018":["엘리시온","수","AR",3,1],"5019":["엘리시온","철","SMG",3,4],"5020":["엘리시온","풍","MG",2,4],"5021":["미실리스","철","RL",2,6],"5022":["엘리시온","수","RL",3,2],"5023":["엘리시온","작","SR",2,1],"5024":["미실리스","작","SG",3,7],"5025":["미실리스","작","SMG",3,2],"5026":["테트라","수","SG",1,1],"5027":["미실리스","풍","SG",1,3],"5028":["테트라","수","SR",1,3],"5029":["테트라","작","SR",3,4],"5030":["미실리스","풍","SR",2,3],"5031":["엘리시온","전","MG",3,4],"5032":["엘리시온","전","SG",3,3],"5033":["테트라","수","SMG",1,2],"5034":["테트라","철","AR",2,3],"5035":["테트라","작","RL",1,2],"5036":["테트라","풍","SR",2,5],"5037":["테트라","철","SMG",2,4],"5038":["미실리스","풍","SMG",3,3],"5039":["테트라","수","AR",2,3],"5040":["필그림","철","RL",1,5],"5041":["필그림","전","AR",3,5],"5042":["필그림","전","SR",3,1],"5043":["필그림","풍","RL",2,3],"5044":["필그림","작","MG",3,5],"5045":["테트라","전","MG",1,6],"5046":["테트라","풍","AR",2,3],"5048":["엘리시온","철","SG",2,5],"5049":["테트라","전","SR",1,7],"5050":["테트라","작","SR",1,3],"5051":["테트라","작","MG",1,2],"5053":["미실리스","작","MG",3,1],"5054":["테트라","전","RL",2,4],"5055":["미실리스","풍","SG",2,5],"5056":["필그림","작","SR",2,2],"5059":["미실리스","전","AR",2,2],"5061":["필그림","수","AR",1,5],"5064":["테트라","수","SR",1,4],"5065":["필그림","철","MG",2,9],"5066":["엘리시온","수","SR",3,7],"5068":["테트라","작","SMG",2,2],"5069":["테트라","수","SMG",1,1],"5070":["테트라","수","MG",2,3],"5071":["엘리시온","수","MG",3,2],"5074":["테트라","전","RL",1,5],"5075":["테트라","풍","SMG",1,6],"5077":["미실리스","전","SR",3,6],"5078":["미실리스","전","SMG",2,3],"5079":["엘리시온","전","SMG",2,4],"5081":["미실리스","수","AR",1,7],"5082":["엘리시온","풍","RL",3,2],"5085":["미실리스","풍","RL",2,3],"5087":["테트라","전","AR",1,2],"5088":["엘리시온","전","SG",1,7],"5089":["어브노멀","수","SMG",2,2],"5090":["어브노멀","작","RL",3,3],"5092":["테트라","수","SG",2,5],"5094":["어브노멀","작","AR",3,4],"5095":["어브노멀","작","RL",3,4],"5097":["테트라","전","SG",3,7],"5098":["엘리시온","철","AR",2,6],"5099":["미실리스","전","SG",2,6],"5100":["미실리스","철","RL",1,6],"5101":["필그림","철","SR","A",7],"5102":["필그림","철","AR",3,4],"5103":["테트라","수","MG",3,7],"5104":["테트라","철","SMG",1,5],"5105":["필그림","풍","RL",3,8],"5106":["엘리시온","전","SG",3,5],"5107":["미실리스","전","MG",2,4],"5108":["어브노멀","수","MG",2,5],"5109":["어브노멀","수","RL",3,4],"5110":["엘리시온","작","SR",1,6],"5111":["테트라","작","RL",2,3],"5112":["미실리스","작","SR",3,3],"5113":["테트라","철","SG",3,6],"5114":["테트라","수","SMG",1,5],"5115":["테트라","전","SMG",2,5],"5116":["테트라","풍","AR",2,6],"5117":["테트라","풍","AR",3,5],"5118":["어브노멀","작","AR",3,5],"5119":["어브노멀","작","MG",3,6],"5120":["어브노멀","전","SR",2,6],"5121":["미실리스","수","SMG",3,6],"5122":["엘리시온","수","AR",3,6],"5123":["필그림","철","SR",1,3],"5124":["필그림","전","RL",3,8],"5125":["필그림","작","AR",2,7],"5126":["미실리스","전","MG",2,8],"5127":["엘리시온","전","RL",3,7],"5128":["엘리시온","수","AR",3,6],"5129":["엘리시온","작","MG",3,9],"5130":["엘리시온","수","MG",2,8],"5131":["엘리시온","수","RL",2,7],"5132":["어브노멀","풍","AR",3,6],"5133":["어브노멀","풍","MG",3,7],"5134":["미실리스","전","RL",2,5],"5135":["테트라","수","SR",3,6],"5136":["테트라","수","RL",2,5],"5137":["필그림","풍","SMG",1,8],"5138":["미실리스","작","MG",3,8],"5139":["미실리스","풍","AR",2,2],"5140":["엘리시온","전","RL",2,7],"5141":["엘리시온","전","SMG",3,4],"5142":["어브노멀","철","AR",3,6],"5143":["어브노멀","철","RL",3,7],"5144":["엘리시온","풍","RL",1,3],"5145":["필그림","수","SG",3,8],"5146":["미실리스","수","MG",3,7],"5147":["엘리시온","작","MG",1,6],"5148":["엘리시온","작","RL",3,5],"5149":["엘리시온","작","SR",2,6],"5150":["테트라","철","SR",3,7],"5151":["테트라","철","SR",2,7],"5152":["어브노멀","전","RL",3,7],"5153":["어브노멀","전","AR",3,5],"5154":["엘리시온","수","MG",2,5],"5155":["필그림","풍","SMG",2,8],"5156":["필그림","풍","SR",3,8],"5157":["필그림","철","SMG",2,5],"5158":["엘리시온","수","SG",1,6],"5159":["엘리시온","작","RL",3,8],"5160":["엘리시온","작","SG",2,7],"5161":["필그림","수","SR",3,9],"5162":["엘리시온","철","AR",1,5],"5163":["테트라","풍","SR",2,7],"5164":["어브노멀","철","SMG",3,6],"5165":["어브노멀","철","SR",2,6],"5166":["엘리시온","풍","SMG",3,5],"5167":["엘리시온","작","SG",2,7],"5168":["미실리스","수","SR",2,3],"5169":["테트라","전","RL",1,9],"5170":["미실리스","전","RL",3,8],"5171":["엘리시온","전","MG",1,4],"5172":["테트라","철","RL",2,8],"5173":["테트라","수","SR",2,8],"5174":["테트라","풍","AR",3,6],"5175":["필그림","철","MG",3,9],"5176":["엘리시온","철","AR",3,6],"5177":["미실리스","풍","RL",3,7],"5178":["미실리스","풍","SR",2,6],"5179":["어브노멀","작","SG",3,6],"5180":["어브노멀","작","MG",3,7],"5181":["미실리스","풍","SG",3,7],"5182":["미실리스","수","SR",3,6],"5183":["미실리스","수","SR",3,6],"5184":["테트라","수","RL",2,6],"5185":["필그림","작","MG",3,9],"5186":["필그림","작","AR",3,9],"5187":["필그림","작","RL",2,6]}; /* 코드: [기업, 우월코드, 총기, 버스트, 티어 점수] (js/app.js 기본 솔레 티어에서 생성) */
+const R_CYC = ['작', '풍', '철', '전', '수'], R_RNG = { NEAR: ['SG', 'SMG'], MID: ['AR', 'MG'], FAR: ['SR'] };
+const rSup = (e) => R_CYC[(R_CYC.indexOf(e) + 4) % 5];
+const rBrk = (cnt) => Math.min(3, Math.max(0, cnt - 1)) + (cnt >= 11 ? 2 : 0);
+function rHand(vals) {
+  const n = vals.length; if (!n) return 0; const m = {}; vals.forEach((v) => { m[v] = (m[v] || 0) + 1; });
+  const c = Object.values(m).sort((a, b) => b - a), a = c[0], b = c[1] || 0;
+  if (a === 5) return 8; if (a === 4) return 7; if (a === 3 && b === 2) return 6; if (a === 3) return 4; if (a === 2 && b === 2) return 3; if (a === 2) return 2; return n === 5 ? 5 : 1;
+}
+function rEval(codes, cnt, boss) {
+  const sp = rSup(boss.e); let chips = 0, b3 = false; const bs = new Set();
+  const D = codes.map((k) => RAID_NK[k]);
+  D.forEach((x, i) => { chips += x[4] + rBrk(cnt[codes[i]] || 1) + (R_RNG[boss.r].includes(x[2]) ? 2 : x[2] === 'RL' ? 1 : 0) + (x[1] === sp ? 2 : 0); bs.add(x[3]); if ((x[3] === 3 || x[3] === 'A') && x[1] === sp) b3 = true; });
+  const hc = rHand(D.map((x) => x[0])), he = rHand(D.map((x) => x[1]));
+  const mult = ((hc === 8 && he === 5) || (hc === 5 && he === 8) ? 13 : hc + he) + (b3 ? 2 : 0);
+  const n123 = [1, 2, 3].filter((b) => bs.has(b)).length, f = n123 === 3 || (bs.has('A') && n123 >= 2) ? 1 : 0.8;
+  return { chips, mult, f, score: Math.round(chips * mult * f) };
+}
+const rShuffle = (a) => { const r = new Uint32Array(a.length); crypto.getRandomValues(r); for (let i = a.length - 1; i > 0; i--) { const j = r[i] % (i + 1); const t = a[i]; a[i] = a[j]; a[j] = t; } return a; };
+const rList = (s) => (s ? String(s).split(',').filter(Boolean) : []);
+async function raid(req, env, out) {
+  if (!env.FIREBASE_SA) return out(503, { ok: false, error: 'not_ready' });
+  const idt = (req.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '');
+  if (!idt) return out(401, { ok: false, error: 'auth' });
+  const lk = await (await fetch('https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=' + FB_API_KEY, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ idToken: idt }) })).json();
+  const uid = lk && lk.users && lk.users[0] && lk.users[0].localId; if (!uid) return out(401, { ok: false, error: 'auth' });
+  const admin = ADMIN_UIDS.includes(uid); if (!RAID_OPEN && !admin) return out(403, { ok: false, error: 'closed' });
+  let B; try { B = await req.json(); } catch (e) { return out(400, { ok: false, error: 'bad' }); }
+  const a = String(B.a || 'state');
+  const sa = JSON.parse(env.FIREBASE_SA), at = await saToken(sa, 'https://www.googleapis.com/auth/datastore'), H = { Authorization: 'Bearer ' + at, 'Content-Type': 'application/json' };
+  const getDoc = async (path) => { const r = await fetch(FS + '/' + path, { headers: H }); if (r.status === 404) return null; const d = await r.json(); const o = {}; Object.entries(d.fields || {}).forEach(([k, v]) => { o[k] = dec(v); }); return { name: d.name, updateTime: d.updateTime, f: o }; };
+  const commit = async (writes) => (await fetch(FS.replace(/\/documents$/, '/documents:commit'), { method: 'POST', headers: H, body: JSON.stringify({ writes }) })).ok;
+  const docName = (path) => 'projects/' + FB_PROJECT + '/databases/(default)/documents/' + path;
+  const now = Date.now(), today = kstDay(now);
+  if (a === 'set') { /* 관리자: 시즌 열기·닫기 { e, r, days } / { off: true } */
+    if (!admin) return out(403, { ok: false, error: 'admin' });
+    const e = R_CYC.includes(B.e) ? B.e : R_CYC[now % 5], r = R_RNG[B.r] ? B.r : ['NEAR', 'MID', 'FAR'][now % 3], days = Math.max(1, Math.min(31, Math.floor(+B.days || 5)));
+    const sn = B.off ? { on: false } : { id: String(B.id || today.slice(0, 7) + '-' + String(now).slice(-5)).replace(/[^0-9a-zA-Z-]/g, '').slice(0, 20), e, r, start: now, end: now + days * 86400000, on: true };
+    const ok = await commit([{ update: { name: docName('meta/raid'), fields: fsv(sn).mapValue.fields } }]);
+    return out(ok ? 200 : 502, { ok, season: sn });
+  }
+  const md = await getDoc('meta/raid'), sn = md && md.f.on && md.f.id ? md.f : null, active = !!(sn && now >= sn.start && now < sn.end);
+  const season = sn ? { id: sn.id, e: sn.e, r: sn.r, start: sn.start, end: sn.end, active } : null;
+  if (!sn) return out(200, { ok: true, season: null, admin });
+  const col = 'raid_' + sn.id;
+  if (a === 'rank') {
+    const q = await (await fetch(FS + ':runQuery', { method: 'POST', headers: H, body: JSON.stringify({ structuredQuery: { from: [{ collectionId: col }], where: { fieldFilter: { field: { fieldPath: 'sc' }, op: 'GREATER_THAN', value: { integerValue: '0' } } }, orderBy: [{ field: { fieldPath: 'sc' }, direction: 'DESCENDING' }], limit: 100 } }) })).json();
+    const rows = (Array.isArray(q) ? q : []).filter((x) => x.document).map((x) => { const f = {}; Object.entries(x.document.fields || {}).forEach(([k, v]) => { f[k] = dec(v); }); return { me: x.document.name.endsWith('/' + uid), nick: f.nick || '', sc: f.sc || 0, at: f.at || 0, deck: f.bd || '', chips: f.bc || 0, mult: f.bm || 0, f: f.bf || 1 }; });
+    rows.sort((x, y) => y.sc - x.sc || x.at - y.at); /* 같은 점수는 먼저 낸 사람이 위 */
+    return out(200, { ok: true, season, rows });
+  }
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const my = await getDoc(col + '/' + uid), f = my ? my.f : {};
+    const n = f.day === today ? (f.n || 0) : 0, g = f.g && f.g.hand ? f.g : null;
+    const view = (g2, extra) => Object.assign({ ok: true, season, admin, tries: n, max: RAID_TRIES, best: f.sc || 0, game: g2 ? { hand: rList(g2.hand).map((k) => [k, g2.cnt[k] || 1]), rd: g2.rd, left: rList(g2.deck).length, total: g2.total } : null }, extra || {});
+    const pre = my ? { updateTime: my.updateTime } : { exists: false };
+    const save = (fields, mask) => ({ update: { name: docName(col + '/' + uid), fields: fsv(fields).mapValue.fields }, updateMask: { fieldPaths: mask }, currentDocument: pre });
+    if (a === 'state') { const ud = await getDoc('users/' + uid); return out(200, view(g, { chips: (ud && ud.f.chipsV && ud.f.chipsV.d) || 0 })); }
+    if (!active) return out(409, { ok: false, error: 'inactive' });
+    if (a === 'start') {
+      if (g) return out(200, view(g)); /* 진행 중인 판이 있으면 그 판을 이어감 */
+      if (n >= RAID_TRIES) return out(409, { ok: false, error: 'tries' });
+      const id = toIntlId(B.openid), area = Number(B.area);
+      if (!id || !AREAS.includes(area)) return out(400, { ok: false, error: 'link' });
+      if (f.oid && (f.oid !== id || f.area !== area)) return out(409, { ok: false, error: 'oid' }); /* 시즌 중에는 처음 쓴 게임 계정으로 고정 */
+      let chars; try { chars = (await post('GetUserCharacters', { intl_open_id: id, nikke_area_id: area }, env.BLA_COOKIE)).characters || []; } catch (e) { return out(502, { ok: false, error: 'bla', msg: String((e && e.message) || e).slice(0, 80) }); }
+      const ud = await getDoc('users/' + uid), web = (ud && ud.f.dex) || {}, cnt = {};
+      chars.forEach((c) => { const k = String(c.name_code); if (RAID_NK[k]) cnt[k] = 1 + Math.min(3, Number(c.grade) || 0) + Math.min(7, Number(c.core) || 0); });
+      Object.keys(web).forEach((k) => { if (RAID_NK[k]) cnt[k] = Math.min(11, (cnt[k] || 0) + Math.max(0, Math.floor(+web[k] || 0))); });
+      const codes = Object.keys(cnt).filter((k) => cnt[k] > 0); if (codes.length < 7) return out(409, { ok: false, error: 'deck', have: codes.length });
+      rShuffle(codes);
+      const rd = 2 + Math.min(3, Math.floor(codes.length / Object.keys(RAID_NK).length * 4)); /* 도감 25%마다 +1 (100%는 다른 보상) */
+      const g2 = { hand: codes.slice(0, 7).join(','), deck: codes.slice(7).join(','), cnt, rd, total: codes.length, t: now };
+      const nick = String((ud && (ud.f.nickname || ud.f.username)) || '').slice(0, 24);
+      if (await commit([save({ uid, nick, oid: id, area, day: today, n: n + 1, g: g2 }, ['uid', 'nick', 'oid', 'area', 'day', 'n', 'g'])])) { const v = view(g2); v.tries = n + 1; return out(200, v); }
+      continue;
+    }
+    if (!g) return out(409, { ok: false, error: 'nogame' });
+    const hand = rList(g.hand), pick = Array.from(new Set((Array.isArray(B.codes) ? B.codes : []).map(String))).filter((k) => hand.includes(k));
+    if (a === 'discard') {
+      if (pick.length < 1 || pick.length > 5 || g.rd < 1) return out(400, { ok: false, error: 'bad' });
+      const fl = B.flt || {}, conds = ['e', 'c', 'b', 'r'].filter((k) => fl[k]), cost = conds.length ? 100 * Math.pow(2, conds.length - 1) : 0;
+      const match = (k) => { const x = RAID_NK[k]; return (!fl.e || x[1] === fl.e) && (!fl.c || x[0] === fl.c) && (!fl.b || String(x[3]) === String(fl.b) || x[3] === 'A') && (!fl.r || (R_RNG[fl.r] || []).includes(x[2])); };
+      const deck = rList(g.deck), got = [];
+      for (let i = 0; i < pick.length && deck.length; i++) { let j = cost ? deck.findIndex(match) : 0; if (j < 0) j = 0; got.push(deck.splice(j, 1)[0]); }
+      const g2 = Object.assign({}, g, { hand: hand.filter((k) => !pick.includes(k)).concat(got).join(','), deck: deck.join(','), rd: g.rd - 1 });
+      const writes = [save({ g: g2 }, ['g'])]; let chips;
+      if (cost) { const ud = await getDoc('users/' + uid), cv = (ud && ud.f.chipsV) || { d: 0, r: 0 }; if ((cv.d || 0) < cost) return out(409, { ok: false, error: 'chips' });
+        chips = cv.d - cost; writes.push({ update: { name: ud.name, fields: { chipsV: fsv({ d: chips, r: cv.r || 0 }) } }, updateMask: { fieldPaths: ['chipsV'] }, currentDocument: { updateTime: ud.updateTime } }); }
+      if (await commit(writes)) return out(200, view(g2, { got: got.map((k) => [k, g.cnt[k] || 1]), chips }));
+      continue;
+    }
+    if (a === 'play') {
+      if (pick.length !== 5) return out(400, { ok: false, error: 'bad' });
+      const R = rEval(pick, g.cnt, sn), up = R.score > (f.sc || 0);
+      const fields = { g: null }, mask = ['g'];
+      if (up) { Object.assign(fields, { sc: R.score, at: now, bd: pick.map((k) => k + ':' + (g.cnt[k] || 1)).join(','), bc: R.chips, bm: R.mult, bf: R.f }); mask.push('sc', 'at', 'bd', 'bc', 'bm', 'bf'); }
+      if (await commit([save(fields, mask)])) return out(200, { ok: true, season, tries: n, max: RAID_TRIES, best: up ? R.score : (f.sc || 0), result: R, newBest: up, game: null });
+      continue;
+    }
+    return out(400, { ok: false, error: 'bad' });
   }
   return out(409, { ok: false, error: 'busy' });
 }

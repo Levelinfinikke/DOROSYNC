@@ -4341,6 +4341,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   const DEX_ADMIN = ['bAdQg5xtIsbCntzxuEjBoSB93T22', 'PdkjvEMLcaR76Ie7h13N6cnpDvT2'], DEX_KEY = 'dorosync-dex', DEX_MAX = 11;
   const DEX_ELK = { 작: 'Fire', 수: 'Water', 전: 'Electronic', 풍: 'Wind', 철: 'Iron' }, DEX_BU = ['', 'I', 'II', 'III'];
   const dexOk = () => { const a = window.doroAccount, u = a && a.user; return !!(u && DEX_ADMIN.includes(u.uid)) || !/github\.io$/.test(location.hostname); }; /* 배포 사이트에선 관리자만, 미리보기·로컬은 항상 */
+  let dexCntAll = () => 0;
   let dexSt = null, dexF = { r: 'SSR', c: '', t: '', own: 0, q: '' };
   const dexLoad = () => { if (dexSt) return dexSt; try { dexSt = JSON.parse(localStorage.getItem(DEX_KEY)) || {}; } catch (e) { dexSt = {}; } if (!dexSt.n) dexSt.n = {}; return dexSt; };
   const dexSave = () => { try { localStorage.setItem(DEX_KEY, JSON.stringify(dexSt)); } catch (e) { /* 저장 공간 없음 */ } };
@@ -4353,43 +4354,44 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
     ['dex', 'raid'].forEach((k) => { const b = document.querySelector('#tabs button[data-tab="' + k + '"]'); if (b && b.hidden === on) b.hidden = !on; });
     if (!on && (curGrp === 'dex' || curGrp === 'raid')) showTab('main');
   }
+  /* 웹에서 얻은 카드 더하기(이후 게임에서 당첨 시 1장씩). 연동한 보유 정보(명함 1 + 돌파 + 코강)에 더해짐, 합쳐서 최대 11장 */
   function dexAdd(n, d) { const s = dexLoad(), c = Math.max(0, Math.min(DEX_MAX, (s.n[n] || 0) + d)); if (c) s.n[n] = c; else delete s.n[n]; dexSave(); return c; }
-  window.doroDex = { add: (n, k) => dexAdd(n, k || 1), count: dexCnt, list: () => dexList().map((r) => r[0]) }; /* 이후 게임(복권·플링코·2048·팩·포커)에서 당첨 시 1장씩 지급 */
-  /* 포커레이드 시안(js/raid.js)이 쓰는 데이터 */
-  window.doroRaidData = () => { const T = tierData(), tiers = (T && T.boss) || {}; return { ok: dexOk(), list: dexList().filter((r) => r[2] === 'SSR').map((r) => ({ n: r[0], c: r[1], e: r[3], w: r[4], b: r[5], t: tiers[r[0]] || 'F', img: nkCode(r[0]) ? BL_IMG(nkCode(r[0])) : '', cnt: dexCnt(r[0]) })) }; };
-  function dexCard(r, tiers) {
-    const n = r[0], c = dexCnt(n), lv = dexLv(c), k = nkCode(n), el = BL_EL[DEX_ELK[r[3]]], tr = tiers[n] || '';
-    const ico = '<span class="nk-top">' + (el ? '<span class="nk-ic" style="color:' + el[0] + '"><svg viewBox="0 0 24 24"><path d="' + el[1] + '"/></svg></span>' : '') + (r[5] ? '<span class="nk-ic">' + DEX_BU[r[5]] + '</span>' : '') + '</span>';
-    const bd = c ? '<span class="nk-bd"><img class="nk-lb" alt="' + dexStage(c) + '" src="' + blLbImg(lv.g, lv.k).src + '"></span>' : '';
-    let seg = ''; for (let i = 1; i <= DEX_MAX; i++) seg += '<i class="' + (i <= c ? (i === 1 ? 'a' : i <= 4 ? 'b' : 'c') : '') + '"></i>';
-    return '<div class="nk dx-c' + (c ? '' : ' dx-no') + (c === DEX_MAX ? ' dx-max' : '') + '" data-dx="' + esc(n) + '"><div class="nk-pic">' + (k ? '<img loading="lazy" alt="" src="' + BL_IMG(k) + '" onerror="this.remove()">' : '') + ico + bd +
-      (tr ? '<span class="dx-tr dx-t' + esc(tr) + '">' + esc(tr) + '</span>' : '') + '</div><div class="nk-in"><b class="nk-nm">' + esc(n) + '</b>' +
-      '<div class="dx-seg" title="1장 명함 · 4장 풀돌 · 11장 풀코강">' + seg + '</div>' +
-      '<div class="nk-ft"><span class="dx-st">' + dexStage(c) + '</span><span class="dx-ctl"><button type="button" class="ghost sm" data-dxd="-1" aria-label="1장 빼기">−</button><b>' + c + '<small>/' + DEX_MAX + '</small></b><button type="button" class="ghost sm" data-dxd="1" aria-label="1장 더하기">+</button></span></div></div></div>';
-  }
+  let dexLkSrc = null, dexLkMap = {};
+  const dexLinked = () => { const d = doroBL && doroBL.data; if (d !== dexLkSrc) { dexLkSrc = d; dexLkMap = {}; ((d && d.nikkes) || []).forEach((x) => { dexLkMap[String(x.code)] = 1 + Math.min(3, +x.grade || 0) + Math.min(7, +x.core || 0); }); } return dexLkMap; };
+  const dexWeb = (n) => Math.max(0, Math.min(DEX_MAX, dexLoad().n[n] || 0));
+  dexCntAll = (n) => Math.min(DEX_MAX, (dexLinked()[nkCode(n)] || 0) + dexWeb(n));
+  window.doroDex = { add: (n, k) => dexAdd(n, k || 1), count: (n) => dexCntAll(n), list: () => dexList().map((r) => r[0]) };
+  const dexTier0 = () => { tierData(); return (trDef && trDef.boss) || {}; }; /* 포커레이드·도감은 기본 솔레 티어 고정(서버와 같게) */
+  const dexObj = (r, tiers) => { const k = nkCode(r[0]); return { n: r[0], c: r[1], rar: r[2], e: r[3], w: r[4], b: r[5], t: r[2] === 'SSR' ? (tiers[r[0]] || 'F') : '', code: k, img: k ? BL_IMG(k) : '', cnt: dexCntAll(r[0]) }; };
+  /* 포커레이드(js/raid.js)가 쓰는 데이터 */
+  window.doroRaidData = () => { const tiers = dexTier0(); let purl = '', area = ''; try { purl = localStorage.getItem('dorosync-bl-purl') || ''; area = localStorage.getItem('dorosync-bl-area') || ''; } catch (e) { /* 무시 */ }
+    return { ok: dexOk(), list: window.GM_ASSETS ? dexList().filter((r) => r[2] === 'SSR').map((r) => dexObj(r, tiers)) : [], lb: (g, c) => blLbImg(g, c).src, elIco: TR_ICO, elCol: TR_EL, tierCol: TR_COL, purl, area, linked: !!(doroBL && doroBL.data) }; };
   function renderDex() {
     const root = $('#tab-dex'); if (!root) return; if (!dexOk()) { root.innerHTML = ''; return; }
-    const T = tierData(), tiers = (T && T.boss) || {}, all = dexList(), f = dexF, TORD = ['SSS', 'SS', 'S', 'A', 'B', 'C', 'D'];
-    const pool = all.filter((r) => r[2] === f.r), have = pool.filter((r) => dexCnt(r[0]) > 0);
-    const full = pool.filter((r) => dexCnt(r[0]) >= 4).length, max = pool.filter((r) => dexCnt(r[0]) >= DEX_MAX).length, cards = pool.reduce((a, r) => a + dexCnt(r[0]), 0);
-    let L = pool.filter((r) => (!f.c || r[1] === f.c) && (!f.t || (tiers[r[0]] || '-') === f.t) && (!f.own || dexCnt(r[0]) > 0) && (!f.q || r[0].replace(/\s/g, '').includes(f.q.replace(/\s/g, ''))));
-    L = L.slice().sort((a, b) => { const ta = TORD.indexOf(tiers[a[0]]), tb = TORD.indexOf(tiers[b[0]]); return (ta < 0 ? 99 : ta) - (tb < 0 ? 99 : tb) || dexCnt(b[0]) - dexCnt(a[0]) || a[0].localeCompare(b[0]); });
+    if (!window.doroRaid || !window.GM_ASSETS) { setTimeout(renderDex, 300); return; }
+    const tiers = dexTier0(), all = dexList(), f = dexF, TORD = ['SSS', 'SS', 'S', 'A', 'B', 'C', 'D', 'E', 'F'];
+    const pool = all.filter((r) => r[2] === f.r), have = pool.filter((r) => dexCntAll(r[0]) > 0);
+    const full = pool.filter((r) => dexCntAll(r[0]) >= 4).length, max = pool.filter((r) => dexCntAll(r[0]) >= DEX_MAX).length, cards = pool.reduce((a, r) => a + dexCntAll(r[0]), 0);
+    let L = pool.filter((r) => (!f.c || r[1] === f.c) && (!f.t || (tiers[r[0]] || '-') === f.t) && (!f.own || dexCntAll(r[0]) > 0) && (!f.q || r[0].replace(/\s/g, '').includes(f.q.replace(/\s/g, ''))));
+    L = L.slice().sort((a, b) => { const ta = TORD.indexOf(tiers[a[0]]), tb = TORD.indexOf(tiers[b[0]]); return (ta < 0 ? 99 : ta) - (tb < 0 ? 99 : tb) || dexCntAll(b[0]) - dexCntAll(a[0]) || a[0].localeCompare(b[0]); });
     const corps = [...new Set(pool.map((r) => r[1]))], ts = f.r === 'SSR' ? TORD.filter((t) => pool.some((r) => tiers[r[0]] === t)) : [];
     const seg = (key, vals, lab) => '<div class="gm-seg dx-f">' + vals.map((v, i) => '<button type="button" data-dxf="' + key + '" data-v="' + esc(v) + '"' + (String(f[key]) === String(v) ? ' class="on"' : '') + '>' + esc(lab ? lab[i] : v) + '</button>').join('') + '</div>';
-    const pct = pool.length ? Math.round(cards / (pool.length * DEX_MAX) * 1000) / 10 : 0;
-    root.innerHTML = '<div class="card dx-hd"><div class="row-ctl sp"><h2 class="inline dx-h">' + window.doroChipSvg('b', 26) + '도감 <span class="muted sm">관리자 전용 · 미공개</span></h2></div>' +
-      '<div class="dx-kpi"><div class="dx-k"><div class="l">수집</div><b class="num">' + have.length + '<small>/' + pool.length + '</small></b></div><div class="dx-k"><div class="l">풀돌 이상</div><b class="num">' + full + '</b></div><div class="dx-k"><div class="l">풀코강</div><b class="num">' + max + '</b></div><div class="dx-k"><div class="l">카드 · 완성도</div><b class="num">' + fmt(cards) + '<small> · ' + pct + '%</small></b></div></div>' +
-      '<div class="dx-bar"><i style="width:' + pct + '%"></i></div>' +
-      '<p class="muted sm dx-leg"><i class="a"></i>1장 명함 <i class="b"></i>+3장 풀돌(★3) <i class="c"></i>+7장 풀코강 — 게임에서 당첨될 때마다 1장. 지금은 테스트용으로 ± 버튼으로 조정합니다.</p>' +
+    /* 수집 마일스톤: SSR 명함 수집률 25%마다 포커레이드 리드로우 +1 */
+    const ssr = all.filter((r) => r[2] === 'SSR'), sh = ssr.filter((r) => dexCntAll(r[0]) > 0).length, sp = ssr.length ? sh / ssr.length * 100 : 0;
+    const ms = [25, 50, 75, 100].map((p) => { const need = Math.ceil(ssr.length * p / 100), on = sh >= need; return '<div class="dx-ms' + (on ? ' on' : '') + '" style="left:' + p + '%"><b>' + p + '%</b><span>' + (p === 100 ? '특별 보상(준비 중)' : '리드로우 +1') + '</span><small>' + (on ? '달성' : (need - sh) + '명 남음') + '</small></div>'; }).join('');
+    const who = doroBL && doroBL.data ? '연동 정보 적용됨' + (doroBL.data.me && doroBL.data.me.role ? ' · ' + esc(doroBL.data.me.role) : '') : '전초기지 탭에서 연동하면 보유 니케의 돌파·코어강화가 반영됩니다';
+    root.innerHTML = '<div class="card dx-hd"><div class="row-ctl sp"><h2 class="inline dx-h">' + window.doroChipSvg('b', 26) + '도감 <span class="muted sm">관리자 전용 · 미공개</span></h2><span class="muted sm">' + who + '</span></div>' +
+      '<div class="dx-kpi"><div class="dx-k"><div class="l">수집</div><b class="num">' + have.length + '<small>/' + pool.length + '</small></b></div><div class="dx-k"><div class="l">풀돌 이상</div><b class="num">' + full + '</b></div><div class="dx-k"><div class="l">풀코강</div><b class="num">' + max + '</b></div><div class="dx-k"><div class="l">카드</div><b class="num">' + fmt(cards) + '<small>/' + fmt(pool.length * DEX_MAX) + '</small></b></div></div>' +
+      '<div class="dx-mst"><div class="dx-mh">수집 마일스톤 <small>SSR 명함 ' + sh + '/' + ssr.length + ' (' + (Math.round(sp * 10) / 10) + '%) · 포커레이드 리드로우 ' + (2 + Math.min(3, Math.floor(sp / 25))) + '회</small></div><div class="dx-mb"><i style="width:' + Math.min(100, sp) + '%"></i>' + ms + '</div></div>' +
+      '<p class="muted sm dx-leg">명함 1장 · 돌파마다 +1장(별 3개) · 코어강화마다 +1장(풀코강 11장). 연동한 보유 정보에 웹 게임에서 얻은 카드가 더해집니다. 풀돌은 포일, 풀코강은 폴리크롬 카드가 됩니다.</p>' +
       '<div class="dx-fs">' + seg('r', ['SSR', 'SR', 'R']) + seg('c', [''].concat(corps), ['전체 기업'].concat(corps)) + (ts.length ? seg('t', [''].concat(ts), ['전체 티어'].concat(ts)) : '') +
       '<label class="chk"><input type="checkbox" id="dx-own"' + (f.own ? ' checked' : '') + '> 보유만</label><input type="search" id="dx-q" placeholder="이름 검색" value="' + esc(f.q) + '"></div></div>' +
-      '<div class="megrid dx-grid">' + (L.length ? L.map((r) => dexCard(r, tiers)).join('') : '<p class="muted">해당하는 니케가 없습니다.</p>') + '</div>';
+      '<div class="dx-grid2">' + (L.length ? L.map((r) => { const o = dexObj(r, tiers); return '<div class="dx-cell' + (o.cnt ? '' : ' dx-no') + '">' + window.doroRaid.card(o) + '</div>'; }).join('') : '<p class="muted">해당하는 니케가 없습니다.</p>') + '</div>';
   }
   (() => {
     const root = $('#tab-dex'); if (!root) return;
     root.addEventListener('click', (e) => {
-      const fb = e.target.closest('[data-dxf]'); if (fb) { const k = fb.dataset.dxf; dexF[k] = fb.dataset.v; if (k === 'r') { dexF.c = ''; dexF.t = ''; } renderDex(); return; }
-      const d = e.target.closest('[data-dxd]'); if (d) { const c = d.closest('[data-dx]'); dexAdd(c.dataset.dx, +d.dataset.dxd); renderDex(); }
+      const fb = e.target.closest('[data-dxf]'); if (fb) { const k = fb.dataset.dxf; dexF[k] = fb.dataset.v; if (k === 'r') { dexF.c = ''; dexF.t = ''; } renderDex(); }
     });
     root.addEventListener('change', (e) => { if (e.target.id === 'dx-own') { dexF.own = e.target.checked ? 1 : 0; renderDex(); } });
     root.addEventListener('input', (e) => { if (e.target.id === 'dx-q') { dexF.q = e.target.value; clearTimeout(renderDex.t); renderDex.t = setTimeout(() => { renderDex(); const q = $('#dx-q'); if (q) { q.focus(); q.setSelectionRange(q.value.length, q.value.length); } }, 200); } });
