@@ -3581,12 +3581,12 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') $('#nk-modal').hidden = true; });
 
   /* ---------- 탭 ---------- */
-  const GRP = { main: 'main', daily: 'main', pkg: 'main', inc: 'main', rules: 'main', boss: 'boss', data: 'boss', ol: 'ol', olrules: 'ol', jw: 'jw', jwrules: 'jw', gc: 'gc', gcm: 'gc', gccs: 'gc', gcco: 'gc', gcdata: 'gc', gctier: 'gc', gcrules: 'gc', me: 'me', dex: 'dex' }; let lastGrp = { main: 'main', boss: 'boss', ol: 'ol', jw: 'jw', gc: 'gcm', me: 'me' };
+  const GRP = { main: 'main', daily: 'main', pkg: 'main', inc: 'main', rules: 'main', boss: 'boss', data: 'boss', ol: 'ol', olrules: 'ol', jw: 'jw', jwrules: 'jw', gc: 'gc', gcm: 'gc', gccs: 'gc', gcco: 'gc', gcdata: 'gc', gctier: 'gc', gcrules: 'gc', me: 'me', dex: 'dex', raid: 'raid' }; let lastGrp = { main: 'main', boss: 'boss', ol: 'ol', jw: 'jw', gc: 'gcm', me: 'me' };
   const OLV = { ol: 'calc', olrules: 'rules' };
   let curGrp = 'main';
   function previewSub(grp) {
     $$('#subtabs button').forEach((b) => { b.hidden = b.dataset.grp !== grp; });
-    $('#subtabs').classList.toggle('show', grp !== 'me' && grp !== 'dex');
+    $('#subtabs').classList.toggle('show', grp !== 'me' && grp !== 'dex' && grp !== 'raid');
     subAlign(grp);
   }
   /* 하위 탭을 상위 탭 바로 아래 가운데에 맞춤 */
@@ -3615,7 +3615,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
     if (lastGrp[grp]) lastGrp[grp] = name;
     $$('#tabs button').forEach((b) => b.classList.toggle('on', b.dataset.tab === grp));
     $$('#subtabs button').forEach((b) => { b.classList.toggle('on', b.dataset.tab === name); b.hidden = b.dataset.grp !== grp; });
-    $('#subtabs').classList.toggle('show', grp !== 'me' && grp !== 'dex');
+    $('#subtabs').classList.toggle('show', grp !== 'me' && grp !== 'dex' && grp !== 'raid');
     curGrp = grp; subAlign(grp);
     $$('.tab').forEach((s) => s.classList.toggle('on', s.id === 'tab-' + (OLV[name] ? 'ol' : name)));
     if (name === 'gcm') gmMount();
@@ -3625,6 +3625,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
     if (name === 'me') { renderMe(); try { invCard(); } catch (e) { /* 초기화 전 */ } }
     if (name === 'jw') renderJw();
     if (name === 'dex') renderDex();
+    if (name === 'raid' && window.doroRaid) window.doroRaid.mount($('#tab-raid'));
     if (name === 'jwrules') renderJwRules();
     if (name === 'gc') renderGc();
     if (name === 'gcrules') renderGcRules();
@@ -4348,12 +4349,14 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   const dexStage = (c) => (!c ? '미보유' : c === 1 ? '명함' : c < 4 ? (c - 1) + '돌파' : c === 4 ? '풀돌' : c < DEX_MAX ? '코강 ' + (c - 4) : '풀코강');
   const dexList = () => { const seen = {}; return GC_NK.filter((r) => { if (seen[r[0]]) return false; seen[r[0]] = 1; return true; }); };
   function dexGate() {
-    const b = document.querySelector('#tabs button[data-tab="dex"]'); if (!b) return; const on = dexOk();
-    if (b.hidden === on) b.hidden = !on;
-    if (!on && curGrp === 'dex') showTab('main');
+    const on = dexOk();
+    ['dex', 'raid'].forEach((k) => { const b = document.querySelector('#tabs button[data-tab="' + k + '"]'); if (b && b.hidden === on) b.hidden = !on; });
+    if (!on && (curGrp === 'dex' || curGrp === 'raid')) showTab('main');
   }
   function dexAdd(n, d) { const s = dexLoad(), c = Math.max(0, Math.min(DEX_MAX, (s.n[n] || 0) + d)); if (c) s.n[n] = c; else delete s.n[n]; dexSave(); return c; }
   window.doroDex = { add: (n, k) => dexAdd(n, k || 1), count: dexCnt, list: () => dexList().map((r) => r[0]) }; /* 이후 게임(복권·플링코·2048·팩·포커)에서 당첨 시 1장씩 지급 */
+  /* 포커레이드 시안(js/raid.js)이 쓰는 데이터 */
+  window.doroRaidData = () => { const T = tierData(), tiers = (T && T.boss) || {}; return { ok: dexOk(), list: dexList().filter((r) => r[2] === 'SSR').map((r) => ({ n: r[0], c: r[1], e: r[3], w: r[4], b: r[5], t: tiers[r[0]] || 'F', img: nkCode(r[0]) ? BL_IMG(nkCode(r[0])) : '', cnt: dexCnt(r[0]) })) }; };
   function dexCard(r, tiers) {
     const n = r[0], c = dexCnt(n), lv = dexLv(c), k = nkCode(n), el = BL_EL[DEX_ELK[r[3]]], tr = tiers[n] || '';
     const ico = '<span class="nk-top">' + (el ? '<span class="nk-ic" style="color:' + el[0] + '"><svg viewBox="0 0 24 24"><path d="' + el[1] + '"/></svg></span>' : '') + (r[5] ? '<span class="nk-ic">' + DEX_BU[r[5]] + '</span>' : '') + '</span>';
