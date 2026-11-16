@@ -1902,3 +1902,11 @@ button:not(.tr-clr):not(.tabs button):not(.tr-f):not(.pk-t):not(.pk-r){border-ra
 @media(max-width:900px){#tab-me .mekpis:not(.mekpis-pre){grid-template-columns:1fr 1fr!important;grid-template-areas:"sy op" "cb cb" "chip chip" "rec rec"}#tab-me .mekpis:not(.mekpis-pre)>.kpi.chipk .chipv{flex-direction:row;justify-content:center;gap:10px 30px!important}}
 @media(max-width:420px){#tab-me .mekpis .kpi.dexk .recs{grid-template-columns:1fr}#tab-me .mekpis .kpi.dexk .recs div:nth-last-child(2){border-bottom:1px solid var(--line)}}
 #tab-me .mekpis .kpi.dexk .recs span{color:var(--muted)!important;font-weight:500}#tab-me .mekpis .kpi.dexk .recs b{color:var(--ink)!important}#tab-me .mekpis .kpi.dexk .recs small{display:inline;color:var(--muted)!important;border:0!important;text-decoration:none!important;background:none!important;padding:0;margin-left:3px;font-size:11.5px}
+
+/* 내 정보의 큰 숫자: 칸 위쪽에 닿고 아래는 살짝 잘리는 초굵은 숫자(Anton, OFL). 싱크로·전초기지·전투력 전용 */
+@font-face{font-family:"DoroBig";src:url(../assets/fonts/anton.woff2) format("woff2");font-display:swap}
+#tab-me .mekpis>.kpi.big{--kh:104px;height:var(--kh);padding:0!important;container-type:inline-size}
+#tab-me .mekpis>.kpi.big .v{position:absolute;left:12px;top:0;margin:0;font-family:"DoroBig","Arial Black",Impact,sans-serif;font-weight:400;font-size:min(calc(var(--kh) * 1.3),calc((100cqw - 22px) / var(--w)));line-height:1;transform:translateY(-.045em);letter-spacing:0;white-space:nowrap;color:var(--kc)}
+#tab-me .mekpis>.kpi.big .l,#tab-me .mekpis>.kpi.big .s{position:absolute;z-index:2;margin:0;padding:1px 7px;border-radius:7px;background:color-mix(in srgb,var(--card) 82%,transparent);font-size:11.5px;line-height:1.5;white-space:nowrap}
+#tab-me .mekpis>.kpi.big .l{left:10px;bottom:7px;color:var(--ink);font-weight:700}#tab-me .mekpis>.kpi.big .s{right:8px;bottom:7px;color:var(--muted)}
+@container (max-width:235px){#tab-me .mekpis>.kpi.big .s{display:none}}
