@@ -1,17 +1,17 @@
-/* DOROSYNC DORO TABS(풀탭) (관리자 전용 · 미공개)
+/* DOROSYNC 도로록(풀탭) (관리자 전용 · 미공개)
    1장 = 골드칩 1개(싱크칩 10) · 탭 3줄을 뜯어 같은 무늬 3개가 나오면 당첨
    한 상자 1,000장: 당첨 수와 순서가 미리 정해져 있음(서버가 정함) · 당첨은 골드칩 · DORO칩 · S~SSS 카드뿐
-   상자 구성: S 70 · SS 35 · SSS 14 · DORO칩 15 · 골드칩 50×1, 20×2, 10×6, 3×20, 1×90 (나머지는 꽝) */
+   상자 구성: S 50 · SS 25 · SSS 10 · DORO칩 15 · 골드칩 50×2, 20×4, 10×10, 3×40, 1×100 (나머지는 꽝) · 칩 환수율 50% */
 (() => {
   'use strict';
   const PROD = /github\.io$/.test(location.hostname), BOX = 1000, K = 'dorosync-tabs';
-  const SPEC = [['S', 70], ['SS', 35], ['SSS', 14], ['r', 15], ['g50', 1], ['g20', 2], ['g10', 6], ['g3', 20], ['g1', 90]], TV = { S: 7, SS: 8, SSS: 9 }, DUP = { 7: 5, 8: 15, 9: 50 };
+  const SPEC = [['S', 50], ['SS', 25], ['SSS', 10], ['r', 15], ['g50', 2], ['g20', 4], ['g10', 10], ['g3', 40], ['g1', 100]], TV = { S: 7, SS: 8, SSS: 9 }, DUP = { 7: 5, 8: 15, 9: 50 };
   const OUT = (() => { const o = []; SPEC.forEach((x) => { for (let i = 0; i < x[1]; i++) o.push(x[0]); }); while (o.length < BOX) o.push(''); return o; })();
   const mulb = (a) => () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
   const order = (seed) => { const r = mulb(seed), a = OUT.map((_, i) => i); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; };
   const $ = (s, r) => (r || document).querySelector(s), esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const fmt = (n) => Math.round(n).toLocaleString('ko-KR'), chip = (k, px) => (window.doroChipSvg ? window.doroChipSvg(k, px, false, true) : ''), data = () => window.doroRaidData();
-  let root = null, Q = [], cur = null, left = null, busy = false, auto = false, AC = null, pendG = 0, pendR = 0;
+  let link = false, root = null, Q = [], cur = null, left = null, busy = false, auto = false, AC = null, pendG = 0, pendR = 0;
   /* ---------- 소리: 절취선이 '드르륵' 뜯기는 소리 = 아주 짧은 종이 파열음이 10ms 안팎 간격으로 이어짐 ---------- */
   const ac = () => { try { if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === 'suspended') AC.resume(); } catch (e) { AC = null; } return AC; };
   let NB = null; const nbuf = (a) => { if (!NB) { NB = a.createBuffer(1, a.sampleRate * 0.5, a.sampleRate); const ch = NB.getChannelData(0); for (let i = 0; i < ch.length; i++) ch[i] = Math.random() * 2 - 1; } return NB; };
@@ -24,18 +24,18 @@
     win: (lv) => { const a = ac(); if (!a) return; [0, 4, 7, 12, 16, 19].slice(0, 2 + lv * 2).forEach((st, i) => { const o = a.createOscillator(), g = a.createGain(), t = a.currentTime + i * 0.075; o.type = 'triangle'; o.frequency.value = 660 * Math.pow(2, st / 12); g.gain.setValueAtTime(0.09, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.4); o.connect(g).connect(a.destination); o.start(t); o.stop(t + 0.42); }); } };
   /* ---------- 뽑기 ---------- */
   const leftOf = (ord, i0) => { const L = { n: BOX - i0 }; for (let q = i0; q < BOX; q++) { const k = OUT[ord[q]]; if (k) L[k] = (L[k] || 0) + 1; } return L; };
-  function local(n) { /* 미리보기 전용: 이 기기에 상자 상태를 둠 */
-    let st = null; try { st = JSON.parse(localStorage.getItem(K)); } catch (e) { /* 무시 */ } if (!st || !st.s || st.i >= BOX) st = { s: (Math.random() * 4294967296) >>> 0, i: 0 };
-    const ord = order(st.s); n = Math.min(n, BOX - st.i); if (!n) return { tix: [], left: leftOf(ord, st.i) }; if (!window.doroChips.spend(10 * n)) throw new Error('chips');
+  function local(n, reset) { /* 미리보기 전용: 이 기기에 상자 상태를 둠 */
+    let st = null; try { st = reset ? null : JSON.parse(localStorage.getItem(K)); } catch (e) { /* 무시 */ } if (!st || !st.s || st.i >= BOX) st = { s: (Math.random() * 4294967296) >>> 0, i: 0 };
+    const ord = order(st.s); n = Math.min(n, BOX - st.i); if (!n) { if (reset) { try { localStorage.setItem(K, JSON.stringify(st)); } catch (e) { /* 무시 */ } } return { tix: [], left: leftOf(ord, st.i) }; } if (!window.doroChips.spend(10 * n)) throw new Error('chips');
     const L = data().list, tix = []; let g = 0, r = 0;
     for (let j = 0; j < n; j++) { const idx = ord[st.i + j], k = OUT[idx]; if (!k) tix.push(['']); else if (k === 'r') { r++; tix.push(['r']); } else if (k[0] === 'g') { g += +k.slice(1); tix.push([k]); }
       else { const pool = L.filter((x) => x.t === k), rr = mulb(st.s ^ Math.imul(idx + 1, 2654435761)), x = pool[Math.floor(rr() * pool.length)] || L[0], dup = window.doroDex.count(x.n) >= 11; if (dup) g += DUP[TV[k]]; else window.doroDex.add(x.n, 1); tix.push([k, x.code, dup ? 1 : 0, dup ? 11 : window.doroDex.count(x.n)]); } }
     st.i += n; try { localStorage.setItem(K, JSON.stringify(st)); } catch (e) { /* 무시 */ } const add = {}; if (g) add.g = g; if (r) add.r = r; if (g || r) window.doroChips.add(add, 'cap');
     return { tix, left: leftOf(ord, st.i) };
   }
-  async function fetchTix(n) {
-    if (!PROD) return local(n);
-    const j = await window.doroRaid.api('tabs', { n }); const a = window.doroAccount; if (a && a.doc && j.dex) a.doc.dex = j.dex; if (n && window.doroChips.sync) window.doroChips.sync(j.chips); return { tix: j.tix || [], left: j.left };
+  async function fetchTix(n, reset) {
+    if (!PROD) return local(n, reset);
+    const j = await window.doroRaid.api('tabs', reset ? { n: 0, reset: 1 } : { n }); const a = window.doroAccount; if (a && a.doc && j.dex) a.doc.dex = j.dex; if (n && window.doroChips.sync) window.doroChips.sync(j.chips); return { tix: j.tix || [], left: j.left };
   }
   /* ---------- 표 한 장 ---------- */
   const CO = { E: '엘리시온', M: '미실리스', T: '테트라', A: '어브노멀', P: '필그림' };
@@ -47,6 +47,8 @@
     const rows = [lose(), lose(), lose()], wi = ws ? Math.floor(Math.random() * 3) : -1; if (ws) rows[wi] = [ws, ws, ws]; return { t, rows, wi, open: [0, 0, 0] };
   }
   const prizeTxt = (t) => { const k = t[0]; if (!k) return '꽝'; if (k === 'r') return chip('r', 20) + ' DORO칩 +1'; if (k[0] === 'g') return chip('g', 20) + ' 골드칩 +' + k.slice(1); const x = data().list.find((y) => String(y.code) === String(t[1])); return '<b style="color:' + ((data().tierCol || {})[k] || '#fff') + '">' + k + '</b> ' + esc(x ? x.n : '') + (t[2] ? ' → ' + chip('g', 18) + ' +' + DUP[TV[k]] : t[3] === 1 ? ' NEW' : ''); };
+  const PAPER = (() => { let rows = ''; for (let y = 0; y < 6; y++) { let t = ''; while (t.length < 46) t += 'DO' + 'RO'.repeat(1 + Math.floor(Math.random() * 5)) + 'C'; rows += '<text x="' + (-Math.floor(Math.random() * 30)) + '" y="' + (13 + y * 14) + '">' + t + '</text>'; }
+    return 'url("data:image/svg+xml;charset=utf-8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="260" height="84"><g font-family="Arial Black,Arial,sans-serif" font-size="12" font-style="italic" fill="#7a1418" fill-opacity=".13">' + rows + '</g></svg>') + '")'; })(); /* DOROROC… 길이가 제각각인 글자를 한 번 정해 모든 덮개에 */
   const CSS = `
 .tb{display:grid;grid-template-columns:290px 1fr;border-radius:16px;overflow:hidden;background:#141018;color:#fff;font-family:"Pretendard","Malgun Gothic",sans-serif;border:1px solid #3a2a2a;min-height:620px}
 .tb-mc{background:linear-gradient(180deg,#7a1418,#4a0c10);padding:14px;display:flex;flex-direction:column;gap:10px;box-shadow:inset -6px 0 12px rgba(0,0,0,.35)}
@@ -65,8 +67,8 @@
 .tb-row{position:relative;height:76px;margin-bottom:7px;border-radius:4px;background:#fff;box-shadow:inset 0 0 0 1.5px #7a1418;display:flex;align-items:center;justify-content:space-around;padding:0 8px;overflow:hidden}
 .tb-row.win{background:#fff3b0;box-shadow:inset 0 0 0 3px #f59e0b,0 0 16px rgba(255,190,60,.9);overflow:visible;z-index:2}.tb-row.win .tb-s{animation:tbHop .5s cubic-bezier(.2,1.8,.4,1)}@keyframes tbHop{40%{transform:translateY(-10px) scale(1.15)}}
 .tb-s{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;background:#22252c center 12%/cover;box-shadow:inset 0 0 0 2px #7a1418,0 1px 2px rgba(0,0,0,.4);overflow:hidden;flex:none}.tb-s.co img{width:62%;height:62%;object-fit:contain}.tb-s.ch{background:#fff8e0}.tb-s.ch svg{width:82%;height:82%}
-.tb-cv{position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 6px,rgba(122,20,24,.5) 6px 8px) 0 0/100% 3px no-repeat,repeating-linear-gradient(90deg,transparent 0 6px,rgba(122,20,24,.5) 6px 8px) 0 100%/100% 3px no-repeat,#efe6cd;display:flex;align-items:center;justify-content:center;gap:10px;color:#7a1418;font-size:15px;letter-spacing:.2em;cursor:grab;touch-action:none;clip-path:inset(0 0 0 var(--p,0%))}
-.tb-cv:before{content:"▶▶▶";font-size:11px;letter-spacing:.1em;opacity:.7}.tb-cv:after{content:"▶▶▶";font-size:11px;letter-spacing:.1em;opacity:.7}
+.tb-cv{position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 6px,rgba(122,20,24,.5) 6px 8px) 0 0/100% 3px no-repeat,repeating-linear-gradient(90deg,transparent 0 6px,rgba(122,20,24,.5) 6px 8px) 0 100%/100% 3px no-repeat,var(--paper) 0 0/100% 100%,#efe6cd;display:flex;align-items:center;justify-content:center;gap:10px;padding-left:22px;color:#7a1418;font-size:15px;letter-spacing:.2em;cursor:grab;touch-action:none;clip-path:inset(0 0 0 var(--p,0%))}
+.tb-cv:before{content:"";position:absolute;left:3px;top:50%;width:17px;height:38px;margin-top:-19px;border-radius:9px 5px 5px 9px;background:repeating-linear-gradient(0deg,transparent 0 4px,rgba(122,20,24,.55) 4px 6px) 50% 50%/9px 20px no-repeat,linear-gradient(90deg,#fffaf0,#d9cfb2);box-shadow:inset 0 0 0 1.5px #7a1418,1px 1px 2px rgba(0,0,0,.3)} /* 왼쪽의 작은 손잡이 */.tb-cv:after{content:"▶▶▶";font-size:11px;letter-spacing:.1em;opacity:.7}
 .tb-curl{position:absolute;top:-2px;bottom:-2px;left:var(--p,0%);width:18px;margin-left:-4px;pointer-events:none;opacity:0;border-radius:9px;background:linear-gradient(90deg,#b9ae90,#fffaf0 35%,#e9dfc4 65%,#8f8468);box-shadow:5px 0 8px rgba(0,0,0,.35)}
 .tb-row.pull .tb-curl{opacity:1}.tb-row.done .tb-cv,.tb-row.done .tb-curl{display:none}
 .tb-ft{font:800 10.5px "Pretendard",sans-serif;text-align:center;color:#7a1418;opacity:.8}
@@ -74,15 +76,21 @@
 .tb-ctl{display:flex;gap:8px;align-items:center;min-height:38px}.tb-ctl button{border:0;border-radius:10px;padding:9px 16px;font:inherit;font-weight:900;font-size:13.5px;color:#fff;background:#3a3f47;cursor:pointer}.tb-ctl button.p{background:#0d8bf2}.tb-ctl span{font-weight:800;font-size:13px;opacity:.85}
 .tb-card{position:absolute;left:50%;top:44%;z-index:5;width:150px;transform:translate(-50%,-50%);pointer-events:none;animation:tbCard 1.6s cubic-bezier(.2,1.3,.4,1) forwards;filter:drop-shadow(0 0 24px var(--gc,#fff))}.tb-card .pk{--cw:150px;width:150px;position:relative}
 @keyframes tbCard{0%{transform:translate(-50%,-50%) scale(.2) rotate(-20deg);opacity:0}25%,80%{transform:translate(-50%,-50%) scale(1);opacity:1}100%{transform:translate(-50%,-90%) scale(.9);opacity:0}}
+.tb-view{position:relative;height:74px;border-radius:8px;background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,255,255,.02)),#0a0a0d;box-shadow:inset 0 0 0 3px #2a0608,inset 0 6px 10px rgba(0,0,0,.8);display:flex;align-items:flex-end;gap:5px;padding:6px 8px;overflow:hidden}
+.tb-view i{flex:1;height:calc(var(--h)*1%);min-height:0;border-radius:2px 2px 0 0;background:repeating-linear-gradient(0deg,#f6efdc 0 1.6px,#b9ae90 1.6px 2.4px);box-shadow:0 0 0 1px rgba(0,0,0,.4);transition:height .4s}.tb-view:after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 40%,rgba(255,255,255,.14) 48%,transparent 56%);pointer-events:none}
+.tb-opt{display:flex;gap:6px}.tb-opt button{flex:1;border:0;border-radius:9px;padding:7px 4px;font:inherit;font-size:12px;font-weight:800;color:#ffd9c9;background:#2a0608;cursor:pointer}.tb-opt button.on{background:#ffb21c;color:#14161c}
+.tb-odds{font-size:11.5px;line-height:1.75;background:#0d0d10;border-radius:10px;padding:8px 10px}.tb-odds[hidden]{display:none}.tb-odds table{width:100%;border-collapse:collapse}.tb-odds td{padding:0 2px}.tb-odds td:last-child{text-align:right;color:#ffd24a;font-weight:800}
 .tb-empty{opacity:.6;font-weight:700;font-size:14px;text-align:center;line-height:1.7}
 @media(max-width:760px){.tb{grid-template-columns:1fr}.tb-st{order:-1;min-height:480px}}
 `;
-  const tkHtml = (T, z) => '<div class="tb-tk" style="z-index:' + z + '"><div class="tb-hd"><span>DORO TABS</span><small>' + chip('g', 13) + '1</small></div>' + T.rows.map((r, i) => '<div class="tb-row" data-i="' + i + '">' + r.map(symHtml).join('') + '<div class="tb-cv">PULL</div><i class="tb-curl"></i></div>').join('') + '<div class="tb-ft">같은 무늬 3개 = 당첨 · 골드칩 · DORO칩 · S~SSS 카드</div></div>';
+  const tkHtml = (T, z) => '<div class="tb-tk" style="z-index:' + z + '"><div class="tb-hd"><span>DOROROC</span><small>' + chip('b', 13) + '10</small></div>' + T.rows.map((r, i) => '<div class="tb-row" data-i="' + i + '">' + r.map(symHtml).join('') + '<div class="tb-cv">PULL</div><i class="tb-curl"></i></div>').join('') + '<div class="tb-ft">같은 무늬 3개 = 당첨 · 골드칩 · DORO칩 · S~SSS 카드</div></div>';
   function ui() {
     if (!root) return; const o = window.doroChips.get();
     $('.tb-bal', root).innerHTML = '<span>' + chip('b', 18) + fmt(Math.max(0, window.doroChips.total() - pendG * 10)) + '</span><span>' + chip('r', 18) + fmt(Math.max(0, ((o && o.r) || 0) - pendR)) + '</span>';
     root.querySelectorAll('.tb-btn button').forEach((b) => { b.disabled = busy || !!cur || Q.length > 0; });
     const L = left; $('.tb-win', root).innerHTML = L ? '이 상자에 남은 표 <span class="n">' + fmt(L.n) + '</span> / ' + fmt(BOX) + '<br><b>SSS</b> ' + (L.SSS || 0) + ' · <b>SS</b> ' + (L.SS || 0) + ' · <b>S</b> ' + (L.S || 0) + '<br>' + chip('r', 14) + ' ' + (L.r || 0) + ' · ' + chip('g', 14) + ' 50×' + (L.g50 || 0) + ' 20×' + (L.g20 || 0) + ' 10×' + (L.g10 || 0) : '상자를 확인하는 중…';
+    { const v = $('.tb-view', root), n = L ? L.n : 0; if (v) v.innerHTML = [0, 1, 2, 3, 4].map((q) => '<i style="--h:' + Math.max(0, Math.min(100, (n - q * 200) / 200 * 100)).toFixed(0) + '"></i>').join(''); } /* 200장씩 다섯 더미: 남은 만큼만 쌓여 있음 */
+    root.querySelectorAll('.tb-opt [data-tb=link]').forEach((b) => b.classList.toggle('on', link));
     const ct = $('.tb-ctl', root); if (ct) ct.innerHTML = cur || Q.length ? '<span>남은 표 ' + (Q.length + (cur ? 1 : 0)) + '장</span><button type="button" data-tb="all">모두 뜯기</button>' : '';
   }
   /* 자판기에서 표가 빠르게 튀어나와 쌓임 → 가지런히 모음 → 맨 위부터 뜯기 */
@@ -114,8 +122,9 @@
     tk.querySelectorAll('.tb-row').forEach((row) => { const i = +row.dataset.i, cv = $('.tb-cv', row), cl = $('.tb-curl', row); let dn = null;
       cv.addEventListener('pointerdown', (e) => { if (auto) return; dn = { x: e.clientX, w: row.getBoundingClientRect().width, last: 0, m: 0 }; row.classList.add('pull'); try { cv.setPointerCapture(e.pointerId); } catch (er) { /* 무시 */ } });
       cv.addEventListener('pointermove', (e) => { if (!dn) return; const dx = Math.max(0, e.clientX - dn.x), p = Math.min(1, dx / (dn.w * 0.92)); dn.m = Math.max(dn.m, dx); row.dataset.p = String(p); cv.style.setProperty('--p', (p * 100) + '%'); cl.style.setProperty('--p', (p * 100) + '%');
+        if (link) tk.querySelectorAll('.tb-row:not(.done)').forEach((r2) => { if (r2 === row) return; r2.classList.add('pull'); r2.dataset.p = String(p); $('.tb-cv', r2).style.setProperty('--p', (p * 100) + '%'); $('.tb-curl', r2).style.setProperty('--p', (p * 100) + '%'); if (p >= 0.97) openRow(r2, +r2.dataset.i, false); }); /* 동시 뜯기 */
         const st = Math.floor(dx / 7); if (st > dn.last) { for (let q = dn.last; q < st && q < dn.last + 4; q++) perf((q - dn.last) * 0.006, 0.8 + Math.random() * 0.3); dn.last = st; } /* 구멍 하나(7px)를 지날 때마다 '드륵' */ if (p >= 0.97) { dn = null; burst(0, 0.03, 0.3, 1700, 0.9); openRow(row, i, false); } });
-      const up = () => { if (!dn) return; const d = dn; dn = null; if (d.m < 6) quick(row, i, 0); else { quick(row, i, 0); } }; /* 놓으면 남은 부분이 마저 뜯김 */
+      const up = () => { if (!dn) return; dn = null; quick(row, i, 0); if (link) tk.querySelectorAll('.tb-row:not(.done)').forEach((r2) => { if (r2 !== row) quick(r2, +r2.dataset.i, 0.02); }); }; /* 놓으면 남은 부분이 마저 뜯김 */
       cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up); });
   }
   function autoRip(tk) { tk.querySelectorAll('.tb-row').forEach((row, i) => setTimeout(() => quick(row, +row.dataset.i, 0), 60 + i * 150)); }
@@ -130,12 +139,17 @@
     setTimeout(() => { if (cur !== T) return; if (tk) tk.animate([{ transform: 'none', opacity: 1 }, { transform: 'translate(' + (k ? 240 : -240) + 'px,60px) rotate(' + (k ? 24 : -24) + 'deg)', opacity: 0 }], { duration: 200, easing: 'ease-in', fill: 'forwards' }); setTimeout(() => { if (cur === T) next(); }, 190); }, hold);
   }
   function build() {
-    root.innerHTML = '<div class="tb"><aside class="tb-mc"><div class="tb-ttl">DORO TABS<small>PULL &amp; WIN</small></div><div class="tb-win"></div><div class="tb-bal"></div>' +
-      '<div class="tb-btn">' + [1, 5, 10].map((n) => '<button type="button" data-n="' + n + '">' + n + '장<small>' + chip('g', 13) + n + '</small></button>').join('') + '</div><div class="tb-slot"></div><div class="tb-msg"></div></aside>' +
+    root.innerHTML = '<div class="tb" style=\'--paper:' + PAPER + '\'><aside class="tb-mc"><div class="tb-ttl">도로록<small>DOROROC</small></div><div class="tb-view"></div><div class="tb-win"></div><div class="tb-bal"></div>' +
+      '<div class="tb-btn">' + [1, 5, 10].map((n) => '<button type="button" data-n="' + n + '">' + n + '장<small>' + chip('b', 13) + n * 10 + '</small></button>').join('') + '</div><div class="tb-slot"></div><div class="tb-msg"></div>' +
+      '<div class="tb-opt"><button type="button" data-tb="link">동시 뜯기</button><button type="button" data-tb="odds">확률표</button><button type="button" data-tb="reset">상자 교체</button></div><div class="tb-odds" hidden><table>' + SPEC.map((x) => '<tr><td>' + (TV[x[0]] ? x[0] + ' 카드' : x[0] === 'r' ? 'DORO칩 1' : '골드칩 ' + x[0].slice(1)) + '</td><td>' + x[1] + '장</td><td>' + (x[1] / 10).toFixed(1) + '%</td></tr>').join('') + '<tr><td>꽝</td><td>' + (BOX - SPEC.reduce((a, x) => a + x[1], 0)) + '장</td><td>' + ((BOX - SPEC.reduce((a, x) => a + x[1], 0)) / 10).toFixed(1) + '%</td></tr></table></div></aside>' +
       '<main class="tb-st"><div class="tb-res"></div><div class="tb-pile"><div class="tb-empty">표를 뽑으세요<br>덮개를 오른쪽으로 끌거나 누르면 뜯깁니다</div></div><div class="tb-ctl"></div></main></div>';
     ui(); if (!left) fetchTix(0).then((r) => { left = r.left; ui(); }).catch(() => { /* 다음에 */ });
   }
-  function onClick(e) { const b = e.target.closest('.tb-btn button'); if (b) { buyN(+b.dataset.n); return; } const a = e.target.closest('[data-tb]'); if (a && a.dataset.tb === 'all') { auto = true; const tk = $('.tb-pile .tb-tk:not(.bk)', root); if (tk && cur && !cur.fin) autoRip(tk); } }
+  function onClick(e) { const b = e.target.closest('.tb-btn button'); if (b) { buyN(+b.dataset.n); return; } const a = e.target.closest('[data-tb]'); if (!a) return;
+    if (a.dataset.tb === 'link') { link = !link; ui(); return; }
+    if (a.dataset.tb === 'odds') { const o = $('.tb-odds', root); o.hidden = !o.hidden; return; }
+    if (a.dataset.tb === 'reset') { if (busy || cur || Q.length) return; if (a.dataset.ok !== '1') { a.dataset.ok = '1'; a.textContent = '한 번 더 누르면 교체'; setTimeout(() => { a.dataset.ok = ''; a.textContent = '상자 교체'; }, 2500); return; } a.dataset.ok = ''; a.textContent = '상자 교체'; busy = true; fetchTix(0, true).then((r) => { left = r.left; busy = false; sfx.tidy(); ui(); }).catch(() => { busy = false; ui(); }); return; }
+    if (a.dataset.tb === 'all') { auto = true; const tk = $('.tb-pile .tb-tk:not(.bk)', root); if (tk && cur && !cur.fin) autoRip(tk); } }
   window.doroTabs = { mount(el) {
     if (!el) return; const d = data(); if (!d.ok) { el.innerHTML = ''; return; } if (!d.list.length || !window.doroRaid) { setTimeout(() => window.doroTabs.mount(el), 400); return; }
     if (!document.getElementById('tabs-css')) { const s = document.createElement('style'); s.id = 'tabs-css'; s.textContent = CSS; document.head.appendChild(s); }

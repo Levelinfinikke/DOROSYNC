@@ -97,7 +97,7 @@
   }
   function build() {
     const seg = (k, arr) => '<div class="pl-seg">' + arr.map((v) => '<button type="button" data-k="' + k + '" data-v="' + v[0] + '">' + v[1] + '</button>').join('') + '</div>';
-    root.innerHTML = '<div class="pl"><aside class="pl-side"><div class="pl-t">DORO<small>DROP</small></div>' +
+    root.innerHTML = '<div class="pl"><aside class="pl-side"><div class="pl-t">도로<small>드롭</small></div>' +
       '<div class="pl-g"><span>위험도</span>' + seg('risk', RISK.map((r, i) => [i, r])) + '</div>' +
       '<div class="pl-g"><span>칩</span>' + seg('ch', CH.map((x, i) => [i, chip(x[0], 16) + x[2]])) + '</div>' +
       '<div class="pl-g"><span>개수</span>' + seg('n', CNT.map((n) => [n, n])) + '</div>' +
