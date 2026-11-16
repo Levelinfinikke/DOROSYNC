@@ -1,6 +1,18 @@
 /* DOROSYNC 가챠 머신 v3 — 독립 모듈. DoroGacha.mount(root, {assets, pools, stock, tiers}) */
 (function () {
   'use strict';
+  /* 다른 브라우저 탭으로 가도 계속 돌아가게: 탭이 가려지면 브라우저가 화면 갱신(rAF)을 멈추고 타이머를 1초 이상으로 늦추므로,
+     가려진 동안에는 늦춰지지 않는 워커의 타이머로 대신 돌림. 보이는 동안에는 평소와 같음 */
+  const BG = (() => { let w = null, seq = 0; const cb = new Map();
+    const mk = () => { try { w = new Worker(URL.createObjectURL(new Blob(['const T={};onmessage=(e)=>{const d=e.data;if(d.c){clearTimeout(T[d.c]);delete T[d.c];}else T[d.i]=setTimeout(()=>{delete T[d.i];postMessage(d.i);},d.ms);};'], { type: 'text/javascript' }))); w.onmessage = (e) => { const f = cb.get(e.data); if (f) { cb.delete(e.data); try { f(); } catch (er) { console.error(er); } } }; w.onerror = () => { w = null; }; } catch (e) { w = null; } };
+    return { set(fn, ms) { if (!w) mk(); if (!w) return 0; const i = ++seq; cb.set(i, fn); w.postMessage({ i, ms: Math.max(0, +ms || 0) }); return i; }, clear(i) { if (cb.delete(i) && w) w.postMessage({ c: i }); } }; })();
+  const _st = window.setTimeout.bind(window), _ct = window.clearTimeout.bind(window), _raf = window.requestAnimationFrame.bind(window), _caf = window.cancelAnimationFrame.bind(window);
+  const setTimeout = (fn, ms, ...a) => { if (document.hidden) { const i = BG.set(() => fn(...a), ms); if (i) return 'w' + i; } return _st(fn, ms, ...a); };
+  const clearTimeout = (id) => { if (typeof id === 'string' && id[0] === 'w') BG.clear(+id.slice(1)); else _ct(id); };
+  const RQ = new Map(); let rqN = 0;
+  const requestAnimationFrame = (fn) => { const id = ++rqN, x = { n: 0, w: 0, run: (t) => { if (!RQ.has(id)) return; RQ.delete(id); fn(typeof t === 'number' ? t : performance.now()); } }; RQ.set(id, x); if (document.hidden) { x.w = BG.set(x.run, 33); if (!x.w) x.n = _raf(x.run); } else x.n = _raf(x.run); return id; };
+  const cancelAnimationFrame = (id) => { const x = RQ.get(id); if (!x) return; RQ.delete(id); if (x.n) _caf(x.n); if (x.w) BG.clear(x.w); };
+  document.addEventListener('visibilitychange', () => { if (document.hidden) RQ.forEach((x) => { if (x.n) { const w2 = BG.set(x.run, 33); if (w2) { _caf(x.n); x.n = 0; x.w = w2; } } }); });
   const GM_ALL = []; /* 열린 가챠 머신들(보관함 확인용) */
   const W = 960, H = 956, TAU = Math.PI * 2;
   const TRICO = 'assets/img/f2b148d53e13.png';
@@ -960,7 +972,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
               el.animate([{ transform: 'translate(' + ox + 'px,' + hy + 'px) scale(' + hs + ') rotate(0deg)', easing: 'linear' }, { transform: 'translate(' + ox + 'px,-2%) scale(' + k * 1.85 + ') rotate(4deg)', offset: 0.72, easing: 'linear' }, { transform: 'translate(' + ox + 'px,-2%) scale(' + k * 1.95 + ') rotate(0deg)', offset: 0.8, easing: 'cubic-bezier(.75,0,1,.6)' }, { transform: 'translate(' + ox + 'px,0) scale(' + k + ')' }], { duration: SL, fill: 'both' });
               el.style.zIndex = String(10 + j); const last = j === cur.n - 1;
               setTimeout(() => { if (!ov.isConnected) return; el.classList.remove('wait'); if (last) bg.hit(); /* 파티클은 마지막 칩에만 */ if (j === 0) return; /* 첫 칩: 원래의 JACKPOT 쿵 */ const word = MNM[j + 1] || (j + 1) + 'x', fsz = (0.5 + 0.13 * (j - 1)).toFixed(2), tx2 = ov.querySelector('.gm-rbtx');
-                tx2.innerHTML = ['a', 'b', 'c', 'd', 'e', 'f'].map((x) => '<span class="t' + x + '">' + word.split('').map((c3, i) => '<b style="--i:' + (i * 0.5) + ';font-size:' + fsz + 'em">' + c3 + '</b>').join('') + '<br>' + T.split('').map((c3) => '<b style="animation:none;opacity:1">' + c3 + '</b>').join('') + '</span>').join('');
+                tx2.innerHTML = ['a', 'b', 'c', 'd', 'e', 'f'].map((x) => '<span class="t' + x + '">' + word.split('').map((c3, i) => '<b style="--i:' + (i * 0.5) + ';font-size:' + fsz + 'em">' + c3 + '</b>').join('') + '<br>' + T.split('').map((c3, i3) => '<b style="--i:' + i3 + ';animation:none;opacity:1">' + c3 + '</b>').join('') + '</span>').join(''); /* --i가 없으면 무지개 무늬 층이 통째로 사라져 글자가 검게 보임 */
                 tx2.style.top = '2%'; { const fl2 = ov.querySelector('.gm-rbfl'); if (fl2) fl2.animate([{ opacity: last ? 0.3 : 0.18 }, { opacity: 0 }], { duration: last ? 500 : 220, easing: 'ease-out' }); ov.animate([{ transform: 'translate(0,0)' }, { transform: 'translate(-6px,5px)' }, { transform: 'translate(5px,-4px)' }, { transform: 'translate(0,0)' }], { duration: 180 }); } /* 화면 전체 연출을 다시 틀지 않고(칩 무늬·회전이 초기화됨) 번쩍·흔들림만 */ vib([60, 20, 110], true); try { snd.boom(); if (last) snd.chipBurst(true); } catch (e) { /* 무시 */ }
                 const nb = ov.querySelector('.gm-rbn'); if (nb) { nb.querySelector('b').textContent = j + 1; nb.classList.remove('pop'); void nb.offsetWidth; nb.classList.add('pop'); } }, SL);
             }, GAPS[j] - SL);

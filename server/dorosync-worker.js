@@ -537,7 +537,7 @@ async function raid(req, env, out) {
   if (a === 'g48') { /* 2048에서 합성한 단계를 이번(또는 곧 시작할) 시즌의 픽업 니케 카드 수로 인정. 보낸 씨앗·움직임을 같은 규칙으로 다시 돌려 확인 */
     if (!sn || now >= sn.end) return out(409, { ok: false, error: 'noseason' });
     const GL = ((SITE && SITE.gacha) || []).filter((x) => x && x.n); let code = '';
-    if (GL.length) { const pin = GL.find((x) => x.pin), act = GL.filter((x) => (x.s || x.e) && (!x.s || now >= x.s) && (!x.e || now < x.e)).sort((x, y) => (y.s || 0) - (x.s || 0)), nx = GL.filter((x) => x.s && now < x.s).sort((x, y) => x.s - y.s); code = String((pin || act[0] || nx[0] || GL[0]).code || ''); }
+    if (GL.length) { const pin = GL.find((x) => x.pin), act = GL.filter((x) => (x.s || x.e) && (!x.s || now >= x.s) && (!x.e || now < x.e)).sort((x, y) => (y.s || 0) - (x.s || 0)), nx = GL.filter((x) => x.s && now < x.s).sort((x, y) => x.s - y.s); code = String((pin || act[0] || nx[0] || GL[0]).code || ''); const want = String(B.code || '').replace(/\D/g, ''); if (want && act.some((x) => String(x.code || '') === want)) code = want; } /* 지금 픽업 중인 니케 가운데 고른 것 */
     if (!code) code = String(B.code || '').replace(/\D/g, '').slice(0, 6); /* 가챠 머신 목록을 서버에 저장하기 전: 사이트가 보낸 대표 픽업 */
     if (!RAID_NK[code]) return out(409, { ok: false, error: 'nopick' });
     const rr = tabsRng(+B.seed >>> 0), c = Array(16).fill(0), sp = () => { const e = []; for (let i = 0; i < 16; i++) if (!c[i]) e.push(i); if (!e.length) return; const i = e[Math.floor(rr() * e.length)]; c[i] = rr() < 0.9 ? 1 : 2; };
@@ -545,9 +545,10 @@ async function raid(req, env, out) {
     sp(); sp(); let mx = 0;
     for (const ch of String(B.moves || '').slice(0, 30000)) { const L = LN[ch]; if (!L || mx >= 11) continue; let moved = false; L.forEach((ln) => { const t = ln.map((i) => c[i]).filter(Boolean), o = []; for (let i = 0; i < t.length; i++) { if (i + 1 < t.length && t[i] === t[i + 1]) { o.push(t[i] + 1); i++; } else o.push(t[i]); } ln.forEach((ci, k) => { const nv = o[k] || 0; if (nv !== c[ci]) moved = true; c[ci] = nv; }); }); if (moved) { mx = Math.max(mx, Math.max.apply(null, c)); sp(); } }
     mx = Math.min(11, Math.max(mx, Math.max.apply(null, c)));
-    for (let attempt = 0; attempt < 3; attempt++) { const ud = await getDoc('users/' + uid); if (!ud) return out(404, { ok: false, error: 'nouser' }); const old = ud.f.g48b, v = Math.max(old && old.sid === sn.id && old.code === code ? +old.v || 0 : 0, mx);
-      if (old && old.sid === sn.id && old.code === code && +old.v >= v) return out(200, { ok: true, v, code, sid: sn.id });
-      if (await commit([{ update: { name: ud.name, fields: { g48b: fsv({ sid: sn.id, code, v }) } }, updateMask: { fieldPaths: ['g48b'] }, currentDocument: { updateTime: ud.updateTime } }])) return out(200, { ok: true, v, code, sid: sn.id }); }
+    for (let attempt = 0; attempt < 3; attempt++) { const ud = await getDoc('users/' + uid); if (!ud) return out(404, { ok: false, error: 'nouser' }); const old = ud.f.g48b, m = old && old.sid === sn.id ? Object.assign({}, old.m || (old.code ? { [old.code]: +old.v || 0 } : {})) : {}, v = Math.max(+m[code] || 0, mx); /* 시즌마다 니케별 최고 단계 */
+      if (+m[code] >= v && old && old.sid === sn.id && old.m) return out(200, { ok: true, v, code, sid: sn.id });
+      m[code] = v;
+      if (await commit([{ update: { name: ud.name, fields: { g48b: fsv({ sid: sn.id, m }) } }, updateMask: { fieldPaths: ['g48b'] }, currentDocument: { updateTime: ud.updateTime } }])) return out(200, { ok: true, v, code, sid: sn.id }); }
     return out(409, { ok: false, error: 'busy' });
   }
   if (!sn) return out(200, { ok: true, season: null, admin });
@@ -585,7 +586,7 @@ async function raid(req, env, out) {
       const ud = await getDoc('users/' + uid), web = (ud && ud.f.dex) || {}, cnt = {};
       chars.forEach((c) => { const k = String(c.name_code); if (RAID_NK[k]) cnt[k] = 1 + Math.min(3, Number(c.grade) || 0) + Math.min(7, Number(c.core) || 0); }); const dexL = Object.assign({}, cnt); /* 연동 보유 수: 카드팩의 풀코강 초과 판정에 씀 */
       Object.keys(web).forEach((k) => { if (RAID_NK[k]) cnt[k] = Math.min(11, (cnt[k] || 0) + Math.max(0, Math.floor(+web[k] || 0))); });
-      { const gb = ud && ud.f.g48b; if (gb && gb.sid === sn.id && RAID_NK[gb.code]) cnt[gb.code] = Math.max(cnt[gb.code] || 0, Math.min(11, Math.floor(+gb.v || 0))); } /* 2048에서 합성한 픽업 니케 단계(이번 시즌만) */
+      { const gb = ud && ud.f.g48b, gm = gb && gb.sid === sn.id ? gb.m || (gb.code ? { [gb.code]: gb.v } : {}) : {}; Object.keys(gm).forEach((k) => { if (RAID_NK[k]) cnt[k] = Math.max(cnt[k] || 0, Math.min(11, Math.floor(+gm[k] || 0))); }); } /* 2048에서 합성한 픽업 니케 단계(이번 시즌만) */
       const codes = Object.keys(cnt).filter((k) => cnt[k] > 0); if (codes.length < 7) return out(409, { ok: false, error: 'deck', have: codes.length });
       rShuffle(codes);
       const NKN = Object.keys(RAID_NK).length, x1 = codes.length >= NKN ? 1 : 0, rd = 1 + Math.min(3, Math.floor(codes.length / NKN * 4)); /* 버리기: 기본 1, 도감 25%마다 +1(최대 4). 100%는 하루 핸드 +1 */

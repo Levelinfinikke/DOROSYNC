@@ -7,7 +7,9 @@
   const K = 'dorosync-2048b', AUTO_FEE = 100, AUTO_N = 100, GOAL = 11; /* AUTO: 싱크칩 100에 100번 자동 진행 */
   const mulb = (a) => () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
   const $ = (s, r) => (r || document).querySelector(s), fmt = (n) => Math.round(n).toLocaleString('ko-KR'), chip = (k, px) => (window.doroChipSvg ? window.doroChipSvg(k, px, false, true) : '');
-  const pick = () => (window.doroPickup ? window.doroPickup() : { n: '', img: '' }), data = () => (window.doroRaidData ? window.doroRaidData() : { ok: false });
+  const PK_K = 'dorosync-2048-pick', pickList = () => { try { return window.doroPickupList ? window.doroPickupList() : []; } catch (e) { return []; } };
+  /* 타일의 니케: 지금 픽업 중인 니케 가운데 고른 것(안 골랐으면 대표 픽업) */
+  const pick = () => { const L = pickList(); let nm = ''; try { nm = localStorage.getItem(PK_K) || ''; } catch (e) { /* 무시 */ } const f = (window.doroPickup ? window.doroPickup() : { n: '', img: '' }); return L.find((x) => x.n === nm) || L.find((x) => x.n === f.n) || L[0] || f; }, data = () => (window.doroRaidData ? window.doroRaidData() : { ok: false });
   const stage = (v) => (v <= 1 ? '명함' : v < 4 ? (v - 1) + '돌파' : v === 4 ? '풀돌' : v < GOAL ? '코강 ' + (v - 4) : '풀코강'), lbSrc = (v) => { try { return v > 1 ? data().lb(Math.min(3, v - 1), Math.max(0, v - 4)) : ''; } catch (e) { return ''; } };
   let root = null, G = null, AC = null, idN = 0, autoT = 0;
   const tone = (f, d, v, t, type) => { try { if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === 'suspended') AC.resume(); const o = AC.createOscillator(), g = AC.createGain(), t0 = AC.currentTime + (t || 0); o.type = type || 'triangle'; o.frequency.value = f; g.gain.setValueAtTime(v, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + d); o.connect(g).connect(AC.destination); o.start(t0); o.stop(t0 + d + 0.02); } catch (e) { /* 무시 */ } };
@@ -39,7 +41,7 @@
 .g48-k{display:grid;grid-template-columns:1fr 1fr;gap:6px}.g48-k div{background:#0c0e14;border-radius:10px;padding:7px 9px;font-size:11.5px;color:#9aa5b8}.g48-k b{display:block;color:#fff;font-size:18px;font-weight:800}
 .g48-bal{display:flex;gap:10px;background:#0c0e14;border-radius:10px;padding:8px 10px;font-weight:800}.g48-bal span{display:inline-flex;align-items:center;gap:5px}
 .g48-b{border:0;border-radius:12px;padding:11px;font:inherit;font-weight:900;font-size:15px;cursor:pointer;color:#14161c;background:linear-gradient(180deg,#ffe58a,#ffb21c 55%,#e08a00);box-shadow:0 4px 0 #8a5200;display:flex;align-items:center;justify-content:center;gap:6px}.g48-b.g{background:#3a4252;color:#fff;box-shadow:0 4px 0 #1c212b}.g48-b.on{background:linear-gradient(180deg,#a8f0c8,#22b573);box-shadow:0 4px 0 #0c6a3c}.g48-b:disabled{opacity:.5;cursor:default}.g48-b:active{transform:translateY(3px);box-shadow:0 1px 0 #8a5200}
-.g48-msg{min-height:16px;font-size:12px;color:#ffb0a0;font-weight:700}.g48-hint{font-size:11.5px;line-height:1.7;color:#9aa5b8}.g48-ap{display:block;margin-top:4px;color:#ffd24a;font-weight:700}
+.g48-msg{min-height:16px;font-size:12px;color:#ffb0a0;font-weight:700}.g48-hint{font-size:11.5px;line-height:1.7;color:#9aa5b8}.g48-ch{margin-left:auto;padding:5px 10px;border-radius:8px;border:1px solid #ffb21c;background:transparent;color:#ffb21c;font:inherit;font-size:12px;font-weight:800;cursor:pointer}.g48-ap{display:block;margin-top:4px;color:#ffd24a;font-weight:700}
 .g48-main{display:grid;place-items:center;padding:18px;background:radial-gradient(ellipse at 50% 30%,#2a3147,#0f1118 75%);position:relative;touch-action:none}
 .g48-bd{position:relative;width:min(460px,84vw);aspect-ratio:1;background:#0a0c12;border-radius:14px;box-shadow:inset 0 0 0 3px #2a3147,0 10px 30px rgba(0,0,0,.5)}
 .g48-bd u{position:absolute;width:22%;height:22%;border-radius:10px;background:rgba(255,255,255,.05);left:calc(2.4% + var(--c)*24.4%);top:calc(2.4% + var(--r)*24.4%)}
@@ -58,7 +60,7 @@
   const dress = (e, v) => { const lb = lbSrc(v); e.className = 'g48-tl s' + (v >= GOAL ? 11 : v >= 8 ? 8 : v >= 5 ? 5 : v >= 4 ? 4 : v <= 1 ? 1 : 2) + (v >= GOAL ? ' poly' : v >= 4 ? ' foil' : ''); e.style.setProperty('--img', 'url(' + pick().img + ')'); e.innerHTML = v >= 5 ? '<em>' + (v >= GOAL ? 'MAX' : v - 4) + '</em>' : lb ? '<img alt="" src="' + lb + '">' : ''; e.title = stage(v); }; /* 코강 단계: 별 없이 코강 숫자만(초상화가 잘 보이게) */
   function ui() {
     if (!root) return; const o = window.doroChips.get(), mx = G ? maxOf(G) : 0, p = pick();
-    $('.g48-pk', root).innerHTML = '<i style="background-image:url(' + p.img + ')"></i><span>지금 픽업<b>' + String(p.n).replace(/[<>&]/g, '') + '</b></span>';
+    $('.g48-pk', root).innerHTML = '<i style="background-image:url(' + p.img + ')"></i><span>지금 픽업<b>' + String(p.n).replace(/[<>&]/g, '') + '</b></span>' + (pickList().length > 1 ? '<button type="button" class="g48-ch" data-g="pick" title="지금 픽업 중인 다른 니케로 바꾸기">변경</button>' : '');
     $('.g48-bal', root).innerHTML = '<span>' + chip('b', 18) + fmt(window.doroChips.total()) + '</span><span>' + chip('r', 18) + fmt((o && o.r) || 0) + '</span>';
     $('.g48-k', root).innerHTML = '<div>움직인 횟수<b>' + fmt(G ? G.n : 0) + '</b></div><div>가장 높은 단계<b>' + (mx ? stage(mx) : '-') + '</b></div>';
     const ab = $('[data-g=auto]', root), over = !G || maxOf(G) >= GOAL || !canMove(G); ab.disabled = over; ab.classList.toggle('on', !!(G && G.on)); ab.innerHTML = G && G.auto > 0 ? (G.on ? 'AUTO 멈춤 (' + G.auto + ')' : 'AUTO 계속 (' + G.auto + ')') : AUTO_N + '회 AUTO ' + chip('b', 15) + AUTO_FEE;
@@ -102,7 +104,8 @@
     art() { addCss(); const d = document.createElement('div'); return '<span class="lb-48g">' + [1, 2, 4, 3, 6, 8, 1, 5, 11].map((v) => { dress(d, v); return d.outerHTML; }).join('') + '</span>'; }, /* 로비 그림: 지금 픽업 니케의 타일 */
     mount(el) {
       if (!el) return; if (!data().ok) { el.innerHTML = ''; return; } addCss();
-      if (root !== el) { root = el; el.addEventListener('click', (e) => { const b = e.target.closest('[data-g]'); if (!b) return; if (b.dataset.g === 'new') { stopAuto(); G = fresh((Math.random() * 4294967296) >>> 0, ''); G.c.forEach((x) => { if (x) x.nw = 1; }); save(); paint(); ui(); } else auto(); });
+      if (root !== el) { root = el; el.addEventListener('click', (e) => { const b = e.target.closest('[data-g]'); if (!b) return; if (b.dataset.g === 'pick') { const L = pickList(), i = L.findIndex((x) => x.n === pick().n), nx = L[(i + 1) % L.length]; if (nx) { try { localStorage.setItem(PK_K, nx.n); } catch (er) { /* 무시 */ } if (G) G.sent = 0; apMsg = ''; root.querySelectorAll('.g48-tl').forEach((el) => el.remove()); paint(); ui(); apShow(); apply2048(); } return; }
+      if (b.dataset.g === 'new') { stopAuto(); G = fresh((Math.random() * 4294967296) >>> 0, ''); G.c.forEach((x) => { if (x) x.nw = 1; }); save(); paint(); ui(); } else auto(); });
         document.addEventListener('keydown', (e) => { if (!root || !root.isConnected || !root.classList.contains('on') || !G || G.on || !KEY[e.key] || /INPUT|TEXTAREA|SELECT/.test((e.target && e.target.tagName) || '')) return; e.preventDefault(); go(KEY[e.key]); });
         window.addEventListener('dorochips', () => { if (root && root.isConnected) ui(); });
         try { const st = JSON.parse(localStorage.getItem(K)); if (st && st.s != null) G = fresh(st.s, st.m, st.a); } catch (e) { /* 무시 */ } }
