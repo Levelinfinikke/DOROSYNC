@@ -3302,6 +3302,19 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
       '<button type="button" class="primary pad" id="auto-go" data-ax="start" disabled>자동 기록 시작</button></div>';
     const sel = $('#auto-area'); if (sel) sel.value = area;
   }
+  /* 자동 기록 설정 전 확인: 그 주소로 실제 기록을 불러와 닉네임·서버·레벨을 보여 주고, 맞는 계정을 고르게 함. 없으면 바로 오류 */
+  const AREA_NM = { 81: '일본', 82: '북미', 83: '한국', 84: '글로벌', 85: '동남아' };
+  async function autoCheck(raw, area, mode) {
+    autoCheck.raw = ''; const box = $('#auto-chk'); if (box) box.remove();
+    let j = null; try { j = await (await fetch(BL_WORKER + '/check?openid=' + encodeURIComponent(raw))).json(); } catch (e) { j = null; }
+    if (!j || !j.ok) { autoMsg(j && j.error === 'LOGIN' ? '지금은 기록 서버가 블라블라링크에 접속하지 못합니다. 잠시 후 다시 시도해 주십시오, 지휘관.' : '기록을 확인하지 못했습니다. 잠시 후 다시 시도해 주십시오, 지휘관.', 1); return; }
+    const R0 = j.res || [], L = (R0.some((r) => r.s > 1) ? R0.filter((r) => r.s > 1) : R0).slice().sort((x, y) => (String(x.area) === String(area) ? -1 : 0) - (String(y.area) === String(area) ? -1 : 0) || y.s - x.s);
+    if (!L.length) { autoMsg('이 주소로는 어느 서버에서도 기록을 찾지 못했습니다. 블라블라링크 프로필의 공유 링크가 맞는지, 프로필이 공개인지 확인해 주십시오, 지휘관.', 1); return; }
+    autoCheck.raw = raw; autoCheck.mode = mode; autoMsg('');
+    const d = document.createElement('div'); d.id = 'auto-chk'; d.className = 'auto-chk';
+    d.innerHTML = '<p class="rapisay">이 계정이 맞습니까, 지휘관? 맞는 계정을 눌러 주십시오.</p>' + L.map((r) => '<button type="button" class="ghost pad auto-pick" data-ax="pick" data-ar="' + r.area + '"><b>' + esc(r.role || '(닉네임 비공개)') + '</b> · ' + (AREA_NM[r.area] || r.area) + ' 서버 · 싱크로 ' + r.s + ' · 전초기지 ' + r.o + (String(r.area) !== String(area) ? ' <small class="muted">(고른 서버와 다름)</small>' : '') + '</button>').join('');
+    const at = $('#auto-msg'); if (at) at.parentNode.insertBefore(d, at); else { const body = $('#auto-body'); if (body) body.appendChild(d); }
+  }
   async function autoAct(e) {
     const b = e.target.closest('[data-ax]'); if (!b || b.dataset.ax === 'x') return;
     const a = acct(); autoMsg('');
@@ -3311,17 +3324,20 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
         const area = $('#auto-area').value, raw = $('#auto-url').value.trim();
         if (!blOpenId(raw)) { autoMsg('닉네임이나 아이디가 아니라, 블라블라링크 프로필의 공유 링크(…?openid=…)를 붙여 넣어 주십시오, 지휘관.', 1); return; }
         if (!$('#auto-agree').checked) return;
-        b.disabled = true;
-        await a.patch({ auto: { on: true, area, openid: raw, since: Date.now() }, autoDue: kstDate(Date.now()) });
+        b.disabled = true; autoMsg('블라블라링크에서 기록을 불러오는 중입니다…');
+        await autoCheck(raw, area, 'start'); b.disabled = false;
+      } else if (b.dataset.ax === 'pick') {
+        const area = b.dataset.ar, raw = autoCheck.raw, mode = autoCheck.mode, au = (a.doc && a.doc.auto) || {};
+        if (!raw) return; b.disabled = true;
+        await a.patch({ auto: { on: true, area, openid: raw, since: mode === 'fix' && au.since ? au.since : Date.now() }, autoDue: kstDate(Date.now()) });
+        autoCheck.raw = '';
         try { localStorage.setItem('dorosync-bl-area', area); localStorage.setItem('dorosync-bl-purl', raw); } catch (er) { /* 무시 */ }
-        autoMsg('설정을 마쳤습니다. 내일 오전 5시~6시부터 매일 기록하겠습니다, 지휘관.'); autoRender(); renderProg();
+        autoMsg(mode === 'fix' ? '프로필 주소를 고쳤습니다. 내일 오전 5시~6시부터 다시 기록하겠습니다, 지휘관.' : '설정을 마쳤습니다. 내일 오전 5시~6시부터 매일 기록하겠습니다, 지휘관.'); autoRender(); renderProg();
       } else if (b.dataset.ax === 'fix') {
         const raw = $('#auto-url').value.trim(), au = (a.doc && a.doc.auto) || {};
         if (!blOpenId(raw)) { autoMsg('닉네임이나 아이디가 아니라, 블라블라링크 프로필의 공유 링크(…?openid=…)를 붙여 넣어 주십시오, 지휘관.', 1); return; }
-        b.disabled = true;
-        await a.patch({ auto: { on: true, area: au.area || '83', openid: raw, since: au.since || Date.now() }, autoDue: kstDate(Date.now()) });
-        try { localStorage.setItem('dorosync-bl-purl', raw); } catch (er) { /* 무시 */ }
-        autoMsg('프로필 주소를 고쳤습니다. 내일 오전 5시~6시부터 다시 기록하겠습니다, 지휘관.'); autoRender();
+        b.disabled = true; autoMsg('블라블라링크에서 기록을 불러오는 중입니다…');
+        await autoCheck(raw, au.area || '83', 'fix'); b.disabled = false;
       } else if (b.dataset.ax === 'stop') {
         if (!confirm('매일 자동 기록을 중지할까요? 저장된 프로필 주소는 삭제되고, 지금까지의 기록은 남습니다.')) return;
         await a.patch({ auto: { on: false }, autoDue: '' });

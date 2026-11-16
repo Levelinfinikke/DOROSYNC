@@ -59,6 +59,22 @@ export default {
       return out(200, { ok: true, cookie: !!env.BLA_COOKIE, login: !!env.FIREBASE_SA, auto });
     }
     if (!okOrigin) return out(403, { ok: false, error: '허용되지 않은 사이트입니다.' });
+    if (url.pathname === '/check') { /* 자동 기록 설정 전 확인: 서버별 닉네임·레벨 (닉네임 비공개여도 레벨만 나오면 기록 가능) */
+      const id = toIntlId(url.searchParams.get('openid'));
+      if (!id) return out(400, { ok: false, error: 'OPENID' });
+      if (!env.BLA_COOKIE) return out(500, { ok: false, error: 'CFG' });
+      const res = [];
+      for (const ar of AREAS) {
+        const q = { intl_open_id: id, nikke_area_id: ar };
+        try {
+          const oi = (await post('GetUserProfileOutpostInfo', q, env.BLA_COOKIE)).outpost_info || {}, s = Number(oi.synchro_level) || 0;
+          if (!s) continue;
+          let role = ''; try { const bi = (await post('GetUserProfileBasicInfo', q, env.BLA_COOKIE)).basic_info || {}; role = String(bi.nickname || bi.role_name || ''); } catch (e) { /* 닉네임 없음 */ }
+          res.push({ area: ar, role, s, o: Number(oi.outpost_battle_level) || 0 });
+        } catch (e) { if (/^LOGIN/.test(String(e && e.message))) return out(503, { ok: false, error: 'LOGIN' }); }
+      }
+      return out(200, { ok: true, res });
+    }
     if (url.pathname !== '/sync') return out(404, { ok: false, error: 'not found' });
 
     const area = Number(url.searchParams.get('area'));
