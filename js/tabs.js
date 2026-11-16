@@ -68,8 +68,8 @@
     return { a: poly(Math.max(0, xb), W, 0), c: p < 0.02 ? poly(6, W - 5, 5) : '', b: xb > 0 ? poly(0, xb, 0) : '' }; };
   const coverSvg = (p) => { const id = 'tbp' + (++cvN), d = cover(p); return '<svg class="tb-cv" viewBox="0 0 240 76" preserveAspectRatio="none"><defs><pattern id="' + id + '" patternUnits="userSpaceOnUse" width="260" height="84"><rect width="260" height="84" fill="#efe6cd"/><image href="' + PAPER_URI + '" width="260" height="84"/></pattern></defs><path class="a" fill="url(#' + id + ')" d="' + d.a + '"/><path class="c" d="' + d.c + '"/><path class="b" d="' + d.b + '"/><text x="130" y="44" text-anchor="middle">PULL ▶▶▶</text></svg>'; };
   const setP = (row, p) => { row.dataset.p = String(p); const d = cover(p), sv = $('.tb-cv', row); $('.a', sv).setAttribute('d', d.a); $('.b', sv).setAttribute('d', d.b); $('.c', sv).setAttribute('d', d.c); };
-  const CSS = `
-.tb{display:grid;grid-template-columns:290px 1fr;border-radius:16px;overflow:hidden;background:#141018;color:#fff;font-family:"Pretendard","Malgun Gothic",sans-serif;border:1px solid #3a2a2a;min-height:620px}
+  const CSS = `/* 뿌리 클래스는 .tbx: 예전 이름 .tb는 가챠 머신 컷인의 글자 층(.tb)과 겹쳐 검은 판이 생겼음 */
+.tbx{display:grid;grid-template-columns:290px 1fr;border-radius:16px;overflow:hidden;background:#141018;color:#fff;font-family:"Pretendard","Malgun Gothic",sans-serif;border:1px solid #3a2a2a;min-height:620px}
 .tb-mc{position:relative;z-index:1;background:linear-gradient(180deg,#7a1418,#4a0c10);padding:14px;display:flex;flex-direction:column;gap:10px;box-shadow:inset -6px 0 12px rgba(0,0,0,.35)}
 .tb-ttl{font-family:"Arial Black",Arial,sans-serif;font-style:italic;font-size:30px;line-height:.95;text-align:center;color:#ffe58a;text-shadow:0 3px 0 #5a2a00,0 0 16px rgba(255,200,80,.6);border:3px solid #ffd24a;border-radius:12px;padding:8px 4px;background:#2a0608}
 .tb-ttl small{display:block;font-size:.4em;letter-spacing:.3em;color:#fff;font-style:normal;margin-top:4px}
@@ -110,7 +110,7 @@ svg.tb-cv{position:absolute;inset:0;width:100%;height:100%;overflow:visible;z-in
 .tb-pz.g,.tb-pz.r{width:60px;height:60px}.tb-pz.g i,.tb-pz.r i{position:absolute;left:calc(8px + var(--i)*5px);top:calc(14px - var(--i)*6px);display:block}.tb-pz i svg{display:block}
 .tb-pz em{position:absolute;right:-10px;bottom:-8px;font:900 13px "Arial Black",Arial,sans-serif;font-style:normal;color:#14161c;background:#ffd24a;border-radius:99px;padding:1px 7px;display:inline-flex;align-items:center;gap:2px;transform:rotate(calc(var(--rot,0deg)*-1))}
 .tb-empty{opacity:.6;font-weight:700;font-size:14px;text-align:center;line-height:1.7}
-@media(max-width:760px){.tb{grid-template-columns:1fr}.tb-st{order:-1;min-height:480px}}
+@media(max-width:760px){.tbx{grid-template-columns:1fr}.tb-st{order:-1;min-height:480px}}
 `;
   const tkHtml = (T, z, ps) => '<div class="tb-tk" style="z-index:' + z + '"><div class="tb-hd"><span>DOROROC</span><small>' + chip('b', 13) + '10</small></div>' + T.rows.map((r, i) => '<div class="tb-row' + (ps && ps[i] ? ' pull' : '') + '" data-i="' + i + '"><svg class="tb-bg" viewBox="0 0 240 76" preserveAspectRatio="none" aria-hidden="true"><path d="M1 17.5L20.5 1H239V75H20.5L1 58.5Z"/></svg>' + r.map(symHtml).join('') + coverSvg(ps ? ps[i] : 0) + '</div>').join('') + '<div class="tb-ft">같은 무늬 3개 = 당첨</div></div>';
   function ui() {
@@ -193,7 +193,7 @@ svg.tb-cv{position:absolute;inset:0;width:100%;height:100%;overflow:visible;z-in
     setTimeout(() => { if (cur !== T) return; if (tk) tk.animate([{ transform: 'none', opacity: 1 }, { transform: 'translate(' + (k ? 240 : -240) + 'px,60px) rotate(' + (k ? 24 : -24) + 'deg)', opacity: 0 }], { duration: auto ? 90 : 200, easing: 'ease-in', fill: 'forwards' }); setTimeout(() => { if (cur === T) next(); }, auto ? 80 : 190); }, hold);
   }
   function build() {
-    root.innerHTML = '<div class="tb" style=\'--paper:' + PAPER + '\'><aside class="tb-mc"><div class="tb-ttl">도로록<small>DOROROC</small></div><div class="tb-view"></div><div class="tb-win"></div><div class="tb-bal"></div>' +
+    root.innerHTML = '<div class="tbx" style=\'--paper:' + PAPER + '\'><aside class="tb-mc"><div class="tb-ttl">도로록<small>DOROROC</small></div><div class="tb-view"></div><div class="tb-win"></div><div class="tb-bal"></div>' +
       '<div class="tb-btn">' + [1, 5, 10].map((n) => '<button type="button" data-n="' + n + '">' + n + '장<small>' + chip('b', 13) + n * 10 + '</small></button>').join('') + '</div><div class="tb-slot"></div><div class="tb-msg"></div><div class="tb-cl">CARD IN</div><div class="tb-cin"></div>' +
       '<div class="tb-opt"><button type="button" data-tb="link">동시 뜯기</button><button type="button" data-tb="odds">확률표</button></div><div class="tb-odds" hidden><table>' + SPEC.map((x) => '<tr><td>' + (TV[x[0]] ? x[0] + ' 카드' : x[0] === 'r' ? 'DORO칩 1' : '골드칩 ' + x[0].slice(1)) + '</td><td>' + x[1] + '장</td><td>' + (x[1] / BOX * 100).toFixed(0) + '%</td></tr>').join('') + '<tr><td>꽝</td><td>' + (BOX - SPEC.reduce((a, x) => a + x[1], 0)) + '장</td><td>' + ((BOX - SPEC.reduce((a, x) => a + x[1], 0)) / BOX * 100).toFixed(0) + '%</td></tr></table></div></aside>' +
       '<main class="tb-st"><div class="tb-res"></div><div class="tb-pile"><div class="tb-empty">표를 뽑으세요<br>덮개를 오른쪽으로 끌거나 누르면 뜯깁니다</div></div><div class="tb-ctl"></div></main></div>';
