@@ -543,6 +543,11 @@ async function raid(req, env, out) {
       if (ended && ud && fr[ended.id] == null) { const all = await rankOf('raid_' + ended.id), t = tierOf(all.findIndex((x) => x.uid === uid), all.length); fr = Object.assign({}, fr, { [ended.id]: t });
         if (await commit([{ update: { name: ud.name, fields: { raidFrames: fsv(fr) } }, updateMask: { fieldPaths: ['raidFrames'] } }])) newFrame = t; }
       return out(200, view(g, { chips: (ud && ud.f.chipsV && ud.f.chipsV.d) || 0, frames: Array.from(new Set(Object.values(fr).map(Number).filter((t) => t > 0))), newFrame })); }
+    if (a === 'giveup') { /* 진행 중인 판 포기: 쓴 횟수는 돌아오지 않고 기록도 남지 않음 */
+      if (!g) return out(200, view(null));
+      if (await commit([save({ g: null }, ['g'])])) return out(200, view(null));
+      continue;
+    }
     if (!active) return out(409, { ok: false, error: 'inactive' });
     if (a === 'start') {
       if (g) return out(200, view(g)); /* 진행 중인 판이 있으면 그 판을 이어감 */
@@ -559,7 +564,7 @@ async function raid(req, env, out) {
       const NKN = Object.keys(RAID_NK).length, x1 = codes.length >= NKN ? 1 : 0, rd = 1 + Math.min(3, Math.floor(codes.length / NKN * 4)); /* 버리기: 기본 1, 도감 25%마다 +1(최대 4). 100%는 하루 핸드 +1 */
       const g2 = { hand: codes.slice(0, 7).join(','), deck: codes.slice(7).join(','), cnt, rd, total: codes.length, t: now };
       const nick = String((ud && (ud.f.nickname || ud.f.username)) || '').slice(0, 24);
-      const pf = String(B.pf || '').replace(/\D/g, '').slice(0, 6), fr = [1, 2, 3].includes(+B.fr) && Object.values((ud && ud.f.raidFrames) || {}).map(Number).includes(+B.fr) ? +B.fr : 0; /* 랭킹에 보일 프로필 니케·테두리(가진 테두리만) */
+      const pf = String(B.pf || '').replace(/\D/g, '').slice(0, 6), rf = (ud && ud.f.raidFrames) || {}, fm = String(B.fr || '').match(/^([0-9a-zA-Z-]{1,20}):([123])$/), fr = fm ? (+rf[fm[1]] === +fm[2] ? fm[0] : 0) : [1, 2, 3].includes(+B.fr) && Object.values(rf).map(Number).includes(+B.fr) ? +B.fr : 0; /* 랭킹에 보일 프로필 니케·테두리(가진 테두리만) */
       if (await commit([save({ uid, nick, oid: id, area, day: today, n: n + 1, g: g2, pf, fr, x1 }, ['uid', 'nick', 'oid', 'area', 'day', 'n', 'g', 'pf', 'fr', 'x1'])].concat(ud ? [{ update: { name: ud.name, fields: { dexL: fsv(dexL) } }, updateMask: { fieldPaths: ['dexL'] } }] : []))) { const v = view(g2); v.tries = n + 1; v.max = RAID_TRIES + x1; return out(200, v); }
       continue;
     }
@@ -678,7 +683,8 @@ async function adminSite(b, H0, out) {
   if (b.imgDel) { const id = String(b.imgDel); if (!/^[a-z0-9]{8,24}$/.test(id)) return out(400, { ok: false, error: 'bad' }); const ok = await commit([{ delete: FS_DOC('img/' + id) }]); return out(ok ? 200 : 502, { ok }); }
   if (b.cfg) { /* 가챠 머신 목록·보스 이름/이미지·공지 */
     const c = b.cfg, g = (Array.isArray(c.gacha) ? c.gacha : []).slice(0, 12).map((x) => ({ id: str(x.id, 20).replace(/[^0-9a-zA-Z_-]/g, '') || String(now), n: str(x.n, 40), rate: +x.rate === 2 ? 2 : 1, corp: ['엘리시온', '미실리스', '테트라', '필그림', '어브노멀'].includes(x.corp) ? x.corp : '', cover: ref(x.cover), face: ref(x.face), s: ms(x.s), e: ms(x.e), pin: x.pin ? 1 : 0 })).filter((x) => x.n && x.cover);
-    const cfg = { gacha: g, raid: { nm: str(c.raid && c.raid.nm, 30), img: ref(c.raid && c.raid.img) }, notice: str(c.notice, 200), at: now };
+    const cfg = { gacha: g, raid: { nm: str(c.raid && c.raid.nm, 30), img: ref(c.raid && c.raid.img) }, notice: str(c.notice, 200), frames: {}, at: now };
+    Object.keys(c.frames && typeof c.frames === 'object' ? c.frames : {}).slice(0, 40).forEach((sid) => { if (!/^[0-9a-zA-Z-]{1,20}$/.test(sid)) return; const o = {}; [1, 2, 3].forEach((t) => { const v = ref(c.frames[sid] && c.frames[sid][t]); if (v) o[t] = v; }); if (Object.keys(o).length) cfg.frames[sid] = o; }); /* 시즌별 순위 보상 테두리(1 = 상위 3%, 2 = 10%, 3 = 30%) */
     const ok = await commit([{ update: { name: FS_DOC('meta/site'), fields: { j: fsv(JSON.stringify(cfg)), at: fsv(now) } } }]); CFG_MEM = null;
     return out(ok ? 200 : 502, { ok, cfg });
   }

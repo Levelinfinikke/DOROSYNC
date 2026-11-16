@@ -180,7 +180,7 @@
 .rd-chal{grid-column:1/-1;position:relative;overflow:hidden;border:3px solid #7a1a12;border-radius:8px;padding:9px 6px 8px;color:#fff;cursor:pointer;font:inherit;text-align:center;background:#e33a2c;box-shadow:0 4px 0 rgba(0,0,0,.45),inset 0 0 0 2px rgba(255,255,255,.18);transition:transform .06s}
 .rd-chal:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(55deg,rgba(255,255,255,0) 0 14px,rgba(255,120,90,.55) 14px 28px);background-size:68.4px 100%;animation:rdStripe 2.6s linear infinite}
 @keyframes rdStripe{to{background-position:68.4px 0}}
-.rd-chal:active{transform:translateY(3px)}.rd-chal:disabled{filter:grayscale(.7) brightness(.7);cursor:default}
+.rd-chal.gv{background:#4a4f58;border-color:#22252b}.rd-chal.gv:before{opacity:.25}.rd-chal:active{transform:translateY(3px)}.rd-chal:disabled{filter:grayscale(.7) brightness(.7);cursor:default}
 .rd-chal b,.rd-chal span{position:relative;display:block;text-shadow:0 2px 0 rgba(0,0,0,.45)}.rd-chal b{font-size:20px;letter-spacing:.06em}.rd-chal span{font-size:11.5px;font-family:"Pretendard","Malgun Gothic",sans-serif;font-weight:800;margin-top:2px}
 .rd-rem{grid-column:1/-1;margin:-3px 34px 0;text-align:center;font-size:11.5px;padding:3px 6px;background:#3a3f47;border:2px solid #23262d;border-top:0;border-radius:0 0 8px 8px;font-family:"Pretendard","Malgun Gothic",sans-serif;font-weight:800}.rd-rem b{color:#ffd24a;margin-left:6px;font-family:"Arial Black",Arial,sans-serif}
 .rd-fsb{position:absolute;right:8px;top:6px;z-index:9;width:32px;height:32px;border-radius:9px;border:0;background:rgba(0,0,0,.55);color:#fff;font-size:17px;cursor:pointer}.rd.fs .rd-fsb{display:none}
@@ -499,6 +499,7 @@
     $('.rd-deck span').textContent = S.deckLeft + '/' + S.deckN;
     const li = S.info || { tries: 0, max: 3 }, used = live ? S.tries : li.tries, mxx = live ? S.max : li.max, ms = (Math.floor((Date.now() + 9 * 3600000) / 86400000) + 1) * 86400000 - (Date.now() + 9 * 3600000);
     $('.rd-chal span').textContent = '갱신 시간 ▶ ' + Math.floor(ms / 3600000) + '시간 ' + Math.floor(ms % 3600000 / 60000) + '분 남음'; $('.rd-rem b').textContent = Math.max(0, mxx - used) + '/' + mxx;
+    { const gv = live && pick, arm = gv && S.giveArm && Date.now() - S.giveArm < 3500; $('.rd-chal b').textContent = arm ? '한 번 더: 포기' : gv ? '포기하기' : '도전하기'; $('.rd-chal').classList.toggle('gv', gv); }
     $('.rd-chal').classList.toggle('on', live); $('[data-r=prac]').classList.toggle('org', !live); $('[data-r=prac]').classList.toggle('blue', live);
     const sb = $('[data-r=snd]'); if (sb) sb.textContent = sndMode === 1 ? '🔊1' : sndMode === 2 ? '🔊2' : '🔇'; $('[data-r=hint]').disabled = busy || !pick;
     const go = $('[data-r=go]'), dc = $('[data-r=disc]');
@@ -658,7 +659,7 @@
     if (S.mode !== 'live') { box.innerHTML = '<p style="padding:14px">랭킹은 실전 모드에서만 기록됩니다.</p>'; return; }
     box.innerHTML = '<p style="padding:14px">불러오는 중…</p>';
     try { const j = await api('rank'); if (j.season && j.season.end) { S.end = j.season.end; tick(); } const N = j.total || j.rows.length, cut = j.cut || [], d = data(), CL = ['상위 3%', '상위 10%', '상위 30%'];
-      let h = ''; j.rows.forEach((r, i) => { h += rkRow(r, N); cut.forEach((c, k) => { if (r.rank === c && (i < j.rows.length - 1 || N > j.rows.length)) h += '<div class="rk-cut">' + (d.frImg ? '<img alt="" src="' + d.frImg(k + 1) + '">' : '') + CL[k] + ' 선</div>'; }); });
+      let h = ''; j.rows.forEach((r, i) => { h += rkRow(r, N); cut.forEach((c, k) => { if (r.rank === c && (i < j.rows.length - 1 || N > j.rows.length)) h += '<div class="rk-cut">' + (d.frImg ? '<img alt="" src="' + esc(d.frImg((j.season && j.season.id ? j.season.id + ':' : '') + (k + 1))) + '">' : '') + CL[k] + ' 선</div>'; }); });
       box.innerHTML = h || '<p style="padding:14px">아직 기록이 없습니다.</p>';
       me.innerHTML = j.mine ? rkRow(j.mine, N, true) : '';
     } catch (e) { box.innerHTML = '<p style="padding:14px">' + esc(errMsg(e)) + '</p>'; }
@@ -748,14 +749,24 @@
   const pracMode = () => (data().list.filter((x) => x.cnt > 0).length >= 7 ? 'mine' : 'test');
   const realChips = () => { try { return window.doroChips ? window.doroChips.total() : 0; } catch (e) { return 0; } };
   function setMode(m) { S.mode = m; S.boss = null; S.tries = 0; S.max = 3; if (m === 'live') enterLive(); else { S.chips = PROD ? realChips() : 10000; deal(true); } }
+  /* 도전 중인 판 포기: 한 번 더 눌러야 실행. 쓴 횟수는 돌아오지 않음 */
+  async function giveUp() {
+    if (!(S.giveArm && Date.now() - S.giveArm < 3500)) { S.giveArm = Date.now(); ui(); setTimeout(() => { if (root && root.isConnected && !busy) ui(); }, 3600); return; }
+    S.giveArm = 0; busy = true; ui();
+    try { const j = await api('giveup'); busy = false; S.tries = j.tries || S.tries; S.max = j.max || S.max; S.info = { tries: S.tries, max: S.max, game: false }; clearTable(); S.phase = 'idle'; place(); ui(); const left = S.max - S.tries;
+      gate('<h3>포기했습니다</h3><div class="rd-fd">이번 판은 기록되지 않습니다 · 오늘 핸드 ' + S.tries + '/' + S.max + '</div>' + (left > 0 ? '<button type="button" class="rb org" data-r="chal">다시 도전하기</button>' : '<div class="rd-fd">오늘 핸드를 모두 썼습니다.</div>') + '<button type="button" class="rb pur" data-r="rank">랭킹</button><button type="button" class="rb blue" data-r="prac">모의전</button>');
+    } catch (e) { busy = false; ui(); $('.rd-msg').textContent = errMsg(e); }
+  }
   function goChal() { const ac2 = acct(); if (ac2 && ac2.user) setMode('live'); else { S.mode = 'live'; clearTable(); S.phase = 'idle'; place(); ui(); gate('<h3>도전하기</h3><div class="rd-fd">로그인이 필요합니다.</div><button type="button" class="rb blue" data-r="prac">모의전</button>'); } }
   /* 입장 연출(솔로레이드 입장처럼): 게이트 닫힘 → 톱니 장치 하강 → 모의전/도전 선택 → 보스 실루엣이 올라오고 장치 상승 → 게이트 열리며 시작 */
   let introPick = null;
-  function introRem() { const e = $('.rd-in-rem'); if (!e || !S) return; const a0 = acct(), i = S.info || {}; e.textContent = a0 && a0.user ? '남은 기록 횟수 ' + Math.max(0, (i.max || 3) - (i.tries || 0)) + '/' + (i.max || 3) : '로그인 필요'; }
+  const liveOn = () => !!(S && S.mode === 'live' && S.phase === 'pick'); /* 도전 중인 판이 깔려 있음 */
+  function introRem() { const e = $('.rd-in-rem'); if (!e || !S) return; const a0 = acct(), i = S.info || {}; $('.rd-in-cl').textContent = liveOn() || i.game ? '이어서 도전하기' : '도전하기'; e.textContent = a0 && a0.user ? '남은 기록 횟수 ' + Math.max(0, (i.max || 3) - (i.tries || 0)) + '/' + (i.max || 3) : '로그인 필요'; }
   async function intro() {
     const I = $('.rd-in'); if (!I || S.introOn) return; S.introOn = true; I.querySelectorAll('*').forEach((e) => e.getAnimations().forEach((x) => x.cancel())); I.hidden = false;
     const gt = $('.rd-in-g.t'), gb = $('.rd-in-g.b'), gear = $('.rd-in-gear'), scr = $('.rd-in-scr'), pnl = $('.rd-in-p'), sil = $('.rd-in-sil'), A = (el, kf, ms, ez) => el.animate(kf, { duration: ms, fill: 'forwards', easing: ez || 'ease-in' }).finished.catch(() => {});
     scr.classList.remove('on', 'nm'); scr.querySelector('.bn b').textContent = bossNm(); introRem();
+    { const a0 = acct(); if (a0 && a0.user && !liveOn()) api('state').then((j) => { S.info = { tries: j.tries || 0, max: j.max || 3, game: !!j.game }; introRem(); }).catch(() => {}); }
     { let t = ''; try { const sn = window.doroCfg.get().season, now = Date.now(); if (sn && now >= sn.start && now < sn.end) { const h = Math.floor((sn.end - now) / 3600000); t = '시즌 종료까지 ' + (h >= 24 ? Math.floor(h / 24) + '일 ' : '') + (h % 24) + '시간'; } else if (sn && now < sn.start) t = '시즌 준비 중'; } catch (e) { /* 설정 전 */ } scr.querySelector('.bn span').textContent = t; }
     const snd = (f) => { try { if (sndMode) f(); } catch (e) { /* 소리 실패는 무시 */ } };
     snd(() => { noise(0.38, 0.12, 0, 600); tone(70, 0.4, 'sawtooth', 0.05, 45); });
@@ -774,7 +785,7 @@
     await A(sil, [{ opacity: 0, transform: 'translateY(22%)' }, { opacity: 0.5, transform: 'translateY(0)' }], 700, 'cubic-bezier(.2,.7,.3,1)'); await sleep(150);
     snd(() => { for (let q = 0; q < 6; q++) noise(0.03, 0.1, q * 0.06, 2400); });
     await A(gear, [{ transform: 'translate(-50%,-50%) rotate(0deg)' }, { transform: 'translate(-50%,-320%) rotate(150deg)' }], 460, 'cubic-bezier(.6,0,.8,.4)'); await sleep(120);
-    if (pick === 'chal') goChal(); else setMode(pracMode()); /* 게이트가 열리는 동안 판이 깔림 */
+    if (pick === 'chal') { if (!liveOn()) goChal(); } else setMode(pracMode()); /* 이어서 도전: 깔려 있는 판 그대로 */ /* 게이트가 열리는 동안 판이 깔림 */
     snd(() => { noise(0.5, 0.3, 0, 350); tone(50, 0.5, 'sine', 0.4, 90); });
     A(sil, [{ opacity: 0.5 }, { opacity: 0 }], 380); A(gt, [{ transform: 'translateY(0)' }, { transform: 'translateY(-101%)' }], 560, 'cubic-bezier(.5,0,.6,1)'); await A(gb, [{ transform: 'translateY(0)' }, { transform: 'translateY(101%)' }], 560, 'cubic-bezier(.5,0,.6,1)');
     I.hidden = true; gear.style.transform = ''; I.querySelectorAll('*').forEach((e) => e.getAnimations().forEach((x) => x.cancel())); S.introOn = false;
@@ -802,7 +813,7 @@
       else if (a === 'start') deal(false);
       else if (a === 'boss') deal(true);
       else if (a === 'prac') { setMode(pracMode()); } /* 모의전: 내 도감 덱(7장 이상일 때), 아니면 테스트 덱. 기록·싱크칩 차감 없음 */
-      else if (a === 'chal') goChal();
+      else if (a === 'chal') { if (liveOn()) giveUp(); else goChal(); }
       else if (a === 'open') { busy = true; api('set', { days: 5 }).then(() => { busy = false; enterLive(); }).catch((e) => { busy = false; gate('<h3>실전</h3><div class="rd-fd">' + esc(errMsg(e)) + '</div><button type="button" class="rb blue" data-r="prac">모의전</button>'); }); }
       else if (a === 'flt') { fp.hidden = !fp.hidden; poolKey = ''; sfx.open(); ui(); }
       else if (a === 'chips' && S.mode !== 'live' && !PROD) { S.chips = 10000; ui(); }
@@ -885,7 +896,7 @@
     const hx = (inner, cls) => '<span class="pk-hx ' + (cls || '') + '">' + inner + '</span>', wpi = (w) => '<img alt="' + w + '" src="assets/img/wp-' + w + '.png">';
     root.innerHTML = '<div class="rd-launch" hidden><div class="rd-lt"><small>POKER RAID</small>' + bossNm() + '</div><div class="rd-lc">' + smp + '</div><button type="button" class="rd-go" data-fs="1" aria-label="플레이">▶</button><div class="rd-lp">가로 화면으로 시작</div></div>' +
       '<div class="rd"><div class="rd-in" hidden><div class="rd-in-g t"></div><div class="rd-in-g b"></div><div class="rd-in-sil"></div><div class="rd-in-gear"><svg viewBox="-104 -104 208 208" aria-hidden="true">' + Array.from({ length: 16 }, (_, i) => '<rect x="-9" y="-100" width="18" height="16" rx="2" fill="#4a4e55" transform="rotate(' + i * 22.5 + ')"/>').join('') + '<circle r="88" fill="#2b2e33" stroke="#6a6f77" stroke-width="5"/><circle r="76" fill="#1b1d20" stroke="#8f949b" stroke-width="2"/><circle r="72" fill="none" stroke="#101112" stroke-width="8"/><circle r="72" fill="none" stroke="#e0b62f" stroke-width="7" stroke-dasharray="7 7.14"/><circle r="66" fill="none" stroke="#9aa0a8" stroke-width="2"/></svg><div class="rd-in-scr"><div class="es">EMERGENCY<br>SCRAMBLE</div><div class="bn"><small>POKER RAID</small><b></b><span></span></div></div></div>' +
-      '<div class="rd-in-p"><em>CHALLENGE MODE</em><p>도전하기는 기록이 순위에 남습니다 · 모의전은 기록과 싱크칩 차감 없이 연습합니다</p><div><button type="button" class="rd-in-b" data-in="prac">모의전</button><button type="button" class="rd-in-b red" data-in="chal">도전하기<small class="rd-in-rem"></small></button></div></div></div><aside class="rd-side">' +
+      '<div class="rd-in-p"><em>CHALLENGE MODE</em><p>도전하기는 기록이 순위에 남습니다 · 모의전은 기록과 싱크칩 차감 없이 연습합니다</p><div><button type="button" class="rd-in-b" data-in="prac">모의전</button><button type="button" class="rd-in-b red" data-in="chal"><span class="rd-in-cl">도전하기</span><small class="rd-in-rem"></small></button></div></div></div><aside class="rd-side">' +
       '<div class="pn rd-boss"><div class="rd-bn"></div><div class="rd-bi"></div></div>' +
       '<div class="pn rd-hp"><div class="rd-hn"></div><div class="rd-cm"><b class="rd-chips">0</b><i>×</i><b class="rd-mult">0</b></div><div class="rd-ex"><span>예상 점수</span><b>0억</b></div></div>' +
       '<div class="pn rd-row rd-best"><span>최고 점수</span><b>0</b></div>' +
@@ -930,12 +941,12 @@
     mount(el) {
       if (!el) return; const d = data(); if (!d.ok) { el.innerHTML = ''; return; }
       if (!d.list.length) { setTimeout(() => window.doroRaid.mount(el), 400); return; } /* 데이터 로딩 대기 */
-      if (root === el && S) { fit(); return; }
+      if (root === el && S) { fit(); if (!S.introOn && !busy) { if (rd().hidden) S.needIntro = 1; else intro(); } return; } /* 들어올 때마다 입장 연출(하던 판은 그대로) */
       root = el; DB = {}; d.list.forEach((x) => { if (x.code) DB[x.code] = x; });
       S = { mode: 'test', boss: null, cards: {}, hand: [], squad: [null, null, null, null, null], sel: new Set(), redraws: 3, tries: 0, max: 3, phase: 'idle', chips: 10000, sort: 'c', flt: { e: '', c: '', b: '', r: '' }, deckLeft: 0, deckN: 0, liveBest: 0 };
       S.mode = pracMode(); if (PROD) S.chips = realChips(); S.info = { tries: 0, max: 3 };
       build(); setInterval(() => { if (root && root.isConnected && S && !busy) ui(); }, 30000);
-      { const a0 = acct(); if (a0 && a0.user) api('state').then((j) => { S.info = { tries: j.tries || 0, max: j.max || 3 }; if (S.mode !== 'live') ui(); introRem(); }).catch(() => {}); } /* 남은 기록 횟수 */
+      { const a0 = acct(); if (a0 && a0.user) api('state').then((j) => { S.info = { tries: j.tries || 0, max: j.max || 3, game: !!j.game }; if (S.mode !== 'live') ui(); introRem(); }).catch(() => {}); } /* 남은 기록 횟수 */
       if (isMobile()) { rd().hidden = true; root.querySelector('.rd-launch').hidden = false; }
       fit(); setBoss(BOSS0); S.phase = 'idle'; place(); ui(); /* 판은 입장 연출에서 모의전/도전을 고른 뒤에 깔림 */
       if (isMobile()) S.needIntro = 1; else intro();

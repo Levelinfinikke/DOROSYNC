@@ -15,8 +15,8 @@
     + '.adm-f{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:10px 12px;align-items:end}.adm-f label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted,#9aa5b8)}.adm-f label.w{grid-column:1/-1}.adm-f input,.adm-f select,.adm-f textarea{font:inherit;font-size:14px;padding:8px 10px;border-radius:9px;border:1px solid var(--line,#2a3140);background:rgba(127,127,127,.1);color:var(--ink,#e8edf6);min-width:0;width:100%;box-sizing:border-box}.adm-f select option{color:#111}'
     + '.adm-act{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px}.adm-b{padding:9px 16px;border-radius:10px;border:0;background:#f5b301;color:#14161c;font:inherit;font-weight:800;cursor:pointer}.adm-b.g{background:rgba(127,127,127,.2);color:inherit}.adm-b.r{background:#e0303a;color:#fff}.adm-b:disabled{opacity:.5;cursor:default}.adm-b.sm{padding:5px 10px;font-size:12px;border-radius:8px}.adm-msg{font-size:13px}.adm-msg.ok{color:var(--ok,#1a9d55)}.adm-msg.bad{color:var(--bad,#e0303a)}'
     + '.adm-gm{display:grid;grid-template-columns:150px 1fr;gap:12px;padding:12px 0;border-top:1px solid var(--line,#2a3140)}.adm-gm:first-of-type{border-top:0}.adm-gm .th{position:relative;border-radius:10px;overflow:hidden;aspect-ratio:16/9;background:#000 center/cover;align-self:start}.adm-gm .th i{position:absolute;right:4px;bottom:4px;width:34px;height:34px;border-radius:50%;background:#222 50% 15%/cover;box-shadow:0 0 0 2px #f5b301}.adm-gm .th em{position:absolute;left:4px;top:4px;font-style:normal;font-size:11px;font-weight:800;padding:2px 7px;border-radius:99px;background:#f5b301;color:#14161c}.adm-gm .th em.n{background:#4da3ff}.adm-gm .th em.e{background:#666;color:#fff}'
-    + '.adm-crop{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start;margin-top:12px}.adm-crop .cv{position:relative;flex:1 1 380px;max-width:620px;border-radius:10px;overflow:hidden;cursor:crosshair;background:#000;line-height:0}.adm-crop .cv img{width:100%;height:auto}.adm-crop .cv u{position:absolute;border:2px solid #f5b301;box-shadow:0 0 0 2000px rgba(0,0,0,.45);pointer-events:none}.adm-crop canvas{width:96px;height:192px;border-radius:10px;background:#222}.adm-bossp{width:150px;aspect-ratio:7/9;border-radius:10px;background:#111 50% 12%/cover;flex:none}@media(max-width:600px){.adm-gm{grid-template-columns:1fr}.adm-gm .th{max-width:240px}}';
-  let data = null, sortK = 'chips', sortD = -1, sec = 'gm', G = null, R = null, NT = '', nw = null, bossNew = null, built = false;
+    + '.adm-crop{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start;margin-top:12px}.adm-crop .cv{position:relative;flex:1 1 380px;max-width:620px;border-radius:10px;overflow:hidden;cursor:crosshair;background:#000;line-height:0}.adm-crop .cv img{width:100%;height:auto}.adm-crop .cv u{position:absolute;border:2px solid #f5b301;box-shadow:0 0 0 2000px rgba(0,0,0,.45);pointer-events:none}.adm-crop canvas{width:96px;height:192px;border-radius:10px;background:#222}.adm-frs{display:flex;flex-wrap:wrap;gap:12px;margin-top:14px}.adm-fr{flex:1 1 200px;border:1px solid var(--line,#2a3140);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:8px;align-items:center;font-size:12.5px}.adm-fr b{font-size:13px}.adm-frp{position:relative;width:76px;height:76px;margin:22px;border-radius:50%;background:#cfd6de}.adm-frp>img:first-child{width:100%;height:100%;border-radius:50%;object-fit:cover;object-position:50% 15%;display:block}.adm-frp .ff{position:absolute;left:50%;top:50%;width:150%;height:150%;transform:translate(-50%,-50%);pointer-events:none}.adm-fr input{font-size:12px;max-width:100%}.adm-fr .tg{font-size:11px;color:var(--muted,#9aa5b8)}.adm-bossp{width:150px;aspect-ratio:7/9;border-radius:10px;background:#111 50% 12%/cover;flex:none}@media(max-width:600px){.adm-gm{grid-template-columns:1fr}.adm-gm .th{max-width:240px}}';
+  let data = null, sortK = 'chips', sortD = -1, sec = 'gm', G = null, R = null, NT = '', nw = null, bossNew = null, built = false, FR = {}, frNew = {};
   const CORPS = ['엘리시온', '미실리스', '테트라', '필그림', '어브노멀'], CYC = ['작', '풍', '철', '전', '수'], ELN = { 작: '작열', 풍: '풍압', 철: '철갑', 전: '전격', 수: '수냉' }, RNGN = { NEAR: '근거리 (SG·SMG)', MID: '중거리 (AR·MG)', FAR: '원거리 (SR)' };
   const weakOf = (e) => CYC[(CYC.indexOf(e) + 4) % 5], bossOf = (w) => CYC[(CYC.indexOf(w) + 1) % 5]; /* 약점코드 ↔ 보스 코드 */
   const toIn = (ms) => (ms ? new Date(ms + 9 * 3600000).toISOString().slice(0, 16) : ''), fromIn = (v) => (v ? Date.parse(v + ':00+09:00') || 0 : 0); /* 입력칸은 항상 한국 시간 */
@@ -35,8 +35,8 @@
     let q = 0.84, u = c.toDataURL('image/webp', q); const type = u.startsWith('data:image/webp') ? 'image/webp' : 'image/jpeg'; if (type !== 'image/webp') u = c.toDataURL(type, q); while (u.length > 800000 && q > 0.4) { q -= 0.1; u = c.toDataURL(type, q); } return { type, data: u.slice(u.indexOf(',') + 1), url: u }; }
   const readImg = (file) => new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = URL.createObjectURL(file); });
   async function upload(pk) { const j = await post({ img: { data: pk.data, type: pk.type } }); return j && j.ok && j.id ? 'img:' + j.id : (upload.err = j, ''); }
-  function pull() { const c = cfg(); G = JSON.parse(JSON.stringify(c.gacha)); R = { nm: c.raid.nm, img: c.raid.img }; NT = c.notice || ''; }
-  async function saveCfg(msgId, okTxt) { const j = await post({ cfg: { gacha: G, raid: R, notice: NT } }); if (j.ok) { const c = cfg(); window.doroCfg.apply({ cfg: j.cfg, season: c.srvSeason, srv: 1 }); pull(); } say(msgId, j, okTxt); return !!j.ok; }
+  function pull() { const c = cfg(); G = JSON.parse(JSON.stringify(c.gacha)); R = { nm: c.raid.nm, img: c.raid.img }; NT = c.notice || ''; FR = JSON.parse(JSON.stringify(c.frames || {})); }
+  async function saveCfg(msgId, okTxt) { const j = await post({ cfg: { gacha: G, raid: R, notice: NT, frames: FR } }); if (j.ok) { const c = cfg(); window.doroCfg.apply({ cfg: j.cfg, season: c.srvSeason, srv: 1 }); pull(); } say(msgId, j, okTxt); return !!j.ok; }
 
   function show() {
     const root = document.getElementById('tab-admin'); if (!root) return;
@@ -44,7 +44,7 @@
     if (!built) { built = true; pull();
       root.innerHTML = '<div class="adm"><div class="adm-nav">' + [['gm', '가챠 머신'], ['rd', '포커레이드'], ['etc', '기타'], ['st', '현황']].map((x) => '<button type="button" data-sec="' + x[0] + '">' + x[1] + '</button>').join('') + '</div><div id="adm-sec"></div></div>';
       root.addEventListener('click', onClick); root.addEventListener('change', onChange); root.addEventListener('input', onInput);
-      window.doroCfg.load().then(() => { if (!nw && !bossNew) { pull(); draw(); } }); }
+      window.doroCfg.load().then(() => { if (!nw && !bossNew && !Object.keys(frNew).length) { pull(); draw(); } }); }
     draw();
   }
   function draw() { document.querySelectorAll('#tab-admin .adm-nav button').forEach((b) => b.classList.toggle('on', b.dataset.sec === sec)); const el = $('#adm-sec'); if (!el) return;
@@ -73,7 +73,7 @@
   const nwRead = () => { if (!nw) return; nw.n = $('#adm-nw-n').value.trim(); nw.rate = +$('#adm-nw-rate').value; nw.corp = $('#adm-nw-corp').value; nw.s = $('#adm-nw-s').value; nw.e = $('#adm-nw-e').value; };
   /* ---------- 포커레이드 ---------- */
   function rdHtml() {
-    const c = cfg(), sv = c.srvSeason, sn = sv || c.season || {}, now = Date.now(), wk = sn.e ? weakOf(sn.e) : '', bi = bossNew ? bossNew.url : R.img ? img(R.img) : 'assets/img/raid-boss-1.webp';
+    const c = cfg(), sv = c.srvSeason, sn0 = sv || c.season || {}, now = Date.now(), D = rdDraft, sn = D ? { id: D.id.trim(), start: fromIn(D.s), end: fromIn(D.e), e: D.w ? bossOf(D.w) : '', r: D.r } : sn0, wk = sn.e ? weakOf(sn.e) : ''; if (D) R.nm = D.nm; rdDraft = null; const _u = 0, bi = bossNew ? bossNew.url : R.img ? img(R.img) : 'assets/img/raid-boss-1.webp';
     const stat = !c.srv ? '서버 설정을 읽지 못했습니다(워커 배포 전이거나 연결 실패).' : !sv ? '서버에 열린 시즌이 없습니다. 아래 일정은 기본값이며, 저장해야 실제로 열립니다.' : now < sv.start ? '서버 시즌 ' + sv.id + ' · 시작 전' : now < sv.end ? '서버 시즌 ' + sv.id + ' · 진행 중' : '서버 시즌 ' + sv.id + ' · 종료됨';
     return '<div class="adm-p"><h3>시즌 일정 · 보스 <small>' + esc(stat) + '</small></h3><div style="display:flex;flex-wrap:wrap;gap:14px"><div class="adm-bossp" id="adm-bossp" style="background-image:url(&quot;' + esc(bi) + '&quot;)"></div><div style="flex:1 1 320px"><div class="adm-f">' +
       '<label>시즌 ID (영문·숫자)<input id="adm-rd-id" maxlength="20" value="' + esc(sn.id || '') + '"></label><label>보스 이름<input id="adm-rd-nm" maxlength="30" value="' + esc(R.nm || '') + '"></label>' +
@@ -81,6 +81,9 @@
       '<label>약점 코드<select id="adm-rd-w"><option value="">선택</option>' + opt(CYC, wk, (x) => ELN[x]) + '</select></label><label>유효 사거리<select id="adm-rd-r"><option value="">선택</option>' + opt(Object.keys(RNGN), sn.r || '', (x) => RNGN[x]) + '</select></label>' +
       '<label class="w">보스 배경 이미지 (세로가 긴 그림 권장 · 게임 배경과 니슬렁 표지에 함께 쓰임)<input type="file" id="adm-rd-file" accept="image/*"></label></div>' +
       '<div class="adm-act"><button type="button" class="adm-b" data-act="rdsave">저장</button>' + (R.img || bossNew ? '<button type="button" class="adm-b g" data-act="rdimg0">기본 배경으로</button>' : '') + (sv ? '<button type="button" class="adm-b r" data-act="rdoff" style="margin-left:auto">시즌 닫기</button>' : '') + '<span id="adm-rd-msg" class="adm-msg"></span></div></div></div>' +
+      '<h3 style="margin-top:18px">테두리 보상 <small>시즌이 끝나면 순위에 따라 지급 · 전초기지 프로필에서 착용</small></h3><div class="adm-frs">' + [1, 2, 3].map((t) => { const cur = (FR[sn.id] || {})[t], src = frNew[t] ? frNew[t].url : cur ? img(cur) : 'assets/img/raid-frame-' + t + '.png', pf = window.doroPickup ? window.doroPickup().img : '';
+        return '<div class="adm-fr"><b>' + ['상위 3%', '상위 10%', '상위 30%'][t - 1] + '</b><div class="adm-frp"><img alt="" src="' + esc(pf) + '"><img class="ff" alt="" data-frp="' + t + '" src="' + esc(src) + '"></div><span class="tg">' + (frNew[t] ? '새 테두리 (저장 전)' : cur ? '이 시즌 전용 테두리' : '기본 테두리') + '</span><input type="file" accept="image/*" data-frt="' + t + '">' + (frNew[t] || cur ? '<button type="button" class="adm-b g sm" data-act="frdel" data-t="' + t + '">기본으로</button>' : '') + '</div>'; }).join('') + '</div>' +
+      '<p class="adm-note">게임 안 테두리 그림(흰 바탕)을 올리면 흰 바탕과 가운데 빈 곳을 자동으로 지우고 테두리만 남깁니다. 위 미리보기가 실제로 보이는 모습입니다. 올리지 않은 등급은 기본 테두리가 지급됩니다. 테두리는 위의 시즌 ID에 묶여 저장됩니다.</p>' +
       '<p class="adm-note">같은 시즌 ID로 저장하면 일정·약점만 고쳐지고 순위는 그대로입니다. 시즌 ID를 바꿔 저장하면 새 시즌이 시작되어 순위가 새로 쌓이고, 직전 시즌 순위로 프로필 테두리가 지급됩니다. 니슬렁 표지의 카운트다운은 이 일정을 따릅니다(시작 전: 다음 시즌까지 · 진행 중: 이번 시즌 종료까지 · 그 외: 다음 시즌을 기대해주세요). 약점 코드로 편성하면 우월코드 보너스를 받습니다.</p></div>';
   }
   /* ---------- 기타 ---------- */
@@ -95,6 +98,7 @@
     if (row && t.dataset.k) { const m = G[+row.dataset.i], k = t.dataset.k; if (k === 'pin') { G.forEach((x) => { x.pin = 0; }); m.pin = t.checked ? 1 : 0; draw(); } else if (k === 's' || k === 'e') m[k] = fromIn(t.value); else if (k === 'rate') m.rate = +t.value === 2 ? 2 : 1; else m[k] = t.value.trim(); return; }
     if (t.id === 'adm-nw-file' && t.files[0]) { try { const im = await readImg(t.files[0]); const keep = nw || {}; nwRead(); nw = Object.assign({ n: '', rate: 2, corp: '', s: '', e: '' }, keep, nw || {}, { im, fx: 0.68, fy: 0.3, z: 0.8, fc: true }); nw.n = $('#adm-nw-n').value.trim(); nw.rate = +$('#adm-nw-rate').value; nw.corp = $('#adm-nw-corp').value; nw.s = $('#adm-nw-s').value; nw.e = $('#adm-nw-e').value; draw(); } catch (er) { say('adm-nw-msg', { error: 'img' }); } return; }
     if (t.id === 'adm-nw-fc' && nw) { nw.fc = t.checked; cropDraw(); return; }
+    if (t.dataset.frt && t.files[0]) { try { const im = await readImg(t.files[0]); frNew[+t.dataset.frt] = cutFrame(im); rdKeep(); draw(); } catch (er) { say('adm-rd-msg', { error: 'img' }); } return; }
     if (t.id === 'adm-rd-file' && t.files[0]) { try { const im = await readImg(t.files[0]); bossNew = pack(im, 1000, 1400); const p = $('#adm-bossp'); if (p) p.style.backgroundImage = 'url("' + bossNew.url + '")'; } catch (er) { say('adm-rd-msg', { error: 'img' }); } }
   }
   async function onClick(e) {
@@ -117,16 +121,40 @@
       else if (act === 'rdsave') { const id = $('#adm-rd-id').value.trim(), s = fromIn($('#adm-rd-s').value), en = fromIn($('#adm-rd-e').value), w = $('#adm-rd-w').value, r = $('#adm-rd-r').value; R.nm = $('#adm-rd-nm').value.trim();
         if (!/^[0-9a-zA-Z-]{1,20}$/.test(id) || !s || en <= s || !w || !r) { say('adm-rd-msg', { error: 'bad' }); return; }
         if (bossNew) { const v = await upload(bossNew); if (!v) { say('adm-rd-msg', upload.err); return; } const old = R.img; R.img = v; bossNew = null; if (String(old || '').startsWith('img:')) rdOld = old; }
-        if (!(await saveCfg('adm-rd-msg'))) return; if (rdOld) { await post({ imgDel: rdOld.slice(4) }); rdOld = ''; }
-        const j = await post({ raid: { id, e: bossOf(w), r, start: s, end: en } }); if (j.ok) { const c = cfg(); window.doroCfg.apply({ cfg: c.saved ? { gacha: c.gacha, raid: c.raid, notice: c.notice } : null, season: { id, e: bossOf(w), r, start: s, end: en }, srv: 1 }); pull(); } say('adm-rd-msg', j); if (j.ok) redraw('adm-rd-msg'); }
+        const frOld = []; for (const t of Object.keys(frNew)) { const v = await upload(frNew[t]); if (!v) { say('adm-rd-msg', upload.err); return; } FR[id] = FR[id] || {}; if (String(FR[id][t] || '').startsWith('img:')) frOld.push(FR[id][t]); FR[id][t] = v; delete frNew[t]; }
+        if (!(await saveCfg('adm-rd-msg'))) return; for (const v of frOld) await post({ imgDel: v.slice(4) }); if (rdOld) { await post({ imgDel: rdOld.slice(4) }); rdOld = ''; }
+        const j = await post({ raid: { id, e: bossOf(w), r, start: s, end: en } }); if (j.ok) { const c = cfg(); window.doroCfg.apply({ cfg: c.saved ? { gacha: c.gacha, raid: c.raid, notice: c.notice, frames: c.frames } : null, season: { id, e: bossOf(w), r, start: s, end: en }, srv: 1 }); pull(); } say('adm-rd-msg', j); if (j.ok) redraw('adm-rd-msg'); }
+      else if (act === 'frdel') { const t = +b.dataset.t, id = $('#adm-rd-id').value.trim(); if (frNew[t]) { delete frNew[t]; rdKeep(); draw(); return; } const old = FR[id] && FR[id][t]; if (!old) return; delete FR[id][t]; if (!Object.keys(FR[id]).length) delete FR[id]; rdKeep(); if (await saveCfg('adm-rd-msg', '기본 테두리로 되돌렸습니다.')) { if (String(old).startsWith('img:')) await post({ imgDel: old.slice(4) }); redraw('adm-rd-msg'); } }
       else if (act === 'rdimg0') { if (bossNew) { bossNew = null; draw(); return; } const old = R.img; R.img = ''; if (await saveCfg('adm-rd-msg', '기본 배경으로 되돌렸습니다.')) { if (String(old).startsWith('img:')) await post({ imgDel: old.slice(4) }); redraw('adm-rd-msg'); } else R.img = old; }
-      else if (act === 'rdoff') { if (b.dataset.sure !== '1') { b.dataset.sure = '1'; b.textContent = '정말 닫기 (한 번 더)'; return; } const j = await post({ raid: { off: true } }); if (j.ok) { const c = cfg(); window.doroCfg.apply({ cfg: c.saved ? { gacha: c.gacha, raid: c.raid, notice: c.notice } : null, season: null, srv: 1 }); } say('adm-rd-msg', j, '시즌을 닫았습니다.'); if (j.ok) redraw('adm-rd-msg'); }
+      else if (act === 'rdoff') { if (b.dataset.sure !== '1') { b.dataset.sure = '1'; b.textContent = '정말 닫기 (한 번 더)'; return; } const j = await post({ raid: { off: true } }); if (j.ok) { const c = cfg(); window.doroCfg.apply({ cfg: c.saved ? { gacha: c.gacha, raid: c.raid, notice: c.notice, frames: c.frames } : null, season: null, srv: 1 }); } say('adm-rd-msg', j, '시즌을 닫았습니다.'); if (j.ok) redraw('adm-rd-msg'); }
       else if (act === 'ntsave') { NT = $('#adm-nt').value.trim(); await saveCfg('adm-nt-msg'); }
       else if (act === 'grant') { const id = $('#adm-gr-id').value.trim(), d = Math.floor(+$('#adm-gr-d').value || 0), r = Math.floor(+$('#adm-gr-r').value || 0); if (!/^[A-Za-z0-9]{6,40}$/.test(id) || (!d && !r)) { say('adm-gr-msg', { error: 'bad' }); return; } const j = await post({ grant: { id, d, r } }); say('adm-gr-msg', j, j.ok ? '반영했습니다. 지금 잔고: 싱크칩 ' + fmt(j.chips.d) + ' · DORO칩 ' + fmt(j.chips.r) : ''); if (j.ok) data = null; }
       else if (act === 'cfgre') { const j = await window.doroCfg.load(); pull(); say('adm-re-msg', j && j.ok ? true : { error: 'network' }, '불러왔습니다.'); }
     } finally { if (b.isConnected) b.disabled = false; }
   }
-  let rdOld = '';
+  let rdOld = '', rdDraft = null;
+  const rdKeep = () => { if ($('#adm-rd-id')) rdDraft = { id: $('#adm-rd-id').value, nm: $('#adm-rd-nm').value, s: $('#adm-rd-s').value, e: $('#adm-rd-e').value, w: $('#adm-rd-w').value, r: $('#adm-rd-r').value }; }; /* 다시 그릴 때 입력하던 값 유지 */
+  /* 테두리 그림에서 흰 바탕(바깥)과 가운데 빈 곳을 지움: 가장자리·가운데에서 이어진 흰색만 지우므로 테두리 안의 흰 무늬는 남음.
+     가운데 구멍이 그림의 66%가 되도록 맞춰(기본 테두리와 같은 비율) 256px 정사각형으로 만듦 */
+  function cutFrame(im) {
+    const W0 = im.naturalWidth, H0 = im.naturalHeight, k = Math.min(1, 720 / Math.max(W0, H0)), W = Math.max(8, Math.round(W0 * k)), H = Math.max(8, Math.round(H0 * k)), c = document.createElement('canvas'); c.width = W; c.height = H;
+    const g = c.getContext('2d', { willReadFrequently: true }); g.fillStyle = '#fff'; g.fillRect(0, 0, W, H); g.drawImage(im, 0, 0, W, H); const d = g.getImageData(0, 0, W, H), px = d.data, mk = new Uint8Array(W * H);
+    const isW = (p) => { const i = p * 4, lo = Math.min(px[i], px[i + 1], px[i + 2]); return lo >= 232 && Math.max(px[i], px[i + 1], px[i + 2]) - lo <= 16; };
+    const fill = (seeds, lab) => { const st = []; seeds.forEach((p) => { if (!mk[p] && isW(p)) { mk[p] = lab; st.push(p); } }); let x0 = W, y0 = H, x1 = -1, y1 = -1, n = 0;
+      while (st.length) { const p = st.pop(), x = p % W, y = (p - x) / W; n++; if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
+        if (x > 0 && !mk[p - 1] && isW(p - 1)) { mk[p - 1] = lab; st.push(p - 1); } if (x < W - 1 && !mk[p + 1] && isW(p + 1)) { mk[p + 1] = lab; st.push(p + 1); } if (y > 0 && !mk[p - W] && isW(p - W)) { mk[p - W] = lab; st.push(p - W); } if (y < H - 1 && !mk[p + W] && isW(p + W)) { mk[p + W] = lab; st.push(p + W); } }
+      return { x0, y0, x1, y1, n }; };
+    const edge = []; for (let x = 0; x < W; x++) { edge.push(x, (H - 1) * W + x); } for (let y = 0; y < H; y++) { edge.push(y * W, y * W + W - 1); } fill(edge, 1);
+    const cs = []; for (let dy = -3; dy <= 3; dy++) for (let dx = -3; dx <= 3; dx++) cs.push((Math.floor(H / 2) + dy * 4) * W + Math.floor(W / 2) + dx * 4); const hole = fill(cs, 2);
+    let bx0 = W, by0 = H, bx1 = -1, by1 = -1;
+    for (let p = 0; p < W * H; p++) { const i = p * 4, x = p % W, y = (p - x) / W; if (mk[p]) { px[i + 3] = 0; continue; } if (x < bx0) bx0 = x; if (x > bx1) bx1 = x; if (y < by0) by0 = y; if (y > by1) by1 = y;
+      if ((x > 0 && mk[p - 1]) || (x < W - 1 && mk[p + 1]) || (y > 0 && mk[p - W]) || (y < H - 1 && mk[p + W])) { const lo = Math.min(px[i], px[i + 1], px[i + 2]); if (lo > 150) { const a = Math.max(0.12, Math.min(1, (255 - lo) / 105)); for (let q = 0; q < 3; q++) px[i + q] = Math.max(0, Math.min(255, Math.round((px[i + q] - 255 * (1 - a)) / a))); px[i + 3] = Math.round(255 * a); } } } /* 경계의 흰 번짐 제거 */
+    g.putImageData(d, 0, 0); if (bx1 < 0) { bx0 = 0; by0 = 0; bx1 = W - 1; by1 = H - 1; }
+    let cx, cy, side; const hw = hole.x1 - hole.x0 + 1, hh = hole.y1 - hole.y0 + 1;
+    if (hole.n > W * H * 0.03 && hw > W * 0.2) { cx = (hole.x0 + hole.x1 + 1) / 2; cy = (hole.y0 + hole.y1 + 1) / 2; side = Math.max(hw, hh) / 0.66; side = Math.max(side, 2 * Math.max(cx - bx0, bx1 + 1 - cx, cy - by0, by1 + 1 - cy) * 0.9); }
+    else { cx = (bx0 + bx1 + 1) / 2; cy = (by0 + by1 + 1) / 2; side = Math.max(bx1 - bx0 + 1, by1 - by0 + 1); }
+    const o = document.createElement('canvas'); o.width = o.height = 256; const og = o.getContext('2d'); og.imageSmoothingQuality = 'high'; og.drawImage(c, cx - side / 2, cy - side / 2, side, side, 0, 0, 256, 256);
+    let u = o.toDataURL('image/webp', 0.92), type = 'image/webp'; if (!u.startsWith('data:image/webp')) { u = o.toDataURL('image/png'); type = 'image/png'; } return { type, data: u.slice(u.indexOf(',') + 1), url: u }; }
   const nwRead0 = () => { if (nw && $('#adm-nw-n')) nwRead(); };
   function redraw(msgId) { const m = document.getElementById(msgId), keep = m ? [m.className, m.textContent] : null; draw(); const m2 = document.getElementById(msgId); if (keep && m2) { m2.className = keep[0]; m2.textContent = keep[1]; } }
   async function load() {

@@ -2752,9 +2752,16 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     return n.find((x) => x.code === c) || n.slice().sort((a, b) => b.combat - a.combat)[0];
   };
   /* 프로필 테두리: 포커레이드 순위 보상(1 = 상위 3%, 2 = 10%, 3 = 30%). 가진 테두리만 고를 수 있음 */
-  const FRM_K = 'dorosync-frame', FRM_NM = { 1: '상위 3%', 2: '상위 10%', 3: '상위 30%' }, FRM_IMG = (t) => 'assets/img/raid-frame-' + t + '.png';
-  const frmOwned = () => { const a = window.doroAccount, d = a && a.user && a.doc, m = (d && d.raidFrames) || {}; const own = Array.from(new Set(Object.values(m).map(Number).filter((t) => t >= 1 && t <= 3))).sort(); return /github\.io$/.test(location.hostname) ? own : [1, 2, 3]; }; /* 미리보기·로컬은 모두 보임 */
-  const frmNow = () => { let t = 0; try { t = +localStorage.getItem(FRM_K) || 0; } catch (e) { /* 무시 */ } return frmOwned().includes(t) ? t : 0; };
+  const FRM_K = 'dorosync-frame', FRM_NM = { 1: '상위 3%', 2: '상위 10%', 3: '상위 30%' }, frmSeason = () => { try { return cfgGet().frames || {}; } catch (e) { return {}; } };
+  /* 테두리 키: 숫자(1~3) = 기본 테두리, '시즌ID:등급' = 관리 탭에서 올린 그 시즌 전용 테두리 */
+  const FRM_IMG = (k) => { const m = String(k).match(/^(.+):([123])$/), f = m && frmSeason()[m[1]]; return m ? (f && f[m[2]] ? cfgImg(f[m[2]]) : 'assets/img/raid-frame-' + m[2] + '.png') : 'assets/img/raid-frame-' + k + '.png'; };
+  const frmName = (k) => { const m = String(k).match(/^(.+):([123])$/); return m ? m[1] + ' ' + FRM_NM[m[2]] : FRM_NM[k]; };
+  const frmOwned = () => { const a = window.doroAccount, d = a && a.user && a.doc, m = (d && d.raidFrames) || {}, F = frmSeason(), out = [];
+    let all = !/github\.io$/.test(location.hostname); try { if (a && a.user && DEX_ADMIN.includes(a.user.uid)) all = true; } catch (e) { /* 초기화 전 */ } /* 미리보기·로컬·관리자는 모두 보임(확인용) */
+    if (all) { [1, 2, 3].forEach((t) => out.push(t)); Object.keys(F).forEach((sid) => [1, 2, 3].forEach((t) => { if (F[sid][t]) out.push(sid + ':' + t); })); }
+    else Object.keys(m).forEach((sid) => { const t = +m[sid]; if (t >= 1 && t <= 3) out.push(F[sid] && F[sid][t] ? sid + ':' + t : t); });
+    return Array.from(new Set(out)).sort((x, y) => (typeof x === 'number' ? 0 : 1) - (typeof y === 'number' ? 0 : 1) || String(x).localeCompare(String(y))); };
+  const frmNow = () => { let v = ''; try { v = localStorage.getItem(FRM_K) || ''; } catch (e) { /* 무시 */ } const k = /^[123]$/.test(v) ? +v : v; return k && frmOwned().includes(k) ? k : 0; };
   const frmHtml = () => { const t = frmNow(); return t ? '<img class="pff" alt="" src="' + FRM_IMG(t) + '">' : ''; };
   /* 계정(사람 모양) 버튼: 로그인 중이면 프로필 니케 초상화로 표시 */
   const acctPfp = () => {
@@ -2762,7 +2769,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     const a = window.doroAccount, on = !!(a && a.user), pf = on ? blPfp() : null; let im = b.querySelector('img.bl-pfp');
     if (pf) { if (!im) { im = document.createElement('img'); im.className = 'bl-pfp'; im.alt = ''; im.onerror = () => { im.remove(); b.classList.remove('has-pfp'); }; b.prepend(im); } im.src = BL_IMG(pf.code); b.classList.add('has-pfp'); }
     else { if (im) im.remove(); b.classList.remove('has-pfp'); }
-    const t = pf ? frmNow() : 0; b.classList.toggle('has-frm', !!t); b.style.setProperty('--frm', t ? 'url(' + FRM_IMG(t) + ')' : 'none'); /* 프로필 테두리 */
+    const t = pf ? frmNow() : 0; b.classList.toggle('has-frm', !!t); b.style.setProperty('--frm', t ? 'url("' + FRM_IMG(t) + '")' : 'none'); /* 프로필 테두리 */
   };
   window.addEventListener('doroacct', () => setTimeout(acctPfp, 0));
   const blNick = () => {
@@ -3016,7 +3023,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     let html = '<div class="card"><div class="row-ctl sp"><h2 class="inline me-who"><span class="pfw"><button type="button" class="me-pfp" id="me-pfp" title="프로필 니케·테두리 바꾸기" aria-label="프로필 니케·테두리 바꾸기" aria-expanded="' + !!renderMe.pick + '">' + (pf ? '<img src="' + BL_IMG(pf.code) + '" alt="" onerror="this.remove()">' : '') + '</button>' + frmHtml() + '</span>' + esc(m.role || '전초기지') + '</h2><button class="ghost sm icb" id="me-apply" type="button" title="싱크로 탭에 다시 적용" aria-label="싱크로 탭에 다시 적용"><svg class="icb-i" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2.5" width="14" height="19" rx="2.5"/><rect x="8" y="5.5" width="8" height="3.5" rx=".8"/><path d="M8.5 13h.01M12 13h.01M15.5 13h.01M8.5 16.5h.01M12 16.5h.01M15.5 16.5h.01"/></svg></button></div>' +
       '<div class="mekpis">' + kp('현재 싱크로', fmt(m.synchro || 0)) + kp('전초기지 레벨', fmt(m.outpost || 0), peer.l) + kp('1군 전투력', fmt(m.top5 || 0), peer.p) +
       chipCard() + '</div>' +
-      (renderMe.pick ? (frmOwned().length ? '<div class="frm-pick" aria-label="프로필 테두리 선택"><span class="muted sm">테두리</span><button type="button" data-frm="0" class="' + (frmNow() ? '' : 'on') + '" title="없음">없음</button>' + frmOwned().map((t) => '<button type="button" data-frm="' + t + '" class="' + (frmNow() === t ? 'on' : '') + '" title="포커레이드 ' + FRM_NM[t] + '"><img alt="' + FRM_NM[t] + '" src="' + FRM_IMG(t) + '"></button>').join('') + '</div>' : '') + '<div class="pfp-pick" role="listbox" aria-label="프로필 니케 선택">' + d.nikkes.slice().sort((x, y) => y.combat - x.combat).map((n) => '<button type="button" role="option" data-pfp="' + n.code + '" class="' + (pf && pf.code === n.code ? 'on' : '') + '" title="' + esc(BL_NM(n)) + '" aria-selected="' + !!(pf && pf.code === n.code) + '"><img src="' + BL_IMG(n.code) + '" alt="' + esc(BL_NM(n)) + '" loading="lazy" onerror="this.parentNode.remove()"></button>').join('') + '</div>' : '') +
+      (renderMe.pick ? (frmOwned().length ? '<div class="frm-pick" aria-label="프로필 테두리 선택"><span class="muted sm">테두리</span><button type="button" data-frm="0" class="' + (frmNow() ? '' : 'on') + '" title="없음">없음</button>' + frmOwned().map((t) => '<button type="button" data-frm="' + esc(t) + '" class="' + (frmNow() === t ? 'on' : '') + '" title="포커레이드 ' + esc(frmName(t)) + '"><img alt="' + esc(frmName(t)) + '" src="' + esc(FRM_IMG(t)) + '"></button>').join('') + '</div>' : '') + '<div class="pfp-pick" role="listbox" aria-label="프로필 니케 선택">' + d.nikkes.slice().sort((x, y) => y.combat - x.combat).map((n) => '<button type="button" role="option" data-pfp="' + n.code + '" class="' + (pf && pf.code === n.code ? 'on' : '') + '" title="' + esc(BL_NM(n)) + '" aria-selected="' + !!(pf && pf.code === n.code) + '"><img src="' + BL_IMG(n.code) + '" alt="' + esc(BL_NM(n)) + '" loading="lazy" onerror="this.parentNode.remove()"></button>').join('') + '</div>' : '') +
       '<p class="muted" id="me-fixnote"></p>' +
       '</div>';
     const only = !($('#me-oc') && !$('#me-oc').checked);
@@ -4523,11 +4530,11 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
       { id: 'mq', n: '마리안 : 퀸', rate: 1, corp: '필그림', cover: 'assets/img/27f563d98449.webp', face: '', s: K(2026, 10, 29, 15), e: K(2026, 11, 19, 4, 59, 59) }],
       raid: { nm: '승리의 여신', img: '' }, notice: '', season: { id: 'S43', e: '', r: '', start: K(2026, 11, 19, 5), end: K(2026, 11, 24, 5) } }; }
   function cfgMerge(d, s) { const c = (s && s.cfg) || {}, now = Date.now(), ss = s && s.srv ? s.season : null; /* 시즌: 서버 것이 아직 안 끝났으면 그것, 아니면 기본 일정(안 끝난 경우만) */
-    return { gacha: Array.isArray(c.gacha) && c.gacha.length ? c.gacha : d.gacha, raid: { nm: (c.raid && c.raid.nm) || d.raid.nm, img: (c.raid && c.raid.img) || '' }, notice: c.notice || '', season: ss && ss.end > now ? ss : d.season.end > now ? d.season : ss, srvSeason: ss, srv: !!(s && s.srv), saved: !!(s && s.cfg) }; }
+    return { gacha: Array.isArray(c.gacha) && c.gacha.length ? c.gacha : d.gacha, raid: { nm: (c.raid && c.raid.nm) || d.raid.nm, img: (c.raid && c.raid.img) || '' }, notice: c.notice || '', frames: c.frames || {}, season: ss && ss.end > now ? ss : d.season.end > now ? d.season : ss, srvSeason: ss, srv: !!(s && s.srv), saved: !!(s && s.cfg) }; }
   function cfgGet() { if (!cfgGet.c) { let s = null; try { s = JSON.parse(localStorage.getItem('dorosync-cfg') || 'null'); } catch (e) { /* 저장 불가 */ } cfgGet.c = cfgMerge(cfgDef(), s); } return cfgGet.c; }
   function cfgImg(v) { v = String(v || ''); return v.startsWith('img:') ? BL_WORKER + '/img/' + v.slice(4) : v; }
   function cfgCss() { const c = cfgGet(), st = document.documentElement.style; if (c.raid.img) st.setProperty('--rd-boss', 'url("' + new URL(cfgImg(c.raid.img), location.href).href + '")'); else st.removeProperty('--rd-boss'); }
-  function cfgApply(s) { try { localStorage.setItem('dorosync-cfg', JSON.stringify(s)); } catch (e) { /* 저장 불가 */ } cfgGet.c = cfgMerge(cfgDef(), s); cfgCss(); window.dispatchEvent(new Event('dorocfg')); if (curTab === 'game') renderLobby(); }
+  function cfgApply(s) { try { localStorage.setItem('dorosync-cfg', JSON.stringify(s)); } catch (e) { /* 저장 불가 */ } cfgGet.c = cfgMerge(cfgDef(), s); cfgCss(); window.dispatchEvent(new Event('dorocfg')); try { acctPfp(); } catch (e) { /* 초기화 전 */ } if (curTab === 'game') renderLobby(); }
   function cfgLoad() { return fetch(BL_WORKER + '/config').then((r) => (r.ok ? r.json() : null)).then((j) => { if (j && j.ok) cfgApply({ cfg: j.cfg, season: j.season, srv: 1 }); return j; }).catch(() => null); }
   /* 대표 픽업: 고정한 것 > 진행 중(가장 최근에 시작) > 곧 시작 > 목록 첫째. 니슬렁 표지·2048 타일이 함께 씀 */
   function cfgFeat() { const L = cfgGet().gacha, now = Date.now(), pin = L.find((x) => x.pin); if (pin) return { m: pin, st: pin.s && now < pin.s ? 'next' : 'now' };
