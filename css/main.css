@@ -1774,8 +1774,8 @@ button:not(.tr-clr):not(.tabs button):not(.tr-f):not(.pk-t):not(.pk-r){border-ra
 .lb-g:not(.soon):hover .lb-art{transform:scale(1.07)}
 .lb-art{position:absolute;inset:0 0 38% 0;background:var(--art,#222);background-size:cover;background-position:center;transition:transform .35s;-webkit-mask-image:linear-gradient(#000 60%,transparent);mask-image:linear-gradient(#000 60%,transparent)}
 .lb-g b{position:relative;font-size:19px;font-weight:900;font-family:"Arial Black","Pretendard","Malgun Gothic",sans-serif}.lb-g small{position:relative;font-size:12.5px;color:#b9c2d3}
-.lb-g i{position:relative;margin-top:auto;align-self:flex-start;font-style:normal;font-weight:900;font-size:12px;padding:5px 12px;border-radius:99px;background:var(--gc,#f5b301);color:#14161c}
-.lb-g.soon{cursor:default;filter:grayscale(.7);opacity:.6}.lb-g.soon i{background:rgba(255,255,255,.14);color:#cfd5da;letter-spacing:.1em}
+.lb-g>i{position:relative;margin-top:auto;align-self:flex-start;font-style:normal;font-weight:900;font-size:12px;padding:5px 12px;border-radius:99px;background:var(--gc,#f5b301);color:#14161c}
+.lb-g.soon{cursor:default;filter:grayscale(.7);opacity:.6}.lb-g.soon>i{background:rgba(255,255,255,.14);color:#cfd5da;letter-spacing:.1em}
 .lb-gc{--gc:#ffd24a;--art:radial-gradient(circle at 50% 120%,#ffd24a 0,#f59e0b 22%,transparent 48%),radial-gradient(circle at 30% 40%,#ff5d8f 0 9%,transparent 10%),radial-gradient(circle at 55% 30%,#5ab8ff 0 11%,transparent 12%),radial-gradient(circle at 72% 52%,#5ef0a0 0 8%,transparent 9%),radial-gradient(circle at 42% 62%,#b07aff 0 10%,transparent 11%),linear-gradient(160deg,#2b3350,#141826)}
 .lb-rd{--gc:#ff5a4d;--art:url(../assets/img/raid-boss-1.webp)}.lb-rd .lb-art{background-position:50% 12%}
 .lb-pk{--gc:#4da3ff;--art:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.45) 47%,transparent 58%),radial-gradient(ellipse at 50% 45%,#8fc6ff,#1d5fa8 55%,#0a1a30)}
@@ -1800,3 +1800,8 @@ button:not(.tr-clr):not(.tabs button):not(.tr-f):not(.pk-t):not(.pk-r){border-ra
 .lb-caps{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 110%,#3a4160,#12151e 70%)}.lb-caps svg{position:absolute;inset:0;width:100%;height:100%}
 
 .lb-pl{--gc:#49b3ff}.lb-pl .lb-art{background-color:#0d2a55!important}
+
+.lb-gcimg{position:absolute;inset:0;background:url(../assets/img/lobby-gacha.webp) 50% 30%/cover}
+.lb-pl .lb-art{background:radial-gradient(circle,#aeb5bf 0 2.6px,#5d6570 3.2px,transparent 3.8px) 0 0/26px 22px,radial-gradient(circle,#aeb5bf 0 2.6px,#5d6570 3.2px,transparent 3.8px) 13px 11px/26px 22px,linear-gradient(#143463,#0a1c3a)!important}
+.lb-ch{position:absolute;top:-22px;width:20px;height:20px;animation:lbFall var(--t) linear var(--d) infinite}.lb-ch svg{display:block;width:100%;height:100%}.lb-ch.g{opacity:calc(.5 - var(--q)*.14);filter:blur(calc(var(--q)*.7px))}
+@keyframes lbFall{0%{transform:translate(0,0)}12.5%{transform:translate(13px,22px)}25%{transform:translate(0,44px)}37.5%{transform:translate(-13px,66px)}50%{transform:translate(0,88px)}62.5%{transform:translate(13px,110px)}75%{transform:translate(26px,132px)}87.5%{transform:translate(13px,154px)}100%{transform:translate(26px,176px)}}

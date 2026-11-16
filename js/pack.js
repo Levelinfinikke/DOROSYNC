@@ -173,9 +173,12 @@ svg.pp-strap{display:block;position:absolute;inset:0;width:100%;height:100%;over
 .pp-rb{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;opacity:0;transition:opacity .35s}
 .pp-sum{padding:28px 34px 20px;width:min(780px,98vw)}
 .pp-hang .pp-gh,.pp-hang .pp-gh.a,.pp-hang .pp-gh.b{transform:translateY(calc(var(--q)*-3.4px)) scale(calc(1 - var(--q)*.012));filter:brightness(calc(.78 - var(--q)*.09));border-radius:1px;box-shadow:0 -1px 0 rgba(255,255,255,.25)}
-.pp-it{padding-top:40px}.pp-pin{display:none}
-.pp.pil .pp-body:after{content:"";position:absolute;inset:0;pointer-events:none;mix-blend-mode:color-dodge;opacity:.55;background:linear-gradient(115deg,#ff5d8f,#ffb84d 16%,#f6f05a 32%,#5ef0a0 48%,#5ab8ff 64%,#b07aff 80%,#ff5d8f) 0 0/300% 300%;animation:ppHolo 4s linear infinite}@keyframes ppHolo{to{background-position:300% 300%}}
-.pp.pil .pp-body:before{content:"";position:absolute;inset:0;pointer-events:none;z-index:1;mix-blend-mode:overlay;background:radial-gradient(circle,rgba(255,255,255,.9) 0,transparent 1.3px) 0 0/9px 11px,radial-gradient(circle,rgba(255,255,255,.7) 0,transparent 1.1px) 4px 6px/13px 12px;animation:ppTw2 1.8s ease-in-out infinite alternate}@keyframes ppTw2{from{opacity:.2}to{opacity:.9}}
+.pp-it{padding-top:44px}
+.pp-pin{display:block;position:absolute;left:50%;top:-22px;width:5px;height:calc(22px + 5.7% - 5px);margin-left:-2.5px;border-radius:3px;background:linear-gradient(90deg,#6b737c,#f4f6f8 45%,#8a929a);box-shadow:0 1px 2px rgba(0,0,0,.6);z-index:7}
+.pp-pin:before{content:"";position:absolute;left:50%;top:-5px;width:26px;height:6px;margin-left:-13px;border-radius:3px;background:linear-gradient(180deg,#f4f6f8,#7b838c)}
+.pp-pin:after{content:"";position:absolute;left:50%;bottom:-11px;width:13px;height:14px;margin-left:-6.5px;border-radius:0 0 8px 8px;border:3.5px solid #c9cfd5;border-top:0;background:none;box-shadow:0 2px 2px rgba(0,0,0,.5)}
+.pp-sum{scrollbar-width:none;overflow-x:hidden}.pp-sum::-webkit-scrollbar{display:none}
+.pp.pil .pp-body:after{content:"";position:absolute;left:-150%;width:400%;top:-60%;height:220%;pointer-events:none;mix-blend-mode:color-dodge;opacity:.42;transform:rotate(24deg);background:repeating-linear-gradient(90deg,#ff5d8f 0,#ffb84d 4.17%,#f6f05a 8.33%,#5ef0a0 12.5%,#5ab8ff 16.67%,#b07aff 20.83%,#ff5d8f 25%);animation:ppHolo 9s linear infinite;will-change:transform}@keyframes ppHolo{from{transform:rotate(24deg) translateX(0)}to{transform:rotate(24deg) translateX(-25%)}} /* 니케 카드의 폴리크롬과 같은 방식: 한 주기만큼만 밀어 이음매가 없음 */
 .pp-bx{position:relative;width:150px;font-family:"Arial Black",Arial,sans-serif;color:#fff;filter:drop-shadow(0 12px 16px rgba(0,0,0,.6))}
 .pp-bx.big{position:absolute;left:50%;top:48%;width:min(360px,74vw);transform:translate(-50%,-50%);z-index:6}
 .bx-lid{position:relative;aspect-ratio:1.55;clip-path:polygon(0 22%,14% 22%,20% 0,80% 0,86% 22%,100% 22%,100% 100%,0 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2%;text-align:center;animation:none!important;box-shadow:inset 0 0 0 2px rgba(255,255,255,.25)}
@@ -218,7 +221,9 @@ svg.pp-strap{display:block;position:absolute;inset:0;width:100%;height:100%;over
   let boxN = 0, fromR = null;
   async function onBuy(kind, n, btn) {
     if (busy) return; busy = true; const msg = $('.pp-msg', root); if (msg) msg.textContent = ''; const it = btn && btn.closest('.pp-it'), sp = it && $('.pp', it); fromR = sp ? sp.getBoundingClientRect() : null;
-    try { const packs = await buy(kind, n), DB = DBc(); lastBuy = { kind, n }; sfx.buy();
+    try { const k0 = KINDS.find((x) => x.k === kind), bal0 = root.querySelectorAll('.pp-bal span')[k0.r ? 1 : 0], pr = n === 30 ? k0.box : k0.price; let wait = 0;
+      const packs = await buy(kind, n), DB = DBc(); lastBuy = { kind, n }; sfx.buy();
+      if (sp && bal0 && bal0.isConnected && window.doroChipFly) { wait = window.doroChipFly(bal0, sp, pr, { size: 20, k: k0.r ? 'r' : 'g' }) || 0; await new Promise((ok) => setTimeout(ok, Math.min(1700, wait))); fromR = sp.isConnected ? sp.getBoundingClientRect() : null; } /* 잔고에서 칩이 나와 팩으로 들어간 뒤 뜯기 */
       Q = packs.map((p) => ({ k: KINDS.find((x) => x.k === kind), cards: p.map((c) => ({ x: DB[String(c[0])], dup: !!c[1], cnt: c[2] || 1, o: 0 })).filter((c) => c.x) }));
       Q.forEach((p) => { p.cards.forEach((c) => { c.o = tvOf(c) + Math.random() * 2.6; }); p.cards.sort((a, b) => a.o - b.o); }); /* 낮은 확률(높은 티어)일수록 뒤에 나올 가능성이 큼 */
       got = []; busy = false; boxN = n === 30 ? Q.length : 0; if (boxN) boxIntro(Q[0].k); else nextPack(); }
@@ -228,7 +233,7 @@ svg.pp-strap{display:block;position:absolute;inset:0;width:100%;height:100%;over
   const boxHtml = (k, left, cls) => { const col = (n) => { let h = ''; for (let i = 0; i < n; i++) h += '<i style="--i:' + i + '"></i>'; return '<span class="bx-col">' + h + '</span>'; };
     return '<div class="pp-bx ' + (cls || '') + (k.r ? ' pil' : '') + '" style="--c1:' + k.c1 + ';--c2:' + k.c2 + '"><div class="bx-lid pp-skin"><b>' + (k.r ? 'PILGRIM' : k.co ? 'CORP' : 'NIKKE') + '<br>CARD PACK</b><span>' + chip(k.r ? 'r' : 'b', 60) + '</span><small>30 PACKS · ' + esc(k.nm) + '</small></div><div class="bx-tray"><div class="bx-in">' + col(Math.ceil(left / 2)) + col(Math.floor(left / 2)) + '</div><div class="bx-front"><em>' + left + '</em></div></div></div>'; };
   function boxIntro(k) {
-    const ov = $('.pp-ov', root); ov.hidden = false; ov.style.setProperty('--rc', k.c2 + '33'); ov.style.setProperty('--ro', '.5');
+    const ov = $('.pp-ov', root); fromR = null; ov.hidden = false; ov.style.setProperty('--rc', k.c2 + '33'); ov.style.setProperty('--ro', '.5');
     ov.innerHTML = '<div class="pp-bgd"></div><div class="pp-rays"></div>' + boxHtml(k, Q.length, 'big');
     const c = $('.pp-bx', ov); $('.pp-bgd', ov).animate([{ opacity: 0 }, { opacity: 1 }], { duration: 300 });
     c.animate([{ transform: 'translate(-50%,-220vh) rotate(-8deg)', easing: 'cubic-bezier(.5,0,1,.7)' }, { transform: 'translate(-50%,-50%) rotate(0deg) scale(1.06,.9)', offset: 0.62 }, { transform: 'translate(-50%,-58%) scale(.97,1.04)', offset: 0.8 }, { transform: 'translate(-50%,-50%)' }], { duration: 700 }); /* 위에서 쿵 */
@@ -346,20 +351,20 @@ svg.pp-strap{display:block;position:absolute;inset:0;width:100%;height:100%;over
   function summary(packs) {
     const ov = $('.pp-ov', root), all = [], multi = packs.length > 1; packs.forEach((p) => p.cards.forEach((c) => all.push(c))); if (!multi) all.sort((a, b) => tvOf(b) - tvOf(a)); /* 여러 팩: 열리는 순서 그대로 */
     const gold = all.filter((c) => c.dup).length, nw = all.filter((c) => !c.dup && c.cnt === 1).length, best = all.reduce((m, c) => Math.max(m, tvOf(c)), 0), k = lastBuy && KINDS.find((x) => x.k === lastBuy.kind);
-    ov.classList.remove('jp', 'jp8', 'jp9'); stageBg(ov, multi ? 0 : best, !multi && best >= 7); ['.pp-st', '.pp-pips', '.pp-skip', '.pp-fb', '.pp-tip', '.pp-sbox', '.pp-mq'].forEach((q) => { const e = $(q, ov); if (e) e.remove(); });
+    ov.classList.remove('jp', 'jp8', 'jp9'); stageBg(ov, multi ? 0 : best, !multi && best >= 7); ['.pp-st', '.pp-pips', '.pp-skip', '.pp-fb', '.pp-tip', '.pp-sbox', '.pp-mq'].concat(boxN && (multi || Q.length) ? [] : ['.pp-dock']).forEach((q) => { const e = $(q, ov); if (e) e.remove(); });
     const box = document.createElement('div'); box.className = 'pp-sbox'; box.style.cssText = 'display:contents';
     const fin = '<div class="pp-fb">' + (Q.length ? '<button type="button" data-pp="next">다음 팩 (' + Q.length + ')</button><button type="button" class="g" data-pp="all">모두 열기</button>' : (k ? '<button type="button" class="o" data-pp="again">한 번 더 ' + chip(k.r ? 'r' : 'b', 15) + fmt(lastBuy.n === 30 ? k.box : k.price) + '</button>' : '') + '<button type="button" class="g" data-pp="close">확인</button>') + '</div>';
     box.innerHTML = '<div class="pp-tip" style="font-size:15px;opacity:1">' + all.length + '장' + (nw ? ' · <span style="color:#5ef0a0">NEW ' + nw + '</span>' : '') + (gold ? ' · <span style="color:#ffd24a">골드칩 ' + gold + '개 반환</span>' : '') + '</div><div class="pp-sum">' + all.map((c) => '<div style="--gc:' + colOf(tvOf(c)) + '"><div class="' + (tvOf(c) >= 7 ? 'hi' : '') + '">' + window.doroRaid.card(Object.assign({}, c.x, { cnt: c.cnt })) + '</div>' + (c.dup ? '<em>골드칩</em>' : c.cnt === 1 ? '<em class="n">NEW</em>' : '<em>' + c.cnt + '장</em>') + '</div>').join('') + '</div><div class="pp-fb"><button type="button" class="g" data-pp="fast">건너뛰기</button></div>';
     ov.appendChild(box); const lf = $('.pp-left', ov); if (lf) lf.textContent = Q.length ? '남은 팩 ' + Q.length : '';
-    const sum = $('.pp-sum', box), cells = [...sum.children], run = ++sumT; let i = 0, hot = 0;
-    const end = () => { cells.forEach((e) => e.classList.add('in')); const fb = $('.pp-fb', box); if (fb) fb.outerHTML = fin; };
+    const sum = $('.pp-sum', box), cells = [...sum.children], run = ++sumT; let i = 0, hot = 0; const dock = $('.pp-dock', ov), dk = multi && dock ? packs[0].k : null, setDock = (n) => { if (dk && dock.isConnected) dock.innerHTML = boxHtml(dk, n, ''); }; if (multi) setDock(packs.length);
+    const end = () => { setDock(0); cells.forEach((e) => e.classList.add('in')); const fb = $('.pp-fb', box); if (fb) fb.outerHTML = fin; };
     summary.fast = () => { sumT++; end(); };
     const step = () => { if (run !== sumT || !box.isConnected) return; if (i >= cells.length) { end(); if (best >= 8) sfx.tier(best); return; }
       const el = cells[i], c = all[i], tv = tvOf(c); el.classList.add('in'); sum.scrollTop = Math.max(0, el.offsetTop - sum.clientHeight + el.offsetHeight + 40); sfx.deal(multi ? (i % 24) + hot : i * 2); /* 이어지며 음이 올라감 */
       let wait = multi ? 120 : 90; /* 일정한 빠르기 */
       if (tv >= 7) { hot++; const rg = document.createElement('i'); rg.className = 'pp-rg'; rg.style.setProperty('--gc', colOf(tv)); rg.style.zIndex = '9'; el.appendChild(rg); rg.animate([{ transform: 'scale(.4)', opacity: 1 }, { transform: 'scale(' + (tv >= 9 ? 9 : tv >= 8 ? 7 : 5) + ')', opacity: 0 }], { duration: 560, easing: 'cubic-bezier(.1,.7,.3,1)' }).onfinish = () => rg.remove();
         shake(sum, tv >= 9 ? 7 : tv >= 8 ? 5 : 3); sfx.tier(tv); wait = tv >= 9 ? 900 : tv >= 8 ? 650 : 400; /* 연출이 끝난 뒤 이어서 */ }
-      i++; setTimeout(step, wait); };
+      i++; if (i % 5 === 1) setDock(packs.length - Math.ceil(i / 5)); /* 한 팩(5장)을 열 때마다 상자에서 한 팩이 줄어듦 */ setTimeout(step, wait); };
     setTimeout(step, 150);
   }
   function onClick(e) {

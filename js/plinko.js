@@ -1,10 +1,10 @@
 /* DOROSYNC 플링코 (관리자 전용 · 미공개)
    싱크칩(1)·실버칩(5)·골드칩(10)을 떨어뜨려 바닥 칸의 배수만큼 받음 · 위험도 3단계 · 8~16줄
-   환수율 약 95% · 양 끝(최고 배수) 칸은 DORO칩도 걸려 있음(환수율과 별도)
+   환수율 약 95% · 양 끝(최고 배수) 칸은 DORO칩을 반드시 지급(환수율과 별도, 건 값 1,000당 1개꼴)
    배포 사이트: 서버(/raid a=plinko)가 결과를 정하고 화면은 그 칸으로 떨어지는 연출만 함 · 미리보기: 이 기기에서 계산 */
 (() => {
   'use strict';
-  const PROD = /github\.io$/.test(location.hostname), RTP = 0.95, DORO_DIV = 40; /* DORO칩 = 건 값 × 2^(줄−8) ÷ 40 (끝 칸에 들어갔을 때) */
+  const PROD = /github\.io$/.test(location.hostname), RTP = 0.95, doroOf = (val, rows) => Math.max(1, Math.round(val * Math.pow(2, rows - 1) / 1000)); /* 끝 칸: DORO칩을 반드시 지급. 건 값 1,000당 1개꼴이 되도록(최소 1개) */
   const RISK = ['LOW', 'MEDIUM', 'HIGH'], CH = [['b', '싱크칩', 1], ['s', '실버칩', 5], ['g', '골드칩', 10]], CNT = [1, 10, 50];
   /* 배수표(서버와 같은 식): 가운데가 가장 낮고 바깥으로 갈수록 커짐. 환수율에 맞춰 전체를 맞춘 뒤 보기 좋은 수로 반올림 */
   const table = (rows, risk) => { const m0 = [0.5, 0.35, 0.2][risk], c = [1.42, 1.85, 2.7][risk], P = [], raw = []; let b = 1, sum = 0;
@@ -12,7 +12,7 @@
     const f = RTP / sum; return raw.map((v) => { v *= f; return v < 10 ? Math.max(0.1, Math.round(v * 10) / 10) : v < 100 ? Math.round(v) : Math.round(v / 10) * 10; }); };
   const $ = (s, r) => (r || document).querySelector(s), fmt = (n) => Math.round(n).toLocaleString('ko-KR'), chip = (k, px) => (window.doroChipSvg ? window.doroChipSvg(k, px, false, true) : '');
   let root = null, cv = null, c = null, S = { rows: 12, risk: 1, ch: 0, n: 1 }, T = [], balls = [], hits = [], pops = [], raf = 0, pend = 0, pendR = 0, busy = false, AC = null, W = 520, H = 600; const IMG = {};
-  try { Object.assign(S, JSON.parse(localStorage.getItem('dorosync-plinko') || '{}')); } catch (e) { /* 무시 */ }
+  try { Object.assign(S, JSON.parse(localStorage.getItem('dorosync-plinko') || '{}')); } catch (e) { /* 무시 */ } if ([8, 12, 16].indexOf(S.rows) < 0) S.rows = 12;
   const save = () => { try { localStorage.setItem('dorosync-plinko', JSON.stringify(S)); } catch (e) { /* 무시 */ } };
   const tick = (f, v, d) => { try { if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === 'suspended') AC.resume(); const o = AC.createOscillator(), g = AC.createGain(), t = AC.currentTime; o.type = 'triangle'; o.frequency.value = f; g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(0.0001, t + d); o.connect(g).connect(AC.destination); o.start(t); o.stop(t + d + 0.02); } catch (e) { /* 무시 */ } };
   const colOf = (m) => (m >= 100 ? '#ff2f6d' : m >= 10 ? '#ff5a3d' : m >= 2 ? '#ff9a24' : m >= 1 ? '#f5c63a' : '#7b8494');
@@ -36,20 +36,23 @@
       if (i !== b.li) { b.li = i; if (i > 0 && i <= S.rows) { hits.push({ r: i - 1, j: b.pj[i - 1], t: now }); tick(900 + i * 55 + Math.random() * 60, 0.03, 0.05); } }
       const x = A[0] + (B[0] - A[0]) * t, y = A[1] + (B[1] - A[1]) * t * t - (i > 0 ? g.dy * 0.34 * Math.sin(Math.PI * t) * (1 - t) : 0), im = IMG[b.ch];
       c.save(); c.translate(x, y); c.rotate(b.rot + el * 0.006 * b.sp); c.scale(1, 0.82 + 0.18 * Math.cos(el * 0.012)); if (im && im.complete) c.drawImage(im, -g.br, -g.br, g.br * 2, g.br * 2); else { c.beginPath(); c.arc(0, 0, g.br, 0, 6.283); c.fillStyle = '#f5b301'; c.fill(); } c.restore();
-      if (el >= SEG * (b.pts.length - 1)) { b.done = true; pops.push({ k: b.k, t: now }); land(b); } });
+      if (el >= SEG * (b.pts.length - 1)) { b.done = true; pops.push({ k: b.k, t: now }); b.fx = B[0]; b.fy = g.by + 15; land(b); } });
     balls = balls.filter((b) => !b.done);
     if (balls.length || hits.length || pops.length) raf = requestAnimationFrame(draw);
   }
   const kick = () => { if (!raf) raf = requestAnimationFrame(draw); };
   function land(b) {
-    pend -= b.pay; pendR -= b.r; ui(); const m = T[b.k]; tick(m >= 10 ? 1320 : m >= 1 ? 880 : 300, m >= 1 ? 0.09 : 0.04, m >= 10 ? 0.5 : 0.15); if (m >= 10) setTimeout(() => tick(1760, 0.08, 0.5), 90);
+    const m = T[b.k], cr = cv.getBoundingClientRect(), sx = cr.left + b.fx / W * cr.width, sy = cr.top + b.fy / H * cr.height, from = { getBoundingClientRect: () => ({ left: sx - 8, top: sy - 8, width: 16, height: 16 }) }, sp = root.querySelectorAll('.pl-bal span');
+    const settle = () => { pend -= b.pay; pendR -= b.r; ui(); }; let ms = 0; /* 칸에서 얻은 칩이 잔고로 빨려 들어간 뒤 잔고가 오름 */
+    try { if (b.pay > 0 && sp[0] && window.doroChipFly) ms = window.doroChipFly(from, sp[0], Math.min(b.pay, 60), { size: 16, k: b.pay >= 10 ? 'g' : 'b' }) || 0; if (b.r > 0 && sp[1] && window.doroChipFly) ms = Math.max(ms, window.doroChipFly(from, sp[1], Math.min(b.r, 12), { size: 20, k: 'r' }) || 0); } catch (e) { /* 무시 */ }
+    setTimeout(settle, ms ? Math.min(1500, ms) : 0); tick(m >= 10 ? 1320 : m >= 1 ? 880 : 300, m >= 1 ? 0.09 : 0.04, m >= 10 ? 0.5 : 0.15); if (m >= 10) setTimeout(() => tick(1760, 0.08, 0.5), 90);
     const log = $('.pl-log', root); if (log) { const e = document.createElement('span'); e.style.background = colOf(m); e.style.color = m >= 1 ? '#14161c' : '#fff'; e.textContent = m + 'x'; log.prepend(e); while (log.children.length > 14) log.lastChild.remove(); }
     if (b.r > 0) { const w = $('.pl-win', root); if (w) { w.innerHTML = chip('r', 22) + ' DORO칩 +' + b.r + '!'; w.classList.remove('on'); void w.offsetWidth; w.classList.add('on'); } [1047, 1319, 1568, 2093].forEach((f, i) => setTimeout(() => tick(f, 0.1, 0.4), i * 80)); }
     else if (m >= 10) { const w = $('.pl-win', root); if (w) { w.innerHTML = m + 'x · ' + chip('b', 18) + ' +' + fmt(b.pay); w.classList.remove('on'); void w.offsetWidth; w.classList.add('on'); } }
   }
   /* ---------- 결과 ---------- */
   const roll = (rows, val, tb) => { let k = 0; const bits = []; for (let i = 0; i < rows; i++) { const r = Math.random() < 0.5 ? 1 : 0; bits.push(r); k += r; } const x = val * tb[k], pay = Math.floor(x) + (Math.random() < x - Math.floor(x) ? 1 : 0); /* 소수 부분은 그 확률로 1개 */
-    let dr = 0; if (k === 0 || k === rows) { const q = val * Math.pow(2, rows - 8) / DORO_DIV; dr = Math.floor(q) + (Math.random() < q - Math.floor(q) ? 1 : 0); } return [k, pay, dr, bits]; };
+    const dr = k === 0 || k === rows ? doroOf(val, rows) : 0; return [k, pay, dr, bits]; };
   async function drop() {
     if (busy) return; const ch = CH[S.ch], cost = ch[2] * S.n, msg = $('.pl-msg', root); msg.textContent = '';
     if (window.doroChips.total() - 0 < cost) { msg.textContent = '싱크칩이 부족합니다.'; return; }
@@ -96,7 +99,7 @@
     const seg = (k, arr) => '<div class="pl-seg">' + arr.map((v) => '<button type="button" data-k="' + k + '" data-v="' + v[0] + '">' + v[1] + '</button>').join('') + '</div>';
     root.innerHTML = '<div class="pl"><aside class="pl-side"><div class="pl-t">PLINKO<small>DORO</small></div>' +
       '<div class="pl-g"><span>위험도</span>' + seg('risk', RISK.map((r, i) => [i, r])) + '</div>' +
-      '<div class="pl-g"><span>줄</span>' + seg('rows', [8, 9, 10, 11, 12, 13, 14, 15, 16].map((r) => [r, r])) + '</div>' +
+      '<div class="pl-g"><span>줄</span>' + seg('rows', [8, 12, 16].map((r) => [r, r])) + '</div>' +
       '<div class="pl-g"><span>칩</span>' + seg('ch', CH.map((x, i) => [i, chip(x[0], 16) + x[2]])) + '</div>' +
       '<div class="pl-g"><span>개수</span>' + seg('n', CNT.map((n) => [n, n])) + '</div>' +
       '<div class="pl-bal"></div><button type="button" class="pl-go"></button><div class="pl-msg"></div></aside>' +

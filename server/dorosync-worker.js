@@ -466,9 +466,9 @@ async function raid(req, env, out) {
     }
     return out(409, { ok: false, error: 'busy' });
   }
-  if (a === 'plinko') { /* 플링코: 서버가 결과를 정함. 환수율 약 95%, 양 끝 칸은 DORO칩(건 값 × 2^(줄−8) ÷ 40) */
+  if (a === 'plinko') { /* 플링코: 서버가 결과를 정함. 환수율 약 95%, 양 끝 칸은 DORO칩 반드시 지급 */
     const rows = Math.floor(+B.rows), risk = Math.floor(+B.risk), val = { b: 1, s: 5, g: 10 }[B.bet], n = Math.max(1, Math.min(50, Math.floor(+B.n) || 1));
-    if (!(rows >= 8 && rows <= 16) || !(risk >= 0 && risk <= 2) || !val) return out(400, { ok: false, error: 'bad' });
+    if (![8, 12, 16].includes(rows) || !(risk >= 0 && risk <= 2) || !val) return out(400, { ok: false, error: 'bad' });
     const m0 = [0.5, 0.35, 0.2][risk], cc = [1.42, 1.85, 2.7][risk], raw = []; let bb = 1, sum = 0;
     for (let k = 0; k <= rows; k++) { const pk = bb / Math.pow(2, rows); bb = bb * (rows - k) / (k + 1); raw.push(m0 * Math.pow(cc, Math.abs(k - rows / 2))); sum += pk * raw[k]; }
     const tb = raw.map((v) => { v *= 0.95 / sum; return v < 10 ? Math.max(0.1, Math.round(v * 10) / 10) : v < 100 ? Math.round(v) : Math.round(v / 10) * 10; }), cost = val * n;
@@ -476,8 +476,7 @@ async function raid(req, env, out) {
       const ud = await getDoc('users/' + uid); if (!ud) return out(404, { ok: false, error: 'nouser' });
       const cv = ud.f.chipsV || { d: 0, r: 0 }; if ((cv.d || 0) < cost) return out(409, { ok: false, error: 'chips' });
       const balls = []; let win = 0, wr = 0;
-      for (let i = 0; i < n; i++) { let k = 0; for (let q = 0; q < rows; q++) if (Math.random() < 0.5) k++; const x = val * tb[k], pay = Math.floor(x) + (Math.random() < x - Math.floor(x) ? 1 : 0); let dr = 0;
-        if (k === 0 || k === rows) { const q2 = val * Math.pow(2, rows - 8) / 40; dr = Math.floor(q2) + (Math.random() < q2 - Math.floor(q2) ? 1 : 0); } win += pay; wr += dr; balls.push([k, pay, dr]); }
+      for (let i = 0; i < n; i++) { let k = 0; for (let q = 0; q < rows; q++) if (Math.random() < 0.5) k++; const x = val * tb[k], pay = Math.floor(x) + (Math.random() < x - Math.floor(x) ? 1 : 0); const dr = k === 0 || k === rows ? Math.max(1, Math.round(val * Math.pow(2, rows - 1) / 1000)) : 0; /* 끝 칸: DORO칩 반드시 지급(1,000당 1개꼴, 최소 1) */ win += pay; wr += dr; balls.push([k, pay, dr]); }
       const chips = { d: (cv.d || 0) - cost + win, r: (cv.r || 0) + wr };
       if (await commit([{ update: { name: ud.name, fields: { chipsV: fsv(chips) } }, updateMask: { fieldPaths: ['chipsV'] }, currentDocument: { updateTime: ud.updateTime } }])) return out(200, { ok: true, balls, chips });
     }

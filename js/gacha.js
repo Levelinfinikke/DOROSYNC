@@ -719,7 +719,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     const SLOW_P = { b: 0.03, s: 0.12, g: 0.35, r: 1 };
     const wantSlow = (t, k) => isSSSn(t.nk) || Math.random() < SLOW_P[k];
     /* 골드칩 확정: 칩 위로 GOLD! 글자가 튀어오르고 금빛 고리가 퍼짐 */
-    function goldPop(el) { const host = document.fullscreenElement || document.body, r = el && el.getBoundingClientRect ? el.getBoundingClientRect() : null, cx = r && r.width ? r.left + r.width / 2 : innerWidth / 2, cy = r && r.width ? r.top + r.height / 2 : innerHeight / 2, sz = r && r.width ? r.width : 60;
+    function goldPop(el) { const host = document.fullscreenElement || document.body, r = el && el.getBoundingClientRect ? el.getBoundingClientRect() : null; if (!r || !r.width) return; /* 건너뛰어 칩이 화면에 없으면 생략(가운데에 뜨던 현상 방지) */ const cx = r && r.width ? r.left + r.width / 2 : innerWidth / 2, cy = r && r.width ? r.top + r.height / 2 : innerHeight / 2, sz = r && r.width ? r.width : 60;
       const d = document.createElement('div'); d.className = 'gm-gpop'; d.style.cssText = 'left:' + cx + 'px;top:' + cy + 'px;--sz:' + sz + 'px'; d.innerHTML = '<i></i><i></i><b>GOLD!</b>'; host.appendChild(d); setTimeout(() => d.remove(), 1300); vib([30, 20, 50]); }
     /* 한 번의 10연속에서 SSR이 2장 이상: DOUBLE! / TRIPLE! … */
     function quake(m) { /* 지진처럼 축 없이 흔들림. 배수가 클수록 세고 길게. 실제 시간으로(배속과 무관) · 렉이 심하면 생략 */ if ((S.fdt || 0) > 0.03 || flyN > 60) return; leftEl.getAnimations().forEach((a) => { if (a.id === 'quake') a.cancel(); }); const A = Math.min(14, 1.2 + (m - 1) * 1.3), D = Math.min(1300, 450 + m * 70), N = Math.round(D / 45), kf = [{ transform: 'none' }];
