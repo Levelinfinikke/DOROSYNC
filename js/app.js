@@ -2686,7 +2686,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
   };
   const chipCard = () => {
     const o = chipRaw(), tot = o.d;
-    return '<div class="kpi chipk">' + chipBig() + '<div class="l">싱크칩</div><div class="chipv">' +
+    return '<div class="kpi chipk" data-go="game" title="니슬렁으로 이동">' + chipBig() + '<div class="l">싱크칩</div><div class="chipv">' +
       '<span class="cv-d" title="싱크칩 (실버칩 1 = 5, 골드칩 1 = 10)">' + window.doroChipSvg('b', 30) + '<b class="num">' + fmt(tot) + '</b></span>' +
       '<span class="cv-r" title="DORO칩">' + window.doroChipSvg('r', 30) + '<b class="num">' + fmt(o.r) + '</b></span></div></div>';
   };
@@ -3640,12 +3640,14 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') $('#nk-modal').hidden = true; });
 
   /* ---------- 탭 ---------- */
-  const GRP = { main: 'main', daily: 'main', pkg: 'main', inc: 'main', rules: 'main', boss: 'boss', data: 'boss', ol: 'ol', olrules: 'ol', jw: 'jw', jwrules: 'jw', gc: 'gc', gcm: 'gc', gcmg: 'game', gccs: 'gc', gcco: 'gc', gcdata: 'gc', gctier: 'gc', gcrules: 'gc', me: 'me', game: 'game', dex: 'game', pack: 'game', plinko: 'game', tabs: 'game', g48: 'game', raid: 'game' }; let lastGrp = { main: 'main', boss: 'boss', ol: 'ol', jw: 'jw', gc: 'gcm', me: 'me', game: 'game' };
+  /* 상위 탭: 싱크로 · 작전날짜 · 오버로드 · 쥬얼 · 니슬렁 · 전초기지. 하위 탭은 싱크로에만 있음(데이터와 모든 계산 규칙을 여기로 모음) */
+  const GRP = { main: 'main', daily: 'main', pkg: 'main', inc: 'main', data: 'main', rules: 'main', olrules: 'main', jwrules: 'main', gcrules: 'main', boss: 'boss', ol: 'ol', jw: 'jw', me: 'me', game: 'game', gcm: 'game', gcmg: 'game', gctier: 'game', dex: 'game', pack: 'game', plinko: 'game', tabs: 'game', g48: 'game', raid: 'game' }; let lastGrp = { main: 'main', boss: 'boss', ol: 'ol', jw: 'jw', me: 'me', game: 'game' };
+  const RULES = { rules: '싱크로', olrules: '오버로드', jwrules: '쥬얼', gcrules: '가챠' }; /* 계산 규칙 탭 안의 작은 탭 */
   const OLV = { ol: 'calc', olrules: 'rules' };
   let curGrp = 'main', curTab = 'main';
   function previewSub(grp) {
     $$('#subtabs button').forEach((b) => { b.hidden = b.dataset.grp !== grp; });
-    $('#subtabs').classList.toggle('show', grp !== 'me' && grp !== 'game');
+    $('#subtabs').classList.toggle('show', grp === 'main');
     subAlign(grp);
   }
   /* 하위 탭을 상위 탭 바로 아래 가운데에 맞춤 */
@@ -3669,13 +3671,14 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   })();
   (() => { const top = document.querySelector('.top'); if (!top) return; const f = () => document.documentElement.style.setProperty('--toph', top.offsetHeight + 'px'); f(); addEventListener('resize', f); if (window.ResizeObserver) new ResizeObserver(f).observe(top); })();
   function showTab(name) {
-    if (name === 'gc' || name === 'gccs' || name === 'gcco' || name === 'gcdata') name = 'gcm'; // 숨긴 하위 탭 대신 가챠 머신
+    if (name === 'gc' || name === 'gccs' || name === 'gcco' || name === 'gcdata' || name === 'gcm') name = 'gcmg'; // 가챠 탭은 없어짐: 가챠 머신은 니슬렁에서
     if (name === 'raid' || name === 'dex' || name === 'pack' || name === 'plinko' || name === 'tabs' || name === 'g48') { let ok = false; try { ok = dexOk(); } catch (e) { /* 초기화 전 */ } if (!ok) name = 'game'; } const sec = name === 'gcmg' ? 'gcm' : name; curTab = sec; /* gcmg: 니슬렁 탭에서 여는 가챠 머신(같은 화면) */
     const grp = GRP[name] || name;
     if (lastGrp[grp]) lastGrp[grp] = name;
     $$('#tabs button').forEach((b) => b.classList.toggle('on', b.dataset.tab === grp));
-    $$('#subtabs button').forEach((b) => { b.classList.toggle('on', b.dataset.tab === name); b.hidden = b.dataset.grp !== grp; });
-    $('#subtabs').classList.toggle('show', grp !== 'me' && grp !== 'game');
+    $$('#subtabs button').forEach((b) => { b.classList.toggle('on', b.dataset.tab === (RULES[name] ? 'rules' : name)); b.hidden = b.dataset.grp !== grp; });
+    { let rn = $('#rules-nav'); if (!rn) { rn = document.createElement('div'); rn.id = 'rules-nav'; rn.innerHTML = Object.keys(RULES).map((k) => '<button type="button" data-go="' + k + '">' + RULES[k] + '</button>').join(''); const tg = $('#tab-main'); tg.parentNode.insertBefore(rn, tg); } rn.hidden = !RULES[name]; rn.querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.go === name)); }
+    $('#subtabs').classList.toggle('show', grp === 'main');
     curGrp = grp; subAlign(grp);
     $$('.tab').forEach((s) => s.classList.toggle('on', s.id === 'tab-' + (OLV[name] ? 'ol' : sec)));
     if (sec === 'gcm') gmMount();
@@ -4419,13 +4422,14 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   function renderLobby() {
     const root = $('#tab-game'); if (!root) return; const adm = dexOk(), o = chipRaw();
     const G = [['gcmg', '가챠 머신', '캡슐을 뽑고 싱크칩을 모으세요', 'lb-gc', 1], ['raid', '포커레이드', '모은 카드로 족보를 만들어 보스를 잡으세요', 'lb-rd', adm], ['pack', '카드팩', '팩을 뜯어 니케 카드를 모으세요', 'lb-pk', adm], ['dex', '내 카드', '모은 카드와 수집 보상', 'lb-dx', adm],
-      ['plinko', '도로드롭', '칩을 떨어트려 DORO칩을 노리세요', 'lb-pl', adm], ['tabs', '도로록', '티켓을 뽑아 도로록 뜯으세요', 'lb-pt', adm], ['g48', '2048', '명함을 합쳐 풀코강을 만드세요', 'lb-48', adm]].filter((g) => g[4] || !g[0]);
+      ['plinko', '도로드롭', '칩을 떨어트려 DORO칩을 노리세요', 'lb-pl', adm], ['tabs', '도로록', '티켓을 뽑아 도로록 뜯으세요', 'lb-pt', adm], ['g48', '2048', '명함을 합쳐 풀코강을 만드세요', 'lb-48', adm], ['gctier', '티어표', '솔로레이드 · PvP 니케 티어', 'lb-tr', 1]].filter((g) => g[4] || !g[0]);
     /* 입구 그림 = 실제 게임 화면의 요소(카드·팩·보스) */
     const art = {}, rd = window.doroRaid && window.doroRaidData ? window.doroRaidData() : null, L = rd && rd.list ? rd.list.slice().sort((a, b) => (b.t === 'SSS') - (a.t === 'SSS')) : [];
     try { if (L.length >= 5 && adm) { const cd = (x, cnt) => window.doroRaid.card(Object.assign({}, x, { cnt }));
         art.raid = '<span class="lb-sc"><span class="lb-hud"><i class="c">42</i>×<i class="m">7</i></span><span class="lb-row">' + [0, 1, 2, 3, 4].map((k) => cd(L[k], [4, 11, 7, 4, 1][k])).join('') + '</span></span>';
         art.dex = '<span class="lb-fan">' + [5, 6, 7].map((k, q) => cd(L[k % L.length], [1, 11, 4][q])).join('') + '</span>';
         if (window.doroTabs && window.doroTabs.art) art.tabs = window.doroTabs.art();
+        art.gctier = '<span class="lb-trs">' + ['SSS', 'SS', 'S', 'A', 'B'].map((t, q) => '<i style="--c:' + ['#ff7f7f', '#ffbf7f', '#ffdf7f', '#ffff7f', '#bfff7f'][q] + '"><b>' + t + '</b>' + '<u></u>'.repeat(5 - q) + '</i>').join('') + '</span>';
         if (window.doro2048 && window.doro2048.art) art.g48 = window.doro2048.art();
         if (window.doroPack && window.doroPack.art) art.pack = '<span class="lb-pks">' + ['co:엘리시온', 'std', 'pil'].map((k) => window.doroPack.art(k)).join('') + '</span>'; }
       { /* 가챠 머신: 필그림 캡슐(살짝 열려 틈에서 빛) · 엘리시온 캡슐 · SR · R 캡슐 */
