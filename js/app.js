@@ -3636,7 +3636,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') $('#nk-modal').hidden = true; });
 
   /* ---------- 탭 ---------- */
-  const GRP = { main: 'main', daily: 'main', pkg: 'main', inc: 'main', rules: 'main', boss: 'boss', data: 'boss', ol: 'ol', olrules: 'ol', jw: 'jw', jwrules: 'jw', gc: 'gc', gcm: 'gc', gcmg: 'game', gccs: 'gc', gcco: 'gc', gcdata: 'gc', gctier: 'gc', gcrules: 'gc', me: 'me', game: 'game', dex: 'game', pack: 'game', plinko: 'game', tabs: 'game', raid: 'game' }; let lastGrp = { main: 'main', boss: 'boss', ol: 'ol', jw: 'jw', gc: 'gcm', me: 'me', game: 'game' };
+  const GRP = { main: 'main', daily: 'main', pkg: 'main', inc: 'main', rules: 'main', boss: 'boss', data: 'boss', ol: 'ol', olrules: 'ol', jw: 'jw', jwrules: 'jw', gc: 'gc', gcm: 'gc', gcmg: 'game', gccs: 'gc', gcco: 'gc', gcdata: 'gc', gctier: 'gc', gcrules: 'gc', me: 'me', game: 'game', dex: 'game', pack: 'game', plinko: 'game', tabs: 'game', g48: 'game', raid: 'game' }; let lastGrp = { main: 'main', boss: 'boss', ol: 'ol', jw: 'jw', gc: 'gcm', me: 'me', game: 'game' };
   const OLV = { ol: 'calc', olrules: 'rules' };
   let curGrp = 'main', curTab = 'main';
   function previewSub(grp) {
@@ -3666,7 +3666,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   (() => { const top = document.querySelector('.top'); if (!top) return; const f = () => document.documentElement.style.setProperty('--toph', top.offsetHeight + 'px'); f(); addEventListener('resize', f); if (window.ResizeObserver) new ResizeObserver(f).observe(top); })();
   function showTab(name) {
     if (name === 'gc' || name === 'gccs' || name === 'gcco' || name === 'gcdata') name = 'gcm'; // 숨긴 하위 탭 대신 가챠 머신
-    if (name === 'raid' || name === 'dex' || name === 'pack' || name === 'plinko' || name === 'tabs') { let ok = false; try { ok = dexOk(); } catch (e) { /* 초기화 전 */ } if (!ok) name = 'game'; } const sec = name === 'gcmg' ? 'gcm' : name; curTab = sec; /* gcmg: 니슬렁 탭에서 여는 가챠 머신(같은 화면) */
+    if (name === 'raid' || name === 'dex' || name === 'pack' || name === 'plinko' || name === 'tabs' || name === 'g48') { let ok = false; try { ok = dexOk(); } catch (e) { /* 초기화 전 */ } if (!ok) name = 'game'; } const sec = name === 'gcmg' ? 'gcm' : name; curTab = sec; /* gcmg: 니슬렁 탭에서 여는 가챠 머신(같은 화면) */
     const grp = GRP[name] || name;
     if (lastGrp[grp]) lastGrp[grp] = name;
     $$('#tabs button').forEach((b) => b.classList.toggle('on', b.dataset.tab === grp));
@@ -3685,6 +3685,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
     if (name === 'pack' && window.doroPack) window.doroPack.mount($('#tab-pack'));
     if (name === 'plinko' && window.doroPlinko) window.doroPlinko.mount($('#tab-plinko'));
     if (name === 'tabs' && window.doroTabs) window.doroTabs.mount($('#tab-tabs'));
+    if (name === 'g48' && window.doro2048) window.doro2048.mount($('#tab-g48'));
     if (name === 'raid' && window.doroRaid) window.doroRaid.mount($('#tab-raid'));
     if (name === 'jwrules') renderJwRules();
     if (name === 'gc') renderGc();
@@ -4413,12 +4414,14 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   function renderLobby() {
     const root = $('#tab-game'); if (!root) return; const adm = dexOk(), o = chipRaw();
     const G = [['gcmg', '가챠 머신', '캡슐을 뽑고 싱크칩을 모으세요', 'lb-gc', 1], ['raid', '포커레이드', '니케 카드로 족보를 만들어 보스를 공략', 'lb-rd', adm], ['pack', '카드팩', '팩을 뜯어 니케 카드를 모으세요', 'lb-pk', adm], ['dex', '카드', '모은 카드와 수집 보상', 'lb-dx', adm],
-      ['plinko', '도로드롭', '칩을 떨어뜨려 배수와 DORO칩을 노리세요', 'lb-pl', adm], ['tabs', '도로록', '표를 뽑아 드르륵 뜯으세요', 'lb-pt', adm], ['', '2048', '준비 중', 'lb-48', 0]].filter((g) => g[4] || !g[0]);
+      ['plinko', '도로드롭', '칩을 떨어뜨려 배수와 DORO칩을 노리세요', 'lb-pl', adm], ['tabs', '도로록', '표를 뽑아 드르륵 뜯으세요', 'lb-pt', adm], ['g48', '2048', '타일을 합쳐 2048을 만드세요', 'lb-48', adm]].filter((g) => g[4] || !g[0]);
     /* 입구 그림 = 실제 게임 화면의 요소(카드·팩·보스) */
     const art = {}, rd = window.doroRaid && window.doroRaidData ? window.doroRaidData() : null, L = rd && rd.list ? rd.list.slice().sort((a, b) => (b.t === 'SSS') - (a.t === 'SSS')) : [];
     try { if (L.length >= 5 && adm) { const cd = (x, cnt) => window.doroRaid.card(Object.assign({}, x, { cnt }));
         art.raid = '<span class="lb-sc"><span class="lb-hud"><i class="c">42</i>×<i class="m">7</i></span><span class="lb-row">' + [0, 1, 2, 3, 4].map((k) => cd(L[k], [4, 11, 7, 4, 1][k])).join('') + '</span></span>';
         art.dex = '<span class="lb-fan">' + [5, 6, 7].map((k, q) => cd(L[k % L.length], [1, 11, 4][q])).join('') + '</span>';
+        if (window.doroTabs && window.doroTabs.art) art.tabs = window.doroTabs.art();
+        art.g48 = '<span class="lb-48g">' + [[2, '#3a4252'], [8, '#2f7de0'], [64, '#8bc34a'], [16, '#1fa8c9'], [256, '#ff9a24'], [1024, '#e23c8a'], [4, '#4a5670'], [128, '#f5c63a'], [2048, '#b05cff']].map((v) => '<i style="background:' + v[1] + '">' + v[0] + '</i>').join('') + '</span>';
         if (window.doroPack && window.doroPack.art) art.pack = '<span class="lb-pks">' + ['co:엘리시온', 'std', 'pil'].map((k) => window.doroPack.art(k)).join('') + '</span>'; }
       { /* 가챠 머신: 필그림 캡슐(살짝 열려 틈에서 빛) · 엘리시온 캡슐 · SR · R 캡슐 */
         const em = (window.GM_ASSETS && window.GM_ASSETS.assets && window.GM_ASSETS.assets.emb) || {};
@@ -4439,7 +4442,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
     const on = dexOk();
     document.querySelectorAll('#subtabs button.adm').forEach((b) => b.classList.toggle('adm-off', !on));
     if (dexGate.on !== on) { dexGate.on = on; if (curTab === 'game') renderLobby(); }
-    if (!on && (curTab === 'raid' || curTab === 'dex' || curTab === 'pack' || curTab === 'plinko' || curTab === 'tabs')) showTab('game');
+    if (!on && (curTab === 'raid' || curTab === 'dex' || curTab === 'pack' || curTab === 'plinko' || curTab === 'tabs' || curTab === 'g48')) showTab('game');
   }
   /* 웹에서 얻은 카드 더하기(이후 게임에서 당첨 시 1장씩). 연동한 보유 정보(명함 1 + 돌파 + 코강)에 더해짐, 합쳐서 최대 11장 */
   function dexAdd(n, d) { const s = dexLoad(), c = Math.max(0, Math.min(DEX_MAX, (s.n[n] || 0) + d)); if (c) s.n[n] = c; else delete s.n[n]; dexSave(); return c; }

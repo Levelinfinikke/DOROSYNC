@@ -1817,3 +1817,10 @@ button:not(.tr-clr):not(.tabs button):not(.tr-f):not(.pk-t):not(.pk-r){border-ra
 
 .lb-pt{--gc:#ff5a4d;--art:repeating-linear-gradient(45deg,#b3161c 0 12px,#9a1016 12px 24px)}
 .dc3-r .dc3r>i{background:linear-gradient(rgba(10,10,20,var(--dk)),rgba(10,10,20,var(--dk))),conic-gradient(#ff5d8f,#ffb84d,#f6f05a,#5ef0a0,#5ab8ff,#b47cff,#ff5d8f)}.dc3-b .dc3r>i,.dc3-s .dc3r>i{background:linear-gradient(rgba(10,10,20,var(--dk)),rgba(10,10,20,var(--dk))),linear-gradient(90deg,#6d727a,#e4e7ec 30%,#9ea4ad 55%,#f1f3f6 75%,#70757d)}
+
+.tb-artw{position:absolute;left:50%;top:6px;width:260px;transform:translateX(-50%) scale(.56) rotate(-5deg);transform-origin:50% 0;pointer-events:none}.tb-artw .tb-tk{position:relative}
+.lb-pt .lb-art{background:radial-gradient(ellipse at 50% 30%,#4a2a22,#17110f)!important}
+.lb-pl .lb-art{background:radial-gradient(circle,#aeb5bf 0 4px,#5d6570 5px,transparent 6px) 0 0/52px 44px,radial-gradient(circle,#aeb5bf 0 4px,#5d6570 5px,transparent 6px) 26px 22px/52px 44px,linear-gradient(#143463,#0a1c3a)!important}
+
+.lb-48{--gc:#ffb21c}.lb-48 .lb-art{background:#12141a!important}.lb-48g{position:absolute;left:50%;top:8px;width:132px;transform:translateX(-50%) rotate(-4deg);display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.lb-48g i{aspect-ratio:1;border-radius:7px;display:grid;place-items:center;font:900 13px "Arial Black",Arial,sans-serif;font-style:normal;color:#fff;box-shadow:inset 0 -3px 0 rgba(0,0,0,.25),inset 0 2px 0 rgba(255,255,255,.25)}
