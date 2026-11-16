@@ -1933,3 +1933,5 @@ button:not(.tr-clr):not(.tabs button):not(.tr-f):not(.pk-t):not(.pk-r){border-ra
 #tab-me .mekpis .kpi.chipk.dexk .chipbig{opacity:.25}
 /* 모바일 니슬렁: 가챠 머신 칸은 현재 픽업 이름 한 줄만(기간·다음 픽업은 숨김) → 옆의 제작소 칸이 길어지지 않음 */
 @media(max-width:700px){#tab-game .lb-gc .lb-x em:not(:first-child){display:none}#tab-game .lb-x{margin-bottom:6px}}
+/* 모바일 니슬렁 머리줄: 제목 한 줄, 그 아래에 잔고(왼쪽)와 피드백 버튼(오른쪽)을 같은 높이로 나란히 */
+@media(max-width:700px){#tab-game .lb-hero{align-items:center;gap:10px 10px;margin-bottom:14px}#tab-game .lb-hero .lb-t{flex:1 1 100%}#tab-game .lb-hero .lb-bal{order:2;margin:0}#tab-game .lb-hero .lb-fb{order:3;margin:0 0 0 auto;top:0;align-self:center}}
