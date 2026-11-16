@@ -435,7 +435,10 @@ async function raid(req, env, out) {
   const admin = ADMIN_UIDS.includes(uid); if (!RAID_OPEN && !admin) return out(403, { ok: false, error: 'closed' });
   let B; try { B = await req.json(); } catch (e) { return out(400, { ok: false, error: 'bad' }); }
   const a = String(B.a || 'state');
-  try { const tv = await siteTv(env); const key = JSON.stringify(tv || {}); if (key !== RAID_TVK) { const nk = {}; Object.keys(RAID_NK0).forEach((k) => { const x = RAID_NK0[k].slice(), v = tv && +tv[k]; if (v >= 1 && v <= 9) x[4] = Math.floor(v); nk[k] = x; }); RAID_NK = nk; RAID_TVK = key; } } catch (e) { /* 설정을 못 읽으면 직전 표 그대로 */ }
+  let SITE = null; /* 관리 탭 설정: 절대 티어표의 등급(tv), 신규 니케 카드(nk), 부스터팩(packs) */
+  try { SITE = await siteTv(env); const tv = SITE && SITE.tv, key = JSON.stringify([tv || {}, (SITE && SITE.nk) || []]); if (key !== RAID_TVK) { const nk = {};
+      ((SITE && SITE.nk) || []).forEach((x) => { const k = String(x.code); if (/^\d{3,6}$/.test(k) && !RAID_NK0[k]) nk[k] = [x.corp || '', x.el || '', x.wp || '', x.bu === 'A' ? 'A' : +x.bu || 3, 9]; }); /* 신규 니케: 등급은 티어표에 없으면 SSS(★) */
+      Object.keys(RAID_NK0).forEach((k) => { nk[k] = RAID_NK0[k].slice(); }); Object.keys(nk).forEach((k) => { const v = tv && +tv[k]; if (v >= 1 && v <= 9) nk[k][4] = Math.floor(v); }); RAID_NK = nk; RAID_TVK = key; } } catch (e) { /* 설정을 못 읽으면 직전 표 그대로 */ }
   const sa = JSON.parse(env.FIREBASE_SA), at = await saToken(sa, 'https://www.googleapis.com/auth/datastore'), H = { Authorization: 'Bearer ' + at, 'Content-Type': 'application/json' };
   const getDoc = async (path) => { const r = await fetch(FS + '/' + path, { headers: H }); if (r.status === 404) return null; const d = await r.json(); const o = {}; Object.entries(d.fields || {}).forEach(([k, v]) => { o[k] = dec(v); }); return { name: d.name, updateTime: d.updateTime, f: o }; };
   const commit = async (writes) => (await fetch(FS.replace(/\/documents$/, '/documents:commit'), { method: 'POST', headers: H, body: JSON.stringify({ writes }) })).ok;
@@ -457,9 +460,12 @@ async function raid(req, env, out) {
     return out(ok ? 200 : 502, { ok, season: sn });
   }
   if (a === 'pack') { /* 카드팩: 서버가 뽑아 계정에 기록. 1팩 5장 · 박스 30팩 · 일반/기업 100싱크칩(일반 박스 2,700) · 필그림 1 DORO칩 · 풀코강 초과분은 골드칩(싱크칩 10) */
-    const kind = String(B.kind || 'std'), n = +B.n === 30 ? 30 : 1, pil = kind === 'pil', co = kind.startsWith('co:') ? kind.slice(3) : '';
-    if (!pil && kind !== 'std' && !['엘리시온', '미실리스', '테트라', '어브노멀'].includes(co)) return out(400, { ok: false, error: 'bad' });
-    const price = pil ? n : kind === 'std' && n === 30 ? 2700 : 100 * n, TW = { 9: 2, 8: 5, 7: 10, 6: 16, 5: 20, 4: 18, 3: 14, 2: 9, 1: 6 }, by = {};
+    const kind = String(B.kind || 'std'), pil = kind === 'pil', co = kind.startsWith('co:') ? kind.slice(3) : '';
+    const bo = kind.startsWith('bo:') ? ((SITE && SITE.packs) || []).find((x) => x && 'bo:' + x.id === kind) : null, boCode = bo ? String(bo.code || '') : ''; /* 픽업 부스터팩: 픽업 카드 1장 확정 + 일반팩 4장. 1팩 100 · 하프박스(20팩) 1,500 */
+    if (kind.startsWith('bo:') && (!bo || !RAID_NK[boCode])) return out(400, { ok: false, error: 'bad' });
+    const n = bo ? (+B.n === 20 ? 20 : 1) : +B.n === 30 ? 30 : 1;
+    if (!bo && !pil && kind !== 'std' && !['엘리시온', '미실리스', '테트라', '어브노멀'].includes(co)) return out(400, { ok: false, error: 'bad' });
+    const price = bo ? (n === 20 ? 1500 : 100) : pil ? n : kind === 'std' && n === 30 ? 2700 : 100 * n, TW = { 9: 2, 8: 5, 7: 10, 6: 16, 5: 20, 4: 18, 3: 14, 2: 9, 1: 6 }, by = {};
     Object.keys(RAID_NK).forEach((k) => { const x = RAID_NK[k]; if (pil ? x[0] !== '필그림' : co ? x[0] !== co : x[0] === '필그림') return; const tv = Math.max(1, Math.min(9, +x[4] || 1)); (by[tv] = by[tv] || []).push(k); });
     const tvs = Object.keys(by), tot = tvs.reduce((s2, t) => s2 + TW[t], 0); if (!tvs.length) return out(400, { ok: false, error: 'bad' });
     const one = () => { let u = Math.random() * tot; for (const t of tvs) { u -= TW[t]; if (u <= 0) return by[t][Math.floor(Math.random() * by[t].length)]; } return by[tvs[0]][0]; };
@@ -467,7 +473,7 @@ async function raid(req, env, out) {
       const ud = await getDoc('users/' + uid); if (!ud) return out(404, { ok: false, error: 'nouser' });
       const cv = ud.f.chipsV || { d: 0, r: 0 }; if ((pil ? cv.r || 0 : cv.d || 0) < price) return out(409, { ok: false, error: 'chips' });
       const dex = Object.assign({}, ud.f.dex || {}), LK = ud.f.dexL || {}, packs = []; let gold = 0;
-      for (let p = 0; p < n; p++) { const cards = []; for (let i = 0; i < 5; i++) { const k = one(), have = Math.min(11, (+LK[k] || 0) + (+dex[k] || 0)), dup = have >= 11; if (dup) gold++; else dex[k] = (+dex[k] || 0) + 1; cards.push([k, dup ? 1 : 0, dup ? 11 : have + 1]); } packs.push(cards); }
+      for (let p = 0; p < n; p++) { const cards = []; for (let i = 0; i < 5; i++) { const k = bo && i === 0 ? boCode : one(), have = Math.min(11, (+LK[k] || 0) + (+dex[k] || 0)), dup = have >= 11; if (dup) gold++; else dex[k] = (+dex[k] || 0) + 1; cards.push([k, dup ? 1 : 0, dup ? 11 : have + 1]); } packs.push(cards); }
       const chips = { d: (cv.d || 0) - (pil ? 0 : price) + gold * 10, r: (cv.r || 0) - (pil ? price : 0) };
       if (await commit([{ update: { name: ud.name, fields: { chipsV: fsv(chips), dex: fsv(dex) } }, updateMask: { fieldPaths: ['chipsV', 'dex'] }, currentDocument: { updateTime: ud.updateTime } }])) return out(200, { ok: true, packs, chips, gold, dex });
     }
@@ -666,7 +672,7 @@ async function siteConfig(env, out) {
   return out(200, Object.assign({ ok: true, now }, CFG_MEM.body), { 'Cache-Control': 'public, max-age=30' });
 }
 let TV_MEM = null;
-async function siteTv(env) { const now = Date.now(); if (TV_MEM && now - TV_MEM.t < 30000) return TV_MEM.tv; const st = await fsGet('meta/site', await saHead(env)); let tv = null; try { tv = st && st.f.j ? JSON.parse(st.f.j).tv || null : null; } catch (e) { tv = null; } TV_MEM = { t: now, tv }; return tv; }
+async function siteTv(env) { const now = Date.now(); if (TV_MEM && now - TV_MEM.t < 30000) return TV_MEM.tv; const st = await fsGet('meta/site', await saHead(env)); let tv = null; try { const c = st && st.f.j ? JSON.parse(st.f.j) : null; tv = c ? { tv: c.tv || null, nk: c.nk || [], packs: c.packs || [] } : null; } catch (e) { tv = null; } TV_MEM = { t: now, tv }; return tv; }
 async function siteImg(id, env, out) {
   if (!/^[a-z0-9]{8,24}$/.test(id) || !env.FIREBASE_SA) return out(404, { ok: false, error: 'not found' });
   const d = await fsGet('img/' + id, await saHead(env)); if (!d || !d.f.b) return out(404, { ok: false, error: 'not found' });
@@ -686,9 +692,12 @@ async function adminSite(b, H0, out) {
   }
   if (b.imgDel) { const id = String(b.imgDel); if (!/^[a-z0-9]{8,24}$/.test(id)) return out(400, { ok: false, error: 'bad' }); const ok = await commit([{ delete: FS_DOC('img/' + id) }]); return out(ok ? 200 : 502, { ok }); }
   if (b.cfg) { /* 가챠 머신 목록·보스 이름/이미지·공지 */
-    const c = b.cfg, g = (Array.isArray(c.gacha) ? c.gacha : []).slice(0, 12).map((x) => ({ id: str(x.id, 20).replace(/[^0-9a-zA-Z_-]/g, '') || String(now), n: str(x.n, 40), rate: +x.rate === 2 ? 2 : 1, corp: ['엘리시온', '미실리스', '테트라', '필그림', '어브노멀'].includes(x.corp) ? x.corp : '', cover: ref(x.cover), face: ref(x.face), s: ms(x.s), e: ms(x.e), pin: x.pin ? 1 : 0 })).filter((x) => x.n && x.cover);
+    const nmL = (L) => (Array.isArray(L) ? L : []).slice(0, 400).map((v) => str(v, 40)).filter(Boolean);
+    const c = b.cfg, g = (Array.isArray(c.gacha) ? c.gacha : []).slice(0, 12).map((x) => ({ id: str(x.id, 20).replace(/[^0-9a-zA-Z_-]/g, '') || String(now), n: str(x.n, 40), rate: +x.rate === 2 ? 2 : 1, corp: ['엘리시온', '미실리스', '테트라', '필그림', '어브노멀'].includes(x.corp) ? x.corp : '', cover: ref(x.cover), face: ref(x.face), s: ms(x.s), e: ms(x.e), pin: x.pin ? 1 : 0, pool: { out: nmL(x.pool && x.pool.out), inc: nmL(x.pool && x.pool.inc) } })).filter((x) => x.n && x.cover);
     const cfg = { gacha: g, raid: { nm: str(c.raid && c.raid.nm, 30), img: ref(c.raid && c.raid.img) }, notice: str(c.notice, 200), frames: {}, at: now };
     Object.keys(c.frames && typeof c.frames === 'object' ? c.frames : {}).slice(0, 40).forEach((sid) => { if (!/^[0-9a-zA-Z-]{1,20}$/.test(sid)) return; const o = {}; [1, 2, 3].forEach((t) => { const v = ref(c.frames[sid] && c.frames[sid][t]); if (v) o[t] = v; }); if (Object.keys(o).length) cfg.frames[sid] = o; }); /* 시즌별 순위 보상 테두리(1 = 상위 3%, 2 = 10%, 3 = 30%) */
+    cfg.nk = (Array.isArray(c.nk) ? c.nk : []).slice(0, 40).map((x) => ({ n: str(x.n, 40), code: String(x.code || '').replace(/\D/g, '').slice(0, 6), corp: ['엘리시온', '미실리스', '테트라', '필그림', '어브노멀'].includes(x.corp) ? x.corp : '', el: R_CYC.includes(x.el) ? x.el : '', wp: ['AR', 'SMG', 'SG', 'SR', 'RL', 'MG'].includes(x.wp) ? x.wp : '', bu: x.bu === 'A' ? 'A' : [1, 2, 3].includes(+x.bu) ? +x.bu : 3, img: ref(x.img) })).filter((x) => x.n && x.code.length >= 3 && x.corp && x.el && x.wp && !RAID_NK0[x.code]); /* 도감에 없는 신규 니케의 카드 정보 */
+    cfg.packs = (Array.isArray(c.packs) ? c.packs : []).slice(0, 12).map((x) => ({ id: str(x.id, 20).replace(/[^0-9a-zA-Z_-]/g, ''), n: str(x.n, 40), code: String(x.code || '').replace(/\D/g, '').slice(0, 6), cover: ref(x.cover), c2: /^#[0-9a-fA-F]{6}$/.test(x.c2) ? x.c2 : '#ffcf5a' })).filter((x) => x.id && x.n && x.code && x.cover); /* 픽업 부스터팩 */
     if (c.tiers && typeof c.tiers === 'object') { /* 절대 티어표: 이름→티어(솔레·PvP), 픽업(★) 목록, 서버용 코드→등급 */
       const LV = ['SSS', 'SS', 'S', 'A', 'B', 'C', 'D', 'E', 'F'], tm = (m) => { const o = {}; Object.keys(m && typeof m === 'object' ? m : {}).slice(0, 600).forEach((n) => { const k = str(n, 40); if (k && LV.includes(m[n])) o[k] = m[n]; }); return o; };
       cfg.tiers = { boss: tm(c.tiers.boss), pvp: tm(c.tiers.pvp), pu: (Array.isArray(c.tiers.pu) ? c.tiers.pu : []).slice(0, 60).map((n) => str(n, 40)).filter(Boolean) };

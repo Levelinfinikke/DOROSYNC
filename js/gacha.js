@@ -10,7 +10,7 @@
   const BK = { x0: 4, x1: 956, y0: 754, y1: 949 };
   const CR = 19, YR = 23, OR = 27, CAP = 220, GRAV = 1500, NDOME = 150, TAPN = 6;
   const COL = { R: ['#2f7df6', '#cfe1ff'], SR: ['#a04df0', '#ead6ff'], SSR: ['#ffc21a', '#ffe88f'], Q: ['#7d8797', '#d5dae3'] };
-  const LVC = ['#4f9bff', '#b06bff', '#ffd24d'], TIERC = { SSS: '#ff4d6d', SS: '#ff8a3c', S: '#ffd93d', A: '#9be15d', B: '#5ad1ff', C: '#8fb0ff', D: '#b79bff', E: '#b9c0cc', F: '#8a93a3', '-': '#5d6574' }, TV = { SSS: 15000, SS: 8000, S: 4000, A: 2000 };
+  const LVC = ['#4f9bff', '#b06bff', '#ffd24d'], TIERC = { SSS: '#ff4d6d', SS: '#ff8a3c', S: '#ffd93d', A: '#9be15d', B: '#5ad1ff', C: '#8fb0ff', D: '#b79bff', E: '#b9c0cc', F: '#8a93a3', '-': '#5d6574', '★': '#ffd24a' }, TV = { SSS: 15000, SS: 8000, S: 4000, A: 2000 };
   const LABEL = { R: 150, SR: 200 }, PER = { jw: 3000, pick: 10, norm: 10 };
   const LED = { x: 176, y: 492, w: 150, h: 48 }, CH = { x: 176, y: 548, w: 150, h: 148 }, LV = { x: 480, y: 587, r: 89 };
   const SLOT = { bill: { x: 634, y: 492, w: 150, h: 58 }, coin: { x: 634, y: 558, w: 150, h: 138 } };
@@ -351,7 +351,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     Object.keys(A.emb).forEach((k) => { IM.emb[k] = ld(A.emb[k]); });
     const SRC = { jw: A.icons.jw, pick: A.tk.pick, norm: A.tk.norm };
     const orbBg = (n) => 'background-image:url(' + (n.img || '') + '),radial-gradient(circle at 50% 30%,#fff6d8,#d9b35a);' + (n.tall ? 'background-size:107% auto,cover;background-position:50% 22%,center;' : 'background-size:cover,cover;background-position:72% 20%,center;');
-    const embOf = (n) => CORP[n.c] || 'pil', isOvr = (n) => !!(n.p && n.c && n.c !== '필그림'), isSSS = (n) => TIERS.boss[n.n] === 'SSS', tierOf = (n) => TIERS[S.mode.tier === 'pvp' ? 'pvp' : 'boss'][n.n] || '-';
+    const embOf = (n) => CORP[n.c] || 'pil', isOvr = (n) => !!(n.p && n.c && n.c !== '필그림'), isSSS = (n) => TIERS.boss[n.n] === 'SSS', tShow = (name, t) => (t === 'SSS' && o.pu && o.pu(name) ? '★' : t), tierOf = (n) => tShow(n.n, TIERS[S.mode.tier === 'pvp' ? 'pvp' : 'boss'][n.n] || '-'); /* ★ = 픽업(티어 미확정, SSS 취급) */
     const pimg = {}; const portrait = (n) => { if (!n.img) return null; if (!pimg[n.n]) { const i = new Image(); i.src = n.img; pimg[n.n] = i; } return pimg[n.n]; };
 
     root.innerHTML = '<div class="gm"><div class="gm-left"><canvas class="gm-cv"></canvas>'
@@ -1080,13 +1080,13 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     /* 한 칸만 다시 그림(다른 칸의 뒤집기·빛남이 끊기지 않게) */
     function renderWell(i) {
       const w = panEl.children[i]; if (!w) { uiTray(); return; }
-      const e = S.tray[i], tr = e ? (TIERS[S.val.mode === 2 ? 'pvp' : 'boss'][e.nk.n] || '-') : '';
+      const e = S.tray[i], tr = e ? tShow(e.nk.n, TIERS[S.val.mode === 2 ? 'pvp' : 'boss'][e.nk.n] || '-') : '';
       w.innerHTML = e ? trayOrbs(e, tr) : ''; w._h = null; if (e) e.merge = false; traySave();
       const tb = leftEl.querySelector('.gm-trbtn span'); if (tb) tb.textContent = S.tray.filter(Boolean).length;
     }
     function uiTray0() { traySave(); const pw = panEl.clientWidth - 20, ph = panEl.clientHeight - 20, cols = pw > 60 ? Math.max(3, Math.min(12, Math.floor((pw + 8) / 62))) : 5, cell = pw > 60 ? (pw - (cols - 1) * 8) / cols : 50, n = cols * Math.max(Math.ceil((S.tray.length + 1) / cols), pw > 60 ? Math.floor((ph + 8 - 14) / (cell + 8)) : 3, 2); panEl.style.setProperty('--cols', cols); const tb = leftEl.querySelector('.gm-trbtn span'); if (tb) tb.textContent = S.tray.filter(Boolean).length; while (panEl.children.length > n) panEl.lastElementChild.remove(); while (panEl.children.length < n) { const d = document.createElement('div'); d.className = 'gm-well'; d.dataset.i = panEl.children.length; panEl.appendChild(d); }
       for (let i = 0; i < n; i++) { const w = panEl.children[i], e = S.tray[i], t = e && e.top; if (t && (t.anim || t.flipping) && t._el && w.contains(t._el)) continue; /* 뒤집는 중인 칸은 그대로(다시 그리면 애니메이션이 끊김) */
-        const tr = e ? (TIERS[S.val.mode === 2 ? 'pvp' : 'boss'][e.nk.n] || '-') : '', h = e ? trayOrbs(e, tr) : ''; if (e) e.merge = false; if (w._h !== h) { w.innerHTML = h; w._h = h; } } }
+        const tr = e ? tShow(e.nk.n, TIERS[S.val.mode === 2 ? 'pvp' : 'boss'][e.nk.n] || '-') : '', h = e ? trayOrbs(e, tr) : ''; if (e) e.merge = false; if (w._h !== h) { w.innerHTML = h; w._h = h; } } }
     const shortN = (n) => (n >= 1e6 ? +(n / 1e6).toFixed(2) + 'M' : n >= 1e4 ? +(n / 1e3).toFixed(1) + 'k' : fmt(n));
     function uiLab(bump) { labEl.querySelector('b').textContent = shortN(S.lab); if (bump) { labEl.classList.add('bump'); clearTimeout(uiLab.t); uiLab.t = setTimeout(() => labEl.classList.remove('bump'), 120); } }
 
@@ -1580,7 +1580,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
         const star = (x, y, k) => { c.beginPath(); for (let q = 0; q < 10; q++) { const a = -Math.PI / 2 + q * Math.PI / 5, rr2 = (q % 2 ? 4 : 9) * k; c.lineTo(x + Math.cos(a) * rr2, y + Math.sin(a) * rr2); } c.closePath(); c.fill(); c.stroke(); };
         if (ps) { c.fillStyle = '#fff'; c.strokeStyle = '#ff7ad9'; c.lineWidth = ps < 0.6 ? 1.2 : 2; PU.forEach((e) => star(X(e.at), Y(act[e.at]), ps)); }
         else if (pn) { c.fillStyle = 'rgba(255,122,217,.14)'; c.fillRect(L, T, w - L - R, 9); c.strokeStyle = 'rgba(255,122,217,.9)'; c.lineWidth = 1; c.beginPath(); PU.forEach((e) => { const x = Math.round(X(e.at)) + 0.5; c.moveTo(x, T); c.lineTo(x, T + 9); }); c.stroke(); c.fillStyle = '#fff'; c.strokeStyle = '#ff7ad9'; c.lineWidth = 1.5; star(L + 9, T + 21, 0.7); c.font = 'bold 11px sans-serif'; c.textAlign = 'left'; c.lineWidth = 3; c.strokeStyle = '#0c1019'; c.strokeText('픽업 ' + pn, L + 19, T + 25); c.fillStyle = '#ffd0f0'; c.fillText('픽업 ' + pn, L + 19, T + 25); }
-        if (S.val.mode) { let lx = -99; S.gl.forEach((e) => { if (e.at > n || e.pu) return; const x = X(e.at), y = Y(act[e.at]); if (x - lx < 13) return; lx = x; const t = TIERS[tk()][e.n] || '-'; c.font = '900 11px sans-serif'; c.textAlign = 'center'; c.lineWidth = 3; c.strokeStyle = '#0c1019'; c.strokeText(t, x, y - 6); c.fillStyle = TIERC[t] || '#9aa5b8'; c.fillText(t, x, y - 6); }); } /* 티어 글자: 겹치면 건너뜀 */
+        if (S.val.mode) { let lx = -99; S.gl.forEach((e) => { if (e.at > n || e.pu) return; const x = X(e.at), y = Y(act[e.at]); if (x - lx < 13) return; lx = x; const t = tShow(e.n, TIERS[tk()][e.n] || '-'); c.font = '900 11px sans-serif'; c.textAlign = 'center'; c.lineWidth = 3; c.strokeStyle = '#0c1019'; c.strokeText(t, x, y - 6); c.fillStyle = TIERC[t] || '#9aa5b8'; c.fillText(t, x, y - 6); }); } /* 티어 글자: 겹치면 건너뜀 */
         c.fillStyle = '#ffd24d'; c.beginPath(); c.arc(X(n), Y(v), 3.5, 0, TAU); c.fill(); }
       root.querySelectorAll('.gm-gh [data-v]').forEach((b) => b.classList.toggle('on', +b.dataset.v === S.val.mode)); }
     root.querySelector('.gm-gh').addEventListener('click', (e) => { const b = e.target.closest('[data-v]'); if (b) { S.val.mode = +b.dataset.v; gDirty = true; uiTray(); } });

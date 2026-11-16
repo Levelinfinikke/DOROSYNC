@@ -7,9 +7,15 @@
   const PROD = /github\.io$/.test(location.hostname), TS = { SSS: 9, SS: 8, S: 7, A: 6, B: 5, C: 4, D: 3, E: 2, F: 1 };
   const TW = { 9: 2, 8: 5, 7: 10, 6: 16, 5: 20, 4: 18, 3: 14, 2: 9, 1: 6 }; /* 티어별 확률 가중치(서버와 같게) */
   const PCO = ['엘리시온', '미실리스', '테트라', '어브노멀'];
-  const KINDS = [{ k: 'std', nm: '일반팩', sub: '필그림 제외 전체', c1: '#2c3644', c2: '#a9bdd6', price: 100, box: 2700 }]
+  const BASE_KINDS = [{ k: 'std', nm: '일반팩', sub: '필그림 제외 전체', c1: '#2c3644', c2: '#a9bdd6', price: 100, box: 2700 }]
     .concat(PCO.map((c, i) => ({ k: 'co:' + c, co: c, nm: c + ' 팩', sub: c + ' 니케만', c1: ['#5c0a10', '#0a2f63', '#6e4e00', '#050506'][i], c2: ['#ff3d45', '#3d9bff', '#ffd23d', '#4a4d57'][i], price: 100, box: 3000 })))
     .concat([{ k: 'pil', co: '필그림', nm: '필그림 팩', sub: '필그림 니케만', c1: '#1a1408', c2: '#e8c35a', price: 1, box: 30, r: 1 }]);
+  /* 픽업 부스터팩(관리 탭에서 추가): 픽업 카드 1장 확정 + 일반팩 4장. 일반팩 왼쪽에 놓임. 여러 개가 함께 있을 수 있음 */
+  const KINDS = [], BN = (k) => k.bn || 30;
+  function syncKinds() { let P = []; try { P = window.doroCfg.get().packs || []; } catch (e) { P = []; } const L = (window.doroRaidData ? window.doroRaidData().list : []) || [];
+    const bo = P.map((x) => { const card = L.find((c) => String(c.code) === String(x.code)) || L.find((c) => c.n === x.n); if (!card) return null; return { k: 'bo:' + x.id, bo: 1, nm: x.n + ' 부스터', pn: x.n, code: String(card.code), sub: x.n + ' 카드 1장 확정', c1: 'color-mix(in srgb,' + x.c2 + ' 30%,#000)', c2: x.c2 || '#ffcf5a', price: 100, box: 1500, bn: 20, cover: window.doroCfg.img(x.cover), face: card.img || window.doroCfg.face(x.n) }; }).filter(Boolean);
+    KINDS.length = 0; bo.concat(BASE_KINDS).forEach((k) => KINDS.push(k)); }
+  syncKinds(); window.addEventListener('dorocfg', () => { syncKinds(); if (root && root.isConnected && !busy && !cur && $('.pp-ov', root) && $('.pp-ov', root).hidden) shop(); });
   const GL = { 9: 'rb', 8: '#ff3b3b', 7: '#b05cff', 6: '#3fe07a' }, glOf = (tv) => GL[tv] || '';
   const $ = (s, r) => (r || document).querySelector(s), esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const fmt = (n) => Math.round(n).toLocaleString('ko-KR'), chip = (k, px) => (window.doroChipSvg ? window.doroChipSvg(k, px, false, true) : '');
@@ -36,13 +42,13 @@
     up: () => { metal(1040, 0.3, 0.06, 0); metal(1560, 0.5, 0.06, 0.09); }, deal: (i) => { metal(520 * Math.pow(2, Math.min(36, i) / 12), 0.09, 0.022, 0); noise(0.02, 0.04, 5000, 0); }, buy: () => { metal(640, 0.2, 0.05, 0); metal(960, 0.3, 0.05, 0.08); } };
   /* ---------- 뽑기 ---------- */
   function rollLocal(kind) { /* 미리보기 전용 */
-    const k = KINDS.find((x) => x.k === kind), L = data().list.filter((x) => (k.r ? x.c === '필그림' : k.co ? x.c === k.co : x.c !== '필그림'));
+    const k = KINDS.find((x) => x.k === kind), L = data().list.filter((x) => (k.r ? x.c === '필그림' : k.co ? x.c === k.co : x.c !== '필그림')), puC = k.bo ? data().list.find((x) => String(x.code) === k.code) : null;
     const by = {}; L.forEach((x) => { const tv = TS[x.t] || 1; (by[tv] = by[tv] || []).push(x); }); const tvs = Object.keys(by), tot = tvs.reduce((a, t) => a + TW[t], 0);
     const one = () => { let u = Math.random() * tot; for (const t of tvs) { u -= TW[t]; if (u <= 0) return by[t][Math.floor(Math.random() * by[t].length)]; } return by[tvs[0]][0]; };
-    return [0, 1, 2, 3, 4].map(() => { const x = one(), dup = window.doroDex.count(x.n) >= 11; if (!dup) window.doroDex.add(x.n, 1); return [x.code, dup ? 1 : 0, dup ? 11 : window.doroDex.count(x.n)]; });
+    return [0, 1, 2, 3, 4].map((q) => { const x = puC && q === 0 ? puC : one(), dup = window.doroDex.count(x.n) >= 11; if (!dup) window.doroDex.add(x.n, 1); return [x.code, dup ? 1 : 0, dup ? 11 : window.doroDex.count(x.n)]; });
   }
   async function buy(kind, n) {
-    const k = KINDS.find((x) => x.k === kind), price = n === 30 ? k.box : k.price;
+    const k = KINDS.find((x) => x.k === kind), price = n > 1 ? k.box : k.price;
     if (PROD) { const j = await window.doroRaid.api('pack', { kind, n }); const a = window.doroAccount; if (a && a.doc) a.doc.dex = j.dex; if (window.doroChips.sync) window.doroChips.sync(j.chips); return j.packs; }
     if (!k.r && !window.doroChips.spend(price)) throw new Error('chips'); /* 미리보기: DORO칩 팩은 차감 없이 체험 */
     const packs = []; let gold = 0; for (let i = 0; i < n; i++) { const p = rollLocal(kind); gold += p.filter((c) => c[1]).length; packs.push(p); }
@@ -180,6 +186,10 @@ svg.pp-strap{display:block;position:absolute;inset:0;width:100%;height:100%;over
 .pp-it{padding-top:44px}
 .pp-pin{display:block;position:absolute;left:50%;bottom:calc(100% - 5.7% - 1px);width:5px;height:24px;margin-left:-2.5px;border-radius:3px 3px 2px 2px;background:linear-gradient(90deg,#5b636c,#f4f6f8 45%,#8a929a);box-shadow:0 1px 2px rgba(0,0,0,.6);z-index:7;border-radius:2px}.pp-pin:before,.pp-pin:after{display:none!important;content:none!important} /* 걸쇠: 펀치홀을 지나 위로 올라가는 짧은 금속 막대 하나 */
 .pp-sum{scrollbar-width:none;overflow-x:hidden}.pp-sum::-webkit-scrollbar{display:none}
+.pp-cv{position:absolute;inset:0;background:#111 center/cover}.pp-cv:after{content:"";position:absolute;inset:0;background:linear-gradient(rgba(0,0,0,.5),rgba(0,0,0,.05) 30%,rgba(0,0,0,.1) 60%,rgba(0,0,0,.6))}
+.pp-ttl.bo{font-size:calc(var(--pw)*.092);top:7.5%}.pp-star{width:.95em;height:.95em;vertical-align:-.12em;margin:0 .02em;filter:drop-shadow(0 1px 0 rgba(0,0,0,.5))}
+.pp-ring.bo{background:radial-gradient(circle at 35% 28%,#fff,#cfd5da 22%,#6b737c 55%,#1c2026 100%);box-shadow:0 calc(var(--pw)*.02) calc(var(--pw)*.05) rgba(0,0,0,.6);filter:none;width:52%;padding:calc(var(--pw)*.022)}.pp-ring.bo i{width:100%;height:100%;border-radius:50%;background:#222 50% 14%/cover;box-shadow:inset 0 0 0 calc(var(--pw)*.012) #ffd23d}
+.bx-face{display:block;width:60px;height:60px;border-radius:50%;background:#222 50% 14%/cover;box-shadow:0 0 0 3px #ffd23d}
 .pp-body{box-shadow:inset 7px 0 9px -5px rgba(0,0,0,.45),inset -7px 0 9px -5px rgba(0,0,0,.45)} /* 속에 카드 뭉치가 든 것처럼: 가운데가 카드 모양으로 도드라지고 가장자리는 눌려 있음 */
 .pp-body:before{content:"";position:absolute;inset:4.5% 7.5%;border-radius:5%/3.2%;pointer-events:none;z-index:1;background:linear-gradient(100deg,rgba(255,255,255,.13),rgba(255,255,255,0) 28%,rgba(0,0,0,0) 62%,rgba(0,0,0,.16));box-shadow:inset 1.5px 1.5px 2px rgba(255,255,255,.34),inset -1.5px -2px 3px rgba(0,0,0,.38),2px 3px 5px rgba(0,0,0,.3),-1px -1px 2px rgba(255,255,255,.16)}
 .pp.pil .pp-body:after{content:"";position:absolute;left:-150%;width:400%;top:-60%;height:220%;pointer-events:none;mix-blend-mode:color-dodge;opacity:.42;transform:rotate(24deg);background:repeating-linear-gradient(90deg,#ff5d8f 0,#ffb84d 4.17%,#f6f05a 8.33%,#5ef0a0 12.5%,#5ab8ff 16.67%,#b07aff 20.83%,#ff5d8f 25%);animation:ppHolo 9s linear infinite;will-change:transform}@keyframes ppHolo{from{transform:rotate(24deg) translateX(0)}to{transform:rotate(24deg) translateX(-25%)}} /* 니케 카드의 폴리크롬과 같은 방식: 한 주기만큼만 밀어 이음매가 없음 */
@@ -210,12 +220,14 @@ svg.pp-strap{display:block;position:absolute;inset:0;width:100%;height:100%;over
       h += '<path d="M50 ' + y0.toFixed(2) + 'L' + x0.toFixed(2) + ' ' + (y0 - Math.sin(t0 * Math.PI) * 2).toFixed(2) + 'L' + x1.toFixed(2) + ' ' + (y1 - Math.sin(t1 * Math.PI) * 2).toFixed(2) + 'L50 ' + y1.toFixed(2) + 'Z" fill="' + (tm > 0.02 ? 'rgb(' + br + ',' + (br + 3) + ',' + (br + 8) + ')' : 'url(#pps)') + '"/>'; } return h; };
   const strapSvg = () => '<svg class="pp-strap" viewBox="0 0 100 ' + VH + '" aria-hidden="true"><defs><linearGradient id="pps" gradientUnits="userSpaceOnUse" x1="' + (50 - SW) + '" x2="50"><stop offset="0" stop-color="#8d949c"/><stop offset=".3" stop-color="#f4f6f8"/><stop offset=".55" stop-color="#c3c9cf"/><stop offset=".78" stop-color="#fff"/><stop offset="1" stop-color="#9aa1a9"/></linearGradient></defs><g>' + strapQ(0, true) + '</g></svg>';
   const packHtml = (k) => { const d = data(), ico = k.co && d.coIco && d.coIco[k.co];
-    const face = '<div class="pp-frame"></div><div class="pp-ttl"><small>DOROSYNC</small>' + (k.r ? 'PILGRIM' : k.co ? 'CORP' : 'NIKKE') + '<br>CARD PACK</div><div class="pp-ring">' + chip(k.r ? 'r' : 'b', 120) + '</div>' + (ico ? '<img class="pp-co" alt="" src="' + ico + '">' : '') + '<div class="pp-n">5 CARDS<br>' + esc(k.nm) + '</div>';
-    return '<div class="pp-wrap"><div class="pp' + (k.r ? ' pil' : '') + '" style="--c1:' + k.c1 + ';--c2:' + k.c2 + '"><div class="pp-f"><div class="pp-all"><i class="pp-gap t"></i><i class="pp-gap b"></i>' + bandSvg('top') + '<div class="pp-body pp-skin">' + face + '</div>' + bandSvg('bot') + '</div></div><div class="pp-b"><div class="pp-in"></div><div class="pp-all"><div class="pp-h l pp-skin"><b class="pp-bsl"></b><b class="pp-bsl b"></b></div><div class="pp-h r pp-skin"><b class="pp-bsl"></b><b class="pp-bsl b"></b></div></div><div class="pp-seam"></div>' + strapSvg() + '<div class="pp-tab">스트랩 ↕</div></div></div></div>'; };
+    const STAR = '<svg class="pp-star" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l3 6.6 7.1.8-5.3 4.9 1.5 7L12 17.7 5.7 21.3l1.5-7L1.9 9.4 9 8.6z" fill="#ffd23d" stroke="#7a4a00" stroke-width="1.4" stroke-linejoin="round"/></svg>';
+    const face = k.bo ? '<i class="pp-cv" style="background-image:url(&quot;' + esc(k.cover) + '&quot;)"></i><div class="pp-frame"></div><div class="pp-ttl bo"><small>DOROSYNC</small>PICK' + STAR + 'UP<br>BOOSTER PACK</div><div class="pp-ring bo"><i style="background-image:url(&quot;' + esc(k.face) + '&quot;)"></i></div>' : '<div class="pp-frame"></div><div class="pp-ttl"><small>DOROSYNC</small>' + (k.r ? 'PILGRIM' : k.co ? 'CORP' : 'NIKKE') + '<br>CARD PACK</div><div class="pp-ring">' + chip(k.r ? 'r' : 'b', 120) + '</div>' + (ico ? '<img class="pp-co" alt="" src="' + ico + '">' : '') + '<div class="pp-n">5 CARDS<br>' + esc(k.nm) + '</div>';
+    return '<div class="pp-wrap"><div class="pp' + (k.r ? ' pil' : '') + (k.bo ? ' bo' : '') + '" style="--c1:' + k.c1 + ';--c2:' + k.c2 + '"><div class="pp-f"><div class="pp-all"><i class="pp-gap t"></i><i class="pp-gap b"></i>' + bandSvg('top') + '<div class="pp-body pp-skin">' + face + '</div>' + bandSvg('bot') + '</div></div><div class="pp-b"><div class="pp-in"></div><div class="pp-all"><div class="pp-h l pp-skin"><b class="pp-bsl"></b><b class="pp-bsl b"></b></div><div class="pp-h r pp-skin"><b class="pp-bsl"></b><b class="pp-bsl b"></b></div></div><div class="pp-seam"></div>' + strapSvg() + '<div class="pp-tab">스트랩 ↕</div></div></div></div>'; };
   function shop() {
+    syncKinds();
     const o = window.doroChips ? window.doroChips.get() : { r: 0 }, bal = window.doroChips ? window.doroChips.total() : 0;
     root.innerHTML = '<div class="card"><div class="row-ctl sp"><h2 class="inline">카드팩</h2><div class="pp-bal"><span>' + chip('b', 20) + fmt(bal) + '</span><span>' + chip('r', 20) + fmt((o && o.r) || 0) + '</span></div></div>' +
-      '<div class="pp-shop">' + KINDS.map((k) => '<div class="pp-it" style="--c2:' + k.c2 + '"><div class="pp-hang" style="--c2g:' + k.c2 + ';--cs2:color-mix(in srgb,' + k.c2 + ' 80%,#000)">' + [5, 4, 3, 2, 1].map((q) => '<i class="pp-gh" style="--q:' + q + '"></i>').join('') + packHtml(k) + '<i class="pp-pin"></i></div><b>' + esc(k.nm) + '</b><div class="pp-buy"><button type="button" class="primary" data-buy="' + esc(k.k) + '" data-n="1">' + chip(k.r ? 'r' : 'b', 14) + fmt(k.price) + '</button><button type="button" class="ghost" data-buy="' + esc(k.k) + '" data-n="30">박스 ' + chip(k.r ? 'r' : 'b', 14) + fmt(k.box) + '</button></div></div>').join('') + '</div><p class="muted sm pp-msg" style="margin-top:8px"></p></div>' +
+      '<div class="pp-shop">' + KINDS.map((k) => '<div class="pp-it" style="--c2:' + k.c2 + '"><div class="pp-hang" style="--c2g:' + k.c2 + ';--cs2:color-mix(in srgb,' + k.c2 + ' 80%,#000)">' + [5, 4, 3, 2, 1].map((q) => '<i class="pp-gh" style="--q:' + q + '"></i>').join('') + packHtml(k) + '<i class="pp-pin"></i></div><b>' + esc(k.nm) + '</b><div class="pp-buy"><button type="button" class="primary" data-buy="' + esc(k.k) + '" data-n="1">' + chip(k.r ? 'r' : 'b', 14) + fmt(k.price) + '</button><button type="button" class="ghost" data-buy="' + esc(k.k) + '" data-n="' + BN(k) + '">' + (k.bo ? '하프박스 ' : '박스 ') + chip(k.r ? 'r' : 'b', 14) + fmt(k.box) + '</button></div></div>').join('') + '</div><p class="muted sm pp-msg" style="margin-top:8px"></p></div>' +
       '<div class="pp-ov" hidden></div>';
   }
   const DBc = () => { const m = {}; data().list.forEach((x) => { m[String(x.code)] = x; }); return m; };
@@ -225,17 +237,17 @@ svg.pp-strap{display:block;position:absolute;inset:0;width:100%;height:100%;over
   let boxN = 0, fromR = null;
   async function onBuy(kind, n, btn) {
     if (busy) return; busy = true; const msg = $('.pp-msg', root); if (msg) msg.textContent = ''; const it = btn && btn.closest('.pp-it'), sp = it && $('.pp', it); fromR = sp ? sp.getBoundingClientRect() : null;
-    try { const k0 = KINDS.find((x) => x.k === kind), bal0 = root.querySelectorAll('.pp-bal span')[k0.r ? 1 : 0], pr = n === 30 ? k0.box : k0.price; let wait = 0;
+    try { const k0 = KINDS.find((x) => x.k === kind), bal0 = root.querySelectorAll('.pp-bal span')[k0.r ? 1 : 0], pr = n > 1 ? k0.box : k0.price; let wait = 0;
       const packs = await buy(kind, n), DB = DBc(); lastBuy = { kind, n }; sfx.buy();
-      if (sp && bal0 && bal0.isConnected && window.doroChipFly) { wait = window.doroChipFly(bal0, sp, n === 30 && !k0.r ? pr / 10 : pr, { size: 20, k: k0.r ? 'r' : 'g' }) || 0; /* 박스는 칩을 1/10만 그림(필그림 박스 제외) */ await new Promise((ok) => setTimeout(ok, Math.min(1700, wait))); fromR = sp.isConnected ? sp.getBoundingClientRect() : null; } /* 잔고에서 칩이 나와 팩으로 들어간 뒤 뜯기 */
+      if (sp && bal0 && bal0.isConnected && window.doroChipFly) { wait = window.doroChipFly(bal0, sp, n > 1 && !k0.r ? pr / 10 : pr, { size: 20, k: k0.r ? 'r' : 'g' }) || 0; /* 박스는 칩을 1/10만 그림(필그림 박스 제외) */ await new Promise((ok) => setTimeout(ok, Math.min(1700, wait))); fromR = sp.isConnected ? sp.getBoundingClientRect() : null; } /* 잔고에서 칩이 나와 팩으로 들어간 뒤 뜯기 */
       Q = packs.map((p) => ({ k: KINDS.find((x) => x.k === kind), cards: p.map((c) => ({ x: DB[String(c[0])], dup: !!c[1], cnt: c[2] || 1, o: 0 })).filter((c) => c.x) }));
       Q.forEach((p) => { p.cards.forEach((c) => { c.o = tvOf(c) + Math.random() * 2.6; }); p.cards.sort((a, b) => a.o - b.o); }); /* 낮은 확률(높은 티어)일수록 뒤에 나올 가능성이 큼 */
-      got = []; busy = false; boxN = n === 30 ? Q.length : 0; if (boxN) boxIntro(Q[0].k); else nextPack(); }
+      got = []; busy = false; boxN = n > 1 ? Q.length : 0; if (boxN) boxIntro(Q[0].k); else nextPack(); }
     catch (e) { busy = false; const t = ERR[e && e.message] || '카드팩을 열지 못했습니다. (' + ((e && e.message) || e) + ')'; const ov = $('.pp-ov', root); if (ov && !ov.hidden) { cur = null; ov.hidden = true; shop(); } const m2 = $('.pp-msg', root); if (m2) m2.textContent = t; }
   }
   /* 박스(진열 상자): 뒤에 세운 표지 + 앞쪽 트레이에 팩이 2줄로 꽂혀 있음. 남은 수만큼 실제로 줄어듦 */
   const boxHtml = (k, left, cls) => { const col = (n) => { let h = ''; for (let i = 0; i < n; i++) h += '<i style="--i:' + i + '"></i>'; return '<span class="bx-col">' + h + '</span>'; };
-    return '<div class="pp-bx ' + (cls || '') + (k.r ? ' pil' : '') + '" style="--c1:' + k.c1 + ';--c2:' + k.c2 + '"><div class="bx-lid pp-skin"><b>' + (k.r ? 'PILGRIM' : k.co ? 'CORP' : 'NIKKE') + '<br>CARD PACK</b><span>' + chip(k.r ? 'r' : 'b', 60) + '</span><small>30 PACKS · ' + esc(k.nm) + '</small></div><div class="bx-tray"><div class="bx-in">' + col(Math.ceil(left / 2)) + col(Math.floor(left / 2)) + '</div><div class="bx-front"><em>' + left + '</em></div></div></div>'; };
+    return '<div class="pp-bx ' + (cls || '') + (k.r ? ' pil' : '') + '" style="--c1:' + k.c1 + ';--c2:' + k.c2 + '"><div class="bx-lid pp-skin"><b>' + (k.bo ? 'PICK★UP<br>BOOSTER PACK' : (k.r ? 'PILGRIM' : k.co ? 'CORP' : 'NIKKE') + '<br>CARD PACK') + '</b><span>' + (k.bo ? '<i class="bx-face" style="background-image:url(&quot;' + esc(k.face) + '&quot;)"></i>' : chip(k.r ? 'r' : 'b', 60)) + '</span><small>' + BN(k) + ' PACKS · ' + esc(k.nm) + '</small></div><div class="bx-tray"><div class="bx-in">' + col(Math.ceil(left / 2)) + col(Math.floor(left / 2)) + '</div><div class="bx-front"><em>' + left + '</em></div></div></div>'; };
   function boxIntro(k) {
     const ov = $('.pp-ov', root); fromR = null; ov.hidden = false; ov.style.setProperty('--rc', k.c2 + '33'); ov.style.setProperty('--ro', '.5');
     ov.innerHTML = '<div class="pp-bgd"></div><div class="pp-rays"></div>' + boxHtml(k, Q.length, 'big');
@@ -357,7 +369,7 @@ svg.pp-strap{display:block;position:absolute;inset:0;width:100%;height:100%;over
     const gold = all.filter((c) => c.dup).length, nw = all.filter((c) => !c.dup && c.cnt === 1).length, best = all.reduce((m, c) => Math.max(m, tvOf(c)), 0), k = lastBuy && KINDS.find((x) => x.k === lastBuy.kind);
     ov.classList.remove('jp', 'jp8', 'jp9'); stageBg(ov, multi ? 0 : best, !multi && best >= 7); ['.pp-st', '.pp-pips', '.pp-skip', '.pp-fb', '.pp-tip', '.pp-sbox', '.pp-mq'].concat(boxN && (multi || Q.length) ? [] : ['.pp-dock']).forEach((q) => { const e = $(q, ov); if (e) e.remove(); });
     const box = document.createElement('div'); box.className = 'pp-sbox'; box.style.cssText = 'display:contents';
-    const fin = '<div class="pp-fb">' + (Q.length ? '<button type="button" data-pp="next">다음 팩 (' + Q.length + ')</button><button type="button" class="g" data-pp="all">모두 열기</button>' : (k ? '<button type="button" class="o" data-pp="again">한 번 더 ' + chip(k.r ? 'r' : 'b', 15) + fmt(lastBuy.n === 30 ? k.box : k.price) + '</button>' : '') + '<button type="button" class="g" data-pp="close">확인</button>') + '</div>';
+    const fin = '<div class="pp-fb">' + (Q.length ? '<button type="button" data-pp="next">다음 팩 (' + Q.length + ')</button><button type="button" class="g" data-pp="all">모두 열기</button>' : (k ? '<button type="button" class="o" data-pp="again">한 번 더 ' + chip(k.r ? 'r' : 'b', 15) + fmt(lastBuy.n > 1 ? k.box : k.price) + '</button>' : '') + '<button type="button" class="g" data-pp="close">확인</button>') + '</div>';
     box.innerHTML = '<div class="pp-tip" style="font-size:15px;opacity:1">' + all.length + '장' + (nw ? ' · <span style="color:#5ef0a0">NEW ' + nw + '</span>' : '') + (gold ? ' · <span style="color:#ffd24a">골드칩 ' + gold + '개 반환</span>' : '') + '</div><div class="pp-sum">' + all.map((c) => '<div style="--gc:' + colOf(tvOf(c)) + '"><div class="' + (tvOf(c) >= 7 ? 'hi' : '') + '">' + window.doroRaid.card(Object.assign({}, c.x, { cnt: c.cnt })) + '</div>' + (c.dup ? '<em>골드칩</em>' : c.cnt === 1 ? '<em class="n">NEW</em>' : '<em>' + c.cnt + '장</em>') + '</div>').join('') + '</div><div class="pp-fb"><button type="button" class="g" data-pp="fast">건너뛰기</button></div>';
     ov.appendChild(box); const lf = $('.pp-left', ov); if (lf) lf.textContent = Q.length ? '남은 팩 ' + Q.length : '';
     const sum = $('.pp-sum', box), cells = [...sum.children], run = ++sumT; let i = 0, hot = 0; const dock = $('.pp-dock', ov), dk = multi && dock ? packs[0].k : null, setDock = (n) => { if (dk && dock.isConnected) dock.innerHTML = boxHtml(dk, n, ''); }; if (multi) setDock(packs.length);
@@ -372,7 +384,7 @@ svg.pp-strap{display:block;position:absolute;inset:0;width:100%;height:100%;over
     setTimeout(step, 150);
   }
   function onClick(e) {
-    const b = e.target.closest('[data-buy]'); if (b) { onBuy(b.dataset.buy, +b.dataset.n === 30 ? 30 : 1, b); return; }
+    const b = e.target.closest('[data-buy]'); if (b) { onBuy(b.dataset.buy, +b.dataset.n > 1 ? +b.dataset.n : 1, b); return; }
     const p = e.target.closest('[data-pp]'); if (!p) return; const a = p.dataset.pp;
     if (a === 'flip') { const pk = $('.pp-st .pp', root); if (pk) { pk.style.setProperty('--rx', '0deg'); pk.style.setProperty('--ry', '0deg'); pk.classList.toggle('flip'); sfx.card(); const h = $('.pp-hint', root); if (h) h.style.display = pk.classList.contains('flip') ? 'none' : ''; } }
     else if (a === 'skip') { if (cur) summary([cur]); }
