@@ -51,7 +51,7 @@
     return 'url("data:image/svg+xml;charset=utf-8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="260" height="84"><g font-family="Arial Black,Arial,sans-serif" font-size="12" font-style="italic" fill="#7a1418" fill-opacity=".13">' + rows + '</g></svg>') + '")'; })(); /* DOROROC… 길이가 제각각인 글자를 한 번 정해 모든 덮개에 */
   const PAPER_URI = PAPER.slice(5, -2); let cvN = 0;
   const cover = (p) => { /* 덮개 모양: 뜯긴 쪽이 휘어 올라가 오른쪽으로 젖혀짐(말리지 않음). 앞면 a · 안쪽 얇은 테두리 c · 뒷면 b */
-    const W = 240, H = 76, R = 44, TM = 1.22, xf = p * W, xb = -1, pt = (x, top, ins) => { let X = x, z = 0; if (x < xf) { const s2 = xf - x, th = Math.min(s2 / R, TM), e = Math.max(0, s2 - R * TM); X = xf - R * Math.sin(th) - Math.cos(TM) * e; z = R * (1 - Math.cos(th)) + Math.sin(TM) * e; } /* 뜯긴 쪽은 접히지 않고 위로 들림: 왼쪽 끝이 떠오르고 오른쪽 변은 붙어 있음 */
+    const W = 240, H = 76, R = 44 - 16 * p, TM = 1.15 + 1.85 * Math.pow(p, 1.4), xf = p * W, xb = TM > Math.PI / 2 ? xf - R * Math.PI / 2 : -1, pt = (x, top, ins) => { let X = x, z = 0; if (x < xf) { const s2 = xf - x, th = Math.min(s2 / R, TM), e = Math.max(0, s2 - R * TM); X = xf - R * Math.sin(th) - Math.cos(TM) * e; z = R * (1 - Math.cos(th)) + Math.sin(TM) * e; } /* 처음엔 들려 올라가고, 당길수록 더 젖혀져 끝까지 당기면 반대편 끝 너머로 완전히 넘어감(오른쪽 변은 붙어 있음) */
       const tp = x < 20 ? (20 - x) / 20 * 17 : 0, y = top ? ins + tp : H - ins - tp, k = 1 + z / 420; return X.toFixed(1) + ' ' + (H / 2 + (y - H / 2) * k - z * 0.2).toFixed(1); };
     const poly = (x0, x1, ins) => { if (x1 - x0 < 0.5) return ''; const T = [], B = [], n = Math.max(2, Math.ceil((x1 - x0) / 5)); for (let i = 0; i <= n; i++) { const x = x1 - (x1 - x0) * i / n; T.push(pt(x, 1, ins)); B.push(pt(x, 0, ins)); } return 'M' + T.join('L') + 'L' + B.reverse().join('L') + 'Z'; };
     return { a: poly(Math.max(0, xb), W, 0), c: p < 0.02 ? poly(6, W - 5, 5) : '', b: xb > 0 ? poly(0, xb, 0) : '' }; };
@@ -75,7 +75,7 @@
 .tb-row{position:relative;height:76px;margin-bottom:7px;border-radius:4px;background:#fff;box-shadow:inset 0 0 0 1.5px #7a1418;display:flex;align-items:center;justify-content:space-around;padding:0 8px;overflow:hidden}
 .tb-row.win{background:#fff3b0;box-shadow:inset 0 0 0 3px #f59e0b,0 0 16px rgba(255,190,60,.9);overflow:visible;z-index:2}.tb-row.win .tb-s{animation:tbHop .5s cubic-bezier(.2,1.8,.4,1)}@keyframes tbHop{40%{transform:translateY(-10px) scale(1.15)}}
 .tb-s{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;background:#22252c center 12%/cover;box-shadow:inset 0 0 0 2px #7a1418,0 1px 2px rgba(0,0,0,.4);overflow:hidden;flex:none}.tb-s.co img{width:62%;height:62%;object-fit:contain}.tb-s.ch{background:#fff8e0}.tb-s.ch svg{width:82%;height:82%}
-.tb-row{overflow:visible;background:none!important;box-shadow:none!important}.tb-bg{position:absolute;inset:0;background:#fff;clip-path:polygon(0 22.4%,8.3% 0,100% 0,100% 100%,8.3% 100%,0 77.6%);z-index:0}.tb-row.win .tb-bg{background:#fff3b0}.tb-row .tb-s{position:relative;z-index:1}.tb-row.win{filter:drop-shadow(0 0 8px rgba(255,190,60,.9))}.tb-row:before,.tb-row:after{content:"";position:absolute;left:0;right:0;height:0;border-top:2px dotted rgba(122,20,24,.6);z-index:0}.tb-row:before{top:1px}.tb-row:after{bottom:1px}
+.tb-row{overflow:visible;background:none!important;box-shadow:none!important}.tb-bg{position:absolute;inset:0;background:#fff;clip-path:polygon(0 22.4%,8.3% 0,100% 0,100% 100%,8.3% 100%,0 77.6%);z-index:0}.tb-row.win .tb-bg{background:#fff3b0}.tb-row .tb-s{position:relative;z-index:1}.tb-row.win{filter:drop-shadow(0 0 8px rgba(255,190,60,.9))}
 svg.tb-cv{position:absolute;inset:0;width:100%;height:100%;overflow:visible;z-index:3;cursor:grab;touch-action:none;filter:drop-shadow(0 1px 1px rgba(0,0,0,.25))}
 .tb-cv .a{stroke:#7a1418;stroke-width:3;stroke-linejoin:round}.tb-cv .b{fill:#ddd2b4;stroke:#7a1418;stroke-width:3;stroke-linejoin:round}.tb-cv .c{fill:none;stroke:#7a1418;stroke-width:1;opacity:.75;pointer-events:none}
 .tb-cv text{font:900 15px "Arial Black",Arial,sans-serif;letter-spacing:.2em;fill:#7a1418;pointer-events:none}.tb-row.pull .tb-cv text,.tb-row.done .tb-cv text{display:none}
@@ -90,6 +90,11 @@ svg.tb-cv{position:absolute;inset:0;width:100%;height:100%;overflow:visible;z-in
 .tb-view i{flex:1;height:calc(var(--h)*1%);min-height:0;border-radius:2px 2px 0 0;background:repeating-linear-gradient(0deg,#f6efdc 0 1.6px,#b9ae90 1.6px 2.4px);box-shadow:0 0 0 1px rgba(0,0,0,.4);transition:height .4s}.tb-view:after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 40%,rgba(255,255,255,.14) 48%,transparent 56%);pointer-events:none}
 .tb-opt{display:flex;gap:6px}.tb-opt button{flex:1;border:0;border-radius:9px;padding:7px 4px;font:inherit;font-size:12px;font-weight:800;color:#ffd9c9;background:#2a0608;cursor:pointer}.tb-opt button.on{background:#ffb21c;color:#14161c}
 .tb-odds{font-size:11.5px;line-height:1.75;background:#0d0d10;border-radius:10px;padding:8px 10px}.tb-odds[hidden]{display:none}.tb-odds table{width:100%;border-collapse:collapse}.tb-odds td{padding:0 2px}.tb-odds td:last-child{text-align:right;color:#ffd24a;font-weight:800}
+.tb-out{position:absolute;width:70px;height:92px;margin:-10px 0 0 0;border-radius:3px;background:repeating-linear-gradient(45deg,#b3161c 0 6px,#9a1016 6px 12px);box-shadow:0 0 0 2px #f6efdc,0 6px 10px rgba(0,0,0,.5);z-index:6;pointer-events:none;transform-origin:50% 0}
+.tb-pz{position:absolute;z-index:4;transform:translate(-50%,-50%) rotate(var(--rot,0deg));cursor:grab;touch-action:none;filter:drop-shadow(0 6px 8px rgba(0,0,0,.55))}.tb-pz:hover{filter:drop-shadow(0 6px 8px rgba(0,0,0,.55)) brightness(1.15)}
+.tb-pz.card{width:96px;filter:drop-shadow(0 0 14px var(--gc,#fff)) drop-shadow(0 6px 8px rgba(0,0,0,.55))}.tb-pz.card .pk{--cw:96px;width:96px;position:relative;pointer-events:none}
+.tb-pz.card .pk-bk{display:none}.tb-pz.g,.tb-pz.r{width:60px;height:60px}.tb-pz.g i,.tb-pz.r i{position:absolute;left:calc(8px + var(--i)*5px);top:calc(14px - var(--i)*6px);display:block}.tb-pz i svg{display:block}
+.tb-pz em{position:absolute;right:-10px;bottom:-8px;font:900 13px "Arial Black",Arial,sans-serif;font-style:normal;color:#14161c;background:#ffd24a;border-radius:99px;padding:1px 7px;display:inline-flex;align-items:center;gap:2px;transform:rotate(calc(var(--rot,0deg)*-1))}
 .tb-empty{opacity:.6;font-weight:700;font-size:14px;text-align:center;line-height:1.7}
 @media(max-width:760px){.tb{grid-template-columns:1fr}.tb-st{order:-1;min-height:480px}}
 `;
@@ -101,7 +106,7 @@ svg.tb-cv{position:absolute;inset:0;width:100%;height:100%;overflow:visible;z-in
     const L = left; $('.tb-win', root).innerHTML = L ? '이 상자에 남은 표 <span class="n">' + fmt(L.n) + '</span> / ' + fmt(BOX) + '<br><b>SSS</b> ' + (L.SSS || 0) + ' · <b>SS</b> ' + (L.SS || 0) + ' · <b>S</b> ' + (L.S || 0) + '<br>' + chip('r', 14) + ' ' + (L.r || 0) + ' · ' + chip('g', 14) + ' 20×' + (L.g20 || 0) + ' 10×' + (L.g10 || 0) + ' 3×' + (L.g3 || 0) : '상자를 확인하는 중…';
     { const v = $('.tb-view', root), n = L ? L.n + inMc : 0; if (v) v.innerHTML = [0, 1, 2, 3, 4].map((q) => '<i style="--h:' + Math.max(0, Math.min(100, (n - q * BOX / 5) / (BOX / 5) * 100)).toFixed(0) + '"></i>').join(''); } /* 200장씩 다섯 더미: 남은 만큼만 쌓여 있음 */
     root.querySelectorAll('.tb-opt [data-tb=link]').forEach((b) => b.classList.toggle('on', link));
-    const ct = $('.tb-ctl', root); if (ct) ct.innerHTML = cur || Q.length ? '<span>남은 표 ' + (Q.length + (cur ? 1 : 0)) + '장</span><button type="button" data-tb="all">모두 뜯기</button>' : '';
+    const ct = $('.tb-ctl', root); if (ct) ct.innerHTML = (cur || Q.length ? '<span>남은 표 ' + (Q.length + (cur ? 1 : 0)) + '장</span><button type="button" data-tb="all">모두 뜯기</button>' : '') + (root.querySelector('.tb-pz') ? '<button type="button" class="p" data-tb="take">모두 회수</button>' : '');
   }
   /* 자판기에서 표가 빠르게 튀어나와 쌓임 → 가지런히 모음 → 맨 위부터 뜯기 */
   async function buyN(n) {
@@ -111,21 +116,26 @@ svg.tb-cv{position:absolute;inset:0;width:100%;height:100%;overflow:visible;z-in
     if (!res.tix.length) { busy = false; ui(); return; }
     res.tix.forEach((t) => { if (t[0] === 'r') pendR++; else if (t[0] && t[0][0] === 'g') pendG += +t[0].slice(1); else if (t[2]) pendG += DUP[TV[t[0]]]; }); ui();
     Q = res.tix.map(compose); inMc = Q.length; ui(); Q.forEach((T0, i0) => setTimeout(() => { inMc = Math.max(0, inMc - 1); ui(); }, 350 + i0 * (Q.length > 5 ? 70 : 110))); const pile = $('.tb-pile', root), e0 = $('.tb-empty', root); if (e0) e0.remove(); pile.innerHTML = ''; const sl = $('.tb-slot', root).getBoundingClientRect(), pr = pile.getBoundingClientRect(), N = Q.length, gap = N > 5 ? 70 : 110;
-    Q.forEach((T, i) => { const d = document.createElement('div'); d.className = 'tb-tk bk'; const rx = (Math.random() * 2 - 1) * 46, ry = (Math.random() * 2 - 1) * 30, rr = (Math.random() * 2 - 1) * 24; d.style.zIndex = String(i + 1); d.dataset.r = rx + ',' + ry + ',' + rr; pile.appendChild(d);
-      d.animate([{ transform: 'translate(' + (sl.left + sl.width / 2 - pr.left - 130) + 'px,' + (sl.top + sl.height / 2 - pr.top - 165) + 'px) rotate(-90deg) scale(.22)' }, /* 사출구에서 튀어나옴 */ { transform: 'translate(' + rx + 'px,' + ry + 'px) rotate(' + rr + 'deg)' }], { duration: 260, delay: 350 + i * gap, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'both' }); sfx.out(0.35 + i * gap / 1000); });
-    setTimeout(() => { if (N > 1) sfx.tidy(); [...pile.children].forEach((d, i) => { const r = d.dataset.r.split(','); d.animate([{ transform: 'translate(' + r[0] + 'px,' + r[1] + 'px) rotate(' + r[2] + 'deg)' }, { transform: 'translate(0,' + (-i * 1.5) + 'px) rotate(0deg)' }], { duration: 320, easing: 'cubic-bezier(.3,1.4,.5,1)', fill: 'forwards' }); }); }, 350 + N * gap + 320); /* 탁탁 가지런히 */
-    setTimeout(() => { busy = false; next(); }, 350 + N * gap + 320 + 480);
+    const mc = $('.tb-mc', root), mr = mc.getBoundingClientRect();
+    Q.forEach((T, i) => { const t0 = 350 + i * gap; /* ① 사출구에서 정면으로 쑥 나와 사라짐 */
+      const o = document.createElement('i'); o.className = 'tb-out'; o.style.left = (sl.left + sl.width / 2 - mr.left) + 'px'; o.style.top = (sl.top + sl.height / 2 - mr.top) + 'px'; mc.appendChild(o);
+      o.animate([{ transform: 'translate(-50%,-30%) scale(.5,.05)', opacity: 1 }, { transform: 'translate(-50%,10%) scale(1,1)', opacity: 1, offset: 0.55 }, { transform: 'translate(-50%,80%) scale(2.2)', opacity: 0 }], { duration: 230, delay: t0, easing: 'ease-in', fill: 'both' }).onfinish = () => o.remove(); sfx.out(t0 / 1000);
+      /* ② 아래에서 테이블 가운데로 던져짐 */
+      const d = document.createElement('div'); d.className = 'tb-tk bk'; const rx = (Math.random() * 2 - 1) * 46, ry = (Math.random() * 2 - 1) * 30, rr = (Math.random() * 2 - 1) * 24; d.style.zIndex = String(i + 1); d.dataset.r = rx + ',' + ry + ',' + rr; pile.appendChild(d);
+      d.animate([{ transform: 'translate(' + ((Math.random() * 2 - 1) * 60) + 'px,' + (innerHeight - pr.top + 40) + 'px) rotate(' + (rr * 4) + 'deg) scale(1.25)' }, { transform: 'translate(' + rx + 'px,' + ry + 'px) rotate(' + rr + 'deg)' }], { duration: 300, delay: t0 + 210, easing: 'cubic-bezier(.15,.8,.3,1)', fill: 'both' }); setTimeout(() => burst(0, 0.03, 0.22, 800, 0.8, 'lowpass'), t0 + 500); });
+    setTimeout(() => { if (N > 1) sfx.tidy(); [...pile.querySelectorAll('.tb-tk.bk')].forEach((d, i) => { const r = d.dataset.r.split(','); d.animate([{ transform: 'translate(' + r[0] + 'px,' + r[1] + 'px) rotate(' + r[2] + 'deg)' }, { transform: 'translate(0,' + (-i * 1.5) + 'px) rotate(0deg)' }], { duration: 320, easing: 'cubic-bezier(.3,1.4,.5,1)', fill: 'forwards' }); }); }, 350 + N * gap + 560); /* 다 던진 뒤 탁탁 가지런히 */
+    setTimeout(() => { busy = false; next(); }, 350 + N * gap + 560 + (N > 1 ? 420 : 60));
   }
   function next() {
     const pile = $('.tb-pile', root), res = $('.tb-res', root); res.className = 'tb-res'; res.innerHTML = ''; cur = Q.shift() || null;
     if (!cur) { pile.innerHTML = ''; auto = false; ui(); return; }
     const backs = [...pile.querySelectorAll('.tb-tk.bk')]; if (backs.length) backs[backs.length - 1].remove(); pile.querySelectorAll('.tb-tk:not(.bk)').forEach((e) => e.remove());
-    pile.insertAdjacentHTML('beforeend', tkHtml(cur, 50)); const tk = pile.lastElementChild; tk.animate([{ transform: 'rotateY(90deg) scale(.96)' }, { transform: 'none' }], { duration: 170 }); sfx.flip(); ui(); bind(tk);
+    pile.insertAdjacentHTML('beforeend', tkHtml(cur, 50)); const tk = pile.lastElementChild; tk.animate([{ transform: 'rotateY(90deg) scale(.96)' }, { transform: 'none' }], { duration: auto ? 70 : 170 }); sfx.flip(); ui(); bind(tk);
     if (auto) autoRip(tk);
   }
   function openRow(row, i, fast) { if (row.classList.contains('done')) return; row.classList.add('done'); cur.open[i] = 1; if (cur.open.every(Boolean)) setTimeout(finish, fast ? 120 : 260); }
   function quick(row, i, t0) { /* 눌러서 한 번에: 덮개가 0.1초쯤에 드르륵 뜯김 */
-    if (row.classList.contains('done') || row.dataset.q) return; row.dataset.q = '1'; row.classList.add('pull'); const p0 = +row.dataset.p || 0, D = Math.max(30, 120 * (1 - p0)), s0 = performance.now() + (t0 || 0) * 1000; sfx.rip(Math.max(2, Math.round(11 * (1 - p0))), t0 || 0);
+    if (row.classList.contains('done') || row.dataset.q) return; row.dataset.q = '1'; row.classList.add('pull'); const p0 = +row.dataset.p || 0, D = Math.max(30, (auto ? 75 : 120) * (1 - p0)), s0 = performance.now() + (t0 || 0) * 1000; sfx.rip(Math.max(2, Math.round(11 * (1 - p0))), t0 || 0);
     const f = (now) => { const p = p0 + (1 - p0) * Math.max(0, Math.min(1, (now - s0) / D)); setP(row, p); if (p < 1) requestAnimationFrame(f); else openRow(row, i, true); }; requestAnimationFrame(f);
   }
   function bind(tk) {
@@ -137,16 +147,31 @@ svg.tb-cv{position:absolute;inset:0;width:100%;height:100%;overflow:visible;z-in
       const up = () => { if (!dn) return; dn = null; quick(row, i, 0); if (link) tk.querySelectorAll('.tb-row:not(.done)').forEach((r2) => { if (r2 !== row) quick(r2, +r2.dataset.i, 0.02); }); }; /* 놓으면 남은 부분이 마저 뜯김 */
       cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up); });
   }
-  function autoRip(tk) { tk.querySelectorAll('.tb-row').forEach((row, i) => setTimeout(() => quick(row, +row.dataset.i, 0), 60 + i * 150)); }
+  function autoRip(tk) { tk.querySelectorAll('.tb-row').forEach((row, i) => setTimeout(() => quick(row, +row.dataset.i, 0), 20 + i * 55)); } /* 모두 뜯기: 세 줄을 빠르게 잇달아 */
+  /* 당첨품(칩·카드)을 테이블에 던져 둠: 누르면 잔고로 빨려 들어가고, 끌어서 옮길 수 있음 */
+  function toss(kind, o, fromEl) {
+    const st = $('.tb-st', root), sr = st.getBoundingClientRect(), fr = (fromEl || st).getBoundingClientRect(), e = document.createElement('div'); e.className = 'tb-pz ' + kind; e.pz = o;
+    if (kind === 'card') { e.style.setProperty('--gc', (data().tierCol || {})[o.k] || '#fff'); e.innerHTML = window.doroRaid.card(Object.assign({}, o.x, { cnt: o.cnt || 1 })) + (o.dup ? '<em>' + chip('g', 14) + '+' + o.gold + '</em>' : ''); }
+    else { const n = Math.min(6, kind === 'r' ? 1 : o.g); let h = ''; for (let i = 0; i < n; i++) h += '<i style="--i:' + i + '">' + chip(kind === 'r' ? 'r' : 'g', kind === 'r' ? 46 : 34) + '</i>'; e.innerHTML = h + (kind !== 'r' && o.g > 1 ? '<em>×' + o.g + '</em>' : ''); }
+    const side = Math.random() < 0.5 ? -1 : 1, tx = sr.width / 2 + side * (190 + Math.random() * Math.max(20, sr.width / 2 - 290)), ty = 90 + Math.random() * Math.max(60, sr.height - 260), x0 = fr.left + fr.width / 2 - sr.left, y0 = fr.top + fr.height / 2 - sr.top, rot = (Math.random() * 2 - 1) * 22;
+    e.style.left = tx + 'px'; e.style.top = ty + 'px'; e.style.setProperty('--rot', rot + 'deg'); st.appendChild(e);
+    e.animate([{ transform: 'translate(calc(-50% + ' + (x0 - tx) + 'px),calc(-50% + ' + (y0 - ty) + 'px)) rotate(0deg) scale(.4)' }, { transform: 'translate(calc(-50% + ' + (x0 - tx) * 0.4 + 'px),calc(-50% + ' + ((y0 - ty) * 0.4 - 70) + 'px)) rotate(' + rot * 3 + 'deg) scale(1.1)', offset: 0.55 }, { transform: 'translate(-50%,-50%) rotate(' + rot + 'deg) scale(1)' }], { duration: 420, easing: 'cubic-bezier(.3,.7,.4,1)' }).onfinish = () => { burst(0, 0.04, 0.3, kind === 'card' ? 900 : 2600, 0.8); };
+    let dn = null; e.addEventListener('pointerdown', (ev) => { dn = { x: ev.clientX, y: ev.clientY, l: parseFloat(e.style.left), t: parseFloat(e.style.top), m: 0 }; e.style.zIndex = '9'; try { e.setPointerCapture(ev.pointerId); } catch (er) { /* 무시 */ } });
+    e.addEventListener('pointermove', (ev) => { if (!dn) return; const dx = ev.clientX - dn.x, dy = ev.clientY - dn.y; dn.m = Math.max(dn.m, Math.hypot(dx, dy)); e.style.left = (dn.l + dx) + 'px'; e.style.top = (dn.t + dy) + 'px'; });
+    const up = () => { if (!dn) return; const d = dn; dn = null; e.style.zIndex = ''; if (d.m < 6) collect(e); }; e.addEventListener('pointerup', up); e.addEventListener('pointercancel', up); ui();
+  }
+  function collect(e) { if (!e.isConnected || e.dataset.go) return; e.dataset.go = '1'; const o = e.pz, bal = root.querySelectorAll('.tb-bal span'), card = e.classList.contains('card'), isR = e.classList.contains('r'), to = bal[isR ? 1 : 0], a = e.getBoundingClientRect(), b = to.getBoundingClientRect();
+    const done = () => { if (isR) pendR = Math.max(0, pendR - 1); else pendG = Math.max(0, pendG - (card ? (o.dup ? o.gold : 0) : o.g)); ui(); };
+    if (card) { sfx.flip(); e.animate([{ transform: 'translate(-50%,-50%) rotate(var(--rot)) scale(1)', opacity: 1 }, { transform: 'translate(calc(-50% + ' + (b.left + 20 - a.left - a.width / 2) + 'px),calc(-50% + ' + (b.top + b.height / 2 - a.top - a.height / 2) + 'px)) rotate(200deg) scale(.08)', opacity: 0.9 }], { duration: 420, easing: 'cubic-bezier(.6,0,.9,.4)', fill: 'forwards' }).onfinish = () => { e.remove(); done(); sfx.coin(); }; } /* 카드도 잔고 쪽으로 빨려 들어감 */
+    else { let ms = 0; try { ms = window.doroChipFly ? window.doroChipFly(e, to, isR ? 1 : o.g * 10, { size: isR ? 24 : 20, k: isR ? 'r' : 'g', single: isR ? 1 : 0 }) : 0; } catch (er) { /* 무시 */ } e.remove(); setTimeout(done, Math.min(1200, ms || 0)); } }
   function finish() {
-    const T = cur; if (!T || T.fin) return; T.fin = 1; const t = T.t, k = t[0], res = $('.tb-res', root), tk = $('.tb-pile .tb-tk:not(.bk)', root), st = $('.tb-st', root); let hold = auto ? 260 : 650;
-    if (k) { const row = tk && tk.querySelector('.tb-row[data-i="' + T.wi + '"]'); if (row) row.classList.add('win'); res.className = 'tb-res w'; res.innerHTML = prizeTxt(t); const bal = root.querySelectorAll('.tb-bal span');
-      if (k === 'r') { pendR--; sfx.win(3); if (window.doroCutin && !auto) window.doroCutin(1); else if (window.doroChipFly && row) window.doroChipFly(row, bal[1], 1, { size: 22, k: 'r', single: 1 }); hold = auto ? 700 : 1500; }
-      else if (k[0] === 'g') { const g = +k.slice(1); pendG -= g; sfx.win(g >= 10 ? 2 : 1); if (window.doroChipFly && row) window.doroChipFly(row, bal[0], g * 10, { size: 18 }); hold = auto ? 500 : 1100; }
-      else { sfx.win(TV[k] - 6); if (t[2]) pendG -= DUP[TV[k]]; const x = data().list.find((y) => String(y.code) === String(t[1])); if (x) { const c = document.createElement('div'); c.className = 'tb-card'; c.style.setProperty('--gc', (data().tierCol || {})[k] || '#fff'); c.innerHTML = window.doroRaid.card(Object.assign({}, x, { cnt: t[3] || 1 })); st.appendChild(c); setTimeout(() => c.remove(), 1650); } hold = auto ? 900 : 1700; }
-      setTimeout(ui, 900); }
+    const T = cur; if (!T || T.fin) return; T.fin = 1; const t = T.t, k = t[0], res = $('.tb-res', root), tk = $('.tb-pile .tb-tk:not(.bk)', root); let hold = auto ? 90 : 650;
+    if (k) { const row = tk && tk.querySelector('.tb-row[data-i="' + T.wi + '"]'); if (row) row.classList.add('win'); res.className = 'tb-res w'; res.innerHTML = prizeTxt(t);
+      if (k === 'r') { sfx.win(3); toss('r', {}, row); if (window.doroCutin && !auto) setTimeout(() => window.doroCutin(1), 250); hold = auto ? 350 : 1300; }
+      else if (k[0] === 'g') { const g = +k.slice(1); sfx.win(g >= 10 ? 2 : 1); toss('g', { g }, row); hold = auto ? 220 : 900; }
+      else { sfx.win(TV[k] - 6); const x = data().list.find((y) => String(y.code) === String(t[1])); if (x) toss('card', { k, x, cnt: t[3], dup: !!t[2], gold: DUP[TV[k]] }, row); hold = auto ? 420 : 1300; } }
     else { res.innerHTML = '<span style="opacity:.55">꽝</span>'; T.lose = 1; }
-    setTimeout(() => { if (cur !== T) return; if (tk) tk.animate([{ transform: 'none', opacity: 1 }, { transform: 'translate(' + (k ? 240 : -240) + 'px,60px) rotate(' + (k ? 24 : -24) + 'deg)', opacity: 0 }], { duration: 200, easing: 'ease-in', fill: 'forwards' }); setTimeout(() => { if (cur === T) next(); }, 190); }, hold);
+    setTimeout(() => { if (cur !== T) return; if (tk) tk.animate([{ transform: 'none', opacity: 1 }, { transform: 'translate(' + (k ? 240 : -240) + 'px,60px) rotate(' + (k ? 24 : -24) + 'deg)', opacity: 0 }], { duration: auto ? 90 : 200, easing: 'ease-in', fill: 'forwards' }); setTimeout(() => { if (cur === T) next(); }, auto ? 80 : 190); }, hold);
   }
   function build() {
     root.innerHTML = '<div class="tb" style=\'--paper:' + PAPER + '\'><aside class="tb-mc"><div class="tb-ttl">도로록<small>DOROROC</small></div><div class="tb-view"></div><div class="tb-win"></div><div class="tb-bal"></div>' +
@@ -157,6 +182,7 @@ svg.tb-cv{position:absolute;inset:0;width:100%;height:100%;overflow:visible;z-in
   }
   function onClick(e) { const b = e.target.closest('.tb-btn button'); if (b) { buyN(+b.dataset.n); return; } const a = e.target.closest('[data-tb]'); if (!a) { if (cur && cur.fin && cur.lose && e.target.closest('.tb-st')) next(); /* 꽝: 누르면 기다리지 않고 바로 다음 */ return; }
     if (a.dataset.tb === 'link') { link = !link; ui(); return; }
+    if (a.dataset.tb === 'take') { root.querySelectorAll('.tb-pz').forEach((e2, i) => setTimeout(() => collect(e2), i * 70)); setTimeout(ui, 200); return; }
     if (a.dataset.tb === 'odds') { const o = $('.tb-odds', root); o.hidden = !o.hidden; return; }
     if (a.dataset.tb === 'reset') { if (busy || cur || Q.length) return; if (a.dataset.ok !== '1') { a.dataset.ok = '1'; a.textContent = '한 번 더 누르면 교체'; setTimeout(() => { a.dataset.ok = ''; a.textContent = '상자 교체'; }, 2500); return; } a.dataset.ok = ''; a.textContent = '상자 교체'; busy = true; fetchTix(0, true).then((r) => { left = r.left; busy = false; sfx.tidy(); ui(); }).catch(() => { busy = false; ui(); }); return; }
     if (a.dataset.tb === 'all') { auto = true; const tk = $('.tb-pile .tb-tk:not(.bk)', root); if (tk && cur && !cur.fin) autoRip(tk); } }
