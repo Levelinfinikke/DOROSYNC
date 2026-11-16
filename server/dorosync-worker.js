@@ -329,7 +329,7 @@ const dec = (v) => {
   if ('arrayValue' in v) return (v.arrayValue.values || []).map(dec); return null;
 };
 
-/* ================= 도로칩 지급 검증 =================
+/* ================= 싱크칩 지급 검증 =================
  * 사이트가 칩을 얻을 때마다 기록(source·종류·개수·시각)을 모아 보냄 → 서버가 검사 후 계정의 chipsV에 더함.
  * 계정 문서의 chipsV(검증된 잔고)·chipDay(하루 사용량)는 서버만 쓸 수 있음(Firestore 규칙).
  * 검사: 로그인 토큰 확인 · 출처별 허용 종류 · 1회 요청 최대 건수 · 시각이 미래/너무 과거면 거절
@@ -371,7 +371,7 @@ async function chipsClaim(req, env, out) {
 }
 
 /* ================= 관리자 현황 =================
- * 관리자(아래 UID)만: 계정별 DORO칩 잔고·오늘 기록·싱크로 자동 기록 설정. 이메일·연동 상세는 보내지 않음 */
+ * 관리자(아래 UID)만: 계정별 싱크칩 잔고·오늘 기록·싱크로 자동 기록 설정. 이메일·연동 상세는 보내지 않음 */
 const ADMIN_UIDS = ['bAdQg5xtIsbCntzxuEjBoSB93T22', 'PdkjvEMLcaR76Ie7h13N6cnpDvT2'];
 async function adminView(req, env, out) {
   if (!env.FIREBASE_SA) return out(503, { ok: false, error: 'not_ready' });

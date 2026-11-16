@@ -2558,10 +2558,10 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
   const BL_UNL = '<svg class="icb-i" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 14.5l-1.8 1.8a3.5 3.5 0 0 1-5-5L5.5 8.5"/><path d="M14.5 9.5l1.8-1.8a3.5 3.5 0 0 1 5 5l-2.8 2.8"/><path d="M8 3v2.5M3 8h2.5M16 21v-2.5M21 16h-2.5"/></svg>';
   const doroBL = window.doroBL = { data: null, win: null, tok: '', timer: 0, fixPend: null, fixTimer: 0, fixTick: 0, sel: null };
   try { const sv = JSON.parse(localStorage.getItem(BLK) || 'null'); if (sv && sv.nikkes) doroBL.data = sv; } catch (e) { /* 저장된 정보 없음 */ }
-  /* ---- 도로칩: 사이트 게임으로 얻는 재화. 도로칩 10 = 실버칩 2 = 골드칩 1, 무지개 도로칩은 별도 ---- */
+  /* ---- 싱크칩: 사이트 게임으로 얻는 재화. 싱크칩 10 = 실버칩 2 = 골드칩 1, DORO칩은 별도 ---- */
   const CHIP_K = 'dorosync-chips', CHIP_COL = { b: ['#f0a020', '#a86405'], s: ['#c3c9d2', '#6f7782'], g: ['#f6c431', '#8a6508'], r: ['#b47cff', '#4a3d8a'] };
   let chipN = 0;
-  /* k: b 도로칩(주황) · s 실버칩 · g 골드칩(반짝임) · r 무지개(프리미엄). fx=false면 애니메이션 없는 가벼운 버전 */
+  /* k: b 싱크칩(주황) · s 실버칩 · g 골드칩(반짝임) · r 무지개(프리미엄). fx=false면 애니메이션 없는 가벼운 버전 */
   window.doroChipSvg = function (k, px, fx, flat) {
     const c = CHIP_COL[k] || CHIP_COL.b, id = 'dc' + (++chipN), grad = k === 'g' || k === 'r', f = grad ? 'url(#' + id + ')' : c[0], anim = grad && fx !== false;
     const dots = [0, 60, 120, 180, 240, 300].map((a) => '<circle cx="' + (40 * Math.sin(a * Math.PI / 180)).toFixed(1) + '" cy="' + (-40 * Math.cos(a * Math.PI / 180)).toFixed(1) + '" r="2.4" fill="' + f + '"/>').join('');
@@ -2586,7 +2586,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
       '<circle r="34" fill="' + c[1] + '"/><circle r="30" fill="' + f + '"/>' + fxs + (TH ? '</g>' : '') + '</svg>';
   };
   /* 지갑
-     - 화면에 보이는 잔고: dschip-v2 { d: DORO칩(실버 5·골드 10 환산), r: 무지개, o: 주인 계정 uid('' = 비회원) }
+     - 화면에 보이는 잔고: dschip-v2 { d: 싱크칩(실버 5·골드 10 환산), r: 무지개, o: 주인 계정 uid('' = 비회원) }
      - 로그인 중 얻은 칩은 지급 기록(dschip-q)으로 모아 서버(/chips)에 보내고, 서버가 검사한 뒤 계정의 chipsV(검증 잔고)에 더함
      - 계정 잔고는 서버만 바꿀 수 있음. 화면 잔고 = 서버 잔고 + 아직 안 보낸 기록 */
   const CHIP2_K = 'dschip-v2', CHIPQ_K = 'dschip-q', CHIP_API = 'https://dorosync.bomullee88.workers.dev/chips', CV = { b: 1, s: 5, g: 10 };
@@ -2617,7 +2617,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
           const q2 = qGet(); if (q2.o === a.user.uid) { q2.ev = q2.ev.slice(send.length); qSet(q2); }
           if (a.doc) a.doc.chipsV = j.chips;
           const p = qSum(qGet().ev); chipSave({ d: j.chips.d + p.d, r: j.chips.r + p.r, o: a.user.uid });
-          if (j.rejected) console.warn('[DORO칩] 서버가 일부 기록을 받지 않음', j.rejected, j.day);
+          if (j.rejected) console.warn('[싱크칩] 서버가 일부 기록을 받지 않음', j.rejected, j.day);
           if (qGet().ev.length) chipFlush(300);
         } else if (r.status === 401) { /* 토큰 문제: 다음 기회에 */ } else chipFlush(15000);
       } catch (e) { chipFlush(15000); /* 네트워크 문제: 잠시 뒤 다시 */ }
@@ -2661,7 +2661,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
       chipSave(o); if (a) chipFlush(); return true;
     },
   };
-  /* 매일 출석: 하루(한국 시간) 한 번 DORO칩 100개. 로그인 중이면 서버가 하루 한 번만 인정 */
+  /* 매일 출석: 하루(한국 시간) 한 번 싱크칩 100개. 로그인 중이면 서버가 하루 한 번만 인정 */
   const ATT_K = 'dschip-att', kstToday = () => new Date(Date.now() + 9 * 3600000).toISOString().slice(0, 10);
   function doroDaily() {
     const a = acctUser(), who = (a ? a.user.uid : 'guest') + '|' + kstToday();
@@ -2677,7 +2677,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
   }
   const DAILY_ON = false; /* 접속 보상: 가챠(DORO MODE) 완성 전까지 끔 */
   if (DAILY_ON) { setTimeout(doroDaily, 1500); window.addEventListener('doroacct', () => setTimeout(doroDaily, 1200)); document.addEventListener('visibilitychange', () => { if (!document.hidden) doroDaily(); }); }
-  /* 카드 우하단의 큰 2.5D 도로칩: 얇은 원판을 겹친 둥근 테두리(가운데가 가장 넓고 앞뒤로 갈수록 좁아짐) + 광택 */
+  /* 카드 우하단의 큰 2.5D 싱크칩: 얇은 원판을 겹친 둥근 테두리(가운데가 가장 넓고 앞뒤로 갈수록 좁아짐) + 광택 */
   const chipBig = () => {
     const N = 22, T = 20; let d = '';
     for (let i = 0; i < N; i++) { const f = i / (N - 1) - 0.5, sc = 1 - 0.1 * (1 - Math.sqrt(Math.max(0, 1 - Math.pow(2 * f, 2)))), dk = f > 0 ? 0.02 + f * 0.5 : 0.1 + -f * 0.9; d += '<i style="transform:translateZ(' + ((f + 0.5) * T).toFixed(2) + 'px) scale(' + sc.toFixed(3) + ');--dk:' + dk.toFixed(2) + '"></i>'; }
@@ -2685,9 +2685,9 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
   };
   const chipCard = () => {
     const o = chipRaw(), tot = o.d;
-    return '<div class="kpi chipk">' + chipBig() + '<div class="l">DORO칩</div><div class="chipv">' +
-      '<span class="cv-d" title="DORO칩 (실버칩 1 = 5, 골드칩 1 = 10)">' + window.doroChipSvg('b', 30) + '<b class="num">' + fmt(tot) + '</b></span>' +
-      '<span class="cv-r" title="무지개 DORO칩">' + window.doroChipSvg('r', 30) + '<b class="num">' + fmt(o.r) + '</b></span></div></div>';
+    return '<div class="kpi chipk">' + chipBig() + '<div class="l">싱크칩</div><div class="chipv">' +
+      '<span class="cv-d" title="싱크칩 (실버칩 1 = 5, 골드칩 1 = 10)">' + window.doroChipSvg('b', 30) + '<b class="num">' + fmt(tot) + '</b></span>' +
+      '<span class="cv-r" title="DORO칩">' + window.doroChipSvg('r', 30) + '<b class="num">' + fmt(o.r) + '</b></span></div></div>';
   };
   window.addEventListener('doroacct', () => { if (!(doroBL && doroBL.data)) { try { renderMe(); } catch (e) { /* 초기화 전 */ } } });
   window.addEventListener('dorochips', () => { const el = document.querySelector('#tab-me .chipk'); if (el) el.outerHTML = chipCard(); });
@@ -2922,9 +2922,9 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     { const iv = $('#me-inv'), pg = $('#me-prog'); if (iv && root.contains(iv)) root.after(iv); if (iv && pg && root.contains(pg)) iv.before(pg); } /* innerHTML로 지워지지 않게 밖으로 */
     const d = doroBL.data;
     { const lk = $('#me-link'); if (lk) lk.style.display = d ? 'none' : ''; }
-    if (!d) { /* 연동 전: DORO칩 잔고만 보여 주고, 로그인 안 했으면 로그인 권유 */
+    if (!d) { /* 연동 전: 싱크칩 잔고만 보여 주고, 로그인 안 했으면 로그인 권유 */
       const logged = !!(window.doroAccount && window.doroAccount.user);
-      root.innerHTML = '<div class="card me-pre"><div class="mekpis mekpis-pre">' + chipCard() + '</div>' + (logged ? '' : '<p class="me-login">DORO칩을 안전하게 저장하려면 로그인하세요. <button type="button" class="ghost sm" id="me-login">로그인</button></p>') + '</div>';
+      root.innerHTML = '<div class="card me-pre"><div class="mekpis mekpis-pre">' + chipCard() + '</div>' + (logged ? '' : '<p class="me-login">싱크칩을 안전하게 저장하려면 로그인하세요. <button type="button" class="ghost sm" id="me-login">로그인</button></p>') + '</div>';
       const lb = $('#me-login'); if (lb) lb.addEventListener('click', () => { if (window.doroAccount) window.doroAccount.open(); else { const b = $('#btn-acct'); if (b) b.click(); } });
       return;
     }
@@ -4397,7 +4397,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   const TR_ADD = {"라이": ["F", "D"], "네온 : 블루 오션": ["E", "E"], "헬름 : 아쿠아마린": ["A", "D"], "메이든 : 아이스 로즈": ["S", "S"], "길로틴 : 윈터 슬레이어": ["A", "E"], "디젤 : 윈터 스위츠": ["SS", "B"], "브리드 : 사일런트 트랙": ["S", "B"], "아비스타": ["C", "D"], "마르차나 : 마린 스터디": ["A", "B"], "길티": ["B", "D"], "신": ["E", "D"], "퀀시": ["D", "E"], "앤 : 미라클 페어리": ["D", "A"], "킬로": ["F", "B"], "모리": ["E", "E"], "일레그 : 붐 앤 쇼크": ["S", "C"], "루피 : 윈터 쇼퍼": ["E", "D"], "메어리 : 베이 갓데스": ["C", "D"], "아니스 : 스파클링 서머": ["S", "A"], "루드밀라 : 윈터 오너": ["S", "D"], "미카 : 스노우 버디": ["B", "B"], "로산나 : 시크 오션": ["A", "B"], "사쿠라 : 블룸 인 서머": ["B", "B"], "니힐리스타": ["E", "B"], "스노우 화이트 : 이노센트 데이즈": ["C", "E"], "라푼젤 : 퓨어 그레이스": ["D", "D"], "도로시 : 세렌디피티": ["SS", "B"], "차임": ["B", "E"], "신데렐라 : 크리스탈 웨이브": ["SSS", "B"], "라푼젤 : 생츄어리": ["A", "B"], "마키마": ["E", "A"], "파워": ["D", "C"], "2B": ["C", "B"], "A2": ["C", "B"], "렘": ["B", "E"], "에밀리아": ["C", "SS"], "아스카": ["B", "D"], "레이": ["A", "B"], "마리": ["A", "B"], "아스카 : WILLE": ["S", "E"], "레이 (가칭)": ["A", "A"], "이브": ["A", "C"], "레이븐": ["S", "C"], "에이다": ["S", "S"], "질": ["B", "D"], "치사토": ["A", "B"], "타키나": ["A", "C"], "퀸(마코토)": ["A", "B"], "유키코": ["S", "C"]}; /* 기존 티어 데이터에 없던 니케: [솔레, PvP] */
   let trDef = null, trSt = null;
   /* 기본 티어 + 사용자 편집본. window.doroTiers는 가챠 머신이 그대로 참조하는 살아 있는 객체 */
-  /* 도로칩 판정용 기본 티어표(유저 편집 무관) */
+  /* 싱크칩 판정용 기본 티어표(유저 편집 무관) */
   function chipTierData() {
     let D = {}; try { D = (window.GM_ASSETS && window.GM_ASSETS.tiers) || {}; } catch (e) { /* 무시 */ }
     const b = Object.assign({}, D.boss || {}); Object.keys(TR_ADD).forEach((n) => { const v = TR_ADD[n]; if (!b[n] && v[0]) b[n] = v[0]; });
@@ -4483,7 +4483,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
       Object.keys(TR_EL).map((e) => fb('el', e, '<img alt="" src="' + TR_ICO[e] + '">', trV.el.has(e), TR_EL[e][0])).join('') + '</div></div>' +
       '<div class="tr-pool-h" data-html2canvas-ignore>미배치 <span class="muted" id="tr-pn">' + pool.length + '명</span></div>' +
       '<div class="tr-pool tr-dz" data-t="" data-html2canvas-ignore>' + pool.map(trCard).join('') + '</div>' +
-      '<p class="muted tr-help">초상화를 드래그하거나 클릭해서 편집하세요. 편집한 티어는 가챠 머신 티어에 즉시 반영합니다.(DORO칩 확률은 기존 티어와 동일)</p>' +
+      '<p class="muted tr-help">초상화를 드래그하거나 클릭해서 편집하세요. 편집한 티어는 가챠 머신 티어에 즉시 반영합니다.(싱크칩 확률은 기존 티어와 동일)</p>' +
       '<p class="muted tr-src">해당 티어표는 <a href="https://www.prydwen.gg/nikke/tier-list" target="_blank" rel="noopener">Prydwen</a>을 참고했으며, 개인 의견과 다소 상이할 수 있습니다.</p>' +
       '<div class="tr-pop" id="tr-pop" hidden></div></div>';
     const q = $('#tr-q'); q.addEventListener('input', () => { trV.q = q.value; trApply(); });

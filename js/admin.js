@@ -1,5 +1,5 @@
 /* DOROSYNC 관리자 현황: 관리자 계정으로 로그인하면 상단에 [관리] 버튼이 생김.
-   계정별 DORO칩 잔고·오늘 기록·싱크로 자동 기록 설정을 워커(/admin)에서 받아 표로 보여 줌. 이메일은 받지 않음 */
+   계정별 싱크칩 잔고·오늘 기록·싱크로 자동 기록 설정을 워커(/admin)에서 받아 표로 보여 줌. 이메일은 받지 않음 */
 (function () {
   'use strict';
   const ADMIN = ['bAdQg5xtIsbCntzxuEjBoSB93T22', 'PdkjvEMLcaR76Ie7h13N6cnpDvT2'];
@@ -42,11 +42,11 @@
     U.sort((a, b) => { const x = val(a, sortK), y = val(b, sortK); return (typeof x === 'string' ? x.localeCompare(y) : x - y) * sortD; });
     const run = data.autoRun;
     let h = '<div id="adm-sum">'
-      + '<div>계정<b>' + others.length + '</b></div><div>칩 보유<b>' + withC.length + '</b></div><div>DORO칩 합계<b>' + fmt(sumD) + '</b></div><div>무지개칩 합계<b>' + fmt(sumR) + '</b></div><div>오늘 칩 활동<b>' + act.length + '</b></div>'
+      + '<div>계정<b>' + others.length + '</b></div><div>칩 보유<b>' + withC.length + '</b></div><div>싱크칩 합계<b>' + fmt(sumD) + '</b></div><div>DORO칩 합계<b>' + fmt(sumR) + '</b></div><div>오늘 칩 활동<b>' + act.length + '</b></div>'
       + '<div>자동 기록 켬<b>' + au.length + '</b></div><div>자동 기록 성공<b>' + auOk.length + '</b></div><div>자동 기록 실패<b class="' + (auBad.length ? 'adm-bad' : '') + '">' + auBad.length + '</b></div>'
       + (run ? '<div>마지막 자동 실행<b style="font-size:14px">' + kst(run.at || run.t) + '</b>' + esc(['n', 'ok', 'fail', 'stop'].filter((k) => run[k] != null && run[k] !== '').map((k) => k + ' ' + run[k]).join(' · ')) + '</div>' : '') + '</div>';
     const th = (k, t, l) => '<th' + (l ? ' class="l"' : '') + (k ? ' data-k="' + k + '"' : '') + '>' + t + (sortK === k ? (sortD < 0 ? ' ▼' : ' ▲') : '') + '</th>';
-    h += '<div style="overflow:auto;max-height:65vh"><table id="adm-t"><thead><tr>' + th('nick', '닉네임', 1) + th('chips', 'DORO칩') + th('r', '무지개') + th('today', '오늘 지급') + th('', '오늘 사용') + th('', '출석') + th('auto', '자동 기록', 1) + th('', '다음 처리') + th('created', '가입') + th('updated', '마지막 저장') + '</tr></thead><tbody>';
+    h += '<div style="overflow:auto;max-height:65vh"><table id="adm-t"><thead><tr>' + th('nick', '닉네임', 1) + th('chips', '싱크칩') + th('r', 'DORO칩') + th('today', '오늘 지급') + th('', '오늘 사용') + th('', '출석') + th('auto', '자동 기록', 1) + th('', '다음 처리') + th('created', '가입') + th('updated', '마지막 저장') + '</tr></thead><tbody>';
     U.forEach((u) => {
       const d = u.day && u.day.d === today ? u.day : null, a = u.auto;
       const au2 = !a || !a.on ? '<span style="opacity:.5">꺼짐</span>' : '<span class="adm-on">켬</span> ' + (a.area ? '(' + esc(a.area) + ') ' : '') + (a.last ? (a.last.ok ? '최근 ' + kst(a.last.at) + ' · 싱크로 ' + a.last.s + ' · 전초기지 ' + a.last.o : '<span class="adm-bad">실패 ' + esc(a.last.code || '') + ' ' + kst(a.last.at) + '</span>') : '· 아직 실행 전 (' + kst(a.since) + '부터)');
