@@ -359,7 +359,7 @@ const dec = (v) => {
  * 검사: 로그인 토큰 확인 · 출처별 허용 종류 · 1회 요청 최대 건수 · 시각이 미래/너무 과거면 거절
  * 하루 지급 상한 없음(비회원 칩 옮기기만 상한). daily(출석 100)는 하루(한국 시간) 한 번. spend(DORO MODE 뽑기)는 잔고에서 뺌(0 아래로는 안 내려감) */
 const CHIP_VAL = { b: 1, s: 5, g: 10 }, CHIP_SRC = { ssr: 'bsgr', label: 'b', cap: 'bsgr', streak: 'bsgr', guest: 'bsgr', daily: 'b', spend: 'b' };
-const MAX_EV = 300, GUEST_CAP_D = 3000, GUEST_CAP_R = 20, DAILY_D = 100;
+const MAX_EV = 300, GUEST_CAP_D = 3000, GUEST_CAP_R = 5, DAILY_D = 100;
 async function chipsClaim(req, env, out) {
   if (!env.FIREBASE_SA) return out(503, { ok: false, error: 'not_ready' });
   const idt = (req.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '');

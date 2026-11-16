@@ -248,7 +248,7 @@ svg.pp-strap{display:block;position:absolute;inset:0;width:100%;height:100%;over
   async function onBuy(kind, n, btn) {
     if (busy) return; busy = true; const msg = $('.pp-msg', root); if (msg) msg.textContent = ''; const it = btn && btn.closest('.pp-it'), sp = it && $('.pp', it); fromR = sp ? sp.getBoundingClientRect() : null;
     try { const k0 = KINDS.find((x) => x.k === kind), bal0 = root.querySelectorAll('.pp-bal span')[k0.r ? 1 : 0], pr = n > 1 ? k0.box : k0.price; let wait = 0;
-      const packs = await buy(kind, n), DB = DBc(); lastBuy = { kind, n }; sfx.buy();
+      const packs = await buy(kind, n), DB = DBc(); lastBuy = { kind, n }; sfx.buy(); try { if (window.doroStat) window.doroStat.add({ packs: packs.length }); } catch (e2) { /* 무시 */ }
       if (sp && bal0 && bal0.isConnected && window.doroChipFly) { wait = window.doroChipFly(bal0, sp, n > 1 && !k0.r ? pr / 10 : pr, { size: 20, k: k0.r ? 'r' : 'g' }) || 0; /* 박스는 칩을 1/10만 그림(필그림 박스 제외) */ await new Promise((ok) => setTimeout(ok, Math.min(1700, wait))); fromR = sp.isConnected ? sp.getBoundingClientRect() : null; } /* 잔고에서 칩이 나와 팩으로 들어간 뒤 뜯기 */
       Q = packs.map((p) => ({ k: KINDS.find((x) => x.k === kind), cards: p.map((c) => ({ x: DB[String(c[0])], dup: !!c[1], cnt: c[2] || 1, o: 0 })).filter((c) => c.x) }));
       Q.forEach((p) => { p.cards.forEach((c) => { c.o = tvOf(c) + Math.random() * 2.6; }); p.cards.sort((a, b) => a.o - b.o); }); /* 낮은 확률(높은 티어)일수록 뒤에 나올 가능성이 큼 */

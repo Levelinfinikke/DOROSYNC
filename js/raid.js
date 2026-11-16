@@ -637,7 +637,7 @@
       dmgNum(dmg, i, k); e.animate([{ transform: 'translateY(-5%) scale(1.05)' }, { transform: 'none' }], { duration: 180, fill: 'forwards' }); await slow(big ? 340 : 200); e.style.zIndex = '';
     }
     await slow(450);
-    ex.textContent = fmt(score) + '억'; tot.textContent = fmt(score) + '억'; S.phase = 'done'; if (S.mode === 'live') { S.liveBest = res.best; S.info = { tries: S.tries, max: S.max }; }
+    ex.textContent = fmt(score) + '억'; tot.textContent = fmt(score) + '억'; S.phase = 'done'; if (S.mode === 'live') { api('rank').then((j) => { if (j.mine && window.doroStat) window.doroStat.raid(j.season && j.season.id, j.mine.rank, j.total || 0, j.mine.sc || 0); }).catch(() => {}); /* 통합 기록: 최고 등수 */ S.liveBest = res.best; S.info = { tries: S.tries, max: S.max }; }
     const live = S.mode === 'live', left = S.max - S.tries, fin = $('.rd-fin'), ag = $('.rd-fin [data-r=again]'); bgm.stop(); fin.hidden = false; msg.textContent = '';
     fin.querySelector('h3').textContent = res.newBest ? 'NEW BEST!' : 'RAID SCORE';
     $('.rd-rkl').textContent = '';
@@ -658,7 +658,7 @@
     clearInterval(S.rkT); S.rkT = setInterval(tick, 1000); tick();
     if (S.mode !== 'live') { box.innerHTML = '<p style="padding:14px">랭킹은 실전 모드에서만 기록됩니다.</p>'; return; }
     box.innerHTML = '<p style="padding:14px">불러오는 중…</p>';
-    try { const j = await api('rank'); if (j.season && j.season.end) { S.end = j.season.end; tick(); } const N = j.total || j.rows.length, cut = j.cut || [], d = data(), CL = ['상위 3%', '상위 10%', '상위 30%'];
+    try { const j = await api('rank'); if (j.season && j.season.end) { S.end = j.season.end; tick(); } try { if (j.mine && window.doroStat) window.doroStat.raid(j.season && j.season.id, j.mine.rank, j.total || 0, j.mine.sc || 0); } catch (e2) { /* 무시 */ } const N = j.total || j.rows.length, cut = j.cut || [], d = data(), CL = ['상위 3%', '상위 10%', '상위 30%'];
       let h = ''; j.rows.forEach((r, i) => { h += rkRow(r, N); cut.forEach((c, k) => { if (r.rank === c && (i < j.rows.length - 1 || N > j.rows.length)) h += '<div class="rk-cut">' + (d.frImg ? '<img alt="" src="' + esc(d.frImg((j.season && j.season.id ? j.season.id + ':' : '') + (k + 1))) + '">' : '') + CL[k] + ' 선</div>'; }); });
       box.innerHTML = h || '<p style="padding:14px">아직 기록이 없습니다.</p>';
       me.innerHTML = j.mine ? rkRow(j.mine, N, true) : '';
