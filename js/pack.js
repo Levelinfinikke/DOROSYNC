@@ -172,14 +172,29 @@ svg.pp-strap{display:block;position:absolute;inset:0;width:100%;height:100%;over
 .pp-ctn.shut:before,.pp-ctn.shut:after{transform:none;top:0;height:50%;transition:transform .35s}
 .pp-rb{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;opacity:0;transition:opacity .35s}
 .pp-sum{padding:28px 34px 20px;width:min(780px,98vw)}
+.pp-hang .pp-gh,.pp-hang .pp-gh.a,.pp-hang .pp-gh.b{transform:translateY(calc(var(--q)*-3.4px)) scale(calc(1 - var(--q)*.012));filter:brightness(calc(.78 - var(--q)*.09));border-radius:1px;box-shadow:0 -1px 0 rgba(255,255,255,.25)}
+.pp-it{padding-top:40px}.pp-pin{display:none}
+.pp.pil .pp-body:after{content:"";position:absolute;inset:0;pointer-events:none;mix-blend-mode:color-dodge;opacity:.55;background:linear-gradient(115deg,#ff5d8f,#ffb84d 16%,#f6f05a 32%,#5ef0a0 48%,#5ab8ff 64%,#b07aff 80%,#ff5d8f) 0 0/300% 300%;animation:ppHolo 4s linear infinite}@keyframes ppHolo{to{background-position:300% 300%}}
+.pp.pil .pp-body:before{content:"";position:absolute;inset:0;pointer-events:none;z-index:1;mix-blend-mode:overlay;background:radial-gradient(circle,rgba(255,255,255,.9) 0,transparent 1.3px) 0 0/9px 11px,radial-gradient(circle,rgba(255,255,255,.7) 0,transparent 1.1px) 4px 6px/13px 12px;animation:ppTw2 1.8s ease-in-out infinite alternate}@keyframes ppTw2{from{opacity:.2}to{opacity:.9}}
+.pp-bx{position:relative;width:150px;font-family:"Arial Black",Arial,sans-serif;color:#fff;filter:drop-shadow(0 12px 16px rgba(0,0,0,.6))}
+.pp-bx.big{position:absolute;left:50%;top:48%;width:min(360px,74vw);transform:translate(-50%,-50%);z-index:6}
+.bx-lid{position:relative;aspect-ratio:1.55;clip-path:polygon(0 22%,14% 22%,20% 0,80% 0,86% 22%,100% 22%,100% 100%,0 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2%;text-align:center;animation:none!important;box-shadow:inset 0 0 0 2px rgba(255,255,255,.25)}
+.bx-lid b{font-style:italic;font-size:10.5cqw;line-height:1;text-shadow:0 2px 0 rgba(0,0,0,.5)}.pp-bx{container-type:inline-size}.bx-lid span svg{width:17cqw;height:17cqw;display:block;filter:drop-shadow(0 2px 3px rgba(0,0,0,.6))}.bx-lid small{font-size:4.2cqw;letter-spacing:.08em;opacity:.9}
+.bx-tray{position:relative;aspect-ratio:2.5;margin-top:-1px;background:#0b0d12;box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--c2) 60%,#000)}
+.bx-in{position:absolute;inset:6% 5% 30% 5%;display:flex;gap:5%}
+.bx-col{flex:1;position:relative}.bx-col i{position:absolute;left:0;right:0;height:26%;bottom:calc(var(--i)*5.2%);transform:scale(calc(1 - var(--i)*.006));border-radius:1px;background:repeating-linear-gradient(0deg,rgba(255,255,255,.2) 0 1px,rgba(0,0,0,.2) 1px 2px),color-mix(in srgb,var(--c2) 80%,#000);box-shadow:0 -1px 0 rgba(255,255,255,.35),0 1px 1px rgba(0,0,0,.5);z-index:calc(20 - var(--i))}
+.bx-col i:first-child{height:60%;background:linear-gradient(180deg,color-mix(in srgb,var(--c2) 80%,#000) 0 30%,var(--c2) 30%)}
+.bx-front{position:absolute;left:0;right:0;bottom:0;height:34%;z-index:30;background:linear-gradient(180deg,color-mix(in srgb,var(--c2) 85%,#fff),var(--c2) 45%,var(--c1));box-shadow:inset 0 2px 0 rgba(255,255,255,.4);display:grid;place-items:center}
+.bx-front em{font-style:normal;font-size:9cqw;text-shadow:0 2px 0 rgba(0,0,0,.5)}
+.pp-dock{width:150px}
 .pp-sum>div{animation:none;opacity:0;transform:translateY(40px) scale(.6) rotate(6deg);transition:opacity .16s,transform .3s cubic-bezier(.2,1.6,.4,1);position:relative}.pp-sum>div.in{opacity:1;transform:none}
 `;
   const VH = 162.2, TH = 21.1, BH = 10.55, SW = 15; let pid = 0; /* 팩 좌표: 가로 100 기준 */
   const sm = (t) => { t = Math.max(0, Math.min(1, t)); return t * t * (3 - 2 * t); };
   /* 상·하단 마감(한 조각): 뜯긴 쪽부터 절취선을 따라 곡선으로 들림 */
   const bandD = (zone, p, rt) => { const H = zone === 'top' ? TH : BH, top = zone === 'top', A = [], B = []; let lc = 0;
-    for (let k = 0; k <= 24; k++) { const x = k / 24 * 100, s2 = rt ? x / 100 : 1 - x / 100, lift = (p > 0 ? sm((p * 1.3 - s2) / 0.5) : 0) * 6.5; if (k === 12) lc = lift;
-      A.push(x.toFixed(1) + ' ' + (top ? -lift * 1.25 : lift).toFixed(2)); B.push(x.toFixed(1) + ' ' + (top ? H - lift : H + lift * 1.25).toFixed(2)); } /* 절취선 쪽은 조금, 바깥쪽은 더 들림 */
+    for (let k = 0; k <= 32; k++) { const x = k / 32 * 100, s2 = rt ? x / 100 : 1 - x / 100, lift = 13 * Math.pow(Math.max(0, p * 1.12 - s2), 1.7); if (k === 16) lc = lift; /* 뜯긴 거리만큼 계속 휘어 올라감(상한 없음) */
+      A.push(x.toFixed(1) + ' ' + (top ? -lift * 1.2 : lift).toFixed(2)); B.push(x.toFixed(1) + ' ' + (top ? H - lift : H + lift * 1.2).toFixed(2)); }
     return { d: 'M' + A.join('L') + 'L' + B.reverse().join('L') + 'Z', lc: top ? -lc : lc }; };
   const bandSvg = (zone) => { const id = 'ppr' + (++pid), H = zone === 'top' ? TH : BH, r = bandD(zone, 0, true);
     return '<svg class="pp-' + (zone === 'top' ? 'top' : 'bot') + '" viewBox="0 0 100 ' + H + '" aria-hidden="true"><defs><pattern id="' + id + '" width="6" height="1.5" patternUnits="userSpaceOnUse"><rect width="6" height=".75" fill="rgba(255,255,255,.2)"/><rect y=".75" width="6" height=".75" fill="rgba(0,0,0,.2)"/></pattern></defs><path class="sd" d="' + r.d + '"/><path class="rg" fill="url(#' + id + ')" d="' + r.d + '"/>' + (zone === 'top' ? '<circle class="hl" cx="50" cy="' + (H * 0.44) + '" r="4.2"/>' : '') + '</svg>'; };
@@ -193,7 +208,7 @@ svg.pp-strap{display:block;position:absolute;inset:0;width:100%;height:100%;over
   function shop() {
     const o = window.doroChips ? window.doroChips.get() : { r: 0 }, bal = window.doroChips ? window.doroChips.total() : 0;
     root.innerHTML = '<div class="card"><div class="row-ctl sp"><h2 class="inline">카드팩</h2><div class="pp-bal"><span>' + chip('b', 20) + fmt(bal) + '</span><span>' + chip('r', 20) + fmt((o && o.r) || 0) + '</span></div></div>' +
-      '<div class="pp-shop">' + KINDS.map((k) => '<div class="pp-it" style="--c2:' + k.c2 + '"><div class="pp-hang" style="--c2g:' + k.c2 + ';--cs2:color-mix(in srgb,' + k.c2 + ' 80%,#000)"><i class="pp-gh b"></i><i class="pp-gh a"></i>' + packHtml(k) + '<i class="pp-pin"></i></div><b>' + esc(k.nm) + '</b><div class="pp-buy"><button type="button" class="primary" data-buy="' + esc(k.k) + '" data-n="1">' + chip(k.r ? 'r' : 'b', 14) + fmt(k.price) + '</button><button type="button" class="ghost" data-buy="' + esc(k.k) + '" data-n="30">박스 ' + chip(k.r ? 'r' : 'b', 14) + fmt(k.box) + '</button></div></div>').join('') + '</div><p class="muted sm pp-msg" style="margin-top:8px"></p></div>' +
+      '<div class="pp-shop">' + KINDS.map((k) => '<div class="pp-it" style="--c2:' + k.c2 + '"><div class="pp-hang" style="--c2g:' + k.c2 + ';--cs2:color-mix(in srgb,' + k.c2 + ' 80%,#000)">' + [5, 4, 3, 2, 1].map((q) => '<i class="pp-gh" style="--q:' + q + '"></i>').join('') + packHtml(k) + '<i class="pp-pin"></i></div><b>' + esc(k.nm) + '</b><div class="pp-buy"><button type="button" class="primary" data-buy="' + esc(k.k) + '" data-n="1">' + chip(k.r ? 'r' : 'b', 14) + fmt(k.price) + '</button><button type="button" class="ghost" data-buy="' + esc(k.k) + '" data-n="30">박스 ' + chip(k.r ? 'r' : 'b', 14) + fmt(k.box) + '</button></div></div>').join('') + '</div><p class="muted sm pp-msg" style="margin-top:8px"></p></div>' +
       '<div class="pp-ov" hidden></div>';
   }
   const DBc = () => { const m = {}; data().list.forEach((x) => { m[String(x.code)] = x; }); return m; };
@@ -209,16 +224,18 @@ svg.pp-strap{display:block;position:absolute;inset:0;width:100%;height:100%;over
       got = []; busy = false; boxN = n === 30 ? Q.length : 0; if (boxN) boxIntro(Q[0].k); else nextPack(); }
     catch (e) { busy = false; const t = ERR[e && e.message] || '카드팩을 열지 못했습니다. (' + ((e && e.message) || e) + ')'; const ov = $('.pp-ov', root); if (ov && !ov.hidden) { cur = null; ov.hidden = true; shop(); } const m2 = $('.pp-msg', root); if (m2) m2.textContent = t; }
   }
-  /* 박스: 상자가 떨어져 쿵 → 덜컹거리다 뚜껑이 열림 → 구석으로 물러나고 첫 팩이 튀어나옴 */
+  /* 박스(진열 상자): 뒤에 세운 표지 + 앞쪽 트레이에 팩이 2줄로 꽂혀 있음. 남은 수만큼 실제로 줄어듦 */
+  const boxHtml = (k, left, cls) => { const col = (n) => { let h = ''; for (let i = 0; i < n; i++) h += '<i style="--i:' + i + '"></i>'; return '<span class="bx-col">' + h + '</span>'; };
+    return '<div class="pp-bx ' + (cls || '') + (k.r ? ' pil' : '') + '" style="--c1:' + k.c1 + ';--c2:' + k.c2 + '"><div class="bx-lid pp-skin"><b>' + (k.r ? 'PILGRIM' : k.co ? 'CORP' : 'NIKKE') + '<br>CARD PACK</b><span>' + chip(k.r ? 'r' : 'b', 60) + '</span><small>30 PACKS · ' + esc(k.nm) + '</small></div><div class="bx-tray"><div class="bx-in">' + col(Math.ceil(left / 2)) + col(Math.floor(left / 2)) + '</div><div class="bx-front"><em>' + left + '</em></div></div></div>'; };
   function boxIntro(k) {
     const ov = $('.pp-ov', root); ov.hidden = false; ov.style.setProperty('--rc', k.c2 + '33'); ov.style.setProperty('--ro', '.5');
-    ov.innerHTML = '<div class="pp-bgd"></div><div class="pp-rays"></div><div class="pp-ctn big shut" style="--c1:' + k.c1 + ';--c2:' + k.c2 + '">30 PACKS</div>';
-    const c = $('.pp-ctn', ov); $('.pp-bgd', ov).animate([{ opacity: 0 }, { opacity: 1 }], { duration: 300 });
-    c.animate([{ transform: 'translate(-50%,-260%) rotate(-12deg)' }, { transform: 'translate(-50%,-50%) rotate(0deg)', offset: 0.6 }, { transform: 'translate(-50%,-56%) scale(1.04,.94)', offset: 0.75 }, { transform: 'translate(-50%,-50%)' }], { duration: 620, easing: 'cubic-bezier(.4,0,.6,1)' });
-    setTimeout(() => { sfx.land(); tone(60, 0.3, 0.2, 0); shake(ov, 8); }, 380);
-    setTimeout(() => { c.animate([0, 1, 2, 3, 4, 5].map((i) => ({ transform: 'translate(-50%,-50%) rotate(' + (i % 2 ? 4 : -4) * (i < 5 ? 1 : 0) + 'deg)' })), { duration: 420 }); sfx.tear(0.2); setTimeout(() => sfx.tear(0.6), 150); }, 700);
-    setTimeout(() => { c.classList.remove('shut'); sfx.rip(); burst(ov, 0, false); }, 1150);
-    setTimeout(() => { fromR = c.getBoundingClientRect(); nextPack(); }, 1550);
+    ov.innerHTML = '<div class="pp-bgd"></div><div class="pp-rays"></div>' + boxHtml(k, Q.length, 'big');
+    const c = $('.pp-bx', ov); $('.pp-bgd', ov).animate([{ opacity: 0 }, { opacity: 1 }], { duration: 300 });
+    c.animate([{ transform: 'translate(-50%,-220vh) rotate(-8deg)', easing: 'cubic-bezier(.5,0,1,.7)' }, { transform: 'translate(-50%,-50%) rotate(0deg) scale(1.06,.9)', offset: 0.62 }, { transform: 'translate(-50%,-58%) scale(.97,1.04)', offset: 0.8 }, { transform: 'translate(-50%,-50%)' }], { duration: 700 }); /* 위에서 쿵 */
+    setTimeout(() => { sfx.land(); tone(52, 0.45, 0.28, 0); noise(0.2, 0.2, 300, 0, 'lowpass'); try { ov.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(10px)' }, { transform: 'translateY(-5px)' }, { transform: 'none' }], { duration: 260 }); } catch (e) { /* 무시 */ } }, 430);
+    setTimeout(() => { const r = c.getBoundingClientRect(), tw = 150, sc = tw / r.width, dx = 18 + tw / 2 - (r.left + r.width / 2), dy = innerHeight - 18 - r.height * sc / 2 - (r.top + r.height / 2); sfx.card();
+      c.animate([{ transform: 'translate(-50%,-50%)' }, { transform: 'translate(calc(-50% + ' + dx + 'px),calc(-50% + ' + dy + 'px)) scale(' + sc + ')' }], { duration: 520, easing: 'cubic-bezier(.5,0,.3,1)', fill: 'forwards' }); }, 1250);
+    setTimeout(() => nextPack(), 1800);
   }
   const colOf = (tv) => { const c = glOf(tv); return c === 'rb' ? '#fff' : c || '#cfd5da'; };
   const stageBg = (ov, tv, on) => { const c = glOf(tv); ov.style.setProperty('--rc', c && c !== 'rb' ? c + '55' : c === 'rb' ? 'rgba(255,220,140,.4)' : 'rgba(255,255,255,.07)'); ov.style.setProperty('--ro', on ? '1' : '.5'); };
@@ -233,9 +250,9 @@ svg.pp-strap{display:block;position:absolute;inset:0;width:100%;height:100%;over
     const best = Math.max.apply(null, cur.cards.map(tvOf)); cur.best = best; cur.fake = best >= 7 && Math.random() < 0.3 ? best - 1 - (Math.random() < 0.4 ? 1 : 0) : best; /* 페이크: 뜯을 때는 한두 단계 낮은 빛 */
     let dust = ''; for (let i = 0; i < 26; i++) dust += '<i style="left:' + (Math.random() * 100).toFixed(1) + '%;--dx:' + ((Math.random() * 2 - 1) * 80).toFixed(0) + 'px;--t:' + (6 + Math.random() * 8).toFixed(1) + 's;--d:-' + (Math.random() * 14).toFixed(1) + 's"></i>';
     const first = ov.hidden || !$('.pp-bgd', ov); ov.hidden = false; ov.classList.remove('jp', 'jp8', 'jp9'); ov.style.setProperty('--rc', cur.k.c2 + '33'); ov.style.setProperty('--ro', '.5');
-    ov.innerHTML = '<div class="pp-bgd"></div><div class="pp-rays"></div><div class="pp-dust">' + dust + '</div><button type="button" class="pp-skip" data-pp="skip">SKIP</button><div class="pp-st">' + packHtml(cur.k) + '</div><div class="pp-pips">' + cur.cards.map(() => '<i></i>').join('') + '</div><div class="pp-tip">절취선을 따라 옆으로 끌어 뜯거나, 뒤집어서 스트랩을 잡아 뜯으세요</div><div class="pp-fb"><button type="button" class="g" data-pp="flip">↻ 뒤집기</button></div>' +
-      (boxN ? '<div class="pp-dock" style="--c1:' + cur.k.c1 + ';--c2:' + cur.k.c2 + '"><div class="pp-ctn">' + Q.length + '</div>남은 팩</div>' : '');
-    const wr = $('.pp-wrap', ov), dock = $('.pp-dock', ov); let r0 = fromR; fromR = null; if (!r0 && dock) r0 = $('.pp-ctn', dock).getBoundingClientRect();
+    ov.innerHTML = '<div class="pp-bgd"></div><div class="pp-rays"></div><div class="pp-dust">' + dust + '</div><button type="button" class="pp-skip" data-pp="skip">SKIP</button><div class="pp-st">' + packHtml(cur.k) + '</div><div class="pp-pips">' + cur.cards.map(() => '<i></i>').join('') + '</div><div class="pp-tip">절취선을 따라 옆으로 끌어 뜯으세요</div><div class="pp-fb"></div>' +
+      (boxN ? '<div class="pp-dock">' + boxHtml(cur.k, Q.length, '') + '</div>' : '');
+    const wr = $('.pp-wrap', ov), dock = $('.pp-dock', ov); let r0 = fromR; fromR = null; if (!r0 && dock) { const tr = $('.bx-in', dock).getBoundingClientRect(); r0 = { left: tr.left + tr.width * 0.3, top: tr.top, width: tr.width * 0.4, height: tr.height }; } /* 상자에서 한 팩을 꺼냄 */
     if (first) { $('.pp-bgd', ov).animate([{ opacity: 0 }, { opacity: 1 }], { duration: 380, easing: 'ease-out' }); $('.pp-rays', ov).animate([{ opacity: 0 }, { opacity: 0.5 }], { duration: 600 }); } /* 주변이 어두워지며 */
     wr.style.animation = 'none'; const r1 = wr.getBoundingClientRect(), bob = () => { wr.style.animation = ''; };
     if (r0 && r0.width) { const sc = Math.min(1, r0.width / r1.width), dx = r0.left + r0.width / 2 - (r1.left + r1.width / 2), dy = r0.top + r0.height / 2 - (r1.top + r1.height / 2); /* 고른 팩이 그 자리에서 화면 가운데로 */
@@ -256,7 +273,7 @@ svg.pp-strap{display:block;position:absolute;inset:0;width:100%;height:100%;over
       if (mode === 'back') { fly(strap, 'translate(140%,-30%) rotate(50deg)', 0, 420); const tb = $('.pp-tab', pk); if (tb) tb.remove(); const sm0 = $('.pp-seam', pk); if (sm0) sm0.remove();
         setTimeout(() => { hl.animate([{ transform: hl.style.transform }, { transform: 'translate(-190%,8%) rotate(-26deg)' }], { duration: 420, easing: 'ease-in', fill: 'forwards' }); hr.animate([{ transform: hr.style.transform }, { transform: 'translate(190%,8%) rotate(26deg)' }], { duration: 420, easing: 'ease-in', fill: 'forwards' }); }, 140);
         setTimeout(() => cardsInit(ov, 'back'), 500); }
-      else { fly(mode === 'top' ? top : bot, 'translate(70%,' + (mode === 'top' ? -420 : 420) + '%) rotate(' + (mode === 'top' ? 40 : -40) + 'deg)', 0, 460); setTimeout(() => cardsInit(ov, mode), 160); } };
+      else { fly(mode === 'top' ? top : bot, 'translate(70%,' + (mode === 'top' ? -420 : 420) + '%) rotate(' + (mode === 'top' ? 40 : -40) + 'deg)', 0, 460); setTimeout(() => cardsInit(ov, mode), 660); } }; /* 빛이 터지고 0.5초 뒤 카드가 나옴 */
     pk.addEventListener('pointerdown', (e) => { if (done) return; const r = pk.getBoundingClientRect(), back = pk.classList.contains('flip'), fy = (e.clientY - r.top) / r.height; const zone = back ? 'back' : fy < 0.3 ? 'top' : fy > 0.74 ? 'bot' : ''; if (!zone) return; dn = { x: e.clientX, y: e.clientY, zone, w: r.width, h: r.height }; pk.classList.add('live'); const tb = $('.pp-tab', pk); if (tb && back) tb.style.display = 'none'; try { pk.setPointerCapture(e.pointerId); } catch (er) { /* 무시 */ } });
     pk.addEventListener('pointermove', (e) => { if (done) return; const r = pk.getBoundingClientRect();
       if (!dn) { if (e.pointerType === 'mouse' && !pk.classList.contains('flip')) { pk.style.setProperty('--ry', (((e.clientX - r.left) / r.width - 0.5) * 22).toFixed(1) + 'deg'); pk.style.setProperty('--rx', ((0.5 - (e.clientY - r.top) / r.height) * 14).toFixed(1) + 'deg'); } return; }
@@ -329,7 +346,7 @@ svg.pp-strap{display:block;position:absolute;inset:0;width:100%;height:100%;over
   function summary(packs) {
     const ov = $('.pp-ov', root), all = [], multi = packs.length > 1; packs.forEach((p) => p.cards.forEach((c) => all.push(c))); if (!multi) all.sort((a, b) => tvOf(b) - tvOf(a)); /* 여러 팩: 열리는 순서 그대로 */
     const gold = all.filter((c) => c.dup).length, nw = all.filter((c) => !c.dup && c.cnt === 1).length, best = all.reduce((m, c) => Math.max(m, tvOf(c)), 0), k = lastBuy && KINDS.find((x) => x.k === lastBuy.kind);
-    ov.classList.remove('jp', 'jp8', 'jp9'); stageBg(ov, multi ? 0 : best, !multi && best >= 7); ['.pp-st', '.pp-pips', '.pp-skip', '.pp-fb', '.pp-tip', '.pp-sbox', '.pp-mq', '.pp-dock'].forEach((q) => { const e = $(q, ov); if (e) e.remove(); });
+    ov.classList.remove('jp', 'jp8', 'jp9'); stageBg(ov, multi ? 0 : best, !multi && best >= 7); ['.pp-st', '.pp-pips', '.pp-skip', '.pp-fb', '.pp-tip', '.pp-sbox', '.pp-mq'].forEach((q) => { const e = $(q, ov); if (e) e.remove(); });
     const box = document.createElement('div'); box.className = 'pp-sbox'; box.style.cssText = 'display:contents';
     const fin = '<div class="pp-fb">' + (Q.length ? '<button type="button" data-pp="next">다음 팩 (' + Q.length + ')</button><button type="button" class="g" data-pp="all">모두 열기</button>' : (k ? '<button type="button" class="o" data-pp="again">한 번 더 ' + chip(k.r ? 'r' : 'b', 15) + fmt(lastBuy.n === 30 ? k.box : k.price) + '</button>' : '') + '<button type="button" class="g" data-pp="close">확인</button>') + '</div>';
     box.innerHTML = '<div class="pp-tip" style="font-size:15px;opacity:1">' + all.length + '장' + (nw ? ' · <span style="color:#5ef0a0">NEW ' + nw + '</span>' : '') + (gold ? ' · <span style="color:#ffd24a">골드칩 ' + gold + '개 반환</span>' : '') + '</div><div class="pp-sum">' + all.map((c) => '<div style="--gc:' + colOf(tvOf(c)) + '"><div class="' + (tvOf(c) >= 7 ? 'hi' : '') + '">' + window.doroRaid.card(Object.assign({}, c.x, { cnt: c.cnt })) + '</div>' + (c.dup ? '<em>골드칩</em>' : c.cnt === 1 ? '<em class="n">NEW</em>' : '<em>' + c.cnt + '장</em>') + '</div>').join('') + '</div><div class="pp-fb"><button type="button" class="g" data-pp="fast">건너뛰기</button></div>';
