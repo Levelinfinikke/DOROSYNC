@@ -47,7 +47,6 @@
     <button role="tab" data-tab="jw"><img class="olic jwic" alt="" src="assets/img/95134e0dd4f5.png">쥬얼</button>
     <button role="tab" data-tab="gc"><i class="tic gcic" aria-hidden="true"></i>모집</button>
     <button role="tab" data-tab="me"><i class="tic" style="--m:url(../assets/img/17e06c5ec949.png)"></i>전초기지</button>
-    <button role="tab" data-tab="dex" class="dxtab" hidden><svg class="dxic" viewBox="-80 -80 160 160" aria-hidden="true"><circle r="72" fill="#3a3f47"/><circle r="64" fill="#9aa1ab"/><circle r="40" fill="#c8ccd2" stroke="#5a6068" stroke-width="6"/><text y="14" text-anchor="middle" font-size="40" font-weight="900" fill="#3a3f47" font-family="Arial">D</text></svg>도감</button>
     <button role="tab" data-tab="raid" class="dxtab" hidden><svg class="dxic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="11" height="15" rx="2" fill="#c8ccd2" transform="rotate(-10 8 12)"/><rect x="10" y="4" width="11" height="15" rx="2" fill="#f5b301" stroke="#3a3f47" stroke-width="1.2" transform="rotate(8 15 12)"/></svg>포커레이드</button>
   </nav>
 <script>(function(){try{var h=(location.hash||'').slice(1);if(!document.getElementById('pre-tab'))return;if(h==='gc'||h==='gccs'||h==='gcco')h='gcm';var G={daily:'main',pkg:'main',inc:'main',rules:'main',data:'boss',olrules:'ol',jwrules:'jw',gcm:'gc',gctier:'gc',gcdata:'gc',gcrules:'gc'},g=G[h]||h,b=document.querySelectorAll('#tabs button');for(var i=0;i<b.length;i++)b[i].classList.toggle('on',b[i].getAttribute('data-tab')===g)}catch(e){}})();</script>
@@ -71,8 +70,9 @@
     <button role="tab" data-grp="gc" data-tab="gccs" class="gone" hidden>코스튬</button>
     <button role="tab" data-grp="gc" data-tab="gcco" class="gone" hidden>소장품</button>
     <button role="tab" data-grp="gc" data-tab="gctier" hidden>티어표</button>
-    <button role="tab" data-grp="gc" data-tab="gcdata" hidden>니케백과</button>
     <button role="tab" data-grp="gc" data-tab="gcrules" hidden>계산 규칙</button>
+    <button role="tab" data-grp="raid" data-tab="raid" hidden>포커레이드</button>
+    <button role="tab" data-grp="raid" data-tab="dex" hidden><img class="cbic" alt="" src="assets/img/raid-back.webp">카드</button>
   </nav>
 </div></div>
 

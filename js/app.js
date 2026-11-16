@@ -3588,12 +3588,12 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') $('#nk-modal').hidden = true; });
 
   /* ---------- 탭 ---------- */
-  const GRP = { main: 'main', daily: 'main', pkg: 'main', inc: 'main', rules: 'main', boss: 'boss', data: 'boss', ol: 'ol', olrules: 'ol', jw: 'jw', jwrules: 'jw', gc: 'gc', gcm: 'gc', gccs: 'gc', gcco: 'gc', gcdata: 'gc', gctier: 'gc', gcrules: 'gc', me: 'me', dex: 'dex', raid: 'raid' }; let lastGrp = { main: 'main', boss: 'boss', ol: 'ol', jw: 'jw', gc: 'gcm', me: 'me' };
+  const GRP = { main: 'main', daily: 'main', pkg: 'main', inc: 'main', rules: 'main', boss: 'boss', data: 'boss', ol: 'ol', olrules: 'ol', jw: 'jw', jwrules: 'jw', gc: 'gc', gcm: 'gc', gccs: 'gc', gcco: 'gc', gcdata: 'gc', gctier: 'gc', gcrules: 'gc', me: 'me', dex: 'raid', raid: 'raid' }; let lastGrp = { main: 'main', boss: 'boss', ol: 'ol', jw: 'jw', gc: 'gcm', me: 'me', raid: 'raid' };
   const OLV = { ol: 'calc', olrules: 'rules' };
   let curGrp = 'main';
   function previewSub(grp) {
     $$('#subtabs button').forEach((b) => { b.hidden = b.dataset.grp !== grp; });
-    $('#subtabs').classList.toggle('show', grp !== 'me' && grp !== 'dex' && grp !== 'raid');
+    $('#subtabs').classList.toggle('show', grp !== 'me');
     subAlign(grp);
   }
   /* 하위 탭을 상위 탭 바로 아래 가운데에 맞춤 */
@@ -3617,12 +3617,12 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   })();
   (() => { const top = document.querySelector('.top'); if (!top) return; const f = () => document.documentElement.style.setProperty('--toph', top.offsetHeight + 'px'); f(); addEventListener('resize', f); if (window.ResizeObserver) new ResizeObserver(f).observe(top); })();
   function showTab(name) {
-    if (name === 'gc' || name === 'gccs' || name === 'gcco') name = 'gcm'; // 숨긴 하위 탭 대신 가챠 머신
+    if (name === 'gc' || name === 'gccs' || name === 'gcco' || name === 'gcdata') name = 'gcm'; // 숨긴 하위 탭 대신 가챠 머신
     const grp = GRP[name] || name;
     if (lastGrp[grp]) lastGrp[grp] = name;
     $$('#tabs button').forEach((b) => b.classList.toggle('on', b.dataset.tab === grp));
     $$('#subtabs button').forEach((b) => { b.classList.toggle('on', b.dataset.tab === name); b.hidden = b.dataset.grp !== grp; });
-    $('#subtabs').classList.toggle('show', grp !== 'me' && grp !== 'dex' && grp !== 'raid');
+    $('#subtabs').classList.toggle('show', grp !== 'me');
     curGrp = grp; subAlign(grp);
     $$('.tab').forEach((s) => s.classList.toggle('on', s.id === 'tab-' + (OLV[name] ? 'ol' : name)));
     if (name === 'gcm') gmMount();
@@ -4358,8 +4358,8 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   const dexList = () => { const seen = {}; return GC_NK.filter((r) => { if (seen[r[0]]) return false; seen[r[0]] = 1; return true; }); };
   function dexGate() {
     const on = dexOk();
-    ['dex', 'raid'].forEach((k) => { const b = document.querySelector('#tabs button[data-tab="' + k + '"]'); if (b && b.hidden === on) b.hidden = !on; });
-    if (!on && (curGrp === 'dex' || curGrp === 'raid')) showTab('main');
+    { const b = document.querySelector('#tabs button[data-tab="raid"]'); if (b && b.hidden === on) b.hidden = !on; }
+    if (!on && curGrp === 'raid') showTab('main');
   }
   /* 웹에서 얻은 카드 더하기(이후 게임에서 당첨 시 1장씩). 연동한 보유 정보(명함 1 + 돌파 + 코강)에 더해짐, 합쳐서 최대 11장 */
   function dexAdd(n, d) { const s = dexLoad(), c = Math.max(0, Math.min(DEX_MAX, (s.n[n] || 0) + d)); if (c) s.n[n] = c; else delete s.n[n]; dexSave(); return c; }
@@ -4377,22 +4377,20 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
     const root = $('#tab-dex'); if (!root) return; if (!dexOk()) { root.innerHTML = ''; return; }
     if (!window.doroRaid || !window.GM_ASSETS) { setTimeout(renderDex, 300); return; }
     const tiers = dexTier0(), all = dexList(), f = dexF, TORD = ['SSS', 'SS', 'S', 'A', 'B', 'C', 'D', 'E', 'F'];
-    const pool = all.filter((r) => r[2] === f.r), have = pool.filter((r) => dexCntAll(r[0]) > 0);
+    const pool = all.filter((r) => r[2] === 'SSR'), have = pool.filter((r) => dexCntAll(r[0]) > 0);
     const full = pool.filter((r) => dexCntAll(r[0]) >= 4).length, max = pool.filter((r) => dexCntAll(r[0]) >= DEX_MAX).length, cards = pool.reduce((a, r) => a + dexCntAll(r[0]), 0);
     let L = pool.filter((r) => (!f.c || r[1] === f.c) && (!f.t || (tiers[r[0]] || '-') === f.t) && (!f.own || dexCntAll(r[0]) > 0) && (!f.q || r[0].replace(/\s/g, '').includes(f.q.replace(/\s/g, ''))));
     L = L.slice().sort((a, b) => { const ta = TORD.indexOf(tiers[a[0]]), tb = TORD.indexOf(tiers[b[0]]); return (ta < 0 ? 99 : ta) - (tb < 0 ? 99 : tb) || dexCntAll(b[0]) - dexCntAll(a[0]) || a[0].localeCompare(b[0]); });
-    const corps = [...new Set(pool.map((r) => r[1]))], ts = f.r === 'SSR' ? TORD.filter((t) => pool.some((r) => tiers[r[0]] === t)) : [];
+    const corps = [...new Set(pool.map((r) => r[1]))], ts = TORD.filter((t) => pool.some((r) => tiers[r[0]] === t));
     const seg = (key, vals, lab) => '<div class="gm-seg dx-f">' + vals.map((v, i) => '<button type="button" data-dxf="' + key + '" data-v="' + esc(v) + '"' + (String(f[key]) === String(v) ? ' class="on"' : '') + '>' + esc(lab ? lab[i] : v) + '</button>').join('') + '</div>';
-    /* 수집 마일스톤: SSR 명함 수집률 25%마다 포커레이드 리드로우 +1 */
+    /* 수집 마일스톤: SSR 명함 수집률 25%마다 포커레이드 버리기 +1, 100%는 핸드 +1 */
     const ssr = all.filter((r) => r[2] === 'SSR'), sh = ssr.filter((r) => dexCntAll(r[0]) > 0).length, sp = ssr.length ? sh / ssr.length * 100 : 0;
-    const ms = [25, 50, 75, 100].map((p) => { const need = Math.ceil(ssr.length * p / 100), on = sh >= need; return '<div class="dx-ms' + (on ? ' on' : '') + '" style="left:' + p + '%"><b>' + p + '%</b><span>' + (p === 100 ? '특별 보상(준비 중)' : '리드로우 +1') + '</span><small>' + (on ? '달성' : (need - sh) + '명 남음') + '</small></div>'; }).join('');
-    const who = doroBL && doroBL.data ? '연동 정보 적용됨' + (doroBL.data.me && doroBL.data.me.role ? ' · ' + esc(doroBL.data.me.role) : '') : '전초기지 탭에서 연동하면 보유 니케의 돌파·코어강화가 반영됩니다';
-    root.innerHTML = '<div class="card dx-hd"><div class="row-ctl sp"><h2 class="inline dx-h">' + window.doroChipSvg('b', 26) + '도감 <span class="muted sm">관리자 전용 · 미공개</span></h2><span class="muted sm">' + who + '</span></div>' +
+    const ms = [25, 50, 75, 100].map((p) => { const need = Math.ceil(ssr.length * p / 100), on = sh >= need; return '<div class="dx-ms' + (on ? ' on' : '') + '" style="left:' + p + '%"><b>' + p + '%</b><span>' + (p === 100 ? '핸드 +1' : '버리기 +1') + '</span><small>' + (on ? '달성' : (need - sh) + '명 남음') + '</small></div>'; }).join('');
+    root.innerHTML = '<div class="card dx-hd"><h2 class="inline dx-h"><img class="cbic" alt="" src="assets/img/raid-back.webp">카드</h2>' +
       '<div class="dx-kpi"><div class="dx-k"><div class="l">수집</div><b class="num">' + have.length + '<small>/' + pool.length + '</small></b></div><div class="dx-k"><div class="l">풀돌 이상</div><b class="num">' + full + '</b></div><div class="dx-k"><div class="l">풀코강</div><b class="num">' + max + '</b></div><div class="dx-k"><div class="l">카드</div><b class="num">' + fmt(cards) + '<small>/' + fmt(pool.length * DEX_MAX) + '</small></b></div></div>' +
-      '<div class="dx-mst"><div class="dx-mh">수집 마일스톤 <small>SSR 명함 ' + sh + '/' + ssr.length + ' (' + (Math.round(sp * 10) / 10) + '%) · 포커레이드 리드로우 ' + (2 + Math.min(3, Math.floor(sp / 25))) + '회</small></div><div class="dx-mb"><i style="width:' + Math.min(100, sp) + '%"></i>' + ms + '</div></div>' +
-      '<p class="muted sm dx-leg">명함 1장 · 돌파마다 +1장(별 3개) · 코어강화마다 +1장(풀코강 11장). 연동한 보유 정보에 웹 게임에서 얻은 카드가 더해집니다. 풀돌은 포일, 풀코강은 폴리크롬 카드가 됩니다.</p>' +
-      '<div class="dx-fs">' + seg('r', ['SSR', 'SR', 'R']) + seg('c', [''].concat(corps), ['전체 기업'].concat(corps)) + (ts.length ? seg('t', [''].concat(ts), ['전체 티어'].concat(ts)) : '') +
-      '<label class="chk"><input type="checkbox" id="dx-own"' + (f.own ? ' checked' : '') + '> 보유만</label><input type="search" id="dx-q" placeholder="이름 검색" value="' + esc(f.q) + '"></div></div>' +
+      '<div class="dx-mst"><div class="dx-mh">수집 <small>' + sh + '/' + ssr.length + ' (' + (Math.round(sp * 10) / 10) + '%) · 버리기 ' + (1 + Math.min(3, Math.floor(sp / 25))) + '회</small></div><div class="dx-mb"><i style="width:' + Math.min(100, sp) + '%"></i>' + ms + '</div></div>' +
+      '<details class="dx-fd"' + (f.open ? ' open' : '') + '><summary>필터</summary><div class="dx-fs">' + seg('c', [''].concat(corps), ['전체 기업'].concat(corps)) + (ts.length ? seg('t', [''].concat(ts), ['전체 티어'].concat(ts)) : '') +
+      '<label class="chk"><input type="checkbox" id="dx-own"' + (f.own ? ' checked' : '') + '> 보유만</label><input type="search" id="dx-q" placeholder="이름 검색" value="' + esc(f.q) + '"></div></details></div>' +
       '<div class="dx-grid2">' + (L.length ? L.map((r) => { const o = dexObj(r, tiers); return '<div class="dx-cell' + (o.cnt ? '' : ' dx-no') + '">' + window.doroRaid.card(o) + '</div>'; }).join('') : '<p class="muted">해당하는 니케가 없습니다.</p>') + '</div>';
   }
   (() => {
@@ -4402,7 +4400,15 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
     });
     root.addEventListener('change', (e) => { if (e.target.id === 'dx-own') { dexF.own = e.target.checked ? 1 : 0; renderDex(); } });
     root.addEventListener('input', (e) => { if (e.target.id === 'dx-q') { dexF.q = e.target.value; clearTimeout(renderDex.t); renderDex.t = setTimeout(() => { renderDex(); const q = $('#dx-q'); if (q) { q.focus(); q.setSelectionRange(q.value.length, q.value.length); } }, 200); } });
-    { const tb = document.querySelector('#tabs button[data-tab="dex"]'); if (tb && window.doroChipSvg) tb.innerHTML = window.doroChipSvg('b', 18, false, true) + '도감'; }
+    const tilt = (e) => { /* 마우스를 따라 카드가 기울고 빛이 따라옴 */
+      if (e.pointerType && e.pointerType !== 'mouse') return; const c = e.target.closest && e.target.closest('.dx-cell .pk'), K = ['--rx', '--ry', '--hs', '--go', '--gx', '--gy'];
+      if (tilt.c && tilt.c !== c) K.forEach((k) => tilt.c.style.removeProperty(k)); tilt.c = c; if (!c) return;
+      const r = c.getBoundingClientRect(), px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
+      c.style.setProperty('--ry', ((px - 0.5) * 34).toFixed(1) + 'deg'); c.style.setProperty('--rx', ((0.5 - py) * 24).toFixed(1) + 'deg'); c.style.setProperty('--hs', '1.08');
+      c.style.setProperty('--go', '1'); c.style.setProperty('--gx', (px * 100).toFixed(0) + '%'); c.style.setProperty('--gy', (py * 100).toFixed(0) + '%');
+    };
+    root.addEventListener('pointermove', tilt); root.addEventListener('pointerleave', () => tilt({ target: document.body }));
+    root.addEventListener('toggle', (e) => { if (e.target.classList && e.target.classList.contains('dx-fd')) dexF.open = e.target.open ? 1 : 0; }, true);
     window.addEventListener('doroacct', dexGate); setTimeout(dexGate, 0); setInterval(dexGate, 5000);
   })();
   /* 가챠 머신: 독립 모듈(DoroGacha)을 실제 풀·보유 재화와 연결 */

@@ -459,7 +459,8 @@ async function raid(req, env, out) {
   for (let attempt = 0; attempt < 3; attempt++) {
     const my = await getDoc(col + '/' + uid), f = my ? my.f : {};
     const n = f.day === today ? (f.n || 0) : 0, g = f.g && f.g.hand ? f.g : null;
-    const view = (g2, extra) => Object.assign({ ok: true, season, admin, tries: n, max: RAID_TRIES, best: f.sc || 0, game: g2 ? { hand: rList(g2.hand).map((k) => [k, g2.cnt[k] || 1]), rd: g2.rd, left: rList(g2.deck).length, pool: rList(g2.deck).sort().map((k) => [k, g2.cnt[k] || 1]), total: g2.total } : null }, extra || {});
+    const mx = RAID_TRIES + (f.x1 ? 1 : 0); /* 도감 100%: 하루 핸드 +1 */
+    const view = (g2, extra) => Object.assign({ ok: true, season, admin, tries: n, max: mx, best: f.sc || 0, game: g2 ? { hand: rList(g2.hand).map((k) => [k, g2.cnt[k] || 1]), rd: g2.rd, left: rList(g2.deck).length, pool: rList(g2.deck).sort().map((k) => [k, g2.cnt[k] || 1]), total: g2.total } : null }, extra || {});
     const pre = my ? { updateTime: my.updateTime } : { exists: false };
     const save = (fields, mask) => ({ update: { name: docName(col + '/' + uid), fields: fsv(fields).mapValue.fields }, updateMask: { fieldPaths: mask }, currentDocument: pre });
     if (a === 'state') { const ud = await getDoc('users/' + uid); let fr = (ud && ud.f.raidFrames) || {}, newFrame = 0;
@@ -470,7 +471,7 @@ async function raid(req, env, out) {
     if (!active) return out(409, { ok: false, error: 'inactive' });
     if (a === 'start') {
       if (g) return out(200, view(g)); /* 진행 중인 판이 있으면 그 판을 이어감 */
-      if (n >= RAID_TRIES) return out(409, { ok: false, error: 'tries' });
+      if (n >= mx) return out(409, { ok: false, error: 'tries' });
       const id = toIntlId(B.openid), area = Number(B.area);
       if (!id || !AREAS.includes(area)) return out(400, { ok: false, error: 'link' });
       if (f.oid && (f.oid !== id || f.area !== area)) return out(409, { ok: false, error: 'oid' }); /* 시즌 중에는 처음 쓴 게임 계정으로 고정 */
@@ -480,15 +481,21 @@ async function raid(req, env, out) {
       Object.keys(web).forEach((k) => { if (RAID_NK[k]) cnt[k] = Math.min(11, (cnt[k] || 0) + Math.max(0, Math.floor(+web[k] || 0))); });
       const codes = Object.keys(cnt).filter((k) => cnt[k] > 0); if (codes.length < 7) return out(409, { ok: false, error: 'deck', have: codes.length });
       rShuffle(codes);
-      const rd = 2 + Math.min(3, Math.floor(codes.length / Object.keys(RAID_NK).length * 4)); /* 도감 25%마다 +1 (100%는 다른 보상) */
+      const NKN = Object.keys(RAID_NK).length, x1 = codes.length >= NKN ? 1 : 0, rd = 1 + Math.min(3, Math.floor(codes.length / NKN * 4)); /* 버리기: 기본 1, 도감 25%마다 +1(최대 4). 100%는 하루 핸드 +1 */
       const g2 = { hand: codes.slice(0, 7).join(','), deck: codes.slice(7).join(','), cnt, rd, total: codes.length, t: now };
       const nick = String((ud && (ud.f.nickname || ud.f.username)) || '').slice(0, 24);
       const pf = String(B.pf || '').replace(/\D/g, '').slice(0, 6), fr = [1, 2, 3].includes(+B.fr) && Object.values((ud && ud.f.raidFrames) || {}).map(Number).includes(+B.fr) ? +B.fr : 0; /* 랭킹에 보일 프로필 니케·테두리(가진 테두리만) */
-      if (await commit([save({ uid, nick, oid: id, area, day: today, n: n + 1, g: g2, pf, fr }, ['uid', 'nick', 'oid', 'area', 'day', 'n', 'g', 'pf', 'fr'])])) { const v = view(g2); v.tries = n + 1; return out(200, v); }
+      if (await commit([save({ uid, nick, oid: id, area, day: today, n: n + 1, g: g2, pf, fr, x1 }, ['uid', 'nick', 'oid', 'area', 'day', 'n', 'g', 'pf', 'fr', 'x1'])])) { const v = view(g2); v.tries = n + 1; v.max = RAID_TRIES + x1; return out(200, v); }
       continue;
     }
     if (!g) return out(409, { ok: false, error: 'nogame' });
     const hand = rList(g.hand), pick = Array.from(new Set((Array.isArray(B.codes) ? B.codes : []).map(String))).filter((k) => hand.includes(k));
+    if (a === 'hint') { /* 추천 보기: 싱크칩 100 */
+      const ud = await getDoc('users/' + uid), cv = (ud && ud.f.chipsV) || { d: 0, r: 0 }; if (!ud || (cv.d || 0) < 100) return out(409, { ok: false, error: 'chips' });
+      const chips = cv.d - 100;
+      if (await commit([{ update: { name: ud.name, fields: { chipsV: fsv({ d: chips, r: cv.r || 0 }) } }, updateMask: { fieldPaths: ['chipsV'] }, currentDocument: { updateTime: ud.updateTime } }])) return out(200, { ok: true, chips });
+      continue;
+    }
     if (a === 'discard') {
       if (pick.length < 1 || pick.length > 5 || g.rd < 1) return out(400, { ok: false, error: 'bad' });
       const fl = B.flt || {}, conds = ['e', 'c', 'b', 'r'].filter((k) => fl[k]), cost = conds.length ? 100 * Math.pow(2, conds.length - 1) * (fl.c === '필그림' ? 2 : 1) : 0; /* 필그림 지정은 2배 */
@@ -507,7 +514,7 @@ async function raid(req, env, out) {
       const R = rEval(pick, g.cnt, sn), up = R.score > (f.sc || 0);
       const fields = { g: null }, mask = ['g'];
       if (up) { Object.assign(fields, { sc: R.score, at: now, bd: pick.map((k) => k + ':' + (g.cnt[k] || 1)).join(','), bc: R.chips, bm: R.mult, bf: R.f }); mask.push('sc', 'at', 'bd', 'bc', 'bm', 'bf'); }
-      if (await commit([save(fields, mask)])) return out(200, { ok: true, season, tries: n, max: RAID_TRIES, best: up ? R.score : (f.sc || 0), result: R, newBest: up, game: null });
+      if (await commit([save(fields, mask)])) return out(200, { ok: true, season, tries: n, max: mx, best: up ? R.score : (f.sc || 0), result: R, newBest: up, game: null });
       continue;
     }
     return out(400, { ok: false, error: 'bad' });
