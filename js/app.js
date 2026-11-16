@@ -4405,8 +4405,16 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
     const root = $('#tab-game'); if (!root) return; const adm = dexOk(), o = chipRaw();
     const G = [['gcmg', '가챠 머신', '캡슐을 뽑고 싱크칩을 모으세요', 'lb-gc', 1], ['raid', '포커레이드', '니케 카드로 족보를 만들어 보스를 공략', 'lb-rd', adm], ['pack', '카드팩', '팩을 뜯어 니케 카드를 모으세요', 'lb-pk', adm], ['dex', '카드', '모은 카드와 수집 보상', 'lb-dx', adm],
       ['', 'PULL-TABS', '준비 중', 'lb-pt', 0], ['', '2048', '준비 중', 'lb-48', 0], ['', 'PLINKO', '준비 중', 'lb-pl', 0]].filter((g) => g[4] || !g[0]);
+    /* 입구 그림 = 실제 게임 화면의 요소(카드·팩·보스) */
+    const art = {}, rd = window.doroRaid && window.doroRaidData ? window.doroRaidData() : null, L = rd && rd.list ? rd.list.slice().sort((a, b) => (b.t === 'SSS') - (a.t === 'SSS')) : [];
+    try { if (L.length >= 5 && adm) { const cd = (x, cnt) => window.doroRaid.card(Object.assign({}, x, { cnt }));
+        art.raid = '<span class="lb-sc"><span class="lb-hud"><i class="c">42</i>×<i class="m">7</i></span><span class="lb-row">' + [0, 1, 2, 3, 4].map((k) => cd(L[k], [4, 11, 7, 4, 1][k])).join('') + '</span></span>';
+        art.dex = '<span class="lb-fan">' + [5, 6, 7].map((k, q) => cd(L[k % L.length], [1, 11, 4][q])).join('') + '</span>';
+        if (window.doroPack && window.doroPack.art) art.pack = '<span class="lb-pks">' + ['co:엘리시온', 'std', 'pil'].map((k) => window.doroPack.art(k)).join('') + '</span>'; }
+      const cv = D.assets && D.assets.cover; if (cv) art.gcmg = '<span class="lb-gm" style="background-image:url(' + cv + ')"></span><span class="lb-dome">' + ['#ff5d8f', '#5ab8ff', '#ffd24a', '#5ef0a0', '#b07aff', '#ff9a3d', '#5ab8ff', '#ff5d8f', '#ffd24a'].map((c2, q) => '<i style="--c:' + c2 + ';left:' + (6 + q * 10.5) + '%;bottom:' + (q % 3 * 13) + '%"></i>').join('') + '</span>'; } catch (e) { /* 그림 없이 */ }
+    if (adm && !L.length && !renderLobby.w) { renderLobby.w = setTimeout(() => { renderLobby.w = 0; if (curTab === 'game') renderLobby(); }, 600); }
     root.innerHTML = '<div class="lb"><div class="lb-hero"><div class="lb-t"><small>DOROSYNC</small>니슬렁</div><div class="lb-bal"><span>' + window.doroChipSvg('b', 26) + '<b class="num">' + fmt(o.d) + '</b></span><span>' + window.doroChipSvg('r', 26) + '<b class="num">' + fmt(o.r) + '</b></span></div></div>' +
-      '<div class="lb-grid">' + G.map((g, i) => '<button type="button" class="lb-g ' + g[3] + (g[0] ? '' : ' soon') + '"' + (g[0] ? ' data-go="' + g[0] + '"' : ' disabled') + ' style="--i:' + i + '"><span class="lb-art" aria-hidden="true"></span><b>' + g[1] + '</b><small>' + g[2] + '</small>' + (g[0] ? '<i>입장 ▶</i>' : '<i>COMING SOON</i>') + '</button>').join('') + '</div></div>';
+      '<div class="lb-grid">' + G.map((g, i) => '<button type="button" class="lb-g ' + g[3] + (g[0] ? '' : ' soon') + '"' + (g[0] ? ' data-go="' + g[0] + '"' : ' disabled') + ' style="--i:' + i + '"><span class="lb-art" aria-hidden="true">' + (art[g[0]] || '') + '</span><b>' + g[1] + '</b><small>' + g[2] + '</small>' + (g[0] ? '<i>입장 ▶</i>' : '<i>COMING SOON</i>') + '</button>').join('') + '</div></div>';
   }
   (() => { const root = $('#tab-game'); if (!root) return; root.addEventListener('click', (e) => { const b = e.target.closest('[data-go]'); if (b) showTab(b.dataset.go); }); window.addEventListener('dorochips', () => { if (curTab === 'game') renderLobby(); });
     const ic = document.querySelector('#tabs .gmtic'); if (ic && window.doroChipSvg) ic.innerHTML = window.doroChipSvg('b', 18, false, true); })();
