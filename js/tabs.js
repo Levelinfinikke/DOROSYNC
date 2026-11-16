@@ -1,0 +1,145 @@
+/* DOROSYNC DORO TABS(풀탭) (관리자 전용 · 미공개)
+   1장 = 골드칩 1개(싱크칩 10) · 탭 3줄을 뜯어 같은 무늬 3개가 나오면 당첨
+   한 상자 1,000장: 당첨 수와 순서가 미리 정해져 있음(서버가 정함) · 당첨은 골드칩 · DORO칩 · S~SSS 카드뿐
+   상자 구성: S 70 · SS 35 · SSS 14 · DORO칩 15 · 골드칩 50×1, 20×2, 10×6, 3×20, 1×90 (나머지는 꽝) */
+(() => {
+  'use strict';
+  const PROD = /github\.io$/.test(location.hostname), BOX = 1000, K = 'dorosync-tabs';
+  const SPEC = [['S', 70], ['SS', 35], ['SSS', 14], ['r', 15], ['g50', 1], ['g20', 2], ['g10', 6], ['g3', 20], ['g1', 90]], TV = { S: 7, SS: 8, SSS: 9 }, DUP = { 7: 5, 8: 15, 9: 50 };
+  const OUT = (() => { const o = []; SPEC.forEach((x) => { for (let i = 0; i < x[1]; i++) o.push(x[0]); }); while (o.length < BOX) o.push(''); return o; })();
+  const mulb = (a) => () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+  const order = (seed) => { const r = mulb(seed), a = OUT.map((_, i) => i); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; };
+  const $ = (s, r) => (r || document).querySelector(s), esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const fmt = (n) => Math.round(n).toLocaleString('ko-KR'), chip = (k, px) => (window.doroChipSvg ? window.doroChipSvg(k, px, false, true) : ''), data = () => window.doroRaidData();
+  let root = null, Q = [], cur = null, left = null, busy = false, auto = false, AC = null, pendG = 0, pendR = 0;
+  /* ---------- 소리: 절취선이 '드르륵' 뜯기는 소리 = 아주 짧은 종이 파열음이 10ms 안팎 간격으로 이어짐 ---------- */
+  const ac = () => { try { if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === 'suspended') AC.resume(); } catch (e) { AC = null; } return AC; };
+  let NB = null; const nbuf = (a) => { if (!NB) { NB = a.createBuffer(1, a.sampleRate * 0.5, a.sampleRate); const ch = NB.getChannelData(0); for (let i = 0; i < ch.length; i++) ch[i] = Math.random() * 2 - 1; } return NB; };
+  const burst = (t, d, v, f, q, type) => { const a = ac(); if (!a) return; const s = a.createBufferSource(), g = a.createGain(), bq = a.createBiquadFilter(), t0 = a.currentTime + t; s.buffer = nbuf(a); bq.type = type || 'bandpass'; bq.frequency.value = f; bq.Q.value = q || 1; g.gain.setValueAtTime(0.0001, t0); g.gain.linearRampToValueAtTime(v, t0 + 0.0006); g.gain.exponentialRampToValueAtTime(0.0001, t0 + d); s.connect(bq).connect(g).connect(a.destination); s.start(t0, Math.random() * 0.4, d + 0.01); };
+  const perf = (t, v) => { burst(t, 0.006, 0.5 * v, 2600 + Math.random() * 1500, 0.8); burst(t, 0.004, 0.22 * v, 6500 + Math.random() * 2500, 0.7, 'highpass'); burst(t + 0.001, 0.012, 0.1 * v, 900 + Math.random() * 300, 1.2); }; /* 구멍 하나가 터지는 소리: 2~4kHz가 중심, 위로 바스락, 아래로 종이 울림 */
+  const sfx = { perf: (v) => perf(0, v == null ? 1 : v),
+    rip: (n, t0) => { let t = t0 || 0; for (let i = 0; i < n; i++) { perf(t, 0.75 + Math.random() * 0.35); t += 0.0085 + Math.random() * 0.0045; } burst(t0 || 0, t - (t0 || 0) + 0.02, 0.05, 4800, 0.5); burst(t, 0.03, 0.3, 1700, 0.9); return t; }, /* 드르륵 + 끝에서 '탁' 떨어짐 */
+    out: (t) => { burst(t, 0.03, 0.4, 700, 0.8, 'lowpass'); burst(t + 0.012, 0.02, 0.2, 3200, 1); }, coin: () => { [1900, 2850].forEach((f, i) => { const a = ac(); if (!a) return; const o = a.createOscillator(), g = a.createGain(), t = a.currentTime + i * 0.05; o.frequency.value = f; g.gain.setValueAtTime(0.08, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.25); o.connect(g).connect(a.destination); o.start(t); o.stop(t + 0.27); }); },
+    tidy: () => { for (let i = 0; i < 5; i++) burst(i * 0.05, 0.03, 0.14, 2200, 0.6); burst(0.3, 0.05, 0.35, 500, 0.8, 'lowpass'); }, flip: () => burst(0, 0.07, 0.16, 3500, 0.6),
+    win: (lv) => { const a = ac(); if (!a) return; [0, 4, 7, 12, 16, 19].slice(0, 2 + lv * 2).forEach((st, i) => { const o = a.createOscillator(), g = a.createGain(), t = a.currentTime + i * 0.075; o.type = 'triangle'; o.frequency.value = 660 * Math.pow(2, st / 12); g.gain.setValueAtTime(0.09, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.4); o.connect(g).connect(a.destination); o.start(t); o.stop(t + 0.42); }); } };
+  /* ---------- 뽑기 ---------- */
+  const leftOf = (ord, i0) => { const L = { n: BOX - i0 }; for (let q = i0; q < BOX; q++) { const k = OUT[ord[q]]; if (k) L[k] = (L[k] || 0) + 1; } return L; };
+  function local(n) { /* 미리보기 전용: 이 기기에 상자 상태를 둠 */
+    let st = null; try { st = JSON.parse(localStorage.getItem(K)); } catch (e) { /* 무시 */ } if (!st || !st.s || st.i >= BOX) st = { s: (Math.random() * 4294967296) >>> 0, i: 0 };
+    const ord = order(st.s); n = Math.min(n, BOX - st.i); if (!n) return { tix: [], left: leftOf(ord, st.i) }; if (!window.doroChips.spend(10 * n)) throw new Error('chips');
+    const L = data().list, tix = []; let g = 0, r = 0;
+    for (let j = 0; j < n; j++) { const idx = ord[st.i + j], k = OUT[idx]; if (!k) tix.push(['']); else if (k === 'r') { r++; tix.push(['r']); } else if (k[0] === 'g') { g += +k.slice(1); tix.push([k]); }
+      else { const pool = L.filter((x) => x.t === k), rr = mulb(st.s ^ Math.imul(idx + 1, 2654435761)), x = pool[Math.floor(rr() * pool.length)] || L[0], dup = window.doroDex.count(x.n) >= 11; if (dup) g += DUP[TV[k]]; else window.doroDex.add(x.n, 1); tix.push([k, x.code, dup ? 1 : 0, dup ? 11 : window.doroDex.count(x.n)]); } }
+    st.i += n; try { localStorage.setItem(K, JSON.stringify(st)); } catch (e) { /* 무시 */ } const add = {}; if (g) add.g = g; if (r) add.r = r; if (g || r) window.doroChips.add(add, 'cap');
+    return { tix, left: leftOf(ord, st.i) };
+  }
+  async function fetchTix(n) {
+    if (!PROD) return local(n);
+    const j = await window.doroRaid.api('tabs', { n }); const a = window.doroAccount; if (a && a.doc && j.dex) a.doc.dex = j.dex; if (n && window.doroChips.sync) window.doroChips.sync(j.chips); return { tix: j.tix || [], left: j.left };
+  }
+  /* ---------- 표 한 장 ---------- */
+  const CO = { E: '엘리시온', M: '미실리스', T: '테트라', A: '어브노멀', P: '필그림' };
+  const symHtml = (s) => { const d = data(); if (CO[s]) return '<i class="tb-s co"><img alt="" src="' + ((d.coIco || {})[CO[s]] || '') + '"></i>'; if ('bsgr'.indexOf(s) >= 0 && s.length === 1) return '<i class="tb-s ch">' + chip(s, 40) + '</i>'; const x = d.list.find((y) => String(y.code) === s.slice(2)); return '<i class="tb-s pt" style="background-image:url(' + (x ? x.img : '') + ')"></i>'; };
+  function compose(t) { /* 당첨 줄 하나 + 꽝 줄(가끔 두 개만 맞는 아슬아슬한 줄) */
+    const d = data(), hi = d.list.filter((x) => TV[x.t]), base = ['E', 'M', 'T', 'A', 'P', 'b', 's', 'g', 'r'], rp = () => 'n:' + hi[Math.floor(Math.random() * hi.length)].code, any = () => (Math.random() < 0.3 ? rp() : base[Math.floor(Math.random() * base.length)]);
+    const k = t[0], ws = !k ? '' : k === 'r' ? 'r' : k === 'g1' ? 'b' : k === 'g3' ? 's' : k === 'g10' ? 'g' : k === 'g20' ? 'EMTA'[Math.floor(Math.random() * 4)] : k === 'g50' ? 'P' : 'n:' + t[1];
+    const lose = () => { const a = any(); let b = Math.random() < 0.4 ? a : any(), c = any(); while (c === a && b === a) c = any(); const r = [a, b, c]; for (let i = 2; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)), z = r[i]; r[i] = r[j]; r[j] = z; } return r; };
+    const rows = [lose(), lose(), lose()], wi = ws ? Math.floor(Math.random() * 3) : -1; if (ws) rows[wi] = [ws, ws, ws]; return { t, rows, wi, open: [0, 0, 0] };
+  }
+  const prizeTxt = (t) => { const k = t[0]; if (!k) return '꽝'; if (k === 'r') return chip('r', 20) + ' DORO칩 +1'; if (k[0] === 'g') return chip('g', 20) + ' 골드칩 +' + k.slice(1); const x = data().list.find((y) => String(y.code) === String(t[1])); return '<b style="color:' + ((data().tierCol || {})[k] || '#fff') + '">' + k + '</b> ' + esc(x ? x.n : '') + (t[2] ? ' → ' + chip('g', 18) + ' +' + DUP[TV[k]] : t[3] === 1 ? ' NEW' : ''); };
+  const CSS = `
+.tb{display:grid;grid-template-columns:290px 1fr;border-radius:16px;overflow:hidden;background:#141018;color:#fff;font-family:"Pretendard","Malgun Gothic",sans-serif;border:1px solid #3a2a2a;min-height:620px}
+.tb-mc{background:linear-gradient(180deg,#7a1418,#4a0c10);padding:14px;display:flex;flex-direction:column;gap:10px;box-shadow:inset -6px 0 12px rgba(0,0,0,.35)}
+.tb-ttl{font-family:"Arial Black",Arial,sans-serif;font-style:italic;font-size:30px;line-height:.95;text-align:center;color:#ffe58a;text-shadow:0 3px 0 #5a2a00,0 0 16px rgba(255,200,80,.6);border:3px solid #ffd24a;border-radius:12px;padding:8px 4px;background:#2a0608}
+.tb-ttl small{display:block;font-size:.4em;letter-spacing:.3em;color:#fff;font-style:normal;margin-top:4px}
+.tb-win{background:#0d0d10;border:3px solid #1c1c22;border-radius:10px;padding:8px;font-size:12px;line-height:1.7}.tb-win b{color:#ffd24a}.tb-win .n{font:900 22px "Arial Black",Arial,sans-serif;color:#5ef0a0}
+.tb-bal{display:flex;gap:10px;background:#1a0608;border-radius:10px;padding:8px 10px;font-weight:800}.tb-bal span{display:inline-flex;align-items:center;gap:5px}
+.tb-btn{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.tb-btn button{border:0;border-radius:12px;padding:12px 2px 9px;font:inherit;font-weight:900;font-size:15px;color:#14161c;cursor:pointer;background:linear-gradient(180deg,#fff3b0,#ffb21c 60%,#d98600);box-shadow:0 5px 0 #6a3d00;display:flex;flex-direction:column;align-items:center;gap:2px}
+.tb-btn button:active{transform:translateY(4px);box-shadow:0 1px 0 #6a3d00}.tb-btn button:disabled{filter:grayscale(.7);opacity:.6;cursor:default}.tb-btn small{display:inline-flex;align-items:center;gap:2px;font-size:11px}
+.tb-slot{height:16px;border-radius:5px;background:#000;box-shadow:inset 0 3px 5px #000,0 1px 0 rgba(255,255,255,.2);margin:6px 18px 0}.tb-msg{min-height:16px;font-size:12px;color:#ffd0c0;font-weight:700;text-align:center}
+.tb-st{position:relative;background:radial-gradient(ellipse at 50% 40%,#3a2a22,#17110f 75%);overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:14px;user-select:none;-webkit-user-select:none}
+.tb-pile{position:relative;width:260px;height:340px}
+.tb-tk{position:absolute;left:0;top:0;width:260px;border-radius:5px;background:#f6efdc;color:#7a1418;box-shadow:0 2px 0 #cfc5a8,0 6px 14px rgba(0,0,0,.5);padding:8px 10px 9px;font-family:"Arial Black",Arial,sans-serif}
+.tb-tk.bk{height:330px;background:repeating-linear-gradient(45deg,#b3161c 0 9px,#9a1016 9px 18px);border:5px solid #f6efdc}
+.tb-hd{display:flex;justify-content:space-between;align-items:center;font-style:italic;font-size:17px;border-bottom:2px solid #7a1418;padding-bottom:4px;margin-bottom:7px}.tb-hd small{font-style:normal;font-size:10px;display:inline-flex;align-items:center;gap:2px}
+.tb-row{position:relative;height:76px;margin-bottom:7px;border-radius:4px;background:#fff;box-shadow:inset 0 0 0 1.5px #7a1418;display:flex;align-items:center;justify-content:space-around;padding:0 8px;overflow:hidden}
+.tb-row.win{background:#fff3b0;box-shadow:inset 0 0 0 3px #f59e0b,0 0 16px rgba(255,190,60,.9);overflow:visible;z-index:2}.tb-row.win .tb-s{animation:tbHop .5s cubic-bezier(.2,1.8,.4,1)}@keyframes tbHop{40%{transform:translateY(-10px) scale(1.15)}}
+.tb-s{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;background:#22252c center 12%/cover;box-shadow:inset 0 0 0 2px #7a1418,0 1px 2px rgba(0,0,0,.4);overflow:hidden;flex:none}.tb-s.co img{width:62%;height:62%;object-fit:contain}.tb-s.ch{background:#fff8e0}.tb-s.ch svg{width:82%;height:82%}
+.tb-cv{position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 6px,rgba(122,20,24,.5) 6px 8px) 0 0/100% 3px no-repeat,repeating-linear-gradient(90deg,transparent 0 6px,rgba(122,20,24,.5) 6px 8px) 0 100%/100% 3px no-repeat,#efe6cd;display:flex;align-items:center;justify-content:center;gap:10px;color:#7a1418;font-size:15px;letter-spacing:.2em;cursor:grab;touch-action:none;clip-path:inset(0 0 0 var(--p,0%))}
+.tb-cv:before{content:"▶▶▶";font-size:11px;letter-spacing:.1em;opacity:.7}.tb-cv:after{content:"▶▶▶";font-size:11px;letter-spacing:.1em;opacity:.7}
+.tb-curl{position:absolute;top:-2px;bottom:-2px;left:var(--p,0%);width:18px;margin-left:-4px;pointer-events:none;opacity:0;border-radius:9px;background:linear-gradient(90deg,#b9ae90,#fffaf0 35%,#e9dfc4 65%,#8f8468);box-shadow:5px 0 8px rgba(0,0,0,.35)}
+.tb-row.pull .tb-curl{opacity:1}.tb-row.done .tb-cv,.tb-row.done .tb-curl{display:none}
+.tb-ft{font:800 10.5px "Pretendard",sans-serif;text-align:center;color:#7a1418;opacity:.8}
+.tb-res{min-height:30px;font-weight:900;font-size:17px;display:flex;align-items:center;gap:6px}.tb-res.w{color:#ffe58a;text-shadow:0 0 14px rgba(255,200,80,.8);animation:tbRes .4s cubic-bezier(.2,1.7,.4,1)}@keyframes tbRes{from{transform:scale(.4);opacity:0}}
+.tb-ctl{display:flex;gap:8px;align-items:center;min-height:38px}.tb-ctl button{border:0;border-radius:10px;padding:9px 16px;font:inherit;font-weight:900;font-size:13.5px;color:#fff;background:#3a3f47;cursor:pointer}.tb-ctl button.p{background:#0d8bf2}.tb-ctl span{font-weight:800;font-size:13px;opacity:.85}
+.tb-card{position:absolute;left:50%;top:44%;z-index:5;width:150px;transform:translate(-50%,-50%);pointer-events:none;animation:tbCard 1.6s cubic-bezier(.2,1.3,.4,1) forwards;filter:drop-shadow(0 0 24px var(--gc,#fff))}.tb-card .pk{--cw:150px;width:150px;position:relative}
+@keyframes tbCard{0%{transform:translate(-50%,-50%) scale(.2) rotate(-20deg);opacity:0}25%,80%{transform:translate(-50%,-50%) scale(1);opacity:1}100%{transform:translate(-50%,-90%) scale(.9);opacity:0}}
+.tb-empty{opacity:.6;font-weight:700;font-size:14px;text-align:center;line-height:1.7}
+@media(max-width:760px){.tb{grid-template-columns:1fr}.tb-st{order:-1;min-height:480px}}
+`;
+  const tkHtml = (T, z) => '<div class="tb-tk" style="z-index:' + z + '"><div class="tb-hd"><span>DORO TABS</span><small>' + chip('g', 13) + '1</small></div>' + T.rows.map((r, i) => '<div class="tb-row" data-i="' + i + '">' + r.map(symHtml).join('') + '<div class="tb-cv">PULL</div><i class="tb-curl"></i></div>').join('') + '<div class="tb-ft">같은 무늬 3개 = 당첨 · 골드칩 · DORO칩 · S~SSS 카드</div></div>';
+  function ui() {
+    if (!root) return; const o = window.doroChips.get();
+    $('.tb-bal', root).innerHTML = '<span>' + chip('b', 18) + fmt(Math.max(0, window.doroChips.total() - pendG * 10)) + '</span><span>' + chip('r', 18) + fmt(Math.max(0, ((o && o.r) || 0) - pendR)) + '</span>';
+    root.querySelectorAll('.tb-btn button').forEach((b) => { b.disabled = busy || !!cur || Q.length > 0; });
+    const L = left; $('.tb-win', root).innerHTML = L ? '이 상자에 남은 표 <span class="n">' + fmt(L.n) + '</span> / ' + fmt(BOX) + '<br><b>SSS</b> ' + (L.SSS || 0) + ' · <b>SS</b> ' + (L.SS || 0) + ' · <b>S</b> ' + (L.S || 0) + '<br>' + chip('r', 14) + ' ' + (L.r || 0) + ' · ' + chip('g', 14) + ' 50×' + (L.g50 || 0) + ' 20×' + (L.g20 || 0) + ' 10×' + (L.g10 || 0) : '상자를 확인하는 중…';
+    const ct = $('.tb-ctl', root); if (ct) ct.innerHTML = cur || Q.length ? '<span>남은 표 ' + (Q.length + (cur ? 1 : 0)) + '장</span><button type="button" data-tb="all">모두 뜯기</button>' : '';
+  }
+  /* 자판기에서 표가 빠르게 튀어나와 쌓임 → 가지런히 모음 → 맨 위부터 뜯기 */
+  async function buyN(n) {
+    if (busy || cur || Q.length) return; const msg = $('.tb-msg', root); msg.textContent = ''; busy = true; ui(); let res;
+    try { const bal = root.querySelectorAll('.tb-bal span')[0], slot = $('.tb-slot', root); res = await fetchTix(n); left = res.left; sfx.coin(); if (window.doroChipFly && res.tix.length) window.doroChipFly(bal, slot, res.tix.length * 10, { size: 18 }); }
+    catch (e) { busy = false; ui(); msg.textContent = ({ chips: '싱크칩이 부족합니다.', login: '로그인이 필요합니다.', closed: '아직 공개 전입니다. (관리자 전용)' })[e && e.message] || '서버와 연결하지 못했습니다. (' + ((e && e.message) || e) + ')'; return; }
+    if (!res.tix.length) { busy = false; ui(); return; }
+    res.tix.forEach((t) => { if (t[0] === 'r') pendR++; else if (t[0] && t[0][0] === 'g') pendG += +t[0].slice(1); else if (t[2]) pendG += DUP[TV[t[0]]]; }); ui();
+    Q = res.tix.map(compose); const pile = $('.tb-pile', root), e0 = $('.tb-empty', root); if (e0) e0.remove(); pile.innerHTML = ''; const st = $('.tb-st', root).getBoundingClientRect(), pr = pile.getBoundingClientRect(), N = Q.length, gap = N > 5 ? 70 : 110;
+    Q.forEach((T, i) => { const d = document.createElement('div'); d.className = 'tb-tk bk'; const rx = (Math.random() * 2 - 1) * 46, ry = (Math.random() * 2 - 1) * 30, rr = (Math.random() * 2 - 1) * 24; d.style.zIndex = String(i + 1); d.dataset.r = rx + ',' + ry + ',' + rr; pile.appendChild(d);
+      d.animate([{ transform: 'translate(' + (st.left - pr.left - 300) + 'px,' + (st.bottom - pr.top - 200) + 'px) rotate(-70deg) scale(.5)' }, { transform: 'translate(' + rx + 'px,' + ry + 'px) rotate(' + rr + 'deg)' }], { duration: 260, delay: 350 + i * gap, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'both' }); sfx.out(0.35 + i * gap / 1000); });
+    setTimeout(() => { sfx.tidy(); [...pile.children].forEach((d, i) => { const r = d.dataset.r.split(','); d.animate([{ transform: 'translate(' + r[0] + 'px,' + r[1] + 'px) rotate(' + r[2] + 'deg)' }, { transform: 'translate(0,' + (-i * 1.5) + 'px) rotate(0deg)' }], { duration: 320, easing: 'cubic-bezier(.3,1.4,.5,1)', fill: 'forwards' }); }); }, 350 + N * gap + 320); /* 탁탁 가지런히 */
+    setTimeout(() => { busy = false; next(); }, 350 + N * gap + 320 + 480);
+  }
+  function next() {
+    const pile = $('.tb-pile', root), res = $('.tb-res', root); res.className = 'tb-res'; res.innerHTML = ''; cur = Q.shift() || null;
+    if (!cur) { pile.innerHTML = ''; auto = false; ui(); return; }
+    const backs = [...pile.querySelectorAll('.tb-tk.bk')]; if (backs.length) backs[backs.length - 1].remove(); pile.querySelectorAll('.tb-tk:not(.bk)').forEach((e) => e.remove());
+    pile.insertAdjacentHTML('beforeend', tkHtml(cur, 50)); const tk = pile.lastElementChild; tk.animate([{ transform: 'rotateY(90deg) scale(.96)' }, { transform: 'none' }], { duration: 170 }); sfx.flip(); ui(); bind(tk);
+    if (auto) autoRip(tk);
+  }
+  function openRow(row, i, fast) { if (row.classList.contains('done')) return; row.classList.add('done'); cur.open[i] = 1; if (cur.open.every(Boolean)) setTimeout(finish, fast ? 120 : 260); }
+  function quick(row, i, t0) { /* 눌러서 한 번에: 덮개가 0.1초쯤에 드르륵 뜯김 */
+    if (row.classList.contains('done') || row.dataset.q) return; row.dataset.q = '1'; row.classList.add('pull'); const cv = $('.tb-cv', row), cl = $('.tb-curl', row), p0 = +row.dataset.p || 0, D = Math.max(30, 120 * (1 - p0)), s0 = performance.now() + (t0 || 0) * 1000; sfx.rip(Math.max(2, Math.round(11 * (1 - p0))), t0 || 0);
+    const f = (now) => { const p = p0 + (1 - p0) * Math.max(0, Math.min(1, (now - s0) / D)); cv.style.setProperty('--p', (p * 100) + '%'); cl.style.setProperty('--p', (p * 100) + '%'); if (p < 1) requestAnimationFrame(f); else openRow(row, i, true); }; requestAnimationFrame(f);
+  }
+  function bind(tk) {
+    tk.querySelectorAll('.tb-row').forEach((row) => { const i = +row.dataset.i, cv = $('.tb-cv', row), cl = $('.tb-curl', row); let dn = null;
+      cv.addEventListener('pointerdown', (e) => { if (auto) return; dn = { x: e.clientX, w: row.getBoundingClientRect().width, last: 0, m: 0 }; row.classList.add('pull'); try { cv.setPointerCapture(e.pointerId); } catch (er) { /* 무시 */ } });
+      cv.addEventListener('pointermove', (e) => { if (!dn) return; const dx = Math.max(0, e.clientX - dn.x), p = Math.min(1, dx / (dn.w * 0.92)); dn.m = Math.max(dn.m, dx); row.dataset.p = String(p); cv.style.setProperty('--p', (p * 100) + '%'); cl.style.setProperty('--p', (p * 100) + '%');
+        const st = Math.floor(dx / 7); if (st > dn.last) { for (let q = dn.last; q < st && q < dn.last + 4; q++) perf((q - dn.last) * 0.006, 0.8 + Math.random() * 0.3); dn.last = st; } /* 구멍 하나(7px)를 지날 때마다 '드륵' */ if (p >= 0.97) { dn = null; burst(0, 0.03, 0.3, 1700, 0.9); openRow(row, i, false); } });
+      const up = () => { if (!dn) return; const d = dn; dn = null; if (d.m < 6) quick(row, i, 0); else { quick(row, i, 0); } }; /* 놓으면 남은 부분이 마저 뜯김 */
+      cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up); });
+  }
+  function autoRip(tk) { tk.querySelectorAll('.tb-row').forEach((row, i) => setTimeout(() => quick(row, +row.dataset.i, 0), 60 + i * 150)); }
+  function finish() {
+    const T = cur; if (!T || T.fin) return; T.fin = 1; const t = T.t, k = t[0], res = $('.tb-res', root), tk = $('.tb-pile .tb-tk:not(.bk)', root), st = $('.tb-st', root); let hold = auto ? 260 : 650;
+    if (k) { const row = tk && tk.querySelector('.tb-row[data-i="' + T.wi + '"]'); if (row) row.classList.add('win'); res.className = 'tb-res w'; res.innerHTML = prizeTxt(t); const bal = root.querySelectorAll('.tb-bal span');
+      if (k === 'r') { pendR--; sfx.win(3); if (window.doroCutin && !auto) window.doroCutin(1); else if (window.doroChipFly && row) window.doroChipFly(row, bal[1], 1, { size: 22, k: 'r', single: 1 }); hold = auto ? 700 : 1500; }
+      else if (k[0] === 'g') { const g = +k.slice(1); pendG -= g; sfx.win(g >= 10 ? 2 : 1); if (window.doroChipFly && row) window.doroChipFly(row, bal[0], g * 10, { size: 18 }); hold = auto ? 500 : 1100; }
+      else { sfx.win(TV[k] - 6); if (t[2]) pendG -= DUP[TV[k]]; const x = data().list.find((y) => String(y.code) === String(t[1])); if (x) { const c = document.createElement('div'); c.className = 'tb-card'; c.style.setProperty('--gc', (data().tierCol || {})[k] || '#fff'); c.innerHTML = window.doroRaid.card(Object.assign({}, x, { cnt: t[3] || 1 })); st.appendChild(c); setTimeout(() => c.remove(), 1650); } hold = auto ? 900 : 1700; }
+      setTimeout(ui, 900); }
+    else { res.innerHTML = '<span style="opacity:.55">꽝</span>'; }
+    setTimeout(() => { if (cur !== T) return; if (tk) tk.animate([{ transform: 'none', opacity: 1 }, { transform: 'translate(' + (k ? 240 : -240) + 'px,60px) rotate(' + (k ? 24 : -24) + 'deg)', opacity: 0 }], { duration: 200, easing: 'ease-in', fill: 'forwards' }); setTimeout(() => { if (cur === T) next(); }, 190); }, hold);
+  }
+  function build() {
+    root.innerHTML = '<div class="tb"><aside class="tb-mc"><div class="tb-ttl">DORO TABS<small>PULL &amp; WIN</small></div><div class="tb-win"></div><div class="tb-bal"></div>' +
+      '<div class="tb-btn">' + [1, 5, 10].map((n) => '<button type="button" data-n="' + n + '">' + n + '장<small>' + chip('g', 13) + n + '</small></button>').join('') + '</div><div class="tb-slot"></div><div class="tb-msg"></div></aside>' +
+      '<main class="tb-st"><div class="tb-res"></div><div class="tb-pile"><div class="tb-empty">표를 뽑으세요<br>덮개를 오른쪽으로 끌거나 누르면 뜯깁니다</div></div><div class="tb-ctl"></div></main></div>';
+    ui(); if (!left) fetchTix(0).then((r) => { left = r.left; ui(); }).catch(() => { /* 다음에 */ });
+  }
+  function onClick(e) { const b = e.target.closest('.tb-btn button'); if (b) { buyN(+b.dataset.n); return; } const a = e.target.closest('[data-tb]'); if (a && a.dataset.tb === 'all') { auto = true; const tk = $('.tb-pile .tb-tk:not(.bk)', root); if (tk && cur && !cur.fin) autoRip(tk); } }
+  window.doroTabs = { mount(el) {
+    if (!el) return; const d = data(); if (!d.ok) { el.innerHTML = ''; return; } if (!d.list.length || !window.doroRaid) { setTimeout(() => window.doroTabs.mount(el), 400); return; }
+    if (!document.getElementById('tabs-css')) { const s = document.createElement('style'); s.id = 'tabs-css'; s.textContent = CSS; document.head.appendChild(s); }
+    if (root !== el) { root = el; el.addEventListener('click', onClick); window.addEventListener('dorochips', () => { if (root && root.isConnected) ui(); }); }
+    if (!cur && !Q.length) build();
+  } };
+})();

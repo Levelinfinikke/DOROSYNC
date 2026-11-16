@@ -2700,17 +2700,24 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
   /* from → to 로 싱크칩 amount 만큼: 골드칩(10) 단위로 실제 수량만큼 터져 나왔다가 빨려 들어감. 10개가 넘으면 계속 뿜어져 나옴(최대 300개까지 그림) */
   window.doroChipFly = function (from, to, amount, opt) {
     if (!from || !to) return 0; const A = from.getBoundingClientRect(), B = to.getBoundingClientRect(); if (!A.width || !B.width) return 0;
-    const host = document.fullscreenElement || document.body, ck = (opt && opt.k) || 'g', real = Math.max(1, Math.round((amount || 10) / (ck === 'g' ? 10 : 1))), P = Math.min(300, real), per = (amount || 0) / P, sz = (opt && opt.size) || 22, T = 980;
+    const host = document.fullscreenElement || document.body, ck = (opt && opt.k) || 'g', real = Math.max(1, Math.round((amount || 10) / (ck === 'g' ? 10 : 1))), P = opt && opt.single ? 1 : Math.min(300, real), per = (amount || 0) / P, sz = (opt && opt.size) || 22, T = 980;
     const cx = A.left + A.width / 2, cy = A.top + A.height / 2, ex = B.left + Math.min(B.width / 2, 40) - cx, ey = B.top + B.height / 2 - cy, rad = Math.max(70, sz * 3) * Math.min(1.7, 1 + P * 0.02), stag = Math.min(22, 4600 / P);
     let arrived = 0, lastS = 0; const frag = document.createDocumentFragment(), run = [];
     for (let i = 0; i < P; i++) {
       const d = document.createElement('div'); d.className = 'dc-fly'; d.style.left = (cx - sz / 2) + 'px'; d.style.top = (cy - sz / 2) + 'px'; d.appendChild(chip3dNode(ck, sz)); frag.appendChild(d);
-      const an = Math.random() * Math.PI * 2, rr = rad * Math.sqrt(0.08 + Math.random() * 0.92), sx = Math.cos(an) * rr, sy = Math.sin(an) * rr * 0.85;
+      const an = Math.random() * Math.PI * 2, rr = (opt && opt.single ? 0 : rad) * Math.sqrt(0.08 + Math.random() * 0.92), sx = Math.cos(an) * rr, sy = Math.sin(an) * rr * 0.85;
       const kf = [{ transform: 'translate(0,0) scale(.3) rotate(0deg)', opacity: 1, easing: 'cubic-bezier(.1,.8,.2,1)' }, { transform: 'translate(' + sx.toFixed(0) + 'px,' + sy.toFixed(0) + 'px) scale(1) rotate(' + ((Math.random() * 2 - 1) * 90).toFixed(0) + 'deg)', opacity: 1, offset: 0.36 }, { transform: 'translate(' + sx.toFixed(0) + 'px,' + (sy + 4).toFixed(0) + 'px) scale(1) rotate(0deg)', opacity: 1, offset: 0.5, easing: 'cubic-bezier(.6,0,.9,.4)' }, { transform: 'translate(' + ex.toFixed(0) + 'px,' + ey.toFixed(0) + 'px) scale(.35) rotate(180deg)', opacity: 0.9 }];
       run.push(() => { d.animate(kf, { duration: T, delay: i * stag, fill: 'both' }).onfinish = () => { d.remove(); arrived++; const nw = performance.now(); if (nw - lastS > 35) { lastS = nw; flyTick(arrived / P); } if (opt && opt.hit) opt.hit(per, arrived === P); if (arrived % 3 === 0 || arrived === P) { try { to.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.06)' }, { transform: 'scale(1)' }], { duration: 110 }); } catch (er) { /* 무시 */ } } }; });
     }
     host.appendChild(frag); run.forEach((f) => f());
     return T + P * stag;
+  };
+  /* DORO칩 당첨 컷인: 무지개 배경 위로 커다란 DORO칩이 돌며 튀어나옴. 누르면 바로 닫힘 */
+  window.doroCutin = function (n) {
+    const old = document.querySelector('.dcut'); if (old) old.remove(); const host = document.fullscreenElement || document.body, ov = document.createElement('div'); ov.className = 'dcut';
+    ov.innerHTML = '<div class="pp-bgd"></div><div class="dcut-in"><div class="dcut-chip"></div><div class="dcut-t">DORO CHIP</div><div class="dcut-n">+' + n + '</div><small>눌러서 닫기</small></div>'; host.appendChild(ov);
+    ov.querySelector('.dcut-chip').appendChild(chip3dNode('r', 300)); try { if (window.doroPack && window.doroPack.rainbow) window.doroPack.rainbow(ov, 60000); } catch (e) { /* 무지개 없이 */ }
+    [523, 659, 784, 1047, 1319, 1568, 2093].forEach((f, i) => setTimeout(() => flyTick((f - 1500) / 1700), i * 70)); const t = setTimeout(() => ov.remove(), 3200); ov.addEventListener('pointerdown', () => { clearTimeout(t); ov.remove(); });
   };
   /* 전초기지 방치 수급: 1분에 싱크칩 1개, 최대 10,000개. 로그인 중이면 서버가 마지막 수령 시각으로 계산해 검증 */
   const IDLE_K = 'dschip-idle', IDLE_MAX = 10000;
@@ -3629,7 +3636,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') $('#nk-modal').hidden = true; });
 
   /* ---------- 탭 ---------- */
-  const GRP = { main: 'main', daily: 'main', pkg: 'main', inc: 'main', rules: 'main', boss: 'boss', data: 'boss', ol: 'ol', olrules: 'ol', jw: 'jw', jwrules: 'jw', gc: 'gc', gcm: 'gc', gcmg: 'game', gccs: 'gc', gcco: 'gc', gcdata: 'gc', gctier: 'gc', gcrules: 'gc', me: 'me', game: 'game', dex: 'game', pack: 'game', plinko: 'game', raid: 'game' }; let lastGrp = { main: 'main', boss: 'boss', ol: 'ol', jw: 'jw', gc: 'gcm', me: 'me', game: 'game' };
+  const GRP = { main: 'main', daily: 'main', pkg: 'main', inc: 'main', rules: 'main', boss: 'boss', data: 'boss', ol: 'ol', olrules: 'ol', jw: 'jw', jwrules: 'jw', gc: 'gc', gcm: 'gc', gcmg: 'game', gccs: 'gc', gcco: 'gc', gcdata: 'gc', gctier: 'gc', gcrules: 'gc', me: 'me', game: 'game', dex: 'game', pack: 'game', plinko: 'game', tabs: 'game', raid: 'game' }; let lastGrp = { main: 'main', boss: 'boss', ol: 'ol', jw: 'jw', gc: 'gcm', me: 'me', game: 'game' };
   const OLV = { ol: 'calc', olrules: 'rules' };
   let curGrp = 'main', curTab = 'main';
   function previewSub(grp) {
@@ -3659,7 +3666,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   (() => { const top = document.querySelector('.top'); if (!top) return; const f = () => document.documentElement.style.setProperty('--toph', top.offsetHeight + 'px'); f(); addEventListener('resize', f); if (window.ResizeObserver) new ResizeObserver(f).observe(top); })();
   function showTab(name) {
     if (name === 'gc' || name === 'gccs' || name === 'gcco' || name === 'gcdata') name = 'gcm'; // 숨긴 하위 탭 대신 가챠 머신
-    if (name === 'raid' || name === 'dex' || name === 'pack' || name === 'plinko') { let ok = false; try { ok = dexOk(); } catch (e) { /* 초기화 전 */ } if (!ok) name = 'game'; } const sec = name === 'gcmg' ? 'gcm' : name; curTab = sec; /* gcmg: 니슬렁 탭에서 여는 가챠 머신(같은 화면) */
+    if (name === 'raid' || name === 'dex' || name === 'pack' || name === 'plinko' || name === 'tabs') { let ok = false; try { ok = dexOk(); } catch (e) { /* 초기화 전 */ } if (!ok) name = 'game'; } const sec = name === 'gcmg' ? 'gcm' : name; curTab = sec; /* gcmg: 니슬렁 탭에서 여는 가챠 머신(같은 화면) */
     const grp = GRP[name] || name;
     if (lastGrp[grp]) lastGrp[grp] = name;
     $$('#tabs button').forEach((b) => b.classList.toggle('on', b.dataset.tab === grp));
@@ -3677,6 +3684,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
     if (name === 'game') renderLobby();
     if (name === 'pack' && window.doroPack) window.doroPack.mount($('#tab-pack'));
     if (name === 'plinko' && window.doroPlinko) window.doroPlinko.mount($('#tab-plinko'));
+    if (name === 'tabs' && window.doroTabs) window.doroTabs.mount($('#tab-tabs'));
     if (name === 'raid' && window.doroRaid) window.doroRaid.mount($('#tab-raid'));
     if (name === 'jwrules') renderJwRules();
     if (name === 'gc') renderGc();
@@ -4405,7 +4413,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   function renderLobby() {
     const root = $('#tab-game'); if (!root) return; const adm = dexOk(), o = chipRaw();
     const G = [['gcmg', '가챠 머신', '캡슐을 뽑고 싱크칩을 모으세요', 'lb-gc', 1], ['raid', '포커레이드', '니케 카드로 족보를 만들어 보스를 공략', 'lb-rd', adm], ['pack', '카드팩', '팩을 뜯어 니케 카드를 모으세요', 'lb-pk', adm], ['dex', '카드', '모은 카드와 수집 보상', 'lb-dx', adm],
-      ['plinko', '플링코', '칩을 떨어뜨려 배수를 노리세요', 'lb-pl', adm], ['', 'PULL-TABS', '준비 중', 'lb-pt', 0], ['', '2048', '준비 중', 'lb-48', 0]].filter((g) => g[4] || !g[0]);
+      ['plinko', 'DORO DROP', '칩을 떨어뜨려 배수와 DORO칩을 노리세요', 'lb-pl', adm], ['tabs', 'DORO TABS', '표를 뽑아 드르륵 뜯으세요', 'lb-pt', adm], ['', '2048', '준비 중', 'lb-48', 0]].filter((g) => g[4] || !g[0]);
     /* 입구 그림 = 실제 게임 화면의 요소(카드·팩·보스) */
     const art = {}, rd = window.doroRaid && window.doroRaidData ? window.doroRaidData() : null, L = rd && rd.list ? rd.list.slice().sort((a, b) => (b.t === 'SSS') - (a.t === 'SSS')) : [];
     try { if (L.length >= 5 && adm) { const cd = (x, cnt) => window.doroRaid.card(Object.assign({}, x, { cnt }));
@@ -4419,7 +4427,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
             '<g clip-path="url(#' + id + 'b)"><circle r="' + r + '" fill="' + botc + '"/></g><g transform="' + (open ? 'translate(' + r * 0.06 + ' ' + -r * 0.2 + ') rotate(-7)' : '') + '"><g clip-path="url(#' + id + 't)"><circle r="' + r + '" fill="' + top + '"/></g>' + (open ? '' : '<rect x="' + -r + '" y="' + -r * 0.045 + '" width="' + 2 * r + '" height="' + r * 0.09 + '" fill="rgba(255,255,255,.75)"/>') + '</g>' +
             (emb ? '<image href="' + emb + '" x="' + -r * 0.5 + '" y="' + (-r * 0.5 - (open ? r * 0.1 : 0)) + '" width="' + r + '" height="' + r + '" opacity=".8" style="filter:brightness(0) sepia(1) saturate(4) hue-rotate(-10deg) brightness(.55)"/>' : '') + '<circle r="' + r + '" fill="url(#' + id + 'g)"/></g>'; };
         void cap; art.gcmg = '<span class="lb-gcimg"></span>'; /* 실제 가챠 머신 화면 */
-        { let h = ''; [[18, 2.6, 0], [46, 3.3, -1.2], [70, 2.9, -2.1]].forEach((v, n) => { for (let q = 3; q >= 0; q--) h += '<span class="lb-ch' + (q ? ' g' : '') + '" style="left:' + v[0] + '%;--t:' + v[1] + 's;--d:' + (v[2] + q * 0.07).toFixed(2) + 's;--q:' + q + '">' + window.doroChipSvg(['b', 'g', 's'][n], 20, false, true) + '</span>'; }); art.plinko = h; } /* 못 사이로 칩이 잔상을 남기며 떨어짐 */ }
+        { let h = ''; [[22, 30], [47, 52], [72, 22]].forEach((v, n) => { for (let q = 0; q >= 0; q--) h += '<span class="lb-ch" style="left:' + v[0] + '%;top:' + v[1] + '%;width:26px;height:26px">' + window.doroChipSvg(['b', 'g', 's'][n], 20, false, true) + '</span>'; }); art.plinko = h; } /* 못 사이로 칩이 잔상을 남기며 떨어짐 */ }
       } catch (e) { /* 그림 없이 */ }
     if (adm && !L.length && !renderLobby.w) { renderLobby.w = setTimeout(() => { renderLobby.w = 0; if (curTab === 'game') renderLobby(); }, 600); }
     root.innerHTML = '<div class="lb"><div class="lb-hero"><div class="lb-t"><small>DOROSYNC</small>니슬렁</div><div class="lb-bal"><span>' + window.doroChipSvg('b', 26) + '<b class="num">' + fmt(o.d) + '</b></span><span>' + window.doroChipSvg('r', 26) + '<b class="num">' + fmt(o.r) + '</b></span></div></div>' +
@@ -4431,7 +4439,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
     const on = dexOk();
     document.querySelectorAll('#subtabs button.adm').forEach((b) => b.classList.toggle('adm-off', !on));
     if (dexGate.on !== on) { dexGate.on = on; if (curTab === 'game') renderLobby(); }
-    if (!on && (curTab === 'raid' || curTab === 'dex' || curTab === 'pack' || curTab === 'plinko')) showTab('game');
+    if (!on && (curTab === 'raid' || curTab === 'dex' || curTab === 'pack' || curTab === 'plinko' || curTab === 'tabs')) showTab('game');
   }
   /* 웹에서 얻은 카드 더하기(이후 게임에서 당첨 시 1장씩). 연동한 보유 정보(명함 1 + 돌파 + 코강)에 더해짐, 합쳐서 최대 11장 */
   function dexAdd(n, d) { const s = dexLoad(), c = Math.max(0, Math.min(DEX_MAX, (s.n[n] || 0) + d)); if (c) s.n[n] = c; else delete s.n[n]; dexSave(); return c; }

@@ -1805,3 +1805,15 @@ button:not(.tr-clr):not(.tabs button):not(.tr-f):not(.pk-t):not(.pk-r){border-ra
 .lb-pl .lb-art{background:radial-gradient(circle,#aeb5bf 0 2.6px,#5d6570 3.2px,transparent 3.8px) 0 0/26px 22px,radial-gradient(circle,#aeb5bf 0 2.6px,#5d6570 3.2px,transparent 3.8px) 13px 11px/26px 22px,linear-gradient(#143463,#0a1c3a)!important}
 .lb-ch{position:absolute;top:-22px;width:20px;height:20px;animation:lbFall var(--t) linear var(--d) infinite}.lb-ch svg{display:block;width:100%;height:100%}.lb-ch.g{opacity:calc(.5 - var(--q)*.14);filter:blur(calc(var(--q)*.7px))}
 @keyframes lbFall{0%{transform:translate(0,0)}12.5%{transform:translate(13px,22px)}25%{transform:translate(0,44px)}37.5%{transform:translate(-13px,66px)}50%{transform:translate(0,88px)}62.5%{transform:translate(13px,110px)}75%{transform:translate(26px,132px)}87.5%{transform:translate(13px,154px)}100%{transform:translate(26px,176px)}}
+
+.lb-ch{animation:none!important;top:auto}.lb-ch.g{display:none}
+/* DORO칩 당첨 컷인 */
+.dcut{position:fixed;inset:0;z-index:9990;display:grid;place-items:center;overflow:hidden;cursor:pointer;background:#05060a;animation:dcIn .25s}@keyframes dcIn{from{opacity:0}}
+.dcut .pp-rb{opacity:1}.dcut-in{position:relative;z-index:2;text-align:center;font-family:"Arial Black","Pretendard",sans-serif;color:#fff}
+.dcut-chip{width:min(46vmin,300px);height:min(46vmin,300px);margin:0 auto;animation:dcChip .7s cubic-bezier(.2,1.5,.4,1) both;filter:drop-shadow(0 0 40px #fff)}.dcut-chip .dc3{--cs:min(46vmin,300px)!important;width:100%;height:100%}.dcut-chip .dc3r{animation-duration:1.6s!important}
+@keyframes dcChip{from{transform:scale(0) rotate(-200deg)}}
+.dcut-t{font-size:min(11vmin,84px);font-style:italic;line-height:1;margin-top:14px;text-shadow:0 5px 0 rgba(0,0,0,.45),0 0 30px #fff;animation:dcT .5s .35s cubic-bezier(.2,1.6,.4,1) both}@keyframes dcT{from{opacity:0;transform:scale(3)}}
+.dcut-n{font-size:min(8vmin,56px);color:#fff6a8;text-shadow:0 4px 0 #7a3a00;animation:dcT .5s .6s cubic-bezier(.2,1.6,.4,1) both}.dcut small{display:block;margin-top:18px;font:700 13px "Pretendard",sans-serif;opacity:.8}
+
+.lb-pt{--gc:#ff5a4d;--art:repeating-linear-gradient(45deg,#b3161c 0 12px,#9a1016 12px 24px)}
+.dc3-r .dc3r>i{background:linear-gradient(rgba(10,10,20,var(--dk)),rgba(10,10,20,var(--dk))),conic-gradient(#ff5d8f,#ffb84d,#f6f05a,#5ef0a0,#5ab8ff,#b47cff,#ff5d8f)}.dc3-b .dc3r>i,.dc3-s .dc3r>i{background:linear-gradient(rgba(10,10,20,var(--dk)),rgba(10,10,20,var(--dk))),linear-gradient(90deg,#6d727a,#e4e7ec 30%,#9ea4ad 55%,#f1f3f6 75%,#70757d)}

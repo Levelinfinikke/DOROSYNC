@@ -1,5 +1,5 @@
-/* DOROSYNC 플링코 (관리자 전용 · 미공개)
-   싱크칩(1)·실버칩(5)·골드칩(10)을 떨어뜨려 바닥 칸의 배수만큼 받음 · 위험도 3단계 · 8~16줄
+/* DOROSYNC DORO DROP(플링코) (관리자 전용 · 미공개)
+   싱크칩(1)·실버칩(5)·골드칩(10)을 떨어뜨려 바닥 칸의 배수만큼 받음 · 위험도 3단계 · 12줄 고정
    환수율 약 95% · 양 끝(최고 배수) 칸은 DORO칩을 반드시 지급(환수율과 별도, 건 값 1,000당 1개꼴)
    배포 사이트: 서버(/raid a=plinko)가 결과를 정하고 화면은 그 칸으로 떨어지는 연출만 함 · 미리보기: 이 기기에서 계산 */
 (() => {
@@ -11,8 +11,8 @@
     for (let k = 0; k <= rows; k++) { P.push(b / Math.pow(2, rows)); b = b * (rows - k) / (k + 1); raw.push(m0 * Math.pow(c, Math.abs(k - rows / 2))); sum += P[k] * raw[k]; }
     const f = RTP / sum; return raw.map((v) => { v *= f; return v < 10 ? Math.max(0.1, Math.round(v * 10) / 10) : v < 100 ? Math.round(v) : Math.round(v / 10) * 10; }); };
   const $ = (s, r) => (r || document).querySelector(s), fmt = (n) => Math.round(n).toLocaleString('ko-KR'), chip = (k, px) => (window.doroChipSvg ? window.doroChipSvg(k, px, false, true) : '');
-  let root = null, cv = null, c = null, S = { rows: 12, risk: 1, ch: 0, n: 1 }, T = [], balls = [], hits = [], pops = [], raf = 0, pend = 0, pendR = 0, busy = false, AC = null, W = 520, H = 600; const IMG = {};
-  try { Object.assign(S, JSON.parse(localStorage.getItem('dorosync-plinko') || '{}')); } catch (e) { /* 무시 */ } if ([8, 12, 16].indexOf(S.rows) < 0) S.rows = 12;
+  let cutN = 0, cutT = 0, root = null, cv = null, c = null, S = { rows: 12, risk: 1, ch: 0, n: 1 }, T = [], balls = [], hits = [], pops = [], raf = 0, pend = 0, pendR = 0, busy = false, AC = null, W = 520, H = 600; const IMG = {};
+  try { Object.assign(S, JSON.parse(localStorage.getItem('dorosync-plinko') || '{}')); } catch (e) { /* 무시 */ } S.rows = 12; /* 12줄 고정 */
   const save = () => { try { localStorage.setItem('dorosync-plinko', JSON.stringify(S)); } catch (e) { /* 무시 */ } };
   const tick = (f, v, d) => { try { if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === 'suspended') AC.resume(); const o = AC.createOscillator(), g = AC.createGain(), t = AC.currentTime; o.type = 'triangle'; o.frequency.value = f; g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(0.0001, t + d); o.connect(g).connect(AC.destination); o.start(t); o.stop(t + d + 0.02); } catch (e) { /* 무시 */ } };
   const colOf = (m) => (m >= 100 ? '#ff2f6d' : m >= 10 ? '#ff5a3d' : m >= 2 ? '#ff9a24' : m >= 1 ? '#f5c63a' : '#7b8494');
@@ -44,10 +44,10 @@
   function land(b) {
     const m = T[b.k], cr = cv.getBoundingClientRect(), sx = cr.left + b.fx / W * cr.width, sy = cr.top + b.fy / H * cr.height, from = { getBoundingClientRect: () => ({ left: sx - 8, top: sy - 8, width: 16, height: 16 }) }, sp = root.querySelectorAll('.pl-bal span');
     const settle = () => { pend -= b.pay; pendR -= b.r; ui(); }; let ms = 0; /* 칸에서 얻은 칩이 잔고로 빨려 들어간 뒤 잔고가 오름 */
-    try { if (b.pay > 0 && sp[0] && window.doroChipFly) ms = window.doroChipFly(from, sp[0], Math.min(b.pay, 60), { size: 16, k: b.pay >= 10 ? 'g' : 'b' }) || 0; if (b.r > 0 && sp[1] && window.doroChipFly) ms = Math.max(ms, window.doroChipFly(from, sp[1], Math.min(b.r, 12), { size: 20, k: 'r' }) || 0); } catch (e) { /* 무시 */ }
+    try { if (b.pay > 0 && sp[0] && window.doroChipFly) ms = b.ch === 'b' ? (window.doroChipFly(from, sp[0], Math.min(b.pay, 60), { size: 16, k: b.pay >= 10 ? 'g' : 'b' }) || 0) : (window.doroChipFly(from, sp[0], 1, { size: 20, k: b.ch, single: 1 }) || 0); /* 실버·골드 베팅: 분열 없이 그 칩 하나가 잔고로(렉 방지) */ if (b.r > 0 && sp[1] && window.doroChipFly) ms = Math.max(ms, window.doroChipFly(from, sp[1], Math.min(b.r, 12), { size: 20, k: 'r' }) || 0); } catch (e) { /* 무시 */ }
     setTimeout(settle, ms ? Math.min(1500, ms) : 0); tick(m >= 10 ? 1320 : m >= 1 ? 880 : 300, m >= 1 ? 0.09 : 0.04, m >= 10 ? 0.5 : 0.15); if (m >= 10) setTimeout(() => tick(1760, 0.08, 0.5), 90);
     const log = $('.pl-log', root); if (log) { const e = document.createElement('span'); e.style.background = colOf(m); e.style.color = m >= 1 ? '#14161c' : '#fff'; e.textContent = m + 'x'; log.prepend(e); while (log.children.length > 14) log.lastChild.remove(); }
-    if (b.r > 0) { const w = $('.pl-win', root); if (w) { w.innerHTML = chip('r', 22) + ' DORO칩 +' + b.r + '!'; w.classList.remove('on'); void w.offsetWidth; w.classList.add('on'); } [1047, 1319, 1568, 2093].forEach((f, i) => setTimeout(() => tick(f, 0.1, 0.4), i * 80)); }
+    if (b.r > 0) { cutN += b.r; clearTimeout(cutT); cutT = setTimeout(() => { const n2 = cutN; cutN = 0; if (window.doroCutin) window.doroCutin(n2); }, 350); } /* 같은 묶음의 DORO칩은 한 번에 */
     else if (m >= 10) { const w = $('.pl-win', root); if (w) { w.innerHTML = m + 'x · ' + chip('b', 18) + ' +' + fmt(b.pay); w.classList.remove('on'); void w.offsetWidth; w.classList.add('on'); } }
   }
   /* ---------- 결과 ---------- */
@@ -97,9 +97,8 @@
   }
   function build() {
     const seg = (k, arr) => '<div class="pl-seg">' + arr.map((v) => '<button type="button" data-k="' + k + '" data-v="' + v[0] + '">' + v[1] + '</button>').join('') + '</div>';
-    root.innerHTML = '<div class="pl"><aside class="pl-side"><div class="pl-t">PLINKO<small>DORO</small></div>' +
+    root.innerHTML = '<div class="pl"><aside class="pl-side"><div class="pl-t">DORO<small>DROP</small></div>' +
       '<div class="pl-g"><span>위험도</span>' + seg('risk', RISK.map((r, i) => [i, r])) + '</div>' +
-      '<div class="pl-g"><span>줄</span>' + seg('rows', [8, 12, 16].map((r) => [r, r])) + '</div>' +
       '<div class="pl-g"><span>칩</span>' + seg('ch', CH.map((x, i) => [i, chip(x[0], 16) + x[2]])) + '</div>' +
       '<div class="pl-g"><span>개수</span>' + seg('n', CNT.map((n) => [n, n])) + '</div>' +
       '<div class="pl-bal"></div><button type="button" class="pl-go"></button><div class="pl-msg"></div></aside>' +

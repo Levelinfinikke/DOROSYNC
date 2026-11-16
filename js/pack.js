@@ -174,9 +174,7 @@ svg.pp-strap{display:block;position:absolute;inset:0;width:100%;height:100%;over
 .pp-sum{padding:28px 34px 20px;width:min(780px,98vw)}
 .pp-hang .pp-gh,.pp-hang .pp-gh.a,.pp-hang .pp-gh.b{transform:translateY(calc(var(--q)*-3.4px)) scale(calc(1 - var(--q)*.012));filter:brightness(calc(.78 - var(--q)*.09));border-radius:1px;box-shadow:0 -1px 0 rgba(255,255,255,.25)}
 .pp-it{padding-top:44px}
-.pp-pin{display:block;position:absolute;left:50%;top:-22px;width:5px;height:calc(22px + 5.7% - 5px);margin-left:-2.5px;border-radius:3px;background:linear-gradient(90deg,#6b737c,#f4f6f8 45%,#8a929a);box-shadow:0 1px 2px rgba(0,0,0,.6);z-index:7}
-.pp-pin:before{content:"";position:absolute;left:50%;top:-5px;width:26px;height:6px;margin-left:-13px;border-radius:3px;background:linear-gradient(180deg,#f4f6f8,#7b838c)}
-.pp-pin:after{content:"";position:absolute;left:50%;bottom:-11px;width:13px;height:14px;margin-left:-6.5px;border-radius:0 0 8px 8px;border:3.5px solid #c9cfd5;border-top:0;background:none;box-shadow:0 2px 2px rgba(0,0,0,.5)}
+.pp-pin{display:block;position:absolute;left:50%;bottom:calc(100% - 5.7% - 1px);width:5px;height:24px;margin-left:-2.5px;border-radius:3px 3px 2px 2px;background:linear-gradient(90deg,#5b636c,#f4f6f8 45%,#8a929a);box-shadow:0 1px 2px rgba(0,0,0,.6);z-index:7} /* 걸쇠: 펀치홀을 지나 위로 올라가는 짧은 금속 막대 하나 */
 .pp-sum{scrollbar-width:none;overflow-x:hidden}.pp-sum::-webkit-scrollbar{display:none}
 .pp.pil .pp-body:after{content:"";position:absolute;left:-150%;width:400%;top:-60%;height:220%;pointer-events:none;mix-blend-mode:color-dodge;opacity:.42;transform:rotate(24deg);background:repeating-linear-gradient(90deg,#ff5d8f 0,#ffb84d 4.17%,#f6f05a 8.33%,#5ef0a0 12.5%,#5ab8ff 16.67%,#b07aff 20.83%,#ff5d8f 25%);animation:ppHolo 9s linear infinite;will-change:transform}@keyframes ppHolo{from{transform:rotate(24deg) translateX(0)}to{transform:rotate(24deg) translateX(-25%)}} /* 니케 카드의 폴리크롬과 같은 방식: 한 주기만큼만 밀어 이음매가 없음 */
 .pp-bx{position:relative;width:150px;font-family:"Arial Black",Arial,sans-serif;color:#fff;filter:drop-shadow(0 12px 16px rgba(0,0,0,.6))}
@@ -223,7 +221,7 @@ svg.pp-strap{display:block;position:absolute;inset:0;width:100%;height:100%;over
     if (busy) return; busy = true; const msg = $('.pp-msg', root); if (msg) msg.textContent = ''; const it = btn && btn.closest('.pp-it'), sp = it && $('.pp', it); fromR = sp ? sp.getBoundingClientRect() : null;
     try { const k0 = KINDS.find((x) => x.k === kind), bal0 = root.querySelectorAll('.pp-bal span')[k0.r ? 1 : 0], pr = n === 30 ? k0.box : k0.price; let wait = 0;
       const packs = await buy(kind, n), DB = DBc(); lastBuy = { kind, n }; sfx.buy();
-      if (sp && bal0 && bal0.isConnected && window.doroChipFly) { wait = window.doroChipFly(bal0, sp, pr, { size: 20, k: k0.r ? 'r' : 'g' }) || 0; await new Promise((ok) => setTimeout(ok, Math.min(1700, wait))); fromR = sp.isConnected ? sp.getBoundingClientRect() : null; } /* 잔고에서 칩이 나와 팩으로 들어간 뒤 뜯기 */
+      if (sp && bal0 && bal0.isConnected && window.doroChipFly) { wait = window.doroChipFly(bal0, sp, n === 30 && !k0.r ? pr / 10 : pr, { size: 20, k: k0.r ? 'r' : 'g' }) || 0; /* 박스는 칩을 1/10만 그림(필그림 박스 제외) */ await new Promise((ok) => setTimeout(ok, Math.min(1700, wait))); fromR = sp.isConnected ? sp.getBoundingClientRect() : null; } /* 잔고에서 칩이 나와 팩으로 들어간 뒤 뜯기 */
       Q = packs.map((p) => ({ k: KINDS.find((x) => x.k === kind), cards: p.map((c) => ({ x: DB[String(c[0])], dup: !!c[1], cnt: c[2] || 1, o: 0 })).filter((c) => c.x) }));
       Q.forEach((p) => { p.cards.forEach((c) => { c.o = tvOf(c) + Math.random() * 2.6; }); p.cards.sort((a, b) => a.o - b.o); }); /* 낮은 확률(높은 티어)일수록 뒤에 나올 가능성이 큼 */
       got = []; busy = false; boxN = n === 30 ? Q.length : 0; if (boxN) boxIntro(Q[0].k); else nextPack(); }
@@ -378,7 +376,7 @@ svg.pp-strap{display:block;position:absolute;inset:0;width:100%;height:100%;over
     else if (a === 'again') { if (lastBuy) onBuy(lastBuy.kind, lastBuy.n); }
     else if (a === 'close') { cur = null; boxN = 0; $('.pp-ov', root).hidden = true; shop(); }
   }
-  window.doroPack = { art(kind) { if (!document.getElementById('pack-css')) { const s0 = document.createElement('style'); s0.id = 'pack-css'; s0.textContent = CSS; document.head.appendChild(s0); } return packHtml(KINDS.find((x) => x.k === kind) || KINDS[0]); }, mount(el) {
+  window.doroPack = { rainbow: (el, ms) => rbCanvas(el, ms), art(kind) { if (!document.getElementById('pack-css')) { const s0 = document.createElement('style'); s0.id = 'pack-css'; s0.textContent = CSS; document.head.appendChild(s0); } return packHtml(KINDS.find((x) => x.k === kind) || KINDS[0]); }, mount(el) {
     if (!el) return; const d = data(); if (!d.ok) { el.innerHTML = ''; return; } if (!d.list.length || !window.doroRaid) { setTimeout(() => window.doroPack.mount(el), 400); return; }
     if (!document.getElementById('pack-css')) { const s = document.createElement('style'); s.id = 'pack-css'; s.textContent = CSS; document.head.appendChild(s); }
     if (root !== el) { root = el; el.addEventListener('click', onClick); window.addEventListener('dorochips', () => { if (root && root.isConnected && !cur && $('.pp-ov', root) && $('.pp-ov', root).hidden && !busy) shop(); }); }
