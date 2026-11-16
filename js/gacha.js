@@ -343,14 +343,14 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
 
   function css() { if (!document.getElementById('gm-css')) { const st = document.createElement('style'); st.id = 'gm-css'; st.textContent = CSS; document.head.appendChild(st); } }
   function mount(root, o) {
-    css(); const PV = o.puRate === 2 ? 15000 : 30000;
+    css(); const PV = o.puRate === 2 ? 15000 : 30000, PUR = o.puRate === 2 ? 2 : 1, STDR = 3.5 - PUR; /* SSR 4% = 픽업 1%(필그림)·2%(일반) + 필그림 0.5% + 나머지 */
     const A = o.assets, P = o.pools, TIERS = (o.tiers && o.tiers.boss && o.tiers.pvp) ? o.tiers : Object.assign({ boss: {}, pvp: {} }, o.tiers);
     let dirty = true, spr = {}, scale = 1, stA = null, stB = null, stC = null, stD = null, domeStale = true;
     const ld = (src) => { const i = new Image(); i.onload = () => { dirty = true; spr = {}; }; i.src = src; return i; };
     const IM = { cover: ld(A.cover), label: ld(A.label), jw: ld(A.icons.jw), pick: ld(A.tk.pick), norm: ld(A.tk.norm), emb: {} };
     Object.keys(A.emb).forEach((k) => { IM.emb[k] = ld(A.emb[k]); });
     const SRC = { jw: A.icons.jw, pick: A.tk.pick, norm: A.tk.norm };
-    const orbBg = (n) => 'background-image:url(' + (n.img || '') + '),radial-gradient(circle at 50% 30%,#fff6d8,#d9b35a);' + (n.tall ? 'background-size:107% auto,cover;background-position:50% 22%,center;' : '');
+    const orbBg = (n) => 'background-image:url(' + (n.img || '') + '),radial-gradient(circle at 50% 30%,#fff6d8,#d9b35a);' + (n.tall ? 'background-size:107% auto,cover;background-position:50% 22%,center;' : 'background-size:cover,cover;background-position:72% 20%,center;');
     const embOf = (n) => CORP[n.c] || 'pil', isOvr = (n) => !!(n.p && n.c && n.c !== '필그림'), isSSS = (n) => TIERS.boss[n.n] === 'SSS', tierOf = (n) => TIERS[S.mode.tier === 'pvp' ? 'pvp' : 'boss'][n.n] || '-';
     const pimg = {}; const portrait = (n) => { if (!n.img) return null; if (!pimg[n.n]) { const i = new Image(); i.src = n.img; pimg[n.n] = i; } return pimg[n.n]; };
 
@@ -499,7 +499,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
         if (b.held) { b.st = 0; continue; } const mx = b.x - (b.ax || 0), my = b.y - (b.ay || 0); if (mx * mx + my * my > 6.25) { b.ax = b.x; b.ay = b.y; b.st = 0; } else { b.st += dt; if (b.st > 0.55) { b.sl = true; b.vx = b.vy = b.w = 0; } } }
     }
     /* 통 안의 캡슐은 넣을 때 내용물이 정해짐(실제 확률). 자동 리필 없음 */
-    function roll() { const u = Math.random() * 100; let nk = null, pu = false; if (u < 1) { nk = P.pickup; pu = true; } else if (u < 1.5) nk = pick(P.pil); else if (u < 4) nk = pick(P.std); if (nk) return { kind: 'SSR', nk: Object.assign({}, nk, { pu }) }; return { kind: u < 47 ? 'SR' : 'R', dummy: Math.random() < 0.04 }; }
+    function roll() { const u = Math.random() * 100; let nk = null, pu = false; if (u < PUR) { nk = P.pickup; pu = true; } else if (u < PUR + 0.5) nk = pick(P.pil); else if (u < 4) nk = pick(P.std); if (nk) return { kind: 'SSR', nk: Object.assign({}, nk, { pu }) }; return { kind: u < 47 ? 'SR' : 'R', dummy: Math.random() < 0.04 }; }
     function domeAdd(top) { const res = roll(), b = body(res.kind, rnd(IN.x0 + 30, IN.x1 - 30), top ? -rnd(30, 560) : rnd(IN.y0 + 30, IN.y1 - 30), res); if (top) { b.vy = 320; b.vx = rnd(-30, 30); }  S.dome.push(b); }
     function domeInit() { S.dome = []; for (let i = 0; i < NDOME; i++) domeAdd(false); for (let k = 0; k < 420; k++) step(S.dome, 1 / 120, wallsDome); domeStale = true; }
     function domeTake() { let bi = null, bd = 1e9; for (const b of S.dome) { if (b.exit) continue; const d = Math.hypot((b.x - 480) * 0.7, b.y - IN.y1); if (d < bd) { bd = d; bi = b; } } if (!bi) return null; bi.exit = true; bi.held = true; bi.sl = false; wake(S.dome); return bi; }
@@ -1550,12 +1550,12 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     let gDirty = true, MC = null;
     const gctx = gcv.getContext('2d'), WT = { SSS: 8, SS: 4, S: 2, A: 1 }, tk = () => (S.val.mode === 2 ? 'pvp' : 'boss');
     const wOf = (name) => WT[TIERS[tk()][name]] || 0, avg = (L) => L.reduce((a, b) => a + b, 0) / (L.length || 1);
-    function gScale() { const e = 0.01 * wOf(P.pickup.n) + 0.005 * avg(P.pil.map((n) => wOf(n.n))) + 0.025 * avg(P.std.map((n) => wOf(n.n))); return e > 0 ? 300 / e : 0; } // 티어 가치는 기댓값이 0이 되도록 맞춤
+    function gScale() { const e = PUR / 100 * wOf(P.pickup.n) + 0.005 * avg(P.pil.map((n) => wOf(n.n))) + STDR / 100 * avg(P.std.map((n) => wOf(n.n))); return e > 0 ? 300 / e : 0; } // 티어 가치는 기댓값이 0이 되도록 맞춤
     const gain = (e, sc) => (S.val.mode ? wOf(e.n) * sc : e.pu ? PV : 0);
     function mcBuild(N) { const sc = gScale(), m = S.val.mode, pv = m ? wOf(P.pickup.n) * sc : PV, vp = P.pil.map((n) => (m ? wOf(n.n) * sc : 0)), vs = P.std.map((n) => (m ? wOf(n.n) * sc : 0));
       const RUN = 1400, K = 5, cum = new Float32Array(RUN), p10 = [0], p90 = [0], tmp = new Float32Array(RUN);
-      for (let n = 1; n <= N; n++) { for (let r = 0; r < RUN; r++) { const u = Math.random() * 100; cum[r] += -300 + (u < 1 ? pv : u < 1.5 ? vp[(Math.random() * vp.length) | 0] : u < 4 ? vs[(Math.random() * vs.length) | 0] : 0); } if (n % K === 0) { tmp.set(cum); tmp.sort(); p10.push(tmp[(RUN * 0.1) | 0]); p90.push(tmp[(RUN * 0.9) | 0]); } }
-      MC = { N, K, p10, p90, sc, ev: -300 + 0.01 * pv + 0.005 * avg(vp) + 0.025 * avg(vs), key: m }; }
+      for (let n = 1; n <= N; n++) { for (let r = 0; r < RUN; r++) { const u = Math.random() * 100; cum[r] += -300 + (u < PUR ? pv : u < PUR + 0.5 ? vp[(Math.random() * vp.length) | 0] : u < 4 ? vs[(Math.random() * vs.length) | 0] : 0); } if (n % K === 0) { tmp.set(cum); tmp.sort(); p10.push(tmp[(RUN * 0.1) | 0]); p90.push(tmp[(RUN * 0.9) | 0]); } }
+      MC = { N, K, p10, p90, sc, ev: -300 + PUR / 100 * pv + 0.005 * avg(vp) + STDR / 100 * avg(vs), key: m }; }
     function drawGraph() {
       gDirty = false; const r = gcv.getBoundingClientRect(); if (!r.width) return; const d = Math.min(2, window.devicePixelRatio || 1); gcv.width = Math.round(r.width * d); gcv.height = Math.round(r.height * d); const gk = r.width < 240 ? 0.7 : 1, c = gctx, w = r.width / gk, h = r.height / gk; c.setTransform(d * gk, 0, 0, d * gk, 0, 0); c.clearRect(0, 0, w, h);
       const n = S.log.length, N = Math.max(100, Math.ceil(n * 1.25 / 50) * 50); if (!MC || MC.N < N || MC.key !== S.val.mode) mcBuild(Math.max(N, 200));

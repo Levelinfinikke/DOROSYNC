@@ -3641,7 +3641,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
 
   /* ---------- 탭 ---------- */
   /* 상위 탭: 싱크로 · 작전날짜 · 오버로드 · 쥬얼 · 니슬렁 · 전초기지. 하위 탭은 싱크로에만 있음(데이터와 모든 계산 규칙을 여기로 모음) */
-  const GRP = { main: 'main', daily: 'main', pkg: 'main', inc: 'main', data: 'main', rules: 'main', olrules: 'main', jwrules: 'main', gcrules: 'main', boss: 'boss', ol: 'ol', jw: 'jw', me: 'me', game: 'game', gcm: 'game', gcmg: 'game', gctier: 'game', dex: 'game', pack: 'game', plinko: 'game', tabs: 'game', g48: 'game', raid: 'game' }; let lastGrp = { main: 'main', boss: 'boss', ol: 'ol', jw: 'jw', me: 'me', game: 'game' };
+  const GRP = { main: 'main', daily: 'main', pkg: 'main', inc: 'main', data: 'main', rules: 'main', olrules: 'main', jwrules: 'main', gcrules: 'main', boss: 'boss', ol: 'ol', jw: 'jw', me: 'me', game: 'game', gcm: 'game', gcmg: 'game', gctier: 'game', dex: 'game', pack: 'game', plinko: 'game', tabs: 'game', g48: 'game', raid: 'game', admin: 'admin' }; let lastGrp = { admin: 'admin',  main: 'main', boss: 'boss', ol: 'ol', jw: 'jw', me: 'me', game: 'game' };
   const RULES = { rules: '싱크로', olrules: '오버로드', jwrules: '쥬얼', gcrules: '가챠' }; /* 계산 규칙 탭 안의 작은 탭 */
   const OLV = { ol: 'calc', olrules: 'rules' };
   let curGrp = 'main', curTab = 'main';
@@ -3671,6 +3671,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   })();
   (() => { const top = document.querySelector('.top'); if (!top) return; const f = () => document.documentElement.style.setProperty('--toph', top.offsetHeight + 'px'); f(); addEventListener('resize', f); if (window.ResizeObserver) new ResizeObserver(f).observe(top); })();
   function showTab(name) {
+    if (name === 'admin' && !(window.doroAdmin && window.doroAdmin.ok())) name = 'main';
     if (name === 'gc' || name === 'gccs' || name === 'gcco' || name === 'gcdata' || name === 'gcm') name = 'gcmg'; // 가챠 탭은 없어짐: 가챠 머신은 니슬렁에서
     if (name === 'raid' || name === 'dex' || name === 'pack' || name === 'plinko' || name === 'tabs' || name === 'g48') { let ok = false; try { ok = dexOk(); } catch (e) { /* 초기화 전 */ } if (!ok) name = 'game'; } const sec = name === 'gcmg' ? 'gcm' : name; curTab = sec; /* gcmg: 니슬렁 탭에서 여는 가챠 머신(같은 화면) */
     const grp = GRP[name] || name;
@@ -3689,6 +3690,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
     if (name === 'jw') renderJw();
     if (name === 'dex') renderDex();
     if (name === 'game') renderLobby();
+    if (name === 'admin') window.doroAdmin.show();
     { let bk = $('#lb-back'); if (!bk) { bk = document.createElement('button'); bk.id = 'lb-back'; bk.type = 'button'; bk.dataset.go = 'game'; bk.textContent = '← 니슬렁'; const tg = $('#tab-game'); tg.parentNode.insertBefore(bk, tg); } bk.hidden = !(grp === 'game' && name !== 'game'); }
     if (name === 'pack' && window.doroPack) window.doroPack.mount($('#tab-pack'));
     if (name === 'plinko' && window.doroPlinko) window.doroPlinko.mount($('#tab-plinko'));
@@ -4438,14 +4440,20 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
             (open ? '<ellipse rx="' + r * 1.5 + '" ry="' + r * 0.5 + '" fill="#fff6c0" opacity=".9" filter="url(#lcbl)"/><ellipse rx="' + r * 0.96 + '" ry="' + r * 0.2 + '" fill="#fff"/>' : '') +
             '<g clip-path="url(#' + id + 'b)"><circle r="' + r + '" fill="' + botc + '"/></g><g transform="' + (open ? 'translate(' + r * 0.06 + ' ' + -r * 0.2 + ') rotate(-7)' : '') + '"><g clip-path="url(#' + id + 't)"><circle r="' + r + '" fill="' + top + '"/></g>' + (open ? '' : '<rect x="' + -r + '" y="' + -r * 0.045 + '" width="' + 2 * r + '" height="' + r * 0.09 + '" fill="rgba(255,255,255,.75)"/>') + '</g>' +
             (emb ? '<image href="' + emb + '" x="' + -r * 0.5 + '" y="' + (-r * 0.5 - (open ? r * 0.1 : 0)) + '" width="' + r + '" height="' + r + '" opacity=".8" style="filter:brightness(0) sepia(1) saturate(4) hue-rotate(-10deg) brightness(.55)"/>' : '') + '<circle r="' + r + '" fill="url(#' + id + 'g)"/></g>'; };
-        void cap; art.gcmg = '<span class="lb-gcimg"></span>'; /* 실제 가챠 머신 화면 */
+        void cap; { const fm = cfgFeat().m; art.gcmg = '<span class="lb-gcimg"><u><s style="background-image:url(&quot;' + esc(cfgImg(fm.cover)) + '&quot;)"></s></u></span>'; } /* 실제 가챠 머신 화면 */
         { let h = ''; [[22, 30], [47, 52], [72, 22]].forEach((v, n) => { for (let q = 3; q >= 0; q--) h += '<span class="lb-ch" style="left:calc(' + v[0] + '% - ' + (q * 5 * (n % 2 ? -1 : 1)) + 'px);top:calc(' + v[1] + '% - ' + q * 13 + 'px);width:26px;height:26px;opacity:' + (1 - q * 0.26) + ';filter:blur(' + q * 0.8 + 'px)">' + window.doroChipSvg(['b', 'g', 's'][n], 20, false, true) + '</span>'; }); art.plinko = h; } /* 못 사이로 칩이 잔상을 남기며 떨어짐 */ }
       } catch (e) { /* 그림 없이 */ }
     if (adm && !L.length && !renderLobby.w) { renderLobby.w = setTimeout(() => { renderLobby.w = 0; if (curTab === 'game') renderLobby(); }, 600); }
     idleLast = -1;
-    root.innerHTML = '<div class="lb"><div class="lb-hero"><div class="lb-t">니슬렁 모음</div><div class="lb-bal"><span>' + window.doroChipSvg('b', 26) + '<b class="num">' + fmt(o.d) + '</b></span><span>' + window.doroChipSvg('r', 26) + '<b class="num">' + fmt(o.r) + '</b></span></div></div>' +
-      '<div class="lb-grid">' + idleCard() + G.map((g, i) => '<button type="button" class="lb-g ' + g[3] + (g[0] ? '' : ' soon') + '"' + (g[0] ? ' data-go="' + g[0] + '"' : ' disabled') + ' style="--i:' + (i + 1) + '"><span class="lb-art" aria-hidden="true">' + (art[g[0]] || '') + '</span><b>' + g[1] + '</b><small>' + g[2] + '</small>' + (g[0] ? '<i>입장 ▶</i>' : '<i>COMING SOON</i>') + '</button>').join('') + '</div></div>';
+    const ex = {}, sty = {}, C = cfgGet(); { const ft = cfgFeat(), m = ft.m; ex.gcmg = '<span class="lb-x"><em>' + (ft.st === 'next' ? '다음 픽업' : '현재 픽업') + ': ' + esc(m.n) + '</em>' + (m.s || m.e ? '<em>' + cfgDate(m.s) + ' ~ ' + cfgDate(m.e) + '</em>' : '') + '</span>'; ex.raid = '<span class="lb-x lb-cd"></span>'; if (C.raid.img) sty.raid = ';--art:url(&quot;' + esc(new URL(cfgImg(C.raid.img), location.href).href) + '&quot;)'; }
+    root.innerHTML = '<div class="lb"><div class="lb-hero"><div class="lb-t">니슬렁 모음</div><div class="lb-bal"><span>' + window.doroChipSvg('b', 26) + '<b class="num">' + fmt(o.d) + '</b></span><span>' + window.doroChipSvg('r', 26) + '<b class="num">' + fmt(o.r) + '</b></span></div></div>' + (C.notice ? '<div class="lb-nt"><b>공지</b>' + esc(C.notice) + '</div>' : '') +
+      '<div class="lb-grid">' + idleCard() + G.map((g, i) => '<button type="button" class="lb-g ' + g[3] + (g[0] ? '' : ' soon') + '"' + (g[0] ? ' data-go="' + g[0] + '"' : ' disabled') + ' style="--i:' + (i + 1) + (sty[g[0]] || '') + '"><span class="lb-art" aria-hidden="true">' + (art[g[0]] || '') + '</span><b>' + g[1] + '</b><small>' + g[2] + '</small>' + (ex[g[0]] || '') + (g[0] ? '<i>입장 ▶</i>' : '<i>COMING SOON</i>') + '</button>').join('') + '</div></div>';
+    lbCd();
   }
+  /* 포커레이드 입구의 시즌 카운트다운 */
+  function lbCd() { const el = document.querySelector('#tab-game .lb-cd'); if (!el) return; const sn = cfgGet().season, now = Date.now(), z = (n) => String(n).padStart(2, '0'), tm = (ms) => { const sc = Math.max(0, Math.floor(ms / 1000)); return (sc >= 86400 ? Math.floor(sc / 86400) + '일 ' : '') + z(Math.floor(sc % 86400 / 3600)) + ':' + z(Math.floor(sc % 3600 / 60)) + ':' + z(sc % 60); };
+    const h = !sn || now >= sn.end ? '<em>다음 시즌을 기대해주세요</em>' : now < sn.start ? '<em>다음 시즌까지</em><em class="num">' + tm(sn.start - now) + '</em>' : '<em>이번 시즌 종료까지</em><em class="num">' + tm(sn.end - now) + '</em>'; if (el.innerHTML !== h) el.innerHTML = h; }
+  setInterval(() => { if (curTab === 'game') lbCd(); }, 1000);
   (() => { const root = $('#tab-game'); if (!root) return; root.addEventListener('click', (e) => { const b = e.target.closest('[data-go]'); if (b) showTab(b.dataset.go); }); window.addEventListener('dorochips', () => { if (curTab === 'game') { const o2 = chipRaw(), sp = document.querySelectorAll('#tab-game .lb-bal b'); if (sp[0]) sp[0].textContent = fmt(o2.d); if (sp[1]) sp[1].textContent = fmt(o2.r); } }); /* 잔고 숫자만 바꿈(위젯을 다시 그리지 않음) */
     const ic = document.querySelector('#tabs .gmtic'); if (ic && window.doroChipSvg) ic.innerHTML = window.doroChipSvg('b', 18, false, true); })();
   function dexGate() {
@@ -4507,14 +4515,34 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   /* 가챠 머신: 독립 모듈(DoroGacha)을 실제 풀·보유 재화와 연결 */
   let gmInst = null; const gmStock = { jw: 0, pick: 0 };
   function gmStockSync() { let v = null; try { const c = jwCalc(); v = c.at(c.today).v; } catch (e) { /* 쥬얼 탭 미입력 */ } const jw = v ? Math.max(0, Math.floor(v.jw || 0)) : 0, pk = v ? Math.max(0, Math.floor(v.pick || 0)) : 0; if (jw < 300 && pk < 1) { gmStock.jw = 30000; gmStock.pick = 100; } else { gmStock.jw = jw; gmStock.pick = pk; } }
-  const GM_PICKUP = ['마리안 : 퀸', '홍련 : 신살']; /* 지금 픽업 중인 니케: 가챠 머신과 2048(타일 초상화)이 함께 씀. 픽업이 바뀌면 여기만 고치면 됨 */
-  window.doroPickup = () => { const n = GM_PICKUP[0], k = nkCode(n); return { n, code: k, img: k ? BL_IMG(k) : '' }; };
+  /* ===== 사이트 설정: 관리 탭에서 바꾸는 값(가챠 머신 목록·레이드 보스·시즌·공지). 서버(/config)에 저장된 값이 없으면 아래 기본값 ===== */
+  function cfgDef() { const K = (y, m, d, h, mi, sc) => Date.UTC(y, m - 1, d, h - 9, mi || 0, sc || 0);
+    return { gacha: [
+      { id: 'sky', n: '스카이', rate: 2, corp: '테트라', cover: 'assets/img/pickup-sky.webp', face: 'assets/img/pickup-sky-face.webp', s: K(2026, 11, 19, 15), e: K(2026, 12, 3, 4, 59, 59) },
+      { id: 'hr', n: '홍련 : 신살', rate: 1, corp: '필그림', cover: 'assets/img/7456775bf4b4.webp', face: '', s: K(2026, 11, 5, 5), e: K(2026, 11, 26, 4, 59, 59) },
+      { id: 'mq', n: '마리안 : 퀸', rate: 1, corp: '필그림', cover: 'assets/img/27f563d98449.webp', face: '', s: K(2026, 10, 29, 15), e: K(2026, 11, 19, 4, 59, 59) }],
+      raid: { nm: '승리의 여신', img: '' }, notice: '', season: { id: 'S43', e: '', r: '', start: K(2026, 11, 19, 5), end: K(2026, 11, 24, 5) } }; }
+  function cfgMerge(d, s) { const c = (s && s.cfg) || {}, now = Date.now(), ss = s && s.srv ? s.season : null; /* 시즌: 서버 것이 아직 안 끝났으면 그것, 아니면 기본 일정(안 끝난 경우만) */
+    return { gacha: Array.isArray(c.gacha) && c.gacha.length ? c.gacha : d.gacha, raid: { nm: (c.raid && c.raid.nm) || d.raid.nm, img: (c.raid && c.raid.img) || '' }, notice: c.notice || '', season: ss && ss.end > now ? ss : d.season.end > now ? d.season : ss, srvSeason: ss, srv: !!(s && s.srv), saved: !!(s && s.cfg) }; }
+  function cfgGet() { if (!cfgGet.c) { let s = null; try { s = JSON.parse(localStorage.getItem('dorosync-cfg') || 'null'); } catch (e) { /* 저장 불가 */ } cfgGet.c = cfgMerge(cfgDef(), s); } return cfgGet.c; }
+  function cfgImg(v) { v = String(v || ''); return v.startsWith('img:') ? BL_WORKER + '/img/' + v.slice(4) : v; }
+  function cfgCss() { const c = cfgGet(), st = document.documentElement.style; if (c.raid.img) st.setProperty('--rd-boss', 'url("' + new URL(cfgImg(c.raid.img), location.href).href + '")'); else st.removeProperty('--rd-boss'); }
+  function cfgApply(s) { try { localStorage.setItem('dorosync-cfg', JSON.stringify(s)); } catch (e) { /* 저장 불가 */ } cfgGet.c = cfgMerge(cfgDef(), s); cfgCss(); window.dispatchEvent(new Event('dorocfg')); if (curTab === 'game') renderLobby(); }
+  function cfgLoad() { return fetch(BL_WORKER + '/config').then((r) => (r.ok ? r.json() : null)).then((j) => { if (j && j.ok) cfgApply({ cfg: j.cfg, season: j.season, srv: 1 }); return j; }).catch(() => null); }
+  /* 대표 픽업: 고정한 것 > 진행 중(가장 최근에 시작) > 곧 시작 > 목록 첫째. 니슬렁 표지·2048 타일이 함께 씀 */
+  function cfgFeat() { const L = cfgGet().gacha, now = Date.now(), pin = L.find((x) => x.pin); if (pin) return { m: pin, st: pin.s && now < pin.s ? 'next' : 'now' };
+    const act = L.filter((x) => (x.s || x.e) && (!x.s || now >= x.s) && (!x.e || now < x.e)).sort((a, b) => (b.s || 0) - (a.s || 0)); if (act[0]) return { m: act[0], st: 'now' };
+    const nx = L.filter((x) => x.s && now < x.s).sort((a, b) => a.s - b.s); if (nx[0]) return { m: nx[0], st: 'next' }; return { m: L[0], st: 'now' }; }
+  function cfgDate(ms) { if (!ms) return ''; const k = new Date(ms + 9 * 3600000); return (k.getUTCMonth() + 1) + '/' + k.getUTCDate() + '(' + '일월화수목금토'[k.getUTCDay()] + ') ' + String(k.getUTCHours()).padStart(2, '0') + ':' + String(k.getUTCMinutes()).padStart(2, '0'); }
+  window.doroCfg = { get: cfgGet, img: cfgImg, feat: cfgFeat, apply: cfgApply, load: cfgLoad, def: cfgDef, date: cfgDate }; cfgCss(); cfgLoad();
+  window.doroPickup = () => { const m = cfgFeat().m, k = nkCode(m.n); return { n: m.n, code: k, img: m.face ? cfgImg(m.face) : k ? BL_IMG(k) : cfgImg(m.cover) }; };
   function gmMount() {
     if (gmInst) return; if (!window.DoroGacha) { /* 가챠 엔진은 가챠 탭을 처음 열 때 불러옴 */ if (!gmMount.w) { gmMount.w = 1; const sc = document.createElement('script'); sc.src = 'js/gacha.js'; sc.onload = () => { gmMount.w = 0; const go = () => { if (curTab === 'gcm') gmMount(); }; if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go(); }; sc.onerror = () => { gmMount.w = 0; const r = document.getElementById('gm-root'); if (r) r.innerHTML = '<p class="muted" style="padding:20px">가챠 머신을 불러오지 못했습니다. 새로고침해 주세요.</p>'; }; document.head.appendChild(sc); } return; } let D; try { D = window.GM_ASSETS; if (!D) throw 0; } catch (e) { return; }
     const corp = {}; GC_NK.forEach((r) => { if (r[2] === 'SSR') corp[r[0]] = r[1]; });
     const mk = (L, p, cp) => L.map((n) => { const k = nkCode(n) || nkCode({ '리틀 머메이드': '세이렌' }[n] || ''); return { n, c: corp[n] || cp || '', k, p, img: k ? BL_IMG(k) : '', tall: 1 }; });
-    gmStockSync(); const std = mk(GC_POOL.std, 0), pil = mk(GC_POOL.pil, 1), M = (name, cover) => ({ assets: Object.assign({}, D.assets, { cover }), tiers: tierData(), chipTiers: chipTierData(), pools: { std, pil, pickup: mk([name], 1, '필그림')[0] }, stock: gmStock, shared: true, title: name + ' 픽업' });
-    gmInst = window.DoroGacha.mountMulti(document.getElementById('gm-root'), [M(GM_PICKUP[0], D.assets.cover), M(GM_PICKUP[1], D.assets.cover2)]);
+    gmStockSync(); const std = mk(GC_POOL.std, 0), pil = mk(GC_POOL.pil, 1), M = (m) => { const two = +m.rate === 2, pu = mk([m.n], two ? 0 : 1, m.corp || (two ? '' : '필그림'))[0]; if (m.corp) pu.c = m.corp; if (m.face) pu.img = cfgImg(m.face); else if (!pu.img) { pu.img = cfgImg(m.cover); pu.tall = 0; } /* 픽업 2% = 일반 니케, 1% = 필그림·오버스펙 */
+      return { assets: Object.assign({}, D.assets, { cover: cfgImg(m.cover) }), tiers: tierData(), chipTiers: chipTierData(), pools: { std, pil, pickup: pu }, puRate: two ? 2 : 1, stock: gmStock, shared: true, title: m.n + ' 픽업' }; };
+    gmInst = window.DoroGacha.mountMulti(document.getElementById('gm-root'), cfgGet().gacha.map(M));
   }
   /* ---------- 가챠 > 티어표 (솔레 / PvP) ---------- */
   const TR_KEY = 'dorosync-tiers-v2', TR_LV = ['SSS', 'SS', 'S', 'A', 'B', 'C', 'D', 'E', 'F'];

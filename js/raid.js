@@ -15,7 +15,8 @@
   const TS = { SSS: 9, SS: 8, S: 7, A: 6, B: 5, C: 4, D: 3, E: 2, F: 1 };
   const HN = { 0: '-', 1: '하이카드', 2: '페어', 3: '투페어', 4: '트리플', 5: '스트레이트', 6: '풀하우스', 7: '포카드', 8: '플러시' };
   const BU = { 1: 'I', 2: 'II', 3: 'III', A: 'A' };
-  const BACK = 'assets/img/raid-back.webp', BOSS_IMG = 'assets/img/raid-boss-1.webp', BOSS_NM = '승리의 여신', BOSS0 = { e: '풍', r: 'NEAR' };
+  const BACK = 'assets/img/raid-back.webp', BOSS_IMG = 'assets/img/raid-boss-1.webp', BOSS0 = { e: '풍', r: 'NEAR' };
+  const bossNm = () => { let n = ''; try { n = window.doroCfg.get().raid.nm; } catch (e) { /* 설정 전 */ } return String(n || '승리의 여신').replace(/[&<>"]/g, ''); }; /* 보스 이름·배경은 관리 탭에서 바꿈(배경 = CSS 변수 --rd-boss) */
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const fmt = (n) => Math.round(n).toLocaleString('ko-KR');
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms)), slow = (ms) => sleep(ms * SLOW);
@@ -169,7 +170,7 @@
 .rd button.rb:disabled{filter:grayscale(.8) brightness(.6);cursor:default}
 .rd .rb.red{background:#f0483c}.rd .rb.blue{background:#0d8bf2}.rd .rb.org{background:#f59a0c}.rd .rb.grn{background:#35a36b}.rd .rb.gry{background:#56646b}.rd .rb.pur{background:#8a56d6}
 .rd-main{position:relative;padding:12px 12px 10px;min-height:600px;display:flex;flex-direction:column;overflow:hidden;background:#0e1013}
-.rd-bg{position:absolute;inset:0;z-index:0;background:url(${BOSS_IMG}) 50% 12%/cover;transform-origin:50% 30%}
+.rd-bg{position:absolute;inset:0;z-index:0;background:var(--rd-boss,url(${BOSS_IMG})) 50% 12%/cover;transform-origin:50% 30%}
 .rd-bg:after{content:"";position:absolute;inset:0;background:linear-gradient(rgba(14,16,20,.38),rgba(14,16,20,.5) 50%,rgba(14,16,20,.93) 82%)}
 .rd-main.atk .rd-bg:after{background:linear-gradient(rgba(14,16,20,.12),rgba(14,16,20,.3) 50%,rgba(14,16,20,.93) 85%);transition:background .4s}
 .rd-bg.hit{animation:rdHit .34s}
@@ -266,7 +267,7 @@
 .rd-w{border-radius:12px;padding:8px 10px 6px}.rd-w h4{margin:0 0 4px!important;color:#fff!important;font-size:14px!important}
 .rd-w.c{background:#0b5fa8;box-shadow:0 3px 0 #06365f}.rd-w.m{background:#a52c24;box-shadow:0 3px 0 #5c1611}.rd-w.f{background:#3a444a;box-shadow:0 3px 0 #1f2529;grid-column:1/-1}
 .rd-help .rd-mb{max-width:520px;padding:0;overflow:hidden}
-.hv-st{position:relative;height:250px;background:#0e1013 url(${BOSS_IMG}) 50% 10%/cover;overflow:hidden;--cw:52px}
+.hv-st{position:relative;height:250px;background:#0e1013 var(--rd-boss,url(${BOSS_IMG})) 50% 10%/cover;overflow:hidden;--cw:52px}
 .hv-st:before{content:"";position:absolute;inset:0;background:rgba(14,16,20,.62)}
 .hv-st .pk{cursor:default;touch-action:auto;position:absolute;bottom:22px;transform:none}
 .hv-slot{position:absolute;top:18px;width:52px;height:92px;border-radius:5px;border:2px dashed rgba(255,255,255,.35);background:rgba(0,0,0,.3)}
@@ -311,7 +312,7 @@
 .rk-deck{grid-column:1/-1;display:flex;gap:4px;justify-content:center;--cw:58px;padding:4px 0 2px}.rk-deck[hidden]{display:none}.rk-deck .pk{cursor:default;touch-action:auto;transform:none}.rk-deck small{align-self:center;margin-left:8px;font-weight:800;color:#56646b}
 .rk-cut{display:flex;align-items:center;gap:8px;margin:8px 2px;font-size:12px;font-weight:900;color:#1667d9}.rk-cut:before,.rk-cut:after{content:"";flex:1;height:2px;background:repeating-linear-gradient(90deg,#1667d9 0 6px,transparent 6px 10px)}.rk-cut img{width:26px;height:26px}
 .rk-me{background:#2a2f37;color:#fff;padding:8px 10px}.rk-me .rd-rk{margin:0;background:#fff;color:#20252b}.rk-me .rk-n{font-size:14px;color:#fff;background:#1e9bff;border-radius:8px;padding:8px 2px}
-.rd-launch{position:relative;overflow:hidden;border-radius:16px;min-height:440px;color:#fff;background:#0e1013 url(${BOSS_IMG}) 50% 8%/cover;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:16px 10px 20px;text-align:center;font-family:"Arial Black","Pretendard","Malgun Gothic",sans-serif}
+.rd-launch{position:relative;overflow:hidden;border-radius:16px;min-height:440px;color:#fff;background:#0e1013 var(--rd-boss,url(${BOSS_IMG})) 50% 8%/cover;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:16px 10px 20px;text-align:center;font-family:"Arial Black","Pretendard","Malgun Gothic",sans-serif}
 .rd-launch[hidden]{display:none}
 .rd-launch:before{content:"";position:absolute;inset:0;background:linear-gradient(rgba(14,16,20,.15),rgba(14,16,20,.45) 45%,rgba(14,16,20,.95))}
 .rd-launch>*{position:relative}
@@ -496,7 +497,7 @@
   }
   function setBoss(b) {
     S.boss = b; const d = data(), sp = supOf(b.e);
-    $('.rd-bn').innerHTML = (d.elIco ? '<img alt="" src="' + d.elIco[b.e] + '">' : '') + BOSS_NM;
+    $('.rd-bn').innerHTML = (d.elIco ? '<img alt="" src="' + d.elIco[b.e] + '">' : '') + bossNm();
     $('.rd-bi').innerHTML = '<span>추천</span><span class="rd-rc">' + (d.elIco ? '<img alt="' + ELN[sp] + '" title="우월코드 ' + ELN[sp] + '" src="' + d.elIco[sp] + '">' : ELN[sp]) + '<span class="rd-wps" title="추천 총기 ' + RNG[b.r].join('·') + '">' + RNG[b.r].map((w) => '<img alt="' + w + '" src="assets/img/wp-' + w + '.png">').join('') + '</span></span>';
   }
   function clearTable() { bgm.stop(); Object.keys(els).forEach((id) => els[id].remove()); els = {}; S.cards = {}; S.hand = []; S.squad = EMPTY(); S.sel = new Set(); poolKey = ''; S.flt = { e: '', c: '', b: '', r: '' }; $('.rd-main').classList.remove('atk'); $('.rd-total b').textContent = '0억'; $$('.rd-dmg,.rd-ban,.rd-burst').forEach((e) => e.remove()); $('.rd-fin').hidden = true; $('.rd-flt').hidden = true; }
@@ -826,7 +827,7 @@
     const fg = (lab, k, arr) => '<div class="rd-fg"><span>' + lab + '</span>' + arr.map((v) => '<button type="button" data-k="' + k + '" data-v="' + v[0] + '">' + v[1] + '</button>').join('') + '</div>';
     const d0 = data(), smp = d0.list.slice().sort((a, b) => (TS[b.t] || 0) - (TS[a.t] || 0)).slice(0, 5).map((x, i) => cardHtml(Object.assign({}, x, { cnt: [4, 11, 11, 7, 1][i] }), BOSS0)).join('');
     const hx = (inner, cls) => '<span class="pk-hx ' + (cls || '') + '">' + inner + '</span>', wpi = (w) => '<img alt="' + w + '" src="assets/img/wp-' + w + '.png">';
-    root.innerHTML = '<div class="rd-launch" hidden><div class="rd-lt"><small>POKER RAID</small>' + BOSS_NM + '</div><div class="rd-lc">' + smp + '</div><button type="button" class="rd-go" data-fs="1" aria-label="플레이">▶</button><div class="rd-lp">가로 화면으로 시작</div></div>' +
+    root.innerHTML = '<div class="rd-launch" hidden><div class="rd-lt"><small>POKER RAID</small>' + bossNm() + '</div><div class="rd-lc">' + smp + '</div><button type="button" class="rd-go" data-fs="1" aria-label="플레이">▶</button><div class="rd-lp">가로 화면으로 시작</div></div>' +
       '<div class="rd"><aside class="rd-side">' +
       '<div class="pn rd-boss"><div class="rd-bn"></div><div class="rd-bi"></div></div>' +
       '<div class="pn rd-hp"><div class="rd-hn"></div><div class="rd-cm"><b class="rd-chips">0</b><i>×</i><b class="rd-mult">0</b></div><div class="rd-ex"><span>예상 점수</span><b>0억</b></div></div>' +

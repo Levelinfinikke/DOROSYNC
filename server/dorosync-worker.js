@@ -56,6 +56,8 @@ export default {
       if (!okOrigin) return out(403, { ok: false, error: 'origin' });
       return raid(req, env, out);
     }
+    if (url.pathname === '/config') { if (req.method !== 'GET') return out(405, { ok: false, error: 'method' }); return siteConfig(env, out); }
+    if (url.pathname.startsWith('/img/')) { if (req.method !== 'GET') return out(405, { ok: false, error: 'method' }); return siteImg(url.pathname.slice(5), env, out); }
     if (url.pathname === '/admin') { if (!okOrigin) return out(403, { ok: false, error: '허용되지 않은 사이트입니다.' }); return adminView(req, env, out); }
     if (req.method !== 'GET') return out(405, { ok: false, error: 'method' });
     if (url.pathname === '/' || url.pathname === '/health') {
@@ -607,6 +609,7 @@ async function adminView(req, env, out) {
   const sa = JSON.parse(env.FIREBASE_SA), at = await saToken(sa, 'https://www.googleapis.com/auth/datastore'), H = { Authorization: 'Bearer ' + at };
   if (req.method === 'POST') { /* 관리자 대리 수정: 자동 기록 프로필 주소·서버만 고침 { fix: { id: 문서ID 앞 6자, openid, area } } */
     let b = {}; try { b = await req.json(); } catch (e) { /* 빈 요청 */ }
+    if (b.cfg || b.img || b.imgDel || b.raid || b.grant) return adminSite(b, H, out);
     const fx = b.fix || b.probe || {}, area = Number(fx.area), raw = String(fx.openid || '').trim();
     if (!/^[A-Za-z0-9]{6,40}$/.test(String(fx.id || '')) || (b.fix && ((raw && !toIntlId(raw)) || !AREAS.includes(area)))) return out(400, { ok: false, error: 'bad' });
     const ids = []; let p2 = '';
@@ -635,4 +638,73 @@ async function adminView(req, env, out) {
   }
   let run = null; try { const d = await (await fetch(FS + '/meta/autoRun', { headers: H })).json(); if (d && d.fields) { run = {}; Object.entries(d.fields).forEach(([k, v]) => { run[k] = dec(v); }); } } catch (e) { /* 무시 */ }
   return out(200, { ok: true, users, autoRun: run });
+}
+
+/* ================= 사이트 설정(관리 탭) =================
+ * meta/site: 가챠 머신 목록·보스 이름/이미지·공지(JSON 문자열 j). img/<id>: 관리자가 올린 이미지(base64).
+ * GET /config, GET /img/<id>는 누구나 읽음. 쓰기는 /admin(POST, 관리자만). */
+let CFG_MEM = null;
+const FS_COMMIT = FS.replace(/\/documents$/, '/documents:commit'), FS_DOC = (path) => 'projects/' + FB_PROJECT + '/databases/(default)/documents/' + path;
+async function saHead(env) { const sa = JSON.parse(env.FIREBASE_SA); return { Authorization: 'Bearer ' + await saToken(sa, 'https://www.googleapis.com/auth/datastore') }; }
+async function fsGet(path, H) { const r = await fetch(FS + '/' + path, { headers: H }); if (!r.ok) return null; const d = await r.json(), o = {}; Object.entries(d.fields || {}).forEach(([k, v]) => { o[k] = dec(v); }); return { name: d.name, updateTime: d.updateTime, f: o }; }
+async function siteConfig(env, out) {
+  if (!env.FIREBASE_SA) return out(503, { ok: false, error: 'not_ready' });
+  const now = Date.now();
+  if (!CFG_MEM || now - CFG_MEM.t > 30000) {
+    const H = await saHead(env), [st, rd] = await Promise.all([fsGet('meta/site', H), fsGet('meta/raid', H)]);
+    let cfg = null; try { cfg = st && st.f.j ? JSON.parse(st.f.j) : null; } catch (e) { cfg = null; }
+    const f = rd && rd.f, season = f && f.on && f.id ? { id: f.id, e: f.e, r: f.r, start: f.start, end: f.end } : null;
+    CFG_MEM = { t: now, body: { cfg, season } };
+  }
+  return out(200, Object.assign({ ok: true, now }, CFG_MEM.body), { 'Cache-Control': 'public, max-age=30' });
+}
+async function siteImg(id, env, out) {
+  if (!/^[a-z0-9]{8,24}$/.test(id) || !env.FIREBASE_SA) return out(404, { ok: false, error: 'not found' });
+  const d = await fsGet('img/' + id, await saHead(env)); if (!d || !d.f.b) return out(404, { ok: false, error: 'not found' });
+  const bin = atob(d.f.b), u8 = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+  return new Response(u8, { status: 200, headers: { 'Content-Type': /^image\/(webp|jpeg|png)$/.test(d.f.t) ? d.f.t : 'image/webp', 'Cache-Control': 'public, max-age=31536000, immutable', 'Access-Control-Allow-Origin': '*' } });
+}
+async function adminSite(b, H0, out) {
+  const H = Object.assign({ 'Content-Type': 'application/json' }, H0), now = Date.now();
+  const commit = async (writes) => (await fetch(FS_COMMIT, { method: 'POST', headers: H, body: JSON.stringify({ writes }) })).ok;
+  const str = (v, n) => String(v == null ? '' : v).replace(/[<>\u0000-\u001f]/g, '').slice(0, n), ref = (v) => (/^(img:[a-z0-9]{8,24}|assets\/img\/[A-Za-z0-9._-]{1,80})$/.test(String(v || '')) ? String(v) : ''), ms = (v) => { const n = Math.floor(+v || 0); return n > 1e12 && n < 5e12 ? n : 0; };
+  if (b.img) { /* 이미지 올리기 { img: { data: base64, type } } → { id } */
+    const data = String(b.img.data || ''), type = String(b.img.type || 'image/webp');
+    if (!/^image\/(webp|jpeg|png)$/.test(type) || data.length < 100 || data.length > 940000 || !/^[A-Za-z0-9+/]+=*$/.test(data)) return out(400, { ok: false, error: 'img' });
+    const id = Array.from(crypto.getRandomValues(new Uint8Array(8))).map((x) => x.toString(16).padStart(2, '0')).join('');
+    const ok = await commit([{ update: { name: FS_DOC('img/' + id), fields: { t: fsv(type), b: fsv(data), at: fsv(now) } } }]);
+    return out(ok ? 200 : 502, { ok, id });
+  }
+  if (b.imgDel) { const id = String(b.imgDel); if (!/^[a-z0-9]{8,24}$/.test(id)) return out(400, { ok: false, error: 'bad' }); const ok = await commit([{ delete: FS_DOC('img/' + id) }]); return out(ok ? 200 : 502, { ok }); }
+  if (b.cfg) { /* 가챠 머신 목록·보스 이름/이미지·공지 */
+    const c = b.cfg, g = (Array.isArray(c.gacha) ? c.gacha : []).slice(0, 12).map((x) => ({ id: str(x.id, 20).replace(/[^0-9a-zA-Z_-]/g, '') || String(now), n: str(x.n, 40), rate: +x.rate === 2 ? 2 : 1, corp: ['엘리시온', '미실리스', '테트라', '필그림', '어브노멀'].includes(x.corp) ? x.corp : '', cover: ref(x.cover), face: ref(x.face), s: ms(x.s), e: ms(x.e), pin: x.pin ? 1 : 0 })).filter((x) => x.n && x.cover);
+    const cfg = { gacha: g, raid: { nm: str(c.raid && c.raid.nm, 30), img: ref(c.raid && c.raid.img) }, notice: str(c.notice, 200), at: now };
+    const ok = await commit([{ update: { name: FS_DOC('meta/site'), fields: { j: fsv(JSON.stringify(cfg)), at: fsv(now) } } }]); CFG_MEM = null;
+    return out(ok ? 200 : 502, { ok, cfg });
+  }
+  if (b.raid) { /* 시즌 일정·약점: 같은 id면 수정, 다른 id면 새 시즌(순위 새로 시작), off면 닫기 */
+    const q = b.raid, old = await fsGet('meta/raid', H0), of = (old && old.f) || {};
+    let sn;
+    if (q.off) { sn = { on: false }; const prev = of.id && of.on ? { id: of.id, end: Math.min(of.end || now, now) } : of.prev || null; if (prev) sn.prev = prev; }
+    else {
+      const id = str(q.id, 20).replace(/[^0-9a-zA-Z-]/g, ''), start = ms(q.start), end = ms(q.end);
+      if (!id || !R_CYC.includes(q.e) || !R_RNG[q.r] || !start || end <= start) return out(400, { ok: false, error: 'bad' });
+      sn = { id, e: q.e, r: q.r, start, end, on: true };
+      const prev = of.id && of.on && of.id !== id ? { id: of.id, end: Math.min(of.end || now, now) } : of.prev || null; if (prev) sn.prev = prev;
+    }
+    const ok = await commit([{ update: { name: FS_DOC('meta/raid'), fields: fsv(sn).mapValue.fields } }]); CFG_MEM = null;
+    return out(ok ? 200 : 502, { ok, season: sn });
+  }
+  if (b.grant) { /* 칩 지급·회수 { grant: { id: 문서ID 앞 6자, d, r } } */
+    const gid = String(b.grant.id || ''), dd = Math.floor(+b.grant.d || 0), dr = Math.floor(+b.grant.r || 0);
+    if (!/^[A-Za-z0-9]{6,40}$/.test(gid) || (!dd && !dr) || Math.abs(dd) > 1000000 || Math.abs(dr) > 10000) return out(400, { ok: false, error: 'bad' });
+    const ids = []; let p2 = '';
+    for (let i = 0; i < 20; i++) { const r = await (await fetch(FS + '/users?pageSize=300&mask.fieldPaths=chipsV&mask.fieldPaths=chips' + (p2 ? '&pageToken=' + encodeURIComponent(p2) : ''), { headers: H0 })).json(); (r.documents || []).forEach((d) => { if (d.name.split('/').pop().startsWith(gid)) ids.push(d); }); p2 = r.nextPageToken; if (!p2) break; }
+    if (ids.length !== 1) return out(404, { ok: false, error: ids.length ? 'ambiguous' : 'notfound' });
+    const d = ids[0], f = d.fields || {}, old = dec(f.chips) || {}, cv = dec(f.chipsV) || { d: Math.max(0, Math.floor(+old.d || 0)), r: Math.max(0, Math.floor(+old.r || 0)) };
+    const nv = { d: Math.max(0, (cv.d || 0) + dd), r: Math.max(0, (cv.r || 0) + dr) };
+    const ok = await commit([{ update: { name: d.name, fields: { chipsV: fsv(nv) } }, updateMask: { fieldPaths: ['chipsV'] }, currentDocument: { updateTime: d.updateTime } }]);
+    return out(ok ? 200 : 409, { ok, chips: nv, error: ok ? undefined : 'busy' });
+  }
+  return out(400, { ok: false, error: 'bad' });
 }

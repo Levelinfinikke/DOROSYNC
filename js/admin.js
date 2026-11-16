@@ -1,5 +1,6 @@
-/* DOROSYNC 관리자 현황: 관리자 계정으로 로그인하면 상단에 [관리] 버튼이 생김.
-   계정별 싱크칩 잔고·오늘 기록·싱크로 자동 기록 설정을 워커(/admin)에서 받아 표로 보여 줌. 이메일은 받지 않음 */
+/* DOROSYNC 관리 탭: 관리자 계정으로 로그인하면 상단에 [관리] 탭이 생김.
+   현황(계정별 칩·자동 기록) · 가챠 머신(픽업 추가·삭제·기간) · 포커레이드(시즌 일정·약점·사거리·보스) · 기타(공지·칩 지급).
+   저장은 모두 워커(/admin)가 관리자 계정인지 확인한 뒤 처리. 이메일은 받지 않음 */
 (function () {
   'use strict';
   const ADMIN = ['bAdQg5xtIsbCntzxuEjBoSB93T22', 'PdkjvEMLcaR76Ie7h13N6cnpDvT2'];
@@ -7,35 +8,138 @@
   const fmt = (n) => Math.round(+n || 0).toLocaleString('ko-KR');
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const kst = (v) => { if (!v) return '-'; const d = new Date(typeof v === 'number' || /^\d+$/.test(v) ? +v : v); if (isNaN(d)) return '-'; const k = new Date(d.getTime() + 9 * 3600000); return (k.getUTCMonth() + 1) + '/' + k.getUTCDate() + ' ' + String(k.getUTCHours()).padStart(2, '0') + ':' + String(k.getUTCMinutes()).padStart(2, '0'); };
-  const CSS = '#adm-btn{margin-left:6px}#adm-m{position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,.6);display:flex;align-items:flex-start;justify-content:center;padding:24px 12px;overflow:auto}#adm-m[hidden]{display:none}'
-    + '#adm-b{background:var(--card,#161a22);color:var(--ink,#e8edf6);border:1px solid var(--line,#2a3140);border-radius:14px;max-width:1100px;width:100%;padding:16px 18px;box-shadow:0 10px 40px rgba(0,0,0,.5)}'
-    + '#adm-b h2{margin:0 0 10px;font-size:18px;display:flex;align-items:center;gap:8px}#adm-b h2 #adm-re{margin-left:auto}#adm-sum{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 12px}#adm-sum div{padding:8px 12px;border-radius:10px;background:rgba(255,255,255,.05);font-size:13px}#adm-sum b{display:block;font-size:18px}'
-    + '#adm-t{width:100%;border-collapse:collapse;font-size:12.5px}#adm-t th,#adm-t td{padding:6px 8px;border-bottom:1px solid var(--line,#2a3140);text-align:right;white-space:nowrap}#adm-t th{cursor:pointer;color:var(--muted,#9aa5b8);position:sticky;top:0;background:var(--card,#161a22)}#adm-t td.l,#adm-t th.l{text-align:left}#adm-t tr.me td{opacity:.6}.adm-on{color:var(--ok,#1a9d55);font-weight:700}.adm-bad{color:var(--bad,#e0303a)}.adm-note{font-size:12px;color:var(--muted,#9aa5b8);margin-top:10px}';
-  let data = null, sortK = 'chips', sortD = -1;
+  const CSS = '#tab-admin .adm{max-width:1100px;margin:0 auto;color:var(--ink,#e8edf6)}.adm-nav{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}.adm-nav button{padding:8px 16px;border-radius:99px;border:1px solid var(--line,#2a3140);background:transparent;color:inherit;font:inherit;font-weight:700;cursor:pointer}.adm-nav button.on{background:var(--ink,#e8edf6);color:var(--card,#161a22);border-color:transparent}'
+    + '.adm-p{background:var(--card,#161a22);border:1px solid var(--line,#2a3140);border-radius:14px;padding:16px 18px;margin:0 0 14px}.adm-p h3{margin:0 0 10px;font-size:16px;display:flex;align-items:center;gap:8px}.adm-p h3 small{font-size:12px;color:var(--muted,#9aa5b8);font-weight:400}.adm-p h3 button{margin-left:auto}'
+    + '#adm-sum{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 12px}#adm-sum div{padding:8px 12px;border-radius:10px;background:rgba(127,127,127,.12);font-size:13px}#adm-sum b{display:block;font-size:18px}'
+    + '#adm-t{width:100%;border-collapse:collapse;font-size:12.5px}#adm-t th,#adm-t td{padding:6px 8px;border-bottom:1px solid var(--line,#2a3140);text-align:right;white-space:nowrap}#adm-t th{cursor:pointer;color:var(--muted,#9aa5b8);position:sticky;top:0;background:var(--card,#161a22)}#adm-t td.l,#adm-t th.l{text-align:left}#adm-t tr.me td{opacity:.6}.adm-on{color:var(--ok,#1a9d55);font-weight:700}.adm-bad{color:var(--bad,#e0303a)}.adm-note{font-size:12px;color:var(--muted,#9aa5b8);margin:8px 0 0;line-height:1.55}'
+    + '.adm-f{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:10px 12px;align-items:end}.adm-f label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted,#9aa5b8)}.adm-f label.w{grid-column:1/-1}.adm-f input,.adm-f select,.adm-f textarea{font:inherit;font-size:14px;padding:8px 10px;border-radius:9px;border:1px solid var(--line,#2a3140);background:rgba(127,127,127,.1);color:var(--ink,#e8edf6);min-width:0;width:100%;box-sizing:border-box}.adm-f select option{color:#111}'
+    + '.adm-act{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px}.adm-b{padding:9px 16px;border-radius:10px;border:0;background:#f5b301;color:#14161c;font:inherit;font-weight:800;cursor:pointer}.adm-b.g{background:rgba(127,127,127,.2);color:inherit}.adm-b.r{background:#e0303a;color:#fff}.adm-b:disabled{opacity:.5;cursor:default}.adm-b.sm{padding:5px 10px;font-size:12px;border-radius:8px}.adm-msg{font-size:13px}.adm-msg.ok{color:var(--ok,#1a9d55)}.adm-msg.bad{color:var(--bad,#e0303a)}'
+    + '.adm-gm{display:grid;grid-template-columns:150px 1fr;gap:12px;padding:12px 0;border-top:1px solid var(--line,#2a3140)}.adm-gm:first-of-type{border-top:0}.adm-gm .th{position:relative;border-radius:10px;overflow:hidden;aspect-ratio:16/9;background:#000 center/cover;align-self:start}.adm-gm .th i{position:absolute;right:4px;bottom:4px;width:34px;height:34px;border-radius:50%;background:#222 50% 15%/cover;box-shadow:0 0 0 2px #f5b301}.adm-gm .th em{position:absolute;left:4px;top:4px;font-style:normal;font-size:11px;font-weight:800;padding:2px 7px;border-radius:99px;background:#f5b301;color:#14161c}.adm-gm .th em.n{background:#4da3ff}.adm-gm .th em.e{background:#666;color:#fff}'
+    + '.adm-crop{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start;margin-top:12px}.adm-crop .cv{position:relative;flex:1 1 380px;max-width:620px;border-radius:10px;overflow:hidden;cursor:crosshair;background:#000;line-height:0}.adm-crop .cv img{width:100%;height:auto}.adm-crop .cv u{position:absolute;border:2px solid #f5b301;box-shadow:0 0 0 2000px rgba(0,0,0,.45);pointer-events:none}.adm-crop canvas{width:96px;height:192px;border-radius:10px;background:#222}.adm-bossp{width:150px;aspect-ratio:7/9;border-radius:10px;background:#111 50% 12%/cover;flex:none}@media(max-width:600px){.adm-gm{grid-template-columns:1fr}.adm-gm .th{max-width:240px}}';
+  let data = null, sortK = 'chips', sortD = -1, sec = 'gm', G = null, R = null, NT = '', nw = null, bossNew = null, built = false;
+  const CORPS = ['엘리시온', '미실리스', '테트라', '필그림', '어브노멀'], CYC = ['작', '풍', '철', '전', '수'], ELN = { 작: '작열', 풍: '풍압', 철: '철갑', 전: '전격', 수: '수냉' }, RNGN = { NEAR: '근거리 (SG·SMG)', MID: '중거리 (AR·MG)', FAR: '원거리 (SR)' };
+  const weakOf = (e) => CYC[(CYC.indexOf(e) + 4) % 5], bossOf = (w) => CYC[(CYC.indexOf(w) + 1) % 5]; /* 약점코드 ↔ 보스 코드 */
+  const toIn = (ms) => (ms ? new Date(ms + 9 * 3600000).toISOString().slice(0, 16) : ''), fromIn = (v) => (v ? Date.parse(v + ':00+09:00') || 0 : 0); /* 입력칸은 항상 한국 시간 */
+  const cfg = () => window.doroCfg.get(), img = (v) => window.doroCfg.img(v), $ = (q) => document.querySelector('#tab-admin ' + q);
   function isAdmin() { const a = window.doroAccount, u = a && a.user; return !!(u && ADMIN.includes(u.uid)); }
-  function button() {
-    let b = document.getElementById('adm-btn'); const on = isAdmin();
-    if (!on) { if (b) b.remove(); return; }
-    if (b) return; const tb = document.querySelector('.top-btns'); if (!tb) return;
+  const canSee = () => isAdmin() || !/github\.io$/.test(location.hostname); /* 미리보기·로컬에서는 화면만 보임(저장은 서버가 관리자만 허용) */
+  function button() { const b = document.getElementById('adm-tab'); if (b) b.hidden = !canSee(); const old = document.getElementById('adm-btn'); if (old) old.remove(); }
+  async function post(body) {
+    let t = ''; try { t = await window.doroAccount.token(); } catch (e) { /* 로그인 안 됨 */ } if (!t) return { ok: false, error: 'login' };
+    try { const r = await fetch(API, { method: 'POST', headers: { Authorization: 'Bearer ' + t, 'Content-Type': 'application/json' }, body: JSON.stringify(body) }), j = await r.json().catch(() => ({})); if (!r.ok && !j.error) j.error = String(r.status); return j; } catch (e) { return { ok: false, error: 'network' }; }
+  }
+  const ERR = { login: '관리자 계정으로 로그인해야 저장됩니다.', admin: '관리자 계정이 아닙니다.', network: '네트워크를 확인해 주세요.', bad: '입력값을 확인해 주세요.', img: '이미지를 올리지 못했습니다(형식·용량).', notfound: '그 ID의 계정이 없습니다.', ambiguous: '같은 ID로 시작하는 계정이 여러 개입니다.', busy: '잠시 후 다시 시도해 주세요.' };
+  function say(id, j, okTxt) { const m = document.getElementById(id); if (!m) return; const ok = j === true || (j && j.ok); m.className = 'adm-msg ' + (ok ? 'ok' : 'bad'); m.textContent = ok ? okTxt || '저장했습니다.' : (ERR[j && j.error] || '저장하지 못했습니다 (' + ((j && j.error) || '?') + '). 서버(워커)가 최신 버전인지 확인해 주세요.'); }
+  /* 이미지를 줄여 webp(안 되면 jpeg) base64로 */
+  function pack(src, maxW, maxH, crop) { const s = crop || { x: 0, y: 0, w: src.naturalWidth || src.width, h: src.naturalHeight || src.height }, k = Math.min(1, maxW / s.w, maxH / s.h), c = document.createElement('canvas'); c.width = Math.round(s.w * k); c.height = Math.round(s.h * k); c.getContext('2d').drawImage(src, s.x, s.y, s.w, s.h, 0, 0, c.width, c.height);
+    let q = 0.84, u = c.toDataURL('image/webp', q); const type = u.startsWith('data:image/webp') ? 'image/webp' : 'image/jpeg'; if (type !== 'image/webp') u = c.toDataURL(type, q); while (u.length > 800000 && q > 0.4) { q -= 0.1; u = c.toDataURL(type, q); } return { type, data: u.slice(u.indexOf(',') + 1), url: u }; }
+  const readImg = (file) => new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = URL.createObjectURL(file); });
+  async function upload(pk) { const j = await post({ img: { data: pk.data, type: pk.type } }); return j && j.ok && j.id ? 'img:' + j.id : (upload.err = j, ''); }
+  function pull() { const c = cfg(); G = JSON.parse(JSON.stringify(c.gacha)); R = { nm: c.raid.nm, img: c.raid.img }; NT = c.notice || ''; }
+  async function saveCfg(msgId, okTxt) { const j = await post({ cfg: { gacha: G, raid: R, notice: NT } }); if (j.ok) { const c = cfg(); window.doroCfg.apply({ cfg: j.cfg, season: c.srvSeason, srv: 1 }); pull(); } say(msgId, j, okTxt); return !!j.ok; }
+
+  function show() {
+    const root = document.getElementById('tab-admin'); if (!root) return;
     if (!document.getElementById('adm-css')) { const st = document.createElement('style'); st.id = 'adm-css'; st.textContent = CSS; document.head.appendChild(st); }
-    b = document.createElement('button'); b.type = 'button'; b.id = 'adm-btn'; b.className = 'ghost upl'; b.textContent = '관리'; b.title = '관리자 현황'; b.onclick = open; tb.appendChild(b);
+    if (!built) { built = true; pull();
+      root.innerHTML = '<div class="adm"><div class="adm-nav">' + [['gm', '가챠 머신'], ['rd', '포커레이드'], ['etc', '기타'], ['st', '현황']].map((x) => '<button type="button" data-sec="' + x[0] + '">' + x[1] + '</button>').join('') + '</div><div id="adm-sec"></div></div>';
+      root.addEventListener('click', onClick); root.addEventListener('change', onChange); root.addEventListener('input', onInput);
+      window.doroCfg.load().then(() => { if (!nw && !bossNew) { pull(); draw(); } }); }
+    draw();
   }
-  async function open() {
-    let m = document.getElementById('adm-m');
-    if (!m) { m = document.createElement('div'); m.id = 'adm-m'; m.innerHTML = '<div id="adm-b"><h2>관리자 현황 <small id="adm-at" style="font-size:12px;color:var(--muted,#9aa5b8);font-weight:400"></small><button type="button" class="ghost sm" id="adm-re">새로고침</button><button type="button" class="ghost sm" id="adm-x">닫기</button></h2><div id="adm-body">불러오는 중…</div></div>'; document.body.appendChild(m);
-      m.addEventListener('click', (e) => { if (e.target === m || e.target.id === 'adm-x') m.hidden = true; if (e.target.id === 'adm-re') load(); const th = e.target.closest('#adm-t th[data-k]'); if (th) { const k = th.dataset.k; sortD = sortK === k ? -sortD : -1; sortK = k; render(); } }); }
-    m.hidden = false; load();
+  function draw() { document.querySelectorAll('#tab-admin .adm-nav button').forEach((b) => b.classList.toggle('on', b.dataset.sec === sec)); const el = $('#adm-sec'); if (!el) return;
+    if (sec === 'gm') el.innerHTML = gmHtml(); else if (sec === 'rd') el.innerHTML = rdHtml(); else if (sec === 'etc') el.innerHTML = etcHtml(); else { el.innerHTML = '<div class="adm-p"><h3>계정 현황 <small id="adm-at"></small><button type="button" class="adm-b g sm" data-act="reload">새로고침</button></h3><div id="adm-body">불러오는 중…</div></div>'; if (data) render(); else load(); }
+    if (sec === 'gm' && nw) cropDraw(); }
+  const opt = (L, v, f) => L.map((x) => '<option value="' + esc(x) + '"' + (x === v ? ' selected' : '') + '>' + esc(f ? f(x) : x) + '</option>').join('');
+  /* ---------- 가챠 머신 ---------- */
+  function gmHtml() {
+    const ft = window.doroCfg.feat().m, now = Date.now(), c = cfg();
+    let h = '<div class="adm-p"><h3>가챠 머신 목록 <small>위에서부터 머신에 나오는 순서</small></h3>';
+    G.forEach((m, i) => { const st = m.s && now < m.s ? ['n', '예정'] : m.e && now >= m.e ? ['e', '종료'] : ['', '진행 중'], fc = window.doroPickup && ft && ft.id === m.id ? window.doroPickup().img : m.face ? img(m.face) : '';
+      h += '<div class="adm-gm" data-i="' + i + '"><div class="th" style="background-image:url(&quot;' + esc(img(m.cover)) + '&quot;)"><em class="' + st[0] + '">' + st[1] + '</em>' + (fc ? '<i style="background-image:url(&quot;' + esc(fc) + '&quot;)"></i>' : '') + '</div><div><div class="adm-f">' +
+        '<label>픽업 니케<input data-k="n" value="' + esc(m.n) + '" maxlength="40"></label><label>픽업 확률<select data-k="rate"><option value="1"' + (m.rate === 2 ? '' : ' selected') + '>1% (필그림·오버스펙)</option><option value="2"' + (m.rate === 2 ? ' selected' : '') + '>2% (일반)</option></select></label><label>기업<select data-k="corp"><option value="">(도감 기준)</option>' + opt(CORPS, m.corp) + '</select></label>' +
+        '<label>시작 (한국 시간)<input type="datetime-local" data-k="s" value="' + toIn(m.s) + '"></label><label>종료 (한국 시간)<input type="datetime-local" data-k="e" value="' + toIn(m.e) + '"></label></div>' +
+        '<div class="adm-act"><button type="button" class="adm-b g sm" data-act="up"' + (i ? '' : ' disabled') + '>▲ 위로</button><button type="button" class="adm-b g sm" data-act="down"' + (i < G.length - 1 ? '' : ' disabled') + '>▼ 아래로</button><label style="font-size:12.5px;display:flex;align-items:center;gap:5px"><input type="checkbox" data-k="pin"' + (m.pin ? ' checked' : '') + '>대표로 고정</label>' + (ft && ft.id === m.id ? '<span class="adm-on" style="font-size:12.5px">지금 대표 (니슬렁 표지 · 2048 타일)</span>' : '') + '<button type="button" class="adm-b r sm" data-act="del" style="margin-left:auto"' + (G.length > 1 ? '' : ' disabled') + '>삭제</button></div></div></div>'; });
+    h += '<div class="adm-act"><button type="button" class="adm-b" data-act="gmsave">변경 저장</button><span id="adm-gm-msg" class="adm-msg"></span></div><p class="adm-note">대표 픽업은 니슬렁의 가챠 머신 표지·"현재 픽업" 문구와 2048 타일에 쓰입니다. 고정하지 않으면 진행 중인 픽업 가운데 가장 최근에 시작한 것, 없으면 곧 시작할 것이 자동으로 대표가 됩니다. 머신은 마지막 하나는 지울 수 없습니다. 이미 가챠 머신을 열어 둔 화면에는 새로고침 뒤에 반영됩니다.' + (c.saved ? '' : ' 아직 서버에 저장한 적이 없어 기본 목록을 보여 주고 있습니다.') + '</p></div>';
+    h += '<div class="adm-p"><h3>새 가챠 머신 추가</h3><div class="adm-f"><label class="w">픽업 표지 이미지 (가로 배너)<input type="file" id="adm-nw-file" accept="image/*"></label>' +
+      '<label>픽업 니케<input id="adm-nw-n" maxlength="40" placeholder="예: 스카이" value="' + esc(nw ? nw.n : '') + '"></label><label>픽업 확률<select id="adm-nw-rate"><option value="1">1% (필그림·오버스펙)</option><option value="2"' + (nw && nw.rate === 1 ? '' : ' selected') + '>2% (일반)</option></select></label><label>기업<select id="adm-nw-corp"><option value="">(도감 기준)</option>' + opt(CORPS, nw ? nw.corp : '') + '</select></label>' +
+      '<label>시작 (한국 시간)<input type="datetime-local" id="adm-nw-s" value="' + (nw ? nw.s : '') + '"></label><label>종료 (한국 시간)<input type="datetime-local" id="adm-nw-e" value="' + (nw ? nw.e : '') + '"></label></div>' +
+      (nw && nw.im ? '<div class="adm-crop"><div class="cv" id="adm-cv"><img alt="" src="' + nw.im.src + '"><u></u></div><div><canvas id="adm-face" width="128" height="256"></canvas><div class="adm-f" style="margin-top:8px;max-width:220px"><label>초상화 크기<input type="range" id="adm-nw-z" min="30" max="100" value="' + Math.round(nw.z * 100) + '"></label><label style="flex-direction:row;align-items:center;gap:6px"><input type="checkbox" id="adm-nw-fc" style="width:auto"' + (nw.fc ? ' checked' : '') + '>표지에서 초상화 자르기</label></div></div></div><p class="adm-note">표지에서 얼굴을 누르면 그 자리를 기준으로 초상화를 자릅니다(캡슐·2048 타일에 쓰임). 도감에 이미 있는 니케라면 체크를 풀어 도감 초상화를 쓰세요.</p>' : '') +
+      '<div class="adm-act"><button type="button" class="adm-b" data-act="gmadd"' + (nw && nw.im ? '' : ' disabled') + '>머신 추가</button><span id="adm-nw-msg" class="adm-msg"></span></div></div>';
+    return h;
   }
-  async function load() {
-    const body = document.getElementById('adm-body'); body.textContent = '불러오는 중…';
+  function cropRect() { const W = nw.im.naturalWidth, H = nw.im.naturalHeight, h = Math.min(H, H * nw.z), w = Math.min(W, h / 2), hh = w * 2, x = Math.max(0, Math.min(W - w, nw.fx * W - w / 2)), y = Math.max(0, Math.min(H - hh, nw.fy * H - hh * 0.3)); return { x, y, w, h: hh }; }
+  function cropDraw() { const cv = $('#adm-cv'), fc = $('#adm-face'); if (!cv || !fc || !nw || !nw.im) return; const r = cropRect(), W = nw.im.naturalWidth, H = nw.im.naturalHeight, u = cv.querySelector('u'); u.style.cssText = 'left:' + r.x / W * 100 + '%;top:' + r.y / H * 100 + '%;width:' + r.w / W * 100 + '%;height:' + r.h / H * 100 + '%;display:' + (nw.fc ? 'block' : 'none'); const g = fc.getContext('2d'); g.clearRect(0, 0, 128, 256); if (nw.fc) g.drawImage(nw.im, r.x, r.y, r.w, r.h, 0, 0, 128, 256); }
+  const nwRead = () => { if (!nw) return; nw.n = $('#adm-nw-n').value.trim(); nw.rate = +$('#adm-nw-rate').value; nw.corp = $('#adm-nw-corp').value; nw.s = $('#adm-nw-s').value; nw.e = $('#adm-nw-e').value; };
+  /* ---------- 포커레이드 ---------- */
+  function rdHtml() {
+    const c = cfg(), sv = c.srvSeason, sn = sv || c.season || {}, now = Date.now(), wk = sn.e ? weakOf(sn.e) : '', bi = bossNew ? bossNew.url : R.img ? img(R.img) : 'assets/img/raid-boss-1.webp';
+    const stat = !c.srv ? '서버 설정을 읽지 못했습니다(워커 배포 전이거나 연결 실패).' : !sv ? '서버에 열린 시즌이 없습니다. 아래 일정은 기본값이며, 저장해야 실제로 열립니다.' : now < sv.start ? '서버 시즌 ' + sv.id + ' · 시작 전' : now < sv.end ? '서버 시즌 ' + sv.id + ' · 진행 중' : '서버 시즌 ' + sv.id + ' · 종료됨';
+    return '<div class="adm-p"><h3>시즌 일정 · 보스 <small>' + esc(stat) + '</small></h3><div style="display:flex;flex-wrap:wrap;gap:14px"><div class="adm-bossp" id="adm-bossp" style="background-image:url(&quot;' + esc(bi) + '&quot;)"></div><div style="flex:1 1 320px"><div class="adm-f">' +
+      '<label>시즌 ID (영문·숫자)<input id="adm-rd-id" maxlength="20" value="' + esc(sn.id || '') + '"></label><label>보스 이름<input id="adm-rd-nm" maxlength="30" value="' + esc(R.nm || '') + '"></label>' +
+      '<label>시작 (한국 시간)<input type="datetime-local" id="adm-rd-s" value="' + toIn(sn.start) + '"></label><label>종료 (한국 시간)<input type="datetime-local" id="adm-rd-e" value="' + toIn(sn.end) + '"></label>' +
+      '<label>약점 코드<select id="adm-rd-w"><option value="">선택</option>' + opt(CYC, wk, (x) => ELN[x]) + '</select></label><label>유효 사거리<select id="adm-rd-r"><option value="">선택</option>' + opt(Object.keys(RNGN), sn.r || '', (x) => RNGN[x]) + '</select></label>' +
+      '<label class="w">보스 배경 이미지 (세로가 긴 그림 권장 · 게임 배경과 니슬렁 표지에 함께 쓰임)<input type="file" id="adm-rd-file" accept="image/*"></label></div>' +
+      '<div class="adm-act"><button type="button" class="adm-b" data-act="rdsave">저장</button>' + (R.img || bossNew ? '<button type="button" class="adm-b g" data-act="rdimg0">기본 배경으로</button>' : '') + (sv ? '<button type="button" class="adm-b r" data-act="rdoff" style="margin-left:auto">시즌 닫기</button>' : '') + '<span id="adm-rd-msg" class="adm-msg"></span></div></div></div>' +
+      '<p class="adm-note">같은 시즌 ID로 저장하면 일정·약점만 고쳐지고 순위는 그대로입니다. 시즌 ID를 바꿔 저장하면 새 시즌이 시작되어 순위가 새로 쌓이고, 직전 시즌 순위로 프로필 테두리가 지급됩니다. 니슬렁 표지의 카운트다운은 이 일정을 따릅니다(시작 전: 다음 시즌까지 · 진행 중: 이번 시즌 종료까지 · 그 외: 다음 시즌을 기대해주세요). 약점 코드로 편성하면 우월코드 보너스를 받습니다.</p></div>';
+  }
+  /* ---------- 기타 ---------- */
+  function etcHtml() {
+    return '<div class="adm-p"><h3>공지 <small>니슬렁 맨 위에 한 줄로 보임 · 비우면 숨김</small></h3><div class="adm-f"><label class="w"><textarea id="adm-nt" rows="2" maxlength="200">' + esc(NT) + '</textarea></label></div><div class="adm-act"><button type="button" class="adm-b" data-act="ntsave">공지 저장</button><span id="adm-nt-msg" class="adm-msg"></span></div></div>' +
+      '<div class="adm-p"><h3>칩 지급 · 회수 <small>보상·오류 보정용</small></h3><div class="adm-f"><label>계정 ID (현황 표의 6자)<input id="adm-gr-id" maxlength="40"></label><label>싱크칩 (빼려면 음수)<input type="number" id="adm-gr-d" value="0"></label><label>DORO칩 (빼려면 음수)<input type="number" id="adm-gr-r" value="0"></label></div><div class="adm-act"><button type="button" class="adm-b" data-act="grant">지급</button><span id="adm-gr-msg" class="adm-msg"></span></div><p class="adm-note">서버에 기록된 잔고를 바로 고칩니다. 받은 사람 화면에는 다음 번 칩 동기화 때 반영됩니다.</p></div>' +
+      '<div class="adm-p"><h3>설정 다시 불러오기</h3><div class="adm-act"><button type="button" class="adm-b g" data-act="cfgre">서버 설정 새로 읽기</button><span id="adm-re-msg" class="adm-msg"></span></div><p class="adm-note">다른 기기에서 바꾼 설정을 이 화면에 바로 반영합니다. 일반 방문자에게는 저장 후 최대 30초쯤 뒤부터 보입니다.</p></div>';
+  }
+  function onInput(e) { const t = e.target; if (t.id === 'adm-nw-z' && nw) { nw.z = +t.value / 100; cropDraw(); } if (t.id === 'adm-nt') NT = t.value; }
+  async function onChange(e) {
+    const t = e.target, row = t.closest('.adm-gm');
+    if (row && t.dataset.k) { const m = G[+row.dataset.i], k = t.dataset.k; if (k === 'pin') { G.forEach((x) => { x.pin = 0; }); m.pin = t.checked ? 1 : 0; draw(); } else if (k === 's' || k === 'e') m[k] = fromIn(t.value); else if (k === 'rate') m.rate = +t.value === 2 ? 2 : 1; else m[k] = t.value.trim(); return; }
+    if (t.id === 'adm-nw-file' && t.files[0]) { try { const im = await readImg(t.files[0]); const keep = nw || {}; nwRead(); nw = Object.assign({ n: '', rate: 2, corp: '', s: '', e: '' }, keep, nw || {}, { im, fx: 0.68, fy: 0.3, z: 0.8, fc: true }); nw.n = $('#adm-nw-n').value.trim(); nw.rate = +$('#adm-nw-rate').value; nw.corp = $('#adm-nw-corp').value; nw.s = $('#adm-nw-s').value; nw.e = $('#adm-nw-e').value; draw(); } catch (er) { say('adm-nw-msg', { error: 'img' }); } return; }
+    if (t.id === 'adm-nw-fc' && nw) { nw.fc = t.checked; cropDraw(); return; }
+    if (t.id === 'adm-rd-file' && t.files[0]) { try { const im = await readImg(t.files[0]); bossNew = pack(im, 1000, 1400); const p = $('#adm-bossp'); if (p) p.style.backgroundImage = 'url("' + bossNew.url + '")'; } catch (er) { say('adm-rd-msg', { error: 'img' }); } }
+  }
+  async function onClick(e) {
+    const nb = e.target.closest('.adm-nav button'); if (nb) { nwRead0(); sec = nb.dataset.sec; draw(); return; }
+    const th = e.target.closest('#adm-t th[data-k]'); if (th) { const k = th.dataset.k; sortD = sortK === k ? -sortD : -1; sortK = k; render(); return; }
+    const cv = e.target.closest('#adm-cv'); if (cv && nw) { const r = cv.getBoundingClientRect(); nw.fx = (e.clientX - r.left) / r.width; nw.fy = (e.clientY - r.top) / r.height; nw.fc = true; const cb = $('#adm-nw-fc'); if (cb) cb.checked = true; cropDraw(); return; }
+    const b = e.target.closest('[data-act]'); if (!b || b.disabled) return; const act = b.dataset.act, row = b.closest('.adm-gm'), i = row ? +row.dataset.i : -1;
+    if (act === 'reload') { load(); return; }
+    if (act === 'up' || act === 'down') { const j = i + (act === 'up' ? -1 : 1); if (j < 0 || j >= G.length) return; const x = G[i]; G[i] = G[j]; G[j] = x; nwRead0(); draw(); return; }
+    if (act === 'del') { if (b.dataset.sure !== '1') { b.dataset.sure = '1'; b.textContent = '정말 삭제 (한 번 더)'; setTimeout(() => { if (b.isConnected) { b.dataset.sure = ''; b.textContent = '삭제'; } }, 4000); return; }
+      const m = G.splice(i, 1)[0]; b.disabled = true; const ok = await saveCfg('adm-gm-msg', '삭제했습니다.'); if (ok) { for (const v of [m.cover, m.face]) if (String(v || '').startsWith('img:')) await post({ imgDel: v.slice(4) }); } else G.splice(i, 0, m); const keep = document.getElementById('adm-gm-msg'), txt = keep ? [keep.className, keep.textContent] : null; draw(); if (txt) { const m2 = document.getElementById('adm-gm-msg'); m2.className = txt[0]; m2.textContent = txt[1]; } return; }
+    b.disabled = true;
     try {
-      const t = await window.doroAccount.token(), r = await fetch(API, { headers: { Authorization: 'Bearer ' + t } }), j = await r.json().catch(() => ({}));
+      if (act === 'gmsave') { if (G.some((m) => !m.n)) say('adm-gm-msg', { error: 'bad' }); else if (G.some((m) => m.s && m.e && m.e <= m.s)) say('adm-gm-msg', { error: 'bad' }); else { await saveCfg('adm-gm-msg'); redraw('adm-gm-msg'); } }
+      else if (act === 'gmadd') { nwRead(); const s = fromIn(nw.s), en = fromIn(nw.e); if (!nw.n || (s && en && en <= s)) { say('adm-nw-msg', { error: 'bad' }); return; }
+        say('adm-nw-msg', true, '올리는 중…'); const cover = await upload(pack(nw.im, 1280, 1280)); if (!cover) { say('adm-nw-msg', upload.err); return; }
+        let face = ''; if (nw.fc) { face = await upload(pack(nw.im, 256, 512, cropRect())); if (!face) { say('adm-nw-msg', upload.err); return; } }
+        G.unshift({ id: 'g' + Date.now().toString(36), n: nw.n, rate: nw.rate === 1 ? 1 : 2, corp: nw.corp, cover, face, s, e: en, pin: 0 });
+        if (await saveCfg('adm-gm-msg', '추가했습니다: ' + nw.n)) { nw = null; redraw('adm-gm-msg'); } else { G.shift(); say('adm-nw-msg', { error: 'save' }); } }
+      else if (act === 'rdsave') { const id = $('#adm-rd-id').value.trim(), s = fromIn($('#adm-rd-s').value), en = fromIn($('#adm-rd-e').value), w = $('#adm-rd-w').value, r = $('#adm-rd-r').value; R.nm = $('#adm-rd-nm').value.trim();
+        if (!/^[0-9a-zA-Z-]{1,20}$/.test(id) || !s || en <= s || !w || !r) { say('adm-rd-msg', { error: 'bad' }); return; }
+        if (bossNew) { const v = await upload(bossNew); if (!v) { say('adm-rd-msg', upload.err); return; } const old = R.img; R.img = v; bossNew = null; if (String(old || '').startsWith('img:')) rdOld = old; }
+        if (!(await saveCfg('adm-rd-msg'))) return; if (rdOld) { await post({ imgDel: rdOld.slice(4) }); rdOld = ''; }
+        const j = await post({ raid: { id, e: bossOf(w), r, start: s, end: en } }); if (j.ok) { const c = cfg(); window.doroCfg.apply({ cfg: c.saved ? { gacha: c.gacha, raid: c.raid, notice: c.notice } : null, season: { id, e: bossOf(w), r, start: s, end: en }, srv: 1 }); pull(); } say('adm-rd-msg', j); if (j.ok) redraw('adm-rd-msg'); }
+      else if (act === 'rdimg0') { if (bossNew) { bossNew = null; draw(); return; } const old = R.img; R.img = ''; if (await saveCfg('adm-rd-msg', '기본 배경으로 되돌렸습니다.')) { if (String(old).startsWith('img:')) await post({ imgDel: old.slice(4) }); redraw('adm-rd-msg'); } else R.img = old; }
+      else if (act === 'rdoff') { if (b.dataset.sure !== '1') { b.dataset.sure = '1'; b.textContent = '정말 닫기 (한 번 더)'; return; } const j = await post({ raid: { off: true } }); if (j.ok) { const c = cfg(); window.doroCfg.apply({ cfg: c.saved ? { gacha: c.gacha, raid: c.raid, notice: c.notice } : null, season: null, srv: 1 }); } say('adm-rd-msg', j, '시즌을 닫았습니다.'); if (j.ok) redraw('adm-rd-msg'); }
+      else if (act === 'ntsave') { NT = $('#adm-nt').value.trim(); await saveCfg('adm-nt-msg'); }
+      else if (act === 'grant') { const id = $('#adm-gr-id').value.trim(), d = Math.floor(+$('#adm-gr-d').value || 0), r = Math.floor(+$('#adm-gr-r').value || 0); if (!/^[A-Za-z0-9]{6,40}$/.test(id) || (!d && !r)) { say('adm-gr-msg', { error: 'bad' }); return; } const j = await post({ grant: { id, d, r } }); say('adm-gr-msg', j, j.ok ? '반영했습니다. 지금 잔고: 싱크칩 ' + fmt(j.chips.d) + ' · DORO칩 ' + fmt(j.chips.r) : ''); if (j.ok) data = null; }
+      else if (act === 'cfgre') { const j = await window.doroCfg.load(); pull(); say('adm-re-msg', j && j.ok ? true : { error: 'network' }, '불러왔습니다.'); }
+    } finally { if (b.isConnected) b.disabled = false; }
+  }
+  let rdOld = '';
+  const nwRead0 = () => { if (nw && $('#adm-nw-n')) nwRead(); };
+  function redraw(msgId) { const m = document.getElementById(msgId), keep = m ? [m.className, m.textContent] : null; draw(); const m2 = document.getElementById(msgId); if (keep && m2) { m2.className = keep[0]; m2.textContent = keep[1]; } }
+  async function load() {
+    const body = document.getElementById('adm-body'); if (!body) return; body.textContent = '불러오는 중…';
+    try {
+      let t = ''; try { t = await window.doroAccount.token(); } catch (e) { /* 로그인 안 됨 */ } if (!t) { body.textContent = '관리자 계정으로 로그인하면 보입니다.'; return; } const r = await fetch(API, { headers: { Authorization: 'Bearer ' + t } }), j = await r.json().catch(() => ({}));
       if (!r.ok || !j.ok) { body.textContent = j.error === 'admin' ? '관리자 계정이 아닙니다.' : '불러오지 못했습니다 (' + (j.error || r.status) + '). 서버(워커)가 최신 버전인지 확인해 주세요.'; return; }
-      data = j; document.getElementById('adm-at').textContent = kst(Date.now()) + ' 기준'; render();
+      data = j; if (sec === 'st') render();
     } catch (e) { body.textContent = '불러오지 못했습니다. 네트워크를 확인해 주세요.'; }
   }
   const val = (u, k) => (k === 'nick' ? u.nick : k === 'chips' ? (u.chips ? u.chips.d : -1) : k === 'r' ? (u.chips ? u.chips.r : -1) : k === 'today' ? (u.day ? u.day.n : -1) : k === 'auto' ? (u.auto && u.auto.on ? (u.auto.last ? 2 : 1) : 0) : k === 'created' ? Date.parse(u.created) || 0 : k === 'updated' ? (+u.updated || Date.parse(u.updated) || 0) : 0);
   function render() {
+    const at = document.getElementById('adm-at'); if (at) at.textContent = kst(Date.now()) + ' 기준'; if (!document.getElementById('adm-body')) return;
     const U = (data.users || []).slice(), others = U.filter((u) => !u.admin), withC = others.filter((u) => u.chips), sumD = withC.reduce((a, u) => a + (u.chips.d || 0), 0), sumR = withC.reduce((a, u) => a + (u.chips.r || 0), 0);
     const au = others.filter((u) => u.auto && u.auto.on), auOk = au.filter((u) => u.auto.last && u.auto.last.ok), auBad = au.filter((u) => u.auto.last && !u.auto.last.ok);
     const today = new Date(Date.now() + 9 * 3600000).toISOString().slice(0, 10), act = others.filter((u) => u.day && u.day.d === today);
@@ -55,5 +159,6 @@
     h += '</tbody></table></div><p class="adm-note">로그인한 계정만 보입니다(비회원 칩은 각자 브라우저에만 있음). 이메일은 표시하지 않습니다. 관리자 계정은 합계에서 뺐습니다. 열 제목을 누르면 정렬됩니다.</p>';
     document.getElementById('adm-body').innerHTML = h;
   }
-  window.addEventListener('doroacct', button); setTimeout(button, 1500); setInterval(button, 5000);
+  window.doroAdmin = { ok: canSee, show };
+  window.addEventListener('doroacct', button); window.addEventListener('dorocfg', () => { if (built && !nw && !bossNew && document.getElementById('tab-admin').classList.contains('on') && sec !== 'st') { /* 저장 직후 등: 화면은 각 동작이 직접 다시 그림 */ } }); setTimeout(button, 1500); setInterval(button, 5000); button();
 })();
