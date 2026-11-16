@@ -1931,3 +1931,5 @@ button:not(.tr-clr):not(.tabs button):not(.tr-f):not(.pk-t):not(.pk-r){border-ra
 #tab-me .frshow button.e{border:2px dashed rgba(140,100,10,.4);background:transparent;color:rgba(140,100,10,.7);font-size:22px;font-weight:700}#tab-me .frshow button.e:disabled{cursor:default;opacity:.6}
 @media(max-width:1300px){#tab-me .mekpis .kpi.chipk.dexk .frshow{position:static;margin:0 0 8px}#tab-me .frshow button{width:54px;height:54px}}
 #tab-me .mekpis .kpi.chipk.dexk .chipbig{opacity:.25}
+/* 모바일 니슬렁: 가챠 머신 칸은 현재 픽업 이름 한 줄만(기간·다음 픽업은 숨김) → 옆의 제작소 칸이 길어지지 않음 */
+@media(max-width:700px){#tab-game .lb-gc .lb-x em:not(:first-child){display:none}#tab-game .lb-x{margin-bottom:6px}}
