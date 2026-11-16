@@ -532,7 +532,7 @@
     const ids = S.hand.filter((id) => S.sel.has(id)), cost = fltCost(); if (!ids.length || busy) return;
     busy = true; ui(); let r;
     try { r = await E().discard(ids, Object.assign({}, S.flt), cost); } catch (e) { busy = false; ui(); $('.rd-msg').textContent = errMsg(e); return; }
-    if (cost) chipFx($('[data-r=disc]'), Math.min(14, 6 + Math.round(cost / 100)));
+    if (cost) chipFx($('[data-r=disc]'), cost);
     sfx.disc(); const mr = $('.rd-main').getBoundingClientRect(), rot = rd().classList.contains('rot'); /* 발라트로처럼: 살짝 움찔한 뒤 비스듬히 누워서 화면 오른쪽 가운데로 날아감(흐려지지 않음) */
     ids.forEach((id, i) => { const c = ctr(els[id]), t = rot ? loc(mr.left + mr.width / 2 - c[0], mr.bottom + 160 - c[1]) : [mr.right + 160 - c[0], mr.top + mr.height / 2 - c[1]], P = 'perspective(800px) ';
       els[id].style.zIndex = 9; els[id].animate([{ transform: P + 'translate(0px,-18%) rotateX(0deg) rotateZ(0deg) scale(1)' }, { transform: P + 'translate(-16px,-24%) rotateX(18deg) rotateZ(-6deg) scale(1.04)', offset: 0.22 }, { transform: P + 'translate(' + (t[0] * 0.55).toFixed(0) + 'px,' + (t[1] * 0.8).toFixed(0) + 'px) rotateX(58deg) rotateZ(48deg) scale(.7)', offset: 0.66 }, { transform: P + 'translate(' + t[0].toFixed(0) + 'px,' + t[1].toFixed(0) + 'px) rotateX(66deg) rotateZ(78deg) scale(.42)' }], { duration: 400, delay: i * 55, easing: 'cubic-bezier(.5,0,.85,.6)', fill: 'forwards' }); });
@@ -673,13 +673,13 @@
     }
     return { now, bd: bd && bd.ev > now.score * 1.04 ? bd : null, alt: bd };
   }
-  const chipFx = (to, n) => { try { if (window.doroChipFly) window.doroChipFly($('.rd-st .ch'), to, n, { size: 20 }); } catch (e) { /* 무시 */ } }; /* 잔고에서 싱크칩이 퍼져 나와 버튼으로 빨려 들어감 */
+  const chipFx = (to, n) => { try { if (window.doroChipFly) window.doroChipFly($('.rd-st .ch'), to, n, { size: 18 }); } catch (e) { /* 무시 */ } }; /* 잔고에서 싱크칩이 퍼져 나와 버튼으로 빨려 들어감 */
   const HINT_COST = 100;
   async function payHint() { /* 싱크칩 100을 내고 추천을 봄(모의전은 미리보기 서버에서만 차감, 실전은 서버가 차감) */
     const msg = $('.rd-msg'); if (S.chips < HINT_COST) { msg.className = 'rd-msg warn'; msg.textContent = '싱크칩이 부족합니다'; return; }
     if (S.mode === 'live') { busy = true; ui(); try { const j = await api('hint'); if (j && j.chips != null) S.chips = j.chips; } catch (e) { busy = false; ui(); $('.rd-msg').textContent = errMsg(e); return; } busy = false; }
     else if (!PROD) S.chips -= HINT_COST;
-    chipFx($('[data-r=hint]'), 8); ui(); hint();
+    chipFx($('[data-r=hint]'), HINT_COST); ui(); hint();
   }
   function hint() {
     if (S.phase !== 'pick') return; recClear(); sfx.ok();

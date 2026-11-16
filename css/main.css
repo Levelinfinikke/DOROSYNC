@@ -1750,3 +1750,35 @@ button:not(.tr-clr):not(.tabs button):not(.tr-f):not(.pk-t):not(.pk-r){border-ra
 .idlek .idle-bar{height:10px;border-radius:99px;background:rgba(127,127,127,.2);overflow:hidden}.idlek .idle-bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#f69a3e,#fbc72a)}
 .idlek #idle-get{flex:none;min-width:72px}
 @media(max-width:560px){.idlek .idle-box{width:64px}}
+
+/* 날아가는 3D 칩(가챠 머신과 같은 구조) */
+.dc-fly{position:fixed;z-index:9999;pointer-events:none;will-change:transform;contain:layout style}.dc-fly svg{display:block}
+.dc3{width:var(--cs);height:var(--cs);perspective:calc(var(--cs) * 6);filter:drop-shadow(0 2px 3px rgba(0,0,0,.45))}
+.dc3r{position:relative;width:100%;height:100%;transform-style:preserve-3d;--ct:calc(var(--cs) * .13);animation:dc3Spin .9s linear infinite}
+.dc3r>i{position:absolute;inset:0;border-radius:50%;background:linear-gradient(rgba(10,10,20,var(--dk)),rgba(10,10,20,var(--dk))),linear-gradient(90deg,#8a6508,#fff3b0 30%,#d9a520 55%,#fff6c8 75%,#8a6508)}
+.dc3f{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;transform:translateZ(calc(var(--ct) * .5 + .3px)) scale(.93)}.dc3b{transform:rotateY(180deg) translateZ(calc(var(--ct) * .5 + .3px)) scale(.93)}.dc3f svg{width:100%;height:100%;display:block}
+@keyframes dc3Spin{from{transform:rotateX(24deg) rotateY(0deg)}to{transform:rotateX(24deg) rotateY(360deg)}}
+
+/* 니슬렁 로비 */
+#subtabs button.adm-off{display:none!important}
+.dxtab .gmtic{display:inline-flex;margin-right:6px;vertical-align:-3px}.dxtab .gmtic svg{display:block}
+.lb{border-radius:18px;overflow:hidden;background:radial-gradient(ellipse 80% 60% at 50% 0,rgba(255,196,80,.2),transparent 70%),linear-gradient(180deg,#171b24,#0c0e13);border:1px solid var(--line);padding:22px 18px 24px;color:#fff}
+.lb-hero{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+.lb-t{font-family:"Arial Black","Pretendard","Malgun Gothic",sans-serif;font-size:38px;font-weight:900;line-height:1;letter-spacing:-.02em;background:linear-gradient(180deg,#fff6c8,#f5b301 60%,#b97400);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 3px 0 rgba(0,0,0,.5))}
+.lb-t small{display:block;font-size:11px;letter-spacing:.4em;color:#9aa5b8;-webkit-text-fill-color:#9aa5b8;margin-bottom:6px;font-family:Arial,sans-serif}
+.lb-bal{display:flex;gap:16px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.12);border-radius:99px;padding:8px 18px}.lb-bal span{display:inline-flex;align-items:center;gap:6px}.lb-bal b{font-size:18px;font-weight:800}
+.lb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
+#tab-game .lb-g{position:relative;overflow:hidden;text-align:left;border:1px solid rgba(255,255,255,.14);border-radius:16px!important;padding:120px 16px 14px;min-height:200px;color:#fff;cursor:pointer;font:inherit;background:#12151c;display:flex;flex-direction:column;gap:3px;transition:transform .18s cubic-bezier(.3,1.4,.5,1),box-shadow .18s,border-color .18s;animation:lbIn .45s cubic-bezier(.2,1.3,.4,1) both;animation-delay:calc(var(--i)*55ms)}
+@keyframes lbIn{from{opacity:0;transform:translateY(24px) scale(.95)}}
+.lb-g:not(.soon):hover{transform:translateY(-6px);box-shadow:0 14px 30px rgba(0,0,0,.5),0 0 0 2px var(--gc,#f5b301);border-color:transparent}
+.lb-g:not(.soon):hover .lb-art{transform:scale(1.07)}
+.lb-art{position:absolute;inset:0 0 38% 0;background:var(--art,#222);background-size:cover;background-position:center;transition:transform .35s;-webkit-mask-image:linear-gradient(#000 60%,transparent);mask-image:linear-gradient(#000 60%,transparent)}
+.lb-g b{position:relative;font-size:19px;font-weight:900;font-family:"Arial Black","Pretendard","Malgun Gothic",sans-serif}.lb-g small{position:relative;font-size:12.5px;color:#b9c2d3}
+.lb-g i{position:relative;margin-top:auto;align-self:flex-start;font-style:normal;font-weight:900;font-size:12px;padding:5px 12px;border-radius:99px;background:var(--gc,#f5b301);color:#14161c}
+.lb-g.soon{cursor:default;filter:grayscale(.7);opacity:.6}.lb-g.soon i{background:rgba(255,255,255,.14);color:#cfd5da;letter-spacing:.1em}
+.lb-gc{--gc:#ffd24a;--art:radial-gradient(circle at 50% 120%,#ffd24a 0,#f59e0b 22%,transparent 48%),radial-gradient(circle at 30% 40%,#ff5d8f 0 9%,transparent 10%),radial-gradient(circle at 55% 30%,#5ab8ff 0 11%,transparent 12%),radial-gradient(circle at 72% 52%,#5ef0a0 0 8%,transparent 9%),radial-gradient(circle at 42% 62%,#b07aff 0 10%,transparent 11%),linear-gradient(160deg,#2b3350,#141826)}
+.lb-rd{--gc:#ff5a4d;--art:url(../assets/img/raid-boss-1.webp)}.lb-rd .lb-art{background-position:50% 12%}
+.lb-pk{--gc:#4da3ff;--art:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.45) 47%,transparent 58%),radial-gradient(ellipse at 50% 45%,#8fc6ff,#1d5fa8 55%,#0a1a30)}
+.lb-dx{--gc:#c8ccd2;--art:url(../assets/img/raid-back.webp)}.lb-dx .lb-art{background-size:38% auto;background-repeat:no-repeat;background-color:#15181d}
+.lb-pt{--art:repeating-linear-gradient(90deg,#3a2f1c 0 22px,#55452a 22px 44px)}.lb-48{--art:conic-gradient(from 45deg,#eee4da,#ede0c8,#f2b179,#f59563,#eee4da)}.lb-pl{--art:radial-gradient(circle,#ffd24a 0 3px,transparent 4px)}.lb-pl .lb-art{background-size:26px 22px;background-color:#141a28}
+@media(max-width:560px){.lb-grid{grid-template-columns:1fr 1fr;gap:10px}.lb-g{padding:92px 12px 12px;min-height:170px}.lb-t{font-size:30px}}
