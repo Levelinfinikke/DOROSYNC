@@ -4555,12 +4555,12 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
     inc.forEach((n) => { const L = pilOf(n) ? pil : std; if (!std.includes(n) && !pil.includes(n)) L.push(n); }); return { std, pil }; }
   const nkFace = (n) => { const k = nkCode(n); if (k) return BL_IMG(k); const g = cfgGet().gacha.find((x) => x.n === n); return g ? cfgImg(g.face || g.cover) : ''; };
   function cfgNext() { const L = cfgGet().gacha, now = Date.now(), ft = cfgFeat().m; return L.filter((x) => x.s && now < x.s && x !== ft).sort((a, b) => a.s - b.s)[0] || null; } /* 대표 다음으로 시작할 픽업 */
-  window.doroTierAdmin = () => { tierData(); return { nikkes: trNikkes(), base: trBase(), builtin: trBuiltin(), LV: TR_LV, COL: TR_COL, code: nkCode, pool: GC_POOL, face: nkFace, isPu: (n) => trPuSet.has(n) }; };
+  window.doroTierAdmin = () => { tierData(); return { nikkes: trNikkes(), base: trBase(), builtin: trBuiltin(), LV: TR_LV, COL: TR_COL, code: nkCode, pool: GC_POOL, face: nkFace, isPu: (n) => trPuSet.has(n), names: BLN, linked: () => { const d = typeof doroBL !== 'undefined' && doroBL && doroBL.data; return ((d && d.nikkes) || []).map((x) => ({ code: String(x.code), name: x.name || BLN[x.code] || '', known: !!BLN[x.code], combat: x.combat || 0 })); } }; };
   function cfgDate(ms) { if (!ms) return ''; const k = new Date(ms + 9 * 3600000); return (k.getUTCMonth() + 1) + '/' + k.getUTCDate() + '(' + '일월화수목금토'[k.getUTCDay()] + ') ' + String(k.getUTCHours()).padStart(2, '0') + ':' + String(k.getUTCMinutes()).padStart(2, '0'); }
   window.doroCfg = { get: cfgGet, img: cfgImg, feat: cfgFeat, apply: cfgApply, load: cfgLoad, def: cfgDef, date: cfgDate, face: (n) => nkFace(n) }; cfgCss(); try { nkExtraApply(); } catch (e) { /* 무시 */ } cfgLoad();
   window.doroPickup = () => { const m = cfgFeat().m, k = nkCode(m.n); return { n: m.n, code: k, img: m.face ? cfgImg(m.face) : k ? BL_IMG(k) : cfgImg(m.cover) }; };
   function gmMount() {
-    if (gmInst) return; if (!window.DoroGacha) { /* 가챠 엔진은 가챠 탭을 처음 열 때 불러옴 */ if (!gmMount.w) { gmMount.w = 1; const sc = document.createElement('script'); sc.src = 'js/gacha.js?v=20261117a'; sc.onload = () => { gmMount.w = 0; const go = () => { if (curTab === 'gcm') gmMount(); }; if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go(); }; sc.onerror = () => { gmMount.w = 0; const r = document.getElementById('gm-root'); if (r) r.innerHTML = '<p class="muted" style="padding:20px">가챠 머신을 불러오지 못했습니다. 새로고침해 주세요.</p>'; }; document.head.appendChild(sc); } return; } let D; try { D = window.GM_ASSETS; if (!D) throw 0; } catch (e) { return; }
+    if (gmInst) return; if (!window.DoroGacha) { /* 가챠 엔진은 가챠 탭을 처음 열 때 불러옴 */ if (!gmMount.w) { gmMount.w = 1; const sc = document.createElement('script'); sc.src = 'js/gacha.js?v=20261117b'; sc.onload = () => { gmMount.w = 0; const go = () => { if (curTab === 'gcm') gmMount(); }; if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go(); }; sc.onerror = () => { gmMount.w = 0; const r = document.getElementById('gm-root'); if (r) r.innerHTML = '<p class="muted" style="padding:20px">가챠 머신을 불러오지 못했습니다. 새로고침해 주세요.</p>'; }; document.head.appendChild(sc); } return; } let D; try { D = window.GM_ASSETS; if (!D) throw 0; } catch (e) { return; }
     const corp = {}; GC_NK.forEach((r) => { if (r[2] === 'SSR') corp[r[0]] = r[1]; });
     const mk = (L, p, cp) => L.map((n) => { const k = nkCode(n) || nkCode({ '리틀 머메이드': '세이렌' }[n] || ''); return { n, c: corp[n] || cp || '', k, p, img: k ? BL_IMG(k) : '', tall: 1 }; });
     gmStockSync(); const fix = (L) => { L.forEach((x) => { if (!x.img) { x.img = nkFace(x.n); const g = cfgGet().gacha.find((q) => q.n === x.n); if (g && g.corp) x.c = g.corp; if (g && !g.face) x.tall = 0; } }); return L; }, M = (m) => { const PL = gmPoolOf(m), std = fix(mk(PL.std, 0)), pil = fix(mk(PL.pil, 1)); const two = +m.rate === 2, pu = mk([m.n], two ? 0 : 1, m.corp || (two ? '' : '필그림'))[0]; if (m.corp) pu.c = m.corp; if (m.face) pu.img = cfgImg(m.face); else if (!pu.img) { pu.img = cfgImg(m.cover); pu.tall = 0; } /* 픽업 2% = 일반 니케, 1% = 필그림·오버스펙 */
@@ -4588,12 +4588,13 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
     G.forEach((m) => { if (m && m.n && !boss[m.n] && !(C && C.boss)) { boss[m.n] = 'SSS'; pu.add(m.n); if (!pvp[m.n]) pvp[m.n] = 'SSS'; } else if (m && m.n && !boss[m.n] && !nkCode(m.n)) { boss[m.n] = 'SSS'; pu.add(m.n); if (!pvp[m.n]) pvp[m.n] = 'SSS'; } });
     return { boss, pvp, pu }; }
   const chipTB = { boss: {} }; let trPuSet = new Set();
+  const trPuFill = (T) => { trPuSet.forEach((n) => { Object.keys(T).forEach((k) => { if (k !== 'ord' && T[k] && !T[k][n]) T[k][n] = 'SSS'; }); }); }; /* 직접 고친 티어표에 아직 없는 ★ 니케는 SSS로 */
   function chipTierData() { const b = trBase().boss; Object.keys(chipTB.boss).forEach((n) => delete chipTB.boss[n]); Object.assign(chipTB.boss, b); return chipTB; }
   /* 설정(절대 티어표)이 바뀌면: 기본값을 다시 만들고, 사용자가 손대지 않은 표는 새 기본값으로 */
   function trRebuild() { if (!window.doroTiers || !trDef) return; let s = null; try { s = JSON.parse(localStorage.getItem(TR_KEY) || 'null'); } catch (e) { /* 무시 */ }
     const B = trBase(); trPuSet = B.pu; const nd = { boss: B.boss, pvp: B.pvp }; TR_SUBS.forEach((sk) => { const m = Object.assign({}, B.boss); if (TR_RH[sk]) m['레드 후드'] = TR_RH[sk]; nd['boss_' + sk] = m; });
     Object.keys(nd).forEach((k) => { trDef[k] = nd[k]; if (!(s && s[k])) { const m = window.doroTiers[k]; Object.keys(m).forEach((n) => delete m[n]); Object.assign(m, nd[k]); } });
-    chipTierData(); trList = null; trSync(); if (curTab === 'gctier') renderTier(); }
+    trPuFill(window.doroTiers); chipTierData(); trList = null; trSync(); if (curTab === 'gctier') renderTier(); }
   function tierData() {
     if (window.doroTiers) return window.doroTiers;
     if (!window.GM_ASSETS) return null; /* 아직 문서 로딩 중 */
@@ -4605,7 +4606,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
       const s = JSON.parse(localStorage.getItem(TR_KEY) || 'null');
       if (s) Object.keys(trDef).forEach((k) => { if (s[k]) { T[k] = {}; Object.keys(s[k]).forEach((n) => { if (TR_LV.includes(s[k][n])) T[k][n] = s[k][n]; }); } if (s.ord && Array.isArray(s.ord[k])) trSt.ord[k] = s.ord[k]; });
     } catch (e) { /* 무시 */ }
-    window.doroTiers = T;
+    trPuFill(T); window.doroTiers = T;
     return T;
   }
   const trSave = () => { const T = window.doroTiers; try { localStorage.setItem(TR_KEY, JSON.stringify(Object.assign({}, T, { ord: trSt.ord }))); } catch (e) { /* 저장 불가 */ } };

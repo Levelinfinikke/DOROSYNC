@@ -351,7 +351,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     Object.keys(A.emb).forEach((k) => { IM.emb[k] = ld(A.emb[k]); });
     const SRC = { jw: A.icons.jw, pick: A.tk.pick, norm: A.tk.norm };
     const orbBg = (n) => 'background-image:url(' + (n.img || '') + '),radial-gradient(circle at 50% 30%,#fff6d8,#d9b35a);' + (n.tall ? 'background-size:107% auto,cover;background-position:50% 22%,center;' : 'background-size:cover,cover;background-position:72% 20%,center;');
-    const embOf = (n) => CORP[n.c] || 'pil', isOvr = (n) => !!(n.p && n.c && n.c !== '필그림'), isSSS = (n) => TIERS.boss[n.n] === 'SSS', tShow = (name, t) => (t === 'SSS' && o.pu && o.pu(name) ? '★' : t), tierOf = (n) => tShow(n.n, TIERS[S.mode.tier === 'pvp' ? 'pvp' : 'boss'][n.n] || '-'); /* ★ = 픽업(티어 미확정, SSS 취급) */
+    const embOf = (n) => CORP[n.c] || 'pil', isOvr = (n) => !!(n.p && n.c && n.c !== '필그림'), isSSS = (n) => TIERS.boss[n.n] === 'SSS', tShow = (name, t) => ((t === 'SSS' || t === '-') && o.pu && o.pu(name) ? '★' : t), tierOf = (n) => tShow(n.n, TIERS[S.mode.tier === 'pvp' ? 'pvp' : 'boss'][n.n] || '-'); /* ★ = 픽업(티어 미확정, SSS 취급) */
     const pimg = {}; const portrait = (n) => { if (!n.img) return null; if (!pimg[n.n]) { const i = new Image(); i.src = n.img; pimg[n.n] = i; } return pimg[n.n]; };
 
     root.innerHTML = '<div class="gm"><div class="gm-left"><canvas class="gm-cv"></canvas>'
