@@ -1852,3 +1852,4 @@ button:not(.tr-clr):not(.tabs button):not(.tr-f):not(.pk-t):not(.pk-r){border-ra
 
 #tab-game .lb-pk>i{background:linear-gradient(90deg,#ff5d8f,#ffb84d,#f6f05a,#5ef0a0,#5ab8ff,#b07aff);color:#14161c}#tab-game .lb-pk:not(.soon):hover{box-shadow:0 14px 30px rgba(0,0,0,.5),0 0 0 2px #b07aff}
 .idle-pit{transition:transform .22s ease-in}
+#tab-game .lb-dx,#tab-game .lb-pl,#tab-game .lb-pt,#tab-game .lb-48{--gc:#fff}
