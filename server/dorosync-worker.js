@@ -283,12 +283,16 @@ async function autoRecord(env) {
   for (const r of rows) {
     const doc = r.document, f = doc.fields || {}, au = (f.auto && f.auto.mapValue && f.auto.mapValue.fields) || {};
     const area = Number(au.area && au.area.stringValue), id = toIntlId(au.openid && au.openid.stringValue);
-    let last, entry = null;
+    let last, entry = null, fixArea = 0;
     try {
       if (!(au.on && au.on.booleanValue) || !AREAS.includes(area)) throw new Error('CFG');
       if (!id) throw new Error('OPENID'); /* 저장된 프로필 주소가 공유 링크·계정 ID 형식이 아님 (닉네임 등) */
-      const oi = (await post('GetUserProfileOutpostInfo', { intl_open_id: id, nikke_area_id: area }, env.BLA_COOKIE)).outpost_info || {};
-      const s = Number(oi.synchro_level) || 0, o = Number(oi.outpost_battle_level) || 0;
+      const lv = async (ar) => { const oi = (await post('GetUserProfileOutpostInfo', { intl_open_id: id, nikke_area_id: ar }, env.BLA_COOKIE)).outpost_info || {}; return [Number(oi.synchro_level) || 0, Number(oi.outpost_battle_level) || 0]; };
+      let s = 0, o = 0;
+      try { [s, o] = await lv(area); } catch (e1) { if (!/^(114002|1302125)\s/.test(String(e1 && e1.message))) throw e1; }
+      if (!s) { /* 서버를 잘못 고른 경우(기본값 한국 그대로 등): 다른 서버에서 찾으면 서버 설정도 바로잡음 */
+        for (const ar of AREAS) { if (ar === area) continue; try { const [s2, o2] = await lv(ar); if (s2 > s) { s = s2; o = o2; fixArea = ar; } } catch (e2) { /* 다음 서버 */ } } /* 빈 계정(레벨 1)보다 실제로 키운 서버 우선 */
+      }
       if (!s) throw new Error('NOLEVEL');
       entry = { d: today, s, o }; last = { at: Date.now(), ok: true, s, o };
     } catch (e) {
@@ -300,7 +304,8 @@ async function autoRecord(env) {
       if (/^E_(HTTP|API|NET)/.test(code) && run.codes[code] >= 3 && run.ok === 0) { run.stop = code; break; }
     }
     if (entry) run.ok++;
-    const w = { update: { name: doc.name, fields: { autoDue: fsv(tomorrow), auto: { mapValue: { fields: { last: fsv(last) } } } } }, updateMask: { fieldPaths: ['autoDue', 'auto.last'] } };
+    const af = { last: fsv(last) }; if (fixArea) af.area = { stringValue: String(fixArea) };
+    const w = { update: { name: doc.name, fields: { autoDue: fsv(tomorrow), auto: { mapValue: { fields: af } } } }, updateMask: { fieldPaths: ['autoDue', 'auto.last'].concat(fixArea ? ['auto.area'] : []) } };
     if (entry) w.updateTransforms = [{ fieldPath: 'hist', appendMissingElements: { values: [fsv(entry)] } }];
     await fetch(FS.replace(/\/documents$/, '/documents:commit'), { method: 'POST', headers: H, body: JSON.stringify({ writes: [w] }) });
   }
