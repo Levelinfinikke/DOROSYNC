@@ -372,9 +372,11 @@ async function chipsClaim(req, env, out) {
     let cv = dec(f.chipsV) || null; const old = dec(f.chips) || {};
     if (!cv) cv = { d: Math.max(0, Math.floor(+old.d || 0)), r: Math.max(0, Math.floor(+old.r || 0)) }; /* 처음 1회: 검증 전에 모아 둔 계정 잔고는 그대로 옮김 */
     let day = dec(f.chipDay) || {}; if (day.d !== today) day = { d: today, n: 0, r: 0, g: 0, a: 0 };
-    let okD = 0, okR = 0, rej = 0; const now = Date.now();
+    let okD = 0, okR = 0, rej = 0; const now = Date.now(); let idleT = +dec(f.idleT) || 0, idleSet = false;
     for (const e of evs) {
       const k = String(e && e.k || ''), n = Math.floor(+(e && e.n) || 0), src = String(e && e.src || ''), t = +(e && e.t) || 0;
+      if (src === 'idle') { /* 싱크칩 상자: 1분에 1개, 최대 10,000. 보낸 수량은 믿지 않고 마지막 수령 시각으로 계산(첫 수령만 최대 1,000까지 인정) */
+        if (idleSet) { rej++; continue; } const m = idleT ? Math.min(10000, Math.floor((now - idleT) / 60000)) : Math.max(0, Math.min(1000, n)); if (idleT && m < 1) { rej++; continue; } okD += m; idleT = now; idleSet = true; continue; }
       const allow = CHIP_SRC[src] || ''; if (!allow.includes(k) || n < 1 || n > 500 || t > now + 120000 || t < now - 3 * 86400000) { rej++; continue; }
       if (src === 'spend') { const m = Math.min(n, cv.d + okD); okD -= m; day.s = (day.s || 0) + m; continue; } /* 뽑기에 쓴 칩 */
       if (src === 'daily') { if (day.a) { rej++; continue; } day.a = 1; okD += DAILY_D; continue; } /* 출석: 하루 한 번 100 */
@@ -383,7 +385,7 @@ async function chipsClaim(req, env, out) {
       if (src === 'guest') day.g = (day.g || 0) + m; else day.n += m; okD += m; if (m < v) rej++;
     }
     const nv = { d: Math.max(0, cv.d + okD), r: cv.r + okR };
-    const w = { update: { name: doc.name, fields: { chipsV: fsv(nv), chipDay: fsv(day) } }, updateMask: { fieldPaths: ['chipsV', 'chipDay'] }, currentDocument: { updateTime: doc.updateTime } };
+    const w = { update: { name: doc.name, fields: Object.assign({ chipsV: fsv(nv), chipDay: fsv(day) }, idleSet ? { idleT: fsv(idleT) } : {}) }, updateMask: { fieldPaths: ['chipsV', 'chipDay'].concat(idleSet ? ['idleT'] : []) }, currentDocument: { updateTime: doc.updateTime } };
     const cr = await fetch(FS.replace(/\/documents$/, '/documents:commit'), { method: 'POST', headers: H, body: JSON.stringify({ writes: [w] }) });
     if (cr.ok) return out(200, { ok: true, chips: nv, added: { d: okD, r: okR }, rejected: rej, day: { used: day.n, spent: day.s || 0, r: day.r, att: !!day.a } });
     if (cr.status !== 400 && cr.status !== 409) return out(502, { ok: false, error: 'write' }); /* 400/409: 그 사이 문서가 바뀜 → 다시 */
@@ -447,6 +449,23 @@ async function raid(req, env, out) {
     const ok = await commit([{ update: { name: docName('meta/raid'), fields: fsv(sn).mapValue.fields } }]);
     return out(ok ? 200 : 502, { ok, season: sn });
   }
+  if (a === 'pack') { /* 카드팩: 서버가 뽑아 계정에 기록. 1팩 5장 · 박스 30팩 · 일반/기업 100싱크칩(일반 박스 2,700) · 필그림 5 DORO칩 · 풀코강 초과분은 골드칩(싱크칩 10) */
+    const kind = String(B.kind || 'std'), n = +B.n === 30 ? 30 : 1, pil = kind === 'pil', co = kind.startsWith('co:') ? kind.slice(3) : '';
+    if (!pil && kind !== 'std' && !['엘리시온', '미실리스', '테트라', '어브노멀'].includes(co)) return out(400, { ok: false, error: 'bad' });
+    const price = pil ? 5 * n : kind === 'std' && n === 30 ? 2700 : 100 * n, TW = { 9: 2, 8: 5, 7: 10, 6: 16, 5: 20, 4: 18, 3: 14, 2: 9, 1: 6 }, by = {};
+    Object.keys(RAID_NK).forEach((k) => { const x = RAID_NK[k]; if (pil ? x[0] !== '필그림' : co ? x[0] !== co : x[0] === '필그림') return; const tv = Math.max(1, Math.min(9, +x[4] || 1)); (by[tv] = by[tv] || []).push(k); });
+    const tvs = Object.keys(by), tot = tvs.reduce((s2, t) => s2 + TW[t], 0); if (!tvs.length) return out(400, { ok: false, error: 'bad' });
+    const one = () => { let u = Math.random() * tot; for (const t of tvs) { u -= TW[t]; if (u <= 0) return by[t][Math.floor(Math.random() * by[t].length)]; } return by[tvs[0]][0]; };
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const ud = await getDoc('users/' + uid); if (!ud) return out(404, { ok: false, error: 'nouser' });
+      const cv = ud.f.chipsV || { d: 0, r: 0 }; if ((pil ? cv.r || 0 : cv.d || 0) < price) return out(409, { ok: false, error: 'chips' });
+      const dex = Object.assign({}, ud.f.dex || {}), LK = ud.f.dexL || {}, packs = []; let gold = 0;
+      for (let p = 0; p < n; p++) { const cards = []; for (let i = 0; i < 5; i++) { const k = one(), have = Math.min(11, (+LK[k] || 0) + (+dex[k] || 0)), dup = have >= 11; if (dup) gold++; else dex[k] = (+dex[k] || 0) + 1; cards.push([k, dup ? 1 : 0, dup ? 11 : have + 1]); } packs.push(cards); }
+      const chips = { d: (cv.d || 0) - (pil ? 0 : price) + gold * 10, r: (cv.r || 0) - (pil ? price : 0) };
+      if (await commit([{ update: { name: ud.name, fields: { chipsV: fsv(chips), dex: fsv(dex) } }, updateMask: { fieldPaths: ['chipsV', 'dex'] }, currentDocument: { updateTime: ud.updateTime } }])) return out(200, { ok: true, packs, chips, gold, dex });
+    }
+    return out(409, { ok: false, error: 'busy' });
+  }
   const md = await getDoc('meta/raid'), sn = md && md.f.on && md.f.id ? md.f : null, active = !!(sn && now >= sn.start && now < sn.end);
   const season = sn ? { id: sn.id, e: sn.e, r: sn.r, start: sn.start, end: sn.end, active } : null;
   if (!sn) return out(200, { ok: true, season: null, admin });
@@ -477,7 +496,7 @@ async function raid(req, env, out) {
       if (f.oid && (f.oid !== id || f.area !== area)) return out(409, { ok: false, error: 'oid' }); /* 시즌 중에는 처음 쓴 게임 계정으로 고정 */
       let chars; try { chars = (await post('GetUserCharacters', { intl_open_id: id, nikke_area_id: area }, env.BLA_COOKIE)).characters || []; } catch (e) { return out(502, { ok: false, error: 'bla', msg: String((e && e.message) || e).slice(0, 80) }); }
       const ud = await getDoc('users/' + uid), web = (ud && ud.f.dex) || {}, cnt = {};
-      chars.forEach((c) => { const k = String(c.name_code); if (RAID_NK[k]) cnt[k] = 1 + Math.min(3, Number(c.grade) || 0) + Math.min(7, Number(c.core) || 0); });
+      chars.forEach((c) => { const k = String(c.name_code); if (RAID_NK[k]) cnt[k] = 1 + Math.min(3, Number(c.grade) || 0) + Math.min(7, Number(c.core) || 0); }); const dexL = Object.assign({}, cnt); /* 연동 보유 수: 카드팩의 풀코강 초과 판정에 씀 */
       Object.keys(web).forEach((k) => { if (RAID_NK[k]) cnt[k] = Math.min(11, (cnt[k] || 0) + Math.max(0, Math.floor(+web[k] || 0))); });
       const codes = Object.keys(cnt).filter((k) => cnt[k] > 0); if (codes.length < 7) return out(409, { ok: false, error: 'deck', have: codes.length });
       rShuffle(codes);
@@ -485,7 +504,7 @@ async function raid(req, env, out) {
       const g2 = { hand: codes.slice(0, 7).join(','), deck: codes.slice(7).join(','), cnt, rd, total: codes.length, t: now };
       const nick = String((ud && (ud.f.nickname || ud.f.username)) || '').slice(0, 24);
       const pf = String(B.pf || '').replace(/\D/g, '').slice(0, 6), fr = [1, 2, 3].includes(+B.fr) && Object.values((ud && ud.f.raidFrames) || {}).map(Number).includes(+B.fr) ? +B.fr : 0; /* 랭킹에 보일 프로필 니케·테두리(가진 테두리만) */
-      if (await commit([save({ uid, nick, oid: id, area, day: today, n: n + 1, g: g2, pf, fr, x1 }, ['uid', 'nick', 'oid', 'area', 'day', 'n', 'g', 'pf', 'fr', 'x1'])])) { const v = view(g2); v.tries = n + 1; v.max = RAID_TRIES + x1; return out(200, v); }
+      if (await commit([save({ uid, nick, oid: id, area, day: today, n: n + 1, g: g2, pf, fr, x1 }, ['uid', 'nick', 'oid', 'area', 'day', 'n', 'g', 'pf', 'fr', 'x1'])].concat(ud ? [{ update: { name: ud.name, fields: { dexL: fsv(dexL) } }, updateMask: { fieldPaths: ['dexL'] } }] : []))) { const v = view(g2); v.tries = n + 1; v.max = RAID_TRIES + x1; return out(200, v); }
       continue;
     }
     if (!g) return out(409, { ok: false, error: 'nogame' });

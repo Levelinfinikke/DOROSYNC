@@ -428,6 +428,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     const look = (b) => ((S.mode.random && b.kind !== 'orb') ? ['Q', '?'] : b.kind === 'SSR' ? ['SSR', S.mode.tier ? 'T' + tierOf(b.res.nk) : embOf(b.res.nk)] : [b.kind, '']).concat(b.res && b.res.cm > 1 ? [b.res.cm] : []);
     const rOf = (kind) => (kind === 'orb' || kind === 'chip' ? OR : (kind === 'SSR' && !S.mode.random) ? YR : CR);
     function capSprite(kind, pr, r, cm) {
+      if (S.mode.random) cm = 0; /* 랜덤 모드: DOUBLE·TRIPLE 문양 없음 */
       const key = kind + pr + r + (cm ? 'c' + cm : ''); if (spr[key]) return spr[key];
       const q = r > 60 ? 2 : 2.5, s = (r + 3) * 2 * q, col = COL[kind]; let ready = true;
       const base = mkc(s, s), b = base.getContext('2d'); b.scale(q, q); b.translate(r + 3, r + 3);
@@ -568,7 +569,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
       else if (ssr >= 2) setTimeout(() => multiPop(ssr, rv, rk), 250); if (B.c.R === 10) setTimeout(() => streak('R'), 400); else if (B.c.SR === 10) setTimeout(() => streak('SR'), 400); return i; }
     /* 태그 달기: 아직 열기 전이면 캡슐에, 이미 열려 바구니·보관함에 있으면 그 초상화에 */
     function tagCm(r, m) { if (r.nk && !r.ck) r.ck = chipOf(r.nk); m = (feverOn() ? fevMul() * 10000 + 100 : 0) + CKS.indexOf(r.ck) * 1000 + m; /* DORO TIME 중이면 그때 배수를 함께 기억(실제 배수 ×4·×6…) */ r.cm = m; /* 칩은 고지할 때 미리 정해 둠(칩 비 양 = 실제로 얻을 칩) */ if (!r.opened || !r.nk) return; const ob = S.bask.find((b) => b.kind === 'orb' && b.res.nk === r.nk && !(b.res.cm > 1)); if (ob) { ob.res.cm = m; return; } const e = S.tray.find((x) => x && x.nk.n === r.nk.n && !(x.tc > 1) && !x.top); if (e) { if (e.count > 1) { e.count--; } else { const i = S.tray.indexOf(e); S.tray[i] = null; } trayAdd(r.nk, 1, null, null, null, m); uiTray(); } } /* 이미 보관함에 있으면 한 장을 떼어 태그 칸으로 */
-    function blkSay(i) { const q = S.blkT && S.blkT[i]; if (!q || q.tot < 2) return; const n = Math.min(q.seen, q.tot); if (n >= 2 && n > q.said) { q.said = n; setTimeout(() => multiPop(n, n === q.tot ? q.rv : 0, q.rk), 300); } }
+    function blkSay(i) { if (S.mode.random) return; /* 랜덤 모드: 알림 없음(SSR 위치가 드러나지 않게) */ const q = S.blkT && S.blkT[i]; if (!q || q.tot < 2) return; const n = Math.min(q.seen, q.tot); if (n >= 2 && n > q.said) { q.said = n; setTimeout(() => multiPop(n, n === q.tot ? q.rv : 0, q.rk), 300); } }
     S.sup = { pick: 0, jw: 0, full: false, acc: 0, key: '' };
     const feedCap = () => Math.max(12, Math.floor(PW * PH * 0.8 / 490));
     function uiFeed() { const b = modeEl.querySelector('.gm-fb'); if (!b) return; const u = S.sup; b.classList.toggle('full', u.full); b.classList.toggle('run', !u.full && (u.pick > 0 || u.jw > 0)); }
@@ -1329,7 +1330,10 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     function autoStep(dt) { // AUTO: 투입 → 레버 → 꺼내기 → 교환·개봉 → 보관 → 리필
       S.at -= dt; const R = S.reveal; S.autoLid = S.cup.length > 0 && !S.lev.auto;
       if (R) { if (R.ph === 'show' && R.kind === 'SSR' && R.t > 1.5 && !R.hide) { const nk = R.nk, cm = R.res.cm; endReveal(false); flyOrb(nk, 1, RV.x, RV.y, cm); } return; }
-      if (S.at > 0 || S.refill) return; S.at = 0.25;
+      const keepA = (b) => (b.kind === 'SSR' || (S.mode.random && b.res && b.res.dummy && b.kind !== 'orb')) && !b.pop;
+      if (S.refill) { S.autoAll = true; if (S.at <= 0) { S.at = 0.25; const y0 = S.bask.find(keepA); if (y0 && (y0.sl || y0.y > BK.y0 + y0.r)) { startReveal(y0); if (S.reveal) S.reveal.bot = true; } } return; } /* 리필: 크레딧이 남아 있어도 바구니의 SSR부터 모두 개봉 */
+      if (S.at > 0) return; S.at = 0.25;
+      if (S.autoAll) { const y1 = S.bask.find(keepA); if (y1) { if (y1.sl || y1.y > BK.y0 + y1.r) { startReveal(y1); if (S.reveal) S.reveal.bot = true; } return; } S.autoAll = false; }
       { const ch = S.bask.find((b) => b.kind === 'chip' && b.sl); if (ch) { chipTake(ch); S.at = 0.25; return; } }
       const orb = S.bask.find((b) => b.kind === 'orb' && b.sl); if (orb) { S.bask.splice(S.bask.indexOf(orb), 1); wake(S.bask); flyOrb(orb.res.nk, orb.res.count, orb.x, orb.y, orb.res.cm); return; }
       const busy = S.lev.auto > 0 || S.emerg.length || S.cup.length || S.dome.some((b) => b.exit) || S.pops.length;
@@ -1342,6 +1346,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
       const left = S.bask.find((b) => (b.kind === 'SSR' || (S.mode.random && b.res.dummy && b.kind !== 'orb')) && !b.pop); if (left) { startReveal(left); if (S.reveal) S.reveal.bot = true; } }
     function update(dt) {
       if (S.streak) { const rd = dt / (S.auto || 1); S.streak.t += rd; S.flash = Math.max(0, S.flash - rd * 3); if (S.streak.t > 3.2) S.streak = null; return; } /* 10연속 고지: 3초간 정지 */
+      { const nw = Date.now(), el = Math.min(500, nw - (S._fn || nw)); S._fn = nw; if (S.reveal && feverOn()) { S._fp = (S._fp || 0) + el; if (S._fp >= 200) { try { localStorage.setItem(FEV_K, String(fevEnd() + S._fp)); } catch (e) { /* 무시 */ } S._fp = 0; } } } /* DORO TIME: 캡슐을 여는 동안은 시간이 멈춤 */
       if (S.auto) autoStep(dt);
       S.time += dt; const L = S.lev, stp = TAU / 10;
       const au = L.q > 0 || L.sp < 1; L.auto = au ? 1 : 0;
@@ -1559,15 +1564,23 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
       const L = 40, R = 54, T = 10, B = 22, X = (i) => L + (w - L - R) * i / N, Y = (val) => T + (h - T - B) * (1 - (val - lo) / (hi - lo));
       c.font = '11px sans-serif'; c.textBaseline = 'middle'; c.strokeStyle = 'rgba(255,255,255,.07)'; c.fillStyle = '#8f9bb2'; c.lineWidth = 1;
       const st = Math.pow(10, Math.floor(Math.log10((hi - lo) / 4))), stp = (hi - lo) / st > 20 ? st * 5 : (hi - lo) / st > 8 ? st * 2 : st; c.textAlign = 'right'; for (let y = Math.ceil(lo / stp) * stp; y <= hi; y += stp) { c.beginPath(); c.moveTo(L, Y(y)); c.lineTo(w - R, Y(y)); c.stroke(); c.fillText(y === 0 ? '0' : (y > 0 ? '+' : '-') + (Math.abs(y) >= 1000 ? +(Math.abs(y) / 1000).toFixed(1) + 'k' : Math.round(Math.abs(y))), L - 6, Y(y)); }
-      c.textAlign = 'center'; c.textBaseline = 'alphabetic'; for (let i = 0; i <= N; i += N / 5) c.fillText(Math.round(i) + (gk < 1 ? '' : '뽑'), X(i), h - 6);
+      c.textAlign = 'center'; c.textBaseline = 'alphabetic'; { const xs0 = Math.pow(10, Math.floor(Math.log10(N / 4))), xs = N / xs0 > 20 ? xs0 * 5 : N / xs0 > 8 ? xs0 * 2 : xs0, xf = (v) => (v >= 10000 ? +(v / 1000).toFixed(1) + 'k' : String(v)); for (let i = 0; i <= N + 0.5; i += xs) c.fillText(xf(Math.round(i)) + (gk < 1 || i === 0 ? '' : '뽑'), X(i), h - 6); }
       c.strokeStyle = 'rgba(255,255,255,.35)'; c.beginPath(); c.moveTo(L, Y(0)); c.lineTo(w - R, Y(0)); c.stroke();
       const band = (arr, c0, c1) => { c.beginPath(); c.moveTo(X(0), Y(0)); for (let i = 1; i <= kN; i++) c.lineTo(X(i * MC.K), Y(arr[i])); for (let i = kN; i >= 0; i--) c.lineTo(X(i * MC.K), Y(MC.ev * i * MC.K)); c.closePath(); const g = c.createLinearGradient(0, Y(arr[kN]), 0, Y(MC.ev * N)); g.addColorStop(0, c0); g.addColorStop(1, c1); c.fillStyle = g; c.fill(); };
       band(MC.p90, 'rgba(70,225,140,.42)', 'rgba(70,225,140,.04)'); band(MC.p10, 'rgba(255,90,100,.42)', 'rgba(255,90,100,.04)');
       const line = (f, col, dash, lw) => { c.beginPath(); for (let i = 0; i <= kN; i++) { const x = X(i * MC.K), y = Y(f(i)); if (i) c.lineTo(x, y); else c.moveTo(x, y); } c.strokeStyle = col; c.lineWidth = lw || 1.2; c.setLineDash(dash || []); c.stroke(); c.setLineDash([]); };
       line((i) => MC.p90[i], 'rgba(70,225,140,.8)', [4, 4]); line((i) => MC.p10[i], 'rgba(255,90,100,.8)', [4, 4]); line((i) => MC.ev * i * MC.K, '#e8eefc', null, 1.8);
       c.textAlign = 'left'; c.font = 'bold 11px sans-serif'; c.fillStyle = '#46e18c'; c.fillText('상위 10%', w - R + 5, Y(MC.p90[kN]) + 4); c.fillStyle = '#ff6a72'; c.fillText('하위 10%', w - R + 5, Y(MC.p10[kN]) + 4); c.fillStyle = '#e8eefc'; c.fillText('기댓값', w - R + 5, Y(MC.ev * N) + 4);
-      if (n) { c.beginPath(); c.moveTo(X(0), Y(0)); for (let i = 1; i <= n; i++) { c.lineTo(X(i), Y(act[i - 1])); c.lineTo(X(i), Y(act[i])); } c.strokeStyle = '#ffd24d'; c.lineWidth = 2; c.stroke();
-        S.gl.forEach((e) => { if (e.at > n) return; const x = X(e.at), y = Y(act[e.at]); if (e.pu) { c.fillStyle = '#fff'; c.strokeStyle = '#ff7ad9'; c.lineWidth = 2; c.beginPath(); for (let k = 0; k < 10; k++) { const a = -Math.PI / 2 + k * Math.PI / 5, rr2 = k % 2 ? 4 : 9; c.lineTo(x + Math.cos(a) * rr2, y + Math.sin(a) * rr2); } c.closePath(); c.fill(); c.stroke(); } else if (S.val.mode) { const t = TIERS[tk()][e.n] || '-'; c.font = '900 11px sans-serif'; c.textAlign = 'center'; c.lineWidth = 3; c.strokeStyle = '#0c1019'; c.strokeText(t, x, y - 6); c.fillStyle = TIERC[t] || '#9aa5b8'; c.fillText(t, x, y - 6); } });
+      if (n) { c.beginPath(); c.moveTo(X(0), Y(0)); const PW = Math.max(60, w - L - R), bk = Math.max(1, Math.ceil(n / (PW * 1.5)));
+        if (bk === 1) { for (let i = 1; i <= n; i++) { c.lineTo(X(i), Y(act[i - 1])); c.lineTo(X(i), Y(act[i])); } }
+        else { for (let i = 1; i <= n; i += bk) { const j = Math.min(n, i + bk - 1); let mn = act[i], mx = act[i]; for (let q = i; q <= j; q++) { if (act[q] < mn) mn = act[q]; if (act[q] > mx) mx = act[q]; } const xm = X((i + j) / 2); c.lineTo(xm, Y(act[i])); c.lineTo(xm, Y(mn)); c.lineTo(xm, Y(mx)); c.lineTo(xm, Y(act[j])); } } /* 뽑기가 많으면 구간별 최소·최대만 */
+        c.strokeStyle = '#ffd24d'; c.lineWidth = bk > 1 ? 1.5 : 2; c.lineJoin = 'round'; c.stroke();
+        /* 픽업 별: 많아질수록 작게, 아주 많으면 위쪽 띠의 눈금 + 개수로 */
+        const PU = S.gl.filter((e) => e.pu && e.at <= n), pn = PU.length, ps = pn <= 8 ? 1 : pn <= 20 ? 0.7 : pn <= 45 ? 0.48 : 0;
+        const star = (x, y, k) => { c.beginPath(); for (let q = 0; q < 10; q++) { const a = -Math.PI / 2 + q * Math.PI / 5, rr2 = (q % 2 ? 4 : 9) * k; c.lineTo(x + Math.cos(a) * rr2, y + Math.sin(a) * rr2); } c.closePath(); c.fill(); c.stroke(); };
+        if (ps) { c.fillStyle = '#fff'; c.strokeStyle = '#ff7ad9'; c.lineWidth = ps < 0.6 ? 1.2 : 2; PU.forEach((e) => star(X(e.at), Y(act[e.at]), ps)); }
+        else if (pn) { c.fillStyle = 'rgba(255,122,217,.14)'; c.fillRect(L, T, w - L - R, 9); c.strokeStyle = 'rgba(255,122,217,.9)'; c.lineWidth = 1; c.beginPath(); PU.forEach((e) => { const x = Math.round(X(e.at)) + 0.5; c.moveTo(x, T); c.lineTo(x, T + 9); }); c.stroke(); c.fillStyle = '#fff'; c.strokeStyle = '#ff7ad9'; c.lineWidth = 1.5; star(L + 9, T + 21, 0.7); c.font = 'bold 11px sans-serif'; c.textAlign = 'left'; c.lineWidth = 3; c.strokeStyle = '#0c1019'; c.strokeText('픽업 ' + pn, L + 19, T + 25); c.fillStyle = '#ffd0f0'; c.fillText('픽업 ' + pn, L + 19, T + 25); }
+        if (S.val.mode) { let lx = -99; S.gl.forEach((e) => { if (e.at > n || e.pu) return; const x = X(e.at), y = Y(act[e.at]); if (x - lx < 13) return; lx = x; const t = TIERS[tk()][e.n] || '-'; c.font = '900 11px sans-serif'; c.textAlign = 'center'; c.lineWidth = 3; c.strokeStyle = '#0c1019'; c.strokeText(t, x, y - 6); c.fillStyle = TIERC[t] || '#9aa5b8'; c.fillText(t, x, y - 6); }); } /* 티어 글자: 겹치면 건너뜀 */
         c.fillStyle = '#ffd24d'; c.beginPath(); c.arc(X(n), Y(v), 3.5, 0, TAU); c.fill(); }
       root.querySelectorAll('.gm-gh [data-v]').forEach((b) => b.classList.toggle('on', +b.dataset.v === S.val.mode)); }
     root.querySelector('.gm-gh').addEventListener('click', (e) => { const b = e.target.closest('[data-v]'); if (b) { S.val.mode = +b.dataset.v; gDirty = true; uiTray(); } });

@@ -1741,3 +1741,12 @@ button:not(.tr-clr):not(.tabs button):not(.tr-f):not(.pk-t):not(.pk-r){border-ra
 #tab-dex .dx-h .cbic{width:17px;margin-right:0}
 #tab-dex .dx-fd{margin-top:12px}#tab-dex .dx-fd>summary{cursor:pointer;font-weight:700;font-size:13px;color:var(--muted);width:max-content;padding:4px 10px;border:1px solid var(--line);border-radius:10px;list-style:none}#tab-dex .dx-fd>summary::-webkit-details-marker{display:none}#tab-dex .dx-fd>summary:after{content:" ▾"}#tab-dex .dx-fd[open]>summary:after{content:" ▴"}
 #tab-dex .dx-cell{perspective:700px}#tab-dex .dx-cell .pk{cursor:default}
+
+/* 전초기지: 싱크칩 상자(방치 수급) */
+#tab-me .mekpis .kpi.idlek{grid-column:1/-1;display:flex;align-items:center;gap:14px;--kc:#e8b52c;background:linear-gradient(135deg,rgba(255,221,128,.2),rgba(127,127,127,.08))!important}
+.idlek .idle-box{width:92px;height:auto;flex:none;filter:drop-shadow(0 4px 6px rgba(0,0,0,.35))}
+.idlek .idle-m{flex:1;min-width:0}.idlek .l .muted{font-weight:500;font-size:12px;margin-left:6px}
+.idlek .idle-v{display:flex;align-items:center;gap:6px;margin:4px 0 6px}.idlek .idle-v b{font-size:22px;font-weight:800}.idlek .idle-v small{color:var(--muted);font-weight:600}
+.idlek .idle-bar{height:10px;border-radius:99px;background:rgba(127,127,127,.2);overflow:hidden}.idlek .idle-bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#f69a3e,#fbc72a)}
+.idlek #idle-get{flex:none;min-width:72px}
+@media(max-width:560px){.idlek .idle-box{width:64px}}

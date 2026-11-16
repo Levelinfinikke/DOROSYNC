@@ -87,8 +87,8 @@
 .pk-fx{position:absolute;inset:0;z-index:2;pointer-events:none;overflow:hidden;display:none}
 .pk.foil .pk-fx,.pk.poly .pk-fx{display:block}
 .pk-fx:before{content:"";position:absolute;left:-150%;width:400%;top:-60%;height:220%;transform:rotate(24deg) translateX(0);animation:pkFx 3.6s linear infinite;will-change:transform}
-.pk.foil .pk-fx{mix-blend-mode:overlay;opacity:1}.pk.foil .pk-in{box-shadow:0 .3em 0 rgba(0,0,0,.35),0 .5em .9em rgba(0,0,0,.35),0 0 .7em rgba(200,225,255,.55)}.pk.foil .pk-fx:after{content:"";position:absolute;inset:0;background:radial-gradient(circle,rgba(255,255,255,.95) 0,rgba(255,255,255,0) 1.4px) 0 0/11px 13px,radial-gradient(circle,rgba(210,230,255,.9) 0,rgba(255,255,255,0) 1.2px) 5px 7px/17px 15px;animation:pkTw 2.2s ease-in-out infinite alternate}@keyframes pkTw{from{opacity:.25}to{opacity:.95}}
-.pk.foil .pk-fx:before{animation-duration:2.8s;background:repeating-linear-gradient(90deg,rgba(255,255,255,0) 0,rgba(255,255,255,1) 4%,rgba(255,255,255,1) 7%,rgba(170,205,255,.75) 10%,rgba(255,255,255,0) 14%,rgba(255,255,255,.8) 18%,rgba(255,255,255,0) 21%,rgba(255,255,255,0) 25%)}
+.pk.foil .pk-fx{mix-blend-mode:overlay;opacity:.82;-webkit-mask-image:radial-gradient(ellipse 62% 40% at 55% 36%,rgba(0,0,0,.12) 35%,#000 100%);mask-image:radial-gradient(ellipse 62% 40% at 55% 36%,rgba(0,0,0,.12) 35%,#000 100%)}.pk.foil .pk-in{box-shadow:0 .3em 0 rgba(0,0,0,.35),0 .5em .9em rgba(0,0,0,.35),0 0 .5em rgba(200,225,255,.35)}.pk.foil .pk-fx:after{content:"";position:absolute;inset:0;background:radial-gradient(circle,rgba(255,255,255,.95) 0,rgba(255,255,255,0) 1.4px) 0 0/11px 13px,radial-gradient(circle,rgba(210,230,255,.9) 0,rgba(255,255,255,0) 1.2px) 5px 7px/17px 15px;animation:pkTw 2.2s ease-in-out infinite alternate}@keyframes pkTw{from{opacity:.1}to{opacity:.6}}
+.pk.foil .pk-fx:before{animation-duration:2.8s;background:repeating-linear-gradient(90deg,rgba(255,255,255,0) 0,rgba(255,255,255,.9) 4.5%,rgba(255,255,255,.9) 6.5%,rgba(170,205,255,.55) 9.5%,rgba(255,255,255,0) 13.5%,rgba(255,255,255,.55) 18%,rgba(255,255,255,0) 21%,rgba(255,255,255,0) 25%)}
 .pk.poly .pk-fx{mix-blend-mode:color-dodge;opacity:.5;-webkit-mask-image:radial-gradient(ellipse 62% 40% at 55% 36%,rgba(0,0,0,.18) 35%,#000 100%);mask-image:radial-gradient(ellipse 62% 40% at 55% 36%,rgba(0,0,0,.18) 35%,#000 100%)}
 .pk.poly .pk-fx:before{animation-duration:5s;background:repeating-linear-gradient(90deg,#ff5d8f 0,#ffb84d 4.17%,#f6f05a 8.33%,#5ef0a0 12.5%,#5ab8ff 16.67%,#b07aff 20.83%,#ff5d8f 25%)}
 @keyframes pkFx{to{transform:rotate(24deg) translateX(-25%)}}
@@ -158,7 +158,7 @@
 @keyframes rdStripe{to{background-position:68.4px 0}}
 .rd-chal:active{transform:translateY(3px)}.rd-chal:disabled{filter:grayscale(.7) brightness(.7);cursor:default}
 .rd-chal b,.rd-chal span{position:relative;display:block;text-shadow:0 2px 0 rgba(0,0,0,.45)}.rd-chal b{font-size:20px;letter-spacing:.06em}.rd-chal span{font-size:11.5px;font-family:"Pretendard","Malgun Gothic",sans-serif;font-weight:800;margin-top:2px}
-.rd-rem{grid-column:1/-1;margin:-3px 14px 0;text-align:center;font-size:11.5px;padding:3px 6px;background:#3a3f47;border:2px solid #23262d;border-top:0;border-radius:0 0 8px 8px;font-family:"Pretendard","Malgun Gothic",sans-serif;font-weight:800}.rd-rem b{color:#ffd24a;margin-left:6px;font-family:"Arial Black",Arial,sans-serif}
+.rd-rem{grid-column:1/-1;margin:-3px 34px 0;text-align:center;font-size:11.5px;padding:3px 6px;background:#3a3f47;border:2px solid #23262d;border-top:0;border-radius:0 0 8px 8px;font-family:"Pretendard","Malgun Gothic",sans-serif;font-weight:800}.rd-rem b{color:#ffd24a;margin-left:6px;font-family:"Arial Black",Arial,sans-serif}
 .rd-fsb{position:absolute;right:8px;top:6px;z-index:9;width:32px;height:32px;border-radius:9px;border:0;background:rgba(0,0,0,.55);color:#fff;font-size:17px;cursor:pointer}.rd.fs .rd-fsb{display:none}
 .rd:fullscreen{width:100vw;height:100vh;border:0;border-radius:0;grid-template-columns:300px minmax(0,1fr)}.rd:fullscreen .rd-side{zoom:1.25}.rd:fullscreen .rd-main{min-height:0}.rd:fullscreen .rd-ctl{zoom:1.2}
 .rd .pk.rec .pk-in{box-shadow:0 0 0 .2em #8df0b0,0 0 1.2em #3fd68b}.rd .pk.recx .pk-in{box-shadow:0 0 0 .2em #ff6b5e,0 0 1.2em #f0483c}
@@ -331,7 +331,7 @@
 .rd.fs .rd-cm b{font-size:17px;padding:3px 6px}.rd.fs .rd-cm i{font-size:15px}
 .rd.fs .rd-ex{margin-top:4px;font-size:10px}.rd.fs .rd-ex b{font-size:17px}
 .rd.fs .rd-row{font-size:10px}.rd.fs .rd-row b{font-size:13px;min-width:66px}
-.rd.fs .rd-st{gap:4px}.rd.fs .rd-chal{padding:5px 4px;border-width:2px}.rd.fs .rd-chal b{font-size:14px}.rd.fs .rd-chal span{font-size:9px}.rd.fs .rd-rem{font-size:9px;padding:2px}
+.rd.fs .rd-st{gap:4px}.rd.fs .rd-chal{padding:5px 4px;border-width:2px}.rd.fs .rd-chal b{font-size:14px}.rd.fs .rd-chal span{font-size:9px}.rd.fs .rd-rem{font-size:9px;padding:2px;margin:-3px 20px 0}
 .rd.fs .rd-st div{font-size:9px;padding:3px 2px;border-radius:7px}.rd.fs .rd-st b{font-size:13px}
 .rd.fs .rd-sb{gap:4px}.rd.fs .rd-sb .rb{font-size:10.5px;padding:6px 2px;border-radius:7px}
 .rd.fs .rd-main{min-height:0;padding:6px 8px 6px}
@@ -532,6 +532,7 @@
     const ids = S.hand.filter((id) => S.sel.has(id)), cost = fltCost(); if (!ids.length || busy) return;
     busy = true; ui(); let r;
     try { r = await E().discard(ids, Object.assign({}, S.flt), cost); } catch (e) { busy = false; ui(); $('.rd-msg').textContent = errMsg(e); return; }
+    if (cost) chipFx($('[data-r=disc]'), Math.min(14, 6 + Math.round(cost / 100)));
     sfx.disc(); const mr = $('.rd-main').getBoundingClientRect(), rot = rd().classList.contains('rot'); /* 발라트로처럼: 살짝 움찔한 뒤 비스듬히 누워서 화면 오른쪽 가운데로 날아감(흐려지지 않음) */
     ids.forEach((id, i) => { const c = ctr(els[id]), t = rot ? loc(mr.left + mr.width / 2 - c[0], mr.bottom + 160 - c[1]) : [mr.right + 160 - c[0], mr.top + mr.height / 2 - c[1]], P = 'perspective(800px) ';
       els[id].style.zIndex = 9; els[id].animate([{ transform: P + 'translate(0px,-18%) rotateX(0deg) rotateZ(0deg) scale(1)' }, { transform: P + 'translate(-16px,-24%) rotateX(18deg) rotateZ(-6deg) scale(1.04)', offset: 0.22 }, { transform: P + 'translate(' + (t[0] * 0.55).toFixed(0) + 'px,' + (t[1] * 0.8).toFixed(0) + 'px) rotateX(58deg) rotateZ(48deg) scale(.7)', offset: 0.66 }, { transform: P + 'translate(' + t[0].toFixed(0) + 'px,' + t[1].toFixed(0) + 'px) rotateX(66deg) rotateZ(78deg) scale(.42)' }], { duration: 400, delay: i * 55, easing: 'cubic-bezier(.5,0,.85,.6)', fill: 'forwards' }); });
@@ -672,12 +673,13 @@
     }
     return { now, bd: bd && bd.ev > now.score * 1.04 ? bd : null, alt: bd };
   }
+  const chipFx = (to, n) => { try { if (window.doroChipFly) window.doroChipFly($('.rd-st .ch'), to, n, { size: 20 }); } catch (e) { /* 무시 */ } }; /* 잔고에서 싱크칩이 퍼져 나와 버튼으로 빨려 들어감 */
   const HINT_COST = 100;
   async function payHint() { /* 싱크칩 100을 내고 추천을 봄(모의전은 미리보기 서버에서만 차감, 실전은 서버가 차감) */
     const msg = $('.rd-msg'); if (S.chips < HINT_COST) { msg.className = 'rd-msg warn'; msg.textContent = '싱크칩이 부족합니다'; return; }
     if (S.mode === 'live') { busy = true; ui(); try { const j = await api('hint'); if (j && j.chips != null) S.chips = j.chips; } catch (e) { busy = false; ui(); $('.rd-msg').textContent = errMsg(e); return; } busy = false; }
     else if (!PROD) S.chips -= HINT_COST;
-    ui(); hint();
+    chipFx($('[data-r=hint]'), 8); ui(); hint();
   }
   function hint() {
     if (S.phase !== 'pick') return; recClear(); sfx.ok();
@@ -865,6 +867,7 @@
     window.addEventListener('resize', fit); document.addEventListener('fullscreenchange', () => { fit(); setTimeout(fit, 200); }); try { new ResizeObserver(fit).observe(root); } catch (e) { /* 미지원 */ }
   }
   window.doroRaid = {
+    api: (a, body) => api(a, body),
     card: (x, boss) => { addCss(); return cardHtml(x, boss); },
     mount(el) {
       if (!el) return; const d = data(); if (!d.ok) { el.innerHTML = ''; return; }
