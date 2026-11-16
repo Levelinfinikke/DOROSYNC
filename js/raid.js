@@ -757,7 +757,7 @@
       gate('<h3>포기했습니다</h3><div class="rd-fd">이번 판은 기록되지 않습니다 · 오늘 핸드 ' + S.tries + '/' + S.max + '</div>' + (left > 0 ? '<button type="button" class="rb org" data-r="chal">다시 도전하기</button>' : '<div class="rd-fd">오늘 핸드를 모두 썼습니다.</div>') + '<button type="button" class="rb pur" data-r="rank">랭킹</button><button type="button" class="rb blue" data-r="prac">모의전</button>');
     } catch (e) { busy = false; ui(); $('.rd-msg').textContent = errMsg(e); }
   }
-  function goChal() { const ac2 = acct(); if (ac2 && ac2.user) setMode('live'); else { S.mode = 'live'; clearTable(); S.phase = 'idle'; place(); ui(); gate('<h3>도전하기</h3><div class="rd-fd">로그인이 필요합니다.</div><button type="button" class="rb blue" data-r="prac">모의전</button>'); } }
+  function goChal() { const ac2 = acct(); if (ac2 && ac2.user) setMode('live'); else { if (window.doroNeedLogin) window.doroNeedLogin('도전하기는 로그인이 필요합니다'); S.mode = 'live'; clearTable(); S.phase = 'idle'; place(); ui(); gate('<h3>도전하기</h3><div class="rd-fd" style="font-size:16px;font-weight:900;color:#ffd24a">로그인이 필요합니다.</div><button type="button" class="rb blue" data-r="prac">모의전</button>'); } }
   /* 입장 연출(솔로레이드 입장처럼): 게이트 닫힘 → 톱니 장치 하강 → 모의전/도전 선택 → 보스 실루엣이 올라오고 장치 상승 → 게이트 열리며 시작 */
   let introPick = null;
   const liveOn = () => !!(S && S.mode === 'live' && S.phase === 'pick'); /* 도전 중인 판이 깔려 있음 */

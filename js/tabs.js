@@ -126,7 +126,7 @@ svg.tb-cv{position:absolute;inset:0;width:100%;height:100%;overflow:visible;z-in
   async function buyN(n) {
     if (busy || cur || Q.length) return; sfx.btn(); const msg = $('.tb-msg', root); msg.textContent = ''; busy = true; ui(); let res;
     try { const bal = root.querySelectorAll('.tb-bal span')[0], slot = $('.tb-slot', root); res = await fetchTix(n); left = res.left; sfx.coin(); if (window.doroChipFly && res.tix.length) window.doroChipFly(bal, slot, res.tix.length * 10, { size: 18 }); }
-    catch (e) { busy = false; ui(); msg.textContent = ({ chips: '싱크칩이 부족합니다.', login: '로그인이 필요합니다.', closed: '아직 공개 전입니다. (관리자 전용)' })[e && e.message] || '서버와 연결하지 못했습니다. (' + ((e && e.message) || e) + ')'; return; }
+    catch (e) { busy = false; ui(); if (e && e.message === 'login' && window.doroNeedLogin) window.doroNeedLogin(); msg.textContent = ({ chips: '싱크칩이 부족합니다.', login: '로그인이 필요합니다.', closed: '아직 공개 전입니다. (관리자 전용)' })[e && e.message] || '서버와 연결하지 못했습니다. (' + ((e && e.message) || e) + ')'; return; }
     if (!res.tix.length) { busy = false; ui(); return; }
     res.tix.forEach((t) => { if (t[0] === 'r') pendR++; else if (t[0] && t[0][0] === 'g') pendG += +t[0].slice(1); else if (t[2]) pendG += DUP[TV[t[0]]]; }); ui();
     Q = res.tix.map(compose); inMc = Q.length; ui(); Q.forEach((T0, i0) => setTimeout(() => { inMc = Math.max(0, inMc - 1); ui(); }, 350 + i0 * (Q.length > 5 ? 70 : 110))); const pile = $('.tb-pile', root), e0 = $('.tb-empty', root); if (e0) e0.remove(); pile.innerHTML = ''; const sl = $('.tb-slot', root).getBoundingClientRect(), pr = pile.getBoundingClientRect(), N = Q.length, gap = N > 5 ? 70 : 110;

@@ -56,6 +56,7 @@ export default {
       if (!okOrigin) return out(403, { ok: false, error: 'origin' });
       return raid(req, env, out);
     }
+    if (url.pathname === '/feedback') { if (req.method !== 'POST') return out(405, { ok: false, error: 'method' }); if (!okOrigin) return out(403, { ok: false, error: 'origin' }); return feedback(req, env, out); }
     if (url.pathname === '/config') { if (req.method !== 'GET') return out(405, { ok: false, error: 'method' }); return siteConfig(env, out); }
     if (url.pathname.startsWith('/img/')) { if (req.method !== 'GET') return out(405, { ok: false, error: 'method' }); return siteImg(url.pathname.slice(5), env, out); }
     if (url.pathname === '/admin') { if (!okOrigin) return out(403, { ok: false, error: '허용되지 않은 사이트입니다.' }); return adminView(req, env, out); }
@@ -642,7 +643,7 @@ async function adminView(req, env, out) {
   const sa = JSON.parse(env.FIREBASE_SA), at = await saToken(sa, 'https://www.googleapis.com/auth/datastore'), H = { Authorization: 'Bearer ' + at };
   if (req.method === 'POST') { /* 관리자 대리 수정: 자동 기록 프로필 주소·서버만 고침 { fix: { id: 문서ID 앞 6자, openid, area } } */
     let b = {}; try { b = await req.json(); } catch (e) { /* 빈 요청 */ }
-    if (b.cfg || b.img || b.imgDel || b.raid || b.grant) return adminSite(b, H, out);
+    if (b.cfg || b.img || b.imgDel || b.raid || b.grant || b.fb || b.fbDel) return adminSite(b, H, out);
     const fx = b.fix || b.probe || {}, area = Number(fx.area), raw = String(fx.openid || '').trim();
     if (!/^[A-Za-z0-9]{6,40}$/.test(String(fx.id || '')) || (b.fix && ((raw && !toIntlId(raw)) || !AREAS.includes(area)))) return out(400, { ok: false, error: 'bad' });
     const ids = []; let p2 = '';
@@ -739,6 +740,12 @@ async function adminSite(b, H0, out) {
     const ok = await commit([{ update: { name: FS_DOC('meta/raid'), fields: fsv(sn).mapValue.fields } }]); CFG_MEM = null;
     return out(ok ? 200 : 502, { ok, season: sn });
   }
+  if (b.fb) { /* 피드백 목록(최근 100개) */
+    const q = await (await fetch(FS + ':runQuery', { method: 'POST', headers: H, body: JSON.stringify({ structuredQuery: { from: [{ collectionId: 'feedback' }], orderBy: [{ field: { fieldPath: 't' }, direction: 'DESCENDING' }], limit: 100 } }) })).json();
+    const rows = (Array.isArray(q) ? q : []).filter((x) => x.document).map((x) => { const f = {}; Object.entries(x.document.fields || {}).forEach(([k, v]) => { f[k] = dec(v); }); return { id: x.document.name.split('/').pop(), t: f.t || 0, text: f.text || '', page: f.page || '', nick: f.nick || '', uid: String(f.uid || '').slice(0, 6) }; });
+    return out(200, { ok: true, rows });
+  }
+  if (b.fbDel) { const id = String(b.fbDel); if (!/^[a-z0-9]{8,24}$/.test(id)) return out(400, { ok: false, error: 'bad' }); const ok = await commit([{ delete: FS_DOC('feedback/' + id) }]); return out(ok ? 200 : 502, { ok }); }
   if (b.grant) { /* 칩 지급·회수 { grant: { id: 문서ID 앞 6자, d, r } } */
     const gid = String(b.grant.id || ''), dd = Math.floor(+b.grant.d || 0), dr = Math.floor(+b.grant.r || 0);
     if (!/^[A-Za-z0-9]{6,40}$/.test(gid) || (!dd && !dr) || Math.abs(dd) > 1000000 || Math.abs(dr) > 10000) return out(400, { ok: false, error: 'bad' });
@@ -751,4 +758,20 @@ async function adminSite(b, H0, out) {
     return out(ok ? 200 : 409, { ok, chips: nv, error: ok ? undefined : 'busy' });
   }
   return out(400, { ok: false, error: 'bad' });
+}
+
+/* ================= 피드백 · 버그 제보 =================
+ * 누구나 보낼 수 있음(로그인하면 닉네임이 함께 남음). feedback/<id>에 저장하고 관리 탭에서 읽음. 같은 주소에서 1분에 3건까지 */
+const FB_RATE = new Map();
+async function feedback(req, env, out) {
+  if (!env.FIREBASE_SA) return out(503, { ok: false, error: 'not_ready' });
+  let b = {}; try { b = await req.json(); } catch (e) { return out(400, { ok: false, error: 'bad' }); }
+  const text = String(b.text || '').replace(/[\u0000-\u0008\u000b-\u001f]/g, '').trim().slice(0, 1000); if (text.length < 5) return out(400, { ok: false, error: 'short' });
+  const ip = req.headers.get('CF-Connecting-IP') || '?', now = Date.now(), L = (FB_RATE.get(ip) || []).filter((t) => now - t < 60000); if (L.length >= 3) return out(429, { ok: false, error: 'too_many' }); L.push(now); FB_RATE.set(ip, L); if (FB_RATE.size > 5000) FB_RATE.clear();
+  let uid = '', nick = ''; const H0 = await saHead(env);
+  const idt = (req.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '');
+  if (idt) { try { const lk = await (await fetch('https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=' + FB_API_KEY, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ idToken: idt }) })).json(); uid = (lk && lk.users && lk.users[0] && lk.users[0].localId) || ''; if (uid) { const ud = await fsGet('users/' + uid, H0); nick = String((ud && (ud.f.nickname || ud.f.username)) || '').slice(0, 24); } } catch (e) { /* 비로그인으로 처리 */ } }
+  const id = Array.from(crypto.getRandomValues(new Uint8Array(8))).map((x) => x.toString(16).padStart(2, '0')).join('');
+  const r = await fetch(FS_COMMIT, { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, H0), body: JSON.stringify({ writes: [{ update: { name: FS_DOC('feedback/' + id), fields: { t: fsv(now), text: fsv(text), page: fsv(String(b.page || '').replace(/[^a-z0-9]/gi, '').slice(0, 20)), uid: fsv(uid), nick: fsv(nick) } } }] }) });
+  return out(r.ok ? 200 : 502, { ok: r.ok });
 }
