@@ -58,9 +58,9 @@
     if (window.doroChips.total() - 0 < cost) { msg.textContent = '싱크칩이 부족합니다.'; return; }
     busy = true; ui(); let res;
     try {
-      if (PROD) { const j = await window.doroRaid.api('plinko', { rows: S.rows, risk: S.risk, bet: ch[0], n: S.n }); res = j.balls; const win = res.reduce((a, b) => a + b[1], 0), wr = res.reduce((a, b) => a + b[2], 0); pend += win; pendR += wr; window.doroChips.sync(j.chips); }
+      if (PROD && window.doroAccount && window.doroAccount.user) { const j = await window.doroRaid.api('plinko', { rows: S.rows, risk: S.risk, bet: ch[0], n: S.n }); res = j.balls; const win = res.reduce((a, b) => a + b[1], 0), wr = res.reduce((a, b) => a + b[2], 0); pend += win; pendR += wr; window.doroChips.sync(j.chips); }
       else { if (!window.doroChips.spend(cost)) throw new Error('chips'); res = []; for (let i = 0; i < S.n; i++) res.push(roll(S.rows, ch[2], T)); const win = res.reduce((a, b) => a + b[1], 0), wr = res.reduce((a, b) => a + b[2], 0); pend += win; pendR += wr; const add = {}; if (win) add.b = win; if (wr) add.r = wr; if (win || wr) window.doroChips.add(add, 'cap'); }
-    } catch (e) { busy = false; ui(); if (e && e.message === 'login' && window.doroNeedLogin) window.doroNeedLogin(); msg.textContent = ({ chips: '싱크칩이 부족합니다.', login: '로그인이 필요합니다.', closed: '아직 공개 전입니다. (관리자 전용)' })[e && e.message] || '서버와 연결하지 못했습니다. (' + ((e && e.message) || e) + ')'; return; }
+    } catch (e) { busy = false; ui(); msg.textContent = ({ chips: '싱크칩이 부족합니다.', login: '로그인이 필요합니다.', closed: '아직 공개 전입니다. (관리자 전용)' })[e && e.message] || '서버와 연결하지 못했습니다. (' + ((e && e.message) || e) + ')'; return; }
     const g = geo(), now = performance.now(), gap = S.n > 10 ? 70 : 130;
     res.forEach((r, i) => { const k = r[0]; let bits = r[3]; if (!bits) { bits = []; for (let q = 0; q < S.rows; q++) bits.push(q < k ? 1 : 0); for (let q = bits.length - 1; q > 0; q--) { const z = Math.floor(Math.random() * (q + 1)), t = bits[q]; bits[q] = bits[z]; bits[z] = t; } } /* 서버가 정한 칸으로 가는 길을 무작위로 */
       const pts = [[W / 2 + (Math.random() * 2 - 1) * 4, 14]], pj = []; let off = 0, j = 1;
@@ -73,7 +73,7 @@
   const CSS = `
 .pl{display:grid;grid-template-columns:270px 1fr;gap:0;border-radius:16px;overflow:hidden;background:#0c1626;color:#fff;font-family:"Pretendard","Malgun Gothic",sans-serif;border:1px solid #1d3355}
 .pl-side{background:linear-gradient(180deg,#14325c,#0d2343);padding:16px 14px;display:flex;flex-direction:column;gap:12px}
-.pl-t i{display:inline-block;width:.86em;height:.86em;vertical-align:-.1em;margin:0 .01em 0 .03em;font-style:normal}.pl-t i svg{width:100%;height:100%;display:block}
+.pl-t i{display:inline-block;width:.86em;height:.86em;vertical-align:-.1em;margin:0 -.04em 0 .14em;font-style:normal}.pl-t i svg{width:100%;height:100%;display:block}
 .pl-t{white-space:nowrap;font-family:"Arial Black",Arial,sans-serif;font-style:italic;font-size:29px;line-height:1;background:linear-gradient(180deg,#e8f6ff,#49b3ff 55%,#1367c9);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 3px 0 rgba(0,0,0,.45))}
 .pl-t small{display:block;font-size:.62em;background:linear-gradient(180deg,#fff3b0,#ffb21c 55%,#c97700);-webkit-background-clip:text;background-clip:text;color:transparent}
 .pl-g>span{display:block;font-size:12px;font-weight:800;color:#ffd24a;margin-bottom:4px}

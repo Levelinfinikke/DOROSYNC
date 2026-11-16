@@ -49,8 +49,9 @@
   }
   async function buy(kind, n) {
     const k = KINDS.find((x) => x.k === kind), price = n > 1 ? k.box : k.price;
-    if (PROD) { const j = await window.doroRaid.api('pack', { kind, n }); const a = window.doroAccount; if (a && a.doc) a.doc.dex = j.dex; if (window.doroChips.sync) window.doroChips.sync(j.chips); return j.packs; }
-    if (!k.r && !window.doroChips.spend(price)) throw new Error('chips'); /* 미리보기: DORO칩 팩은 차감 없이 체험 */
+    if (PROD && window.doroAccount && window.doroAccount.user) { const j = await window.doroRaid.api('pack', { kind, n }); const a = window.doroAccount; if (a && a.doc) a.doc.dex = j.dex; if (window.doroChips.sync) window.doroChips.sync(j.chips); return j.packs; }
+    /* 로그인하지 않았으면 이 기기에서 뽑음(칩·카드는 이 브라우저에 저장). 미리보기에서는 DORO칩 팩을 차감 없이 체험 */
+    if (k.r ? (PROD && !window.doroChips.spendR(price)) : !window.doroChips.spend(price)) throw new Error('chips');
     const packs = []; let gold = 0; for (let i = 0; i < n; i++) { const p = rollLocal(kind); gold += p.filter((c) => c[1]).length; packs.push(p); }
     if (k.bo && n > 1 && !packs.some((p) => p.some((c) => String(c[0]) === k.code))) { const pu = data().list.find((x) => String(x.code) === k.code), dup = window.doroDex.count(pu.n) >= 11; if (!dup) window.doroDex.add(pu.n, 1); else gold++; packs[Math.floor(Math.random() * n)][Math.floor(Math.random() * 5)] = [pu.code, dup ? 1 : 0, dup ? 11 : window.doroDex.count(pu.n)]; } /* 하프박스: 픽업 최소 1장(미리보기 계산) */
     if (gold) window.doroChips.add({ g: gold }, 'cap'); return packs;
@@ -231,7 +232,7 @@ svg.pp-strap{display:block;position:absolute;inset:0;width:100%;height:100%;over
     syncKinds();
     const o = window.doroChips ? window.doroChips.get() : { r: 0 }, bal = window.doroChips ? window.doroChips.total() : 0;
     root.innerHTML = '<div class="card"><div class="row-ctl sp"><h2 class="inline">카드팩</h2><div class="pp-bal"><span>' + chip('b', 20) + fmt(bal) + '</span><span>' + chip('r', 20) + fmt((o && o.r) || 0) + '</span></div></div>' +
-      '<div class="pp-shop">' + KINDS.map((k) => '<div class="pp-it" style="--c2:' + k.c2 + '"><div class="pp-hang" style="--c2g:' + k.c2 + ';--cs2:color-mix(in srgb,' + k.c2 + ' 80%,#000)">' + [5, 4, 3, 2, 1].map((q) => '<i class="pp-gh" style="--q:' + q + '"></i>').join('') + packHtml(k) + '<i class="pp-pin"></i></div><b>' + esc(k.nm) + '</b><div class="pp-buy"><button type="button" class="primary" data-buy="' + esc(k.k) + '" data-n="1">' + chip(k.r ? 'r' : 'b', 14) + fmt(k.price) + '</button><button type="button" class="ghost" data-buy="' + esc(k.k) + '" data-n="' + BN(k) + '">' + (k.bo ? '하프박스(100뽑) ' : '박스(150뽑) ') + chip(k.r ? 'r' : 'b', 14) + fmt(k.box) + '</button></div><button type="button" class="pp-od" data-odds="' + esc(k.k) + '">확률 보기</button></div>').join('') + '</div><p class="pp-msg" style="margin-top:8px"></p></div><div class="pp-odm" hidden></div>' +
+      '<div class="pp-shop">' + KINDS.map((k) => '<div class="pp-it" style="--c2:' + k.c2 + '"><div class="pp-hang" style="--c2g:' + k.c2 + ';--cs2:color-mix(in srgb,' + k.c2 + ' 80%,#000)">' + [5, 4, 3, 2, 1].map((q) => '<i class="pp-gh" style="--q:' + q + '"></i>').join('') + packHtml(k) + '<i class="pp-pin"></i></div><b>' + esc(k.nm) + '</b><div class="pp-buy"><button type="button" class="primary" data-buy="' + esc(k.k) + '" data-n="1">' + chip(k.r ? 'r' : 'b', 14) + fmt(k.price) + '</button><button type="button" class="ghost" data-buy="' + esc(k.k) + '" data-n="' + BN(k) + '">' + (k.bo ? '하프박스(100) ' : '박스(150) ') + chip(k.r ? 'r' : 'b', 14) + fmt(k.box) + '</button></div><button type="button" class="pp-od" data-odds="' + esc(k.k) + '">확률 보기</button></div>').join('') + '</div><p class="pp-msg" style="margin-top:8px"></p></div><div class="pp-odm" hidden></div>' +
       '<div class="pp-ov" hidden></div>';
   }
   /* 팩별 확률표: 등급마다 가중치가 있고, 그 팩에 든 등급끼리 나눠 가짐. 같은 등급 안에서는 니케마다 같은 확률 */
@@ -252,7 +253,7 @@ svg.pp-strap{display:block;position:absolute;inset:0;width:100%;height:100%;over
       Q = packs.map((p) => ({ k: KINDS.find((x) => x.k === kind), cards: p.map((c) => ({ x: DB[String(c[0])], dup: !!c[1], cnt: c[2] || 1, o: 0 })).filter((c) => c.x) }));
       Q.forEach((p) => { p.cards.forEach((c) => { c.o = tvOf(c) + Math.random() * 2.6; }); p.cards.sort((a, b) => a.o - b.o); }); /* 낮은 확률(높은 티어)일수록 뒤에 나올 가능성이 큼 */
       got = []; busy = false; boxN = n > 1 ? Q.length : 0; if (boxN) boxIntro(Q[0].k); else nextPack(); }
-    catch (e) { busy = false; if (e && e.message === 'login' && window.doroNeedLogin) window.doroNeedLogin(); const t = ERR[e && e.message] || '카드팩을 열지 못했습니다. (' + ((e && e.message) || e) + ')'; const ov = $('.pp-ov', root); if (ov && !ov.hidden) { cur = null; ov.hidden = true; shop(); } const m2 = $('.pp-msg', root); if (m2) m2.textContent = t; }
+    catch (e) { busy = false; const t = ERR[e && e.message] || '카드팩을 열지 못했습니다. (' + ((e && e.message) || e) + ')'; const ov = $('.pp-ov', root); if (ov && !ov.hidden) { cur = null; ov.hidden = true; shop(); } const m2 = $('.pp-msg', root); if (m2) m2.textContent = t; }
   }
   /* 박스(진열 상자): 뒤에 세운 표지 + 앞쪽 트레이에 팩이 2줄로 꽂혀 있음. 남은 수만큼 실제로 줄어듦 */
   const boxHtml = (k, left, cls) => { const col = (n) => { let h = ''; for (let i = 0; i < n; i++) h += '<i style="--i:' + i + '"></i>'; return '<span class="bx-col">' + h + '</span>'; };
