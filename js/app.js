@@ -2733,7 +2733,7 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
   window.doroChipFly = function (from, to, amount, opt) {
     if (!from || !to) return 0; const A = from.getBoundingClientRect(), B = to.getBoundingClientRect(); if (!A.width || !B.width) return 0;
     const host = document.fullscreenElement || document.body, ck = (opt && opt.k) || 'g', real = Math.max(1, Math.round((amount || 10) / (ck === 'g' ? 10 : 1))), P = opt && opt.single ? 1 : Math.min(300, real), per = (amount || 0) / P, sz = (opt && opt.size) || 22, T = 980;
-    const cx = A.left + A.width / 2, cy = A.top + A.height / 2, ex = B.left + Math.min(B.width / 2, 40) - cx, ey = B.top + B.height / 2 - cy, rad = Math.max(70, sz * 3) * Math.min(1.7, 1 + P * 0.02), stag = Math.min(22, 4600 / P);
+    const cx = opt && opt.left ? A.left + 3 : A.left + A.width / 2, cy = A.top + A.height / 2, ex = B.left + Math.min(B.width / 2, 40) - cx, ey = B.top + B.height / 2 - cy, rad = Math.max(70, sz * 3) * Math.min(1.7, 1 + P * 0.02), stag = Math.min(22, 4600 / P);
     let arrived = 0, lastS = 0; const frag = document.createDocumentFragment(), run = [];
     for (let i = 0; i < P; i++) {
       const d = document.createElement('div'); d.className = 'dc-fly'; d.style.left = (cx - sz / 2) + 'px'; d.style.top = (cy - sz / 2) + 'px'; d.appendChild(chip3dNode(ck, sz)); frag.appendChild(d);
@@ -2772,7 +2772,11 @@ self.TABLES={"pwr":{"head":["싱크로 Lv","화력형 공격력","k","C0","예�
     const bt = e.target.closest && e.target.closest('#idle-get'); if (!bt || bt.disabled) return; const n = idleNow(); if (n < 1) return;
     const a = acctUser(), now = Date.now(); try { localStorage.setItem(IDLE_K + (a ? '-' + a.user.uid : ''), String(now)); } catch (er) { /* 무시 */ } if (a && a.doc) a.doc.idleT = now;
     const card = bt.closest('.idlek'), box = card.querySelector('.idle-fx'), to = document.querySelector('#tab-game .lb-bal span'); bt.disabled = true; idleCard.busy = 1;
-    const ms = window.doroChipFly(box, to, Math.min(n, 600), { size: 24 }); /* 많이 쌓였으면 칩을 60개까지만 그림(렉 방지) */ const c0 = card.querySelector('.idle-v .num'), bar = card.querySelector('.idle-bar u'); if (c0) c0.textContent = '0'; if (bar) bar.style.width = '0%';
+    const c0 = card.querySelector('.idle-v .num'), bar = card.querySelector('.idle-bar u'), barB = card.querySelector('.idle-bar');
+    const ms = window.doroChipFly(bar && bar.offsetWidth > 2 ? bar : barB || box, to, Math.min(n, 600), { size: 24, left: 1 }); /* 막대 왼쪽 끝에서 나옴. 많이 쌓였으면 칩을 60개까지만 그림(렉 방지) */
+    { const span = Math.max(250, ms - 980), w0 = bar ? parseFloat(bar.style.width) || 0 : 0, t0 = performance.now(); /* 칩이 나오는 동안 게이지와 숫자가 함께 줄어듦 */
+      if (bar) { try { bar.animate([{ width: w0 + '%' }, { width: '0%' }], { duration: span, easing: 'linear', fill: 'forwards' }); } catch (er) { /* 무시 */ } bar.style.width = '0%'; }
+      const run = (nw) => { const k = Math.min(1, (nw - t0) / span); if (c0) c0.textContent = fmt(Math.round(n * (1 - k))); if (k < 1) requestAnimationFrame(run); }; requestAnimationFrame(run); }
     setTimeout(() => { window.doroChips.add({ b: n }, 'idle'); }, 950); /* 첫 칩이 닿을 때 잔고에 더함 */
     setTimeout(() => { idleCard.busy = 0; idleLast = -1; idleTick(); }, Math.max(1000, ms));
   });
@@ -4621,7 +4625,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   window.doroPickupList = () => { const now = Date.now(), L = cfgGet().gacha.filter((x) => (x.s || x.e) && (!x.s || now >= x.s) && (!x.e || now < x.e)), U = L.length ? L : [cfgFeat().m]; return U.map((m) => { const k = nkCode(m.n); return { n: m.n, code: k, img: m.face ? cfgImg(m.face) : k ? BL_IMG(k) : cfgImg(m.cover) }; }); };
   window.doroPickup = () => { const m = cfgFeat().m, k = nkCode(m.n); return { n: m.n, code: k, img: m.face ? cfgImg(m.face) : k ? BL_IMG(k) : cfgImg(m.cover) }; };
   function gmMount() {
-    if (gmInst) return; if (!window.DoroGacha) { /* 가챠 엔진은 가챠 탭을 처음 열 때 불러옴 */ if (!gmMount.w) { gmMount.w = 1; const sc = document.createElement('script'); sc.src = 'js/gacha.js?v=20261119b'; sc.onload = () => { gmMount.w = 0; const go = () => { if (curTab === 'gcm') gmMount(); }; if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go(); }; sc.onerror = () => { gmMount.w = 0; const r = document.getElementById('gm-root'); if (r) r.innerHTML = '<p class="muted" style="padding:20px">가챠 머신을 불러오지 못했습니다. 새로고침해 주세요.</p>'; }; document.head.appendChild(sc); } return; } let D; try { D = window.GM_ASSETS; if (!D) throw 0; } catch (e) { return; }
+    if (gmInst) return; if (!window.DoroGacha) { /* 가챠 엔진은 가챠 탭을 처음 열 때 불러옴 */ if (!gmMount.w) { gmMount.w = 1; const sc = document.createElement('script'); sc.src = 'js/gacha.js?v=20261119c'; sc.onload = () => { gmMount.w = 0; const go = () => { if (curTab === 'gcm') gmMount(); }; if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go(); }; sc.onerror = () => { gmMount.w = 0; const r = document.getElementById('gm-root'); if (r) r.innerHTML = '<p class="muted" style="padding:20px">가챠 머신을 불러오지 못했습니다. 새로고침해 주세요.</p>'; }; document.head.appendChild(sc); } return; } let D; try { D = window.GM_ASSETS; if (!D) throw 0; } catch (e) { return; }
     const corp = {}; GC_NK.forEach((r) => { if (r[2] === 'SSR') corp[r[0]] = r[1]; });
     const mk = (L, p, cp) => L.map((n) => { const k = nkCode(n) || nkCode({ '리틀 머메이드': '세이렌' }[n] || ''); return { n, c: corp[n] || cp || '', k, p, img: k ? BL_IMG(k) : '', tall: 1 }; });
     gmStockSync(); const fix = (L) => { L.forEach((x) => { if (!x.img) { x.img = nkFace(x.n); const g = cfgGet().gacha.find((q) => q.n === x.n); if (g && g.corp) x.c = g.corp; if (g && !g.face) x.tall = 0; } }); return L; }, M = (m) => { const PL = gmPoolOf(m), std = fix(mk(PL.std, 0)), pil = fix(mk(PL.pil, 1)); const two = +m.rate === 2, pu = mk([m.n], two ? 0 : 1, m.corp || (two ? '' : '필그림'))[0]; if (m.corp) pu.c = m.corp; if (m.face) pu.img = cfgImg(m.face); else if (!pu.img) { pu.img = cfgImg(m.cover); pu.tall = 0; } /* 픽업 2% = 일반 니케, 1% = 필그림·오버스펙 */
