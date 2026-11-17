@@ -530,7 +530,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     function pull() { const c = S.cred[0]; if (!c) return; const b = domeTake(); if (!b) return; const res = b.res; c.n--; if (!c.n) S.cred.shift(); S.credN--;
       S.stats.n++; S.stats.gold++; if (res.kind === 'SSR') { S.stats.ssr++; if (res.nk.pu) S.stats.pu++; } achPull(res); lxPull(res); try { if (window.doroStat) window.doroStat.add({ n: 1, ssr: res.kind === 'SSR' ? 1 : 0, pu: res.kind === 'SSR' && res.nk.pu ? 1 : 0 }); } catch (e) { /* 기록 실패는 무시 */ } S.log.push(0); res.sq = S.sq.length; S.sq.push({ k: res.kind, d: 0, a: 0 }); res.blk = blockAdd(res.kind, res); gDirty = true; { const now = performance.now(), at = Math.max(now, (S._tk || 0) + 45); S._tk = at; if (at <= now) snd.tick(); else setTimeout(() => snd.tick(), at - now); } /* AUTO에서도 드르륵 10번 모두(겹치지 않게 45ms 간격) */ uiStat(); }
     /* 10연속 R·SR: 뽑은 순서 기준, 10개가 모두 까졌을 때 확률 고지 */
-    function streak(k) { lxEv(k === 'SR' ? 275 : 215, 100, 3.4); achHit(k === 'SR' ? 'sSR' : 'sR'); const p = +(Math.pow(k === 'SR' ? 0.43 : 0.53, 10) * 100).toPrecision(2), ck = chipRoll(k === 'SR' ? 'stkSR' : 'stkR'); S.flash = 0.7; snd.burst(2); vib([40, 30, 40, 30, 120], true); sparks(480, 330, 70, k === 'SR' ? '#b06bff' : '#4f9bff', 700, 200); setTimeout(() => streakCut(k, p, ck), 260); } /* 10연속 보상: 고유 연출 뒤 보상 칩이 바구니로 */
+    function streak(k) { lxEv(k === 'SR' ? 275 : 215, 100, 3.4); lxEdge(k === 'SR' ? 275 : 215, 1400); achHit(k === 'SR' ? 'sSR' : 'sR'); const p = +(Math.pow(k === 'SR' ? 0.43 : 0.53, 10) * 100).toPrecision(2), ck = chipRoll(k === 'SR' ? 'stkSR' : 'stkR'); S.flash = 0.7; snd.burst(2); vib([40, 30, 40, 30, 120], true); sparks(480, 330, 70, k === 'SR' ? '#b06bff' : '#4f9bff', 700, 200); setTimeout(() => streakCut(k, p, ck), 260); } /* 10연속 보상: 고유 연출 뒤 보상 칩이 바구니로 */
     /* R·SR 10연속 컷인: ?칩이 박히고, 가운데 버튼을 꾹 누르면 단계가 오르내리다 보상이 정해짐. 3초 뒤 탭하여 계속(AUTO는 자동) */
     function streakCut(k, p, ck, demo) {
       rbFont(); S.stk = true; const sr = k === 'SR', ov = document.createElement('div'); ov.className = 'gm-rbcut gm-stk ' + (sr ? 'gm-stk-sr' : 'gm-stk-r');
@@ -793,7 +793,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
       m.innerHTML = '<div><header><b>업적</b><span>' + nOk + ' / ' + ACH_L.length + '</span><button type="button" aria-label="닫기">×</button></header><ul>' + ACH_L.map((a) => { const ok = !!o.u[a[0]], cur = Math.min(a[4], achCur(o, a[3])); return '<li class="' + (ok ? 'ok' : '') + '"><b>' + a[1] + '</b><span class="rw">' + achRw(a[5], a[6], 15) + '</span><em>' + a[2] + (ok ? '' : ' · ' + cur.toLocaleString('ko-KR') + ' / ' + a[4].toLocaleString('ko-KR')) + '</em><u><s style="width:' + (ok ? 100 : Math.round(cur / a[4] * 100)) + '%"></s></u></li>'; }).join('') + '</ul></div>';
       m.addEventListener('click', (e) => { if (e.target === m || e.target.closest('header button')) m.remove(); }); host.appendChild(m); }
     setTimeout(achCheck, 1500 + GM_ALL.length * 150); window.addEventListener('doroacct', () => setTimeout(achCheck, 1200));
-    function multiPop(n, rv, rk) { lxEv(n >= 3 ? 4 : 24, 100, 1.4 + 0.4 * n, 9); achHit(n >= 4 ? 'quad' : n === 3 ? 'tri' : 'dbl'); if (rv > 0) setTimeout(() => coinRain(false, null, { n: Math.max(8, Math.min(160, Math.round(rv * 1.2))), k: rk || 'b' }), 200); /* 칩 비: 고지할 때, 그 SSR들이 줄 칩만큼 */
+    function multiPop(n, rv, rk) { lxEv(n >= 3 ? 4 : 24, 100, 1.4 + 0.4 * n, 9); lxEdge(n >= 3 ? 4 : 24, 900 + 250 * n); achHit(n >= 4 ? 'quad' : n === 3 ? 'tri' : 'dbl'); if (rv > 0) setTimeout(() => coinRain(false, null, { n: Math.max(8, Math.min(160, Math.round(rv * 1.2))), k: rk || 'b' }), 200); /* 칩 비: 고지할 때, 그 SSR들이 줄 칩만큼 */
       multiPop0(n); }
     function multiPop0(n) { const host = document.fullscreenElement || document.body, r = cvRect(), W2 = (feverOn() ? DNM : CNM)[n] || n + 'x'; quake(n); /* 기계 전체가 지진처럼 흔들림 */
       S.scrPop = { t0: performance.now(), n, w: W2, rb: feverOn() }; /* 픽업 표지 화면에 잠깐 번쩍 */
@@ -802,7 +802,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     /* ---- DORO TIME: 화면 아래 무지개 타이머, 기계 테두리 무지개 ---- */
     const FEV_LV = 'dsgm-dorotime-lv';
     const fevLv = () => { try { return feverOn() ? (+localStorage.getItem(FEV_LV) || 1) : 0; } catch (e) { return 0; } };
-    function feverStart(ms, up, n) { n = Math.max(1, n || 1); const lv = up ? fevLv() + n : n; /* DORO칩 n개 = n단계 */ try { localStorage.setItem(FEV_K, String(Date.now() + (ms || FEV_MS))); localStorage.setItem(FEV_LV, String(lv)); } catch (e) { /* 무시 */ } window.__fevEndT = 0; lxEv(-1, 100, 1.6, 10); achHit('fev'); achHit('lv', lv, true); rbFont(); feverPop(lv); feverTick(); }
+    function feverStart(ms, up, n) { n = Math.max(1, n || 1); const lv = up ? fevLv() + n : n; /* DORO칩 n개 = n단계 */ try { localStorage.setItem(FEV_K, String(Date.now() + (ms || FEV_MS))); localStorage.setItem(FEV_LV, String(lv)); } catch (e) { /* 무시 */ } window.__fevEndT = 0; lxEv(-1, 100, 1.6, 10); lxEdge(-1, 1500); achHit('fev'); achHit('lv', lv, true); rbFont(); feverPop(lv); feverTick(); }
     /* 남은 시간 계산·마지막 10초 효과음·끝날 때 회색 정지(표시는 기계의 픽업 표지 화면에서) */
     function feverTick() {
       if (window.__fevT && window.__fevT !== feverTick) { window.__fevT(); return; } window.__fevT = feverTick; /* 기계가 여러 대여도 타이머는 하나 */
@@ -1538,6 +1538,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     /* 기둥 조명 2개 · 통 테두리 · 본체 띠 · 레버 눈금 · 바닥 빛. 뽑기·SSR·DOUBLE·10연속·DORO TIME·리필에 반응. 프레임마다 사각형 수십 개와 그라디언트 몇 개뿐(렉 없음) */
     const LX = { w: [], ev: null }, lxNow = () => performance.now() / 1000, PYL = [104, 820], PYN = 16, PYY = 104, PYH = 30, PYG = 7.5;
     function lxEv(h, s, dur, strobe) { LX.ev = { h, s, t: lxNow(), dur, strobe: strobe || 0 }; } /* h < 0: 무지개 */
+    function lxEdge(h, dur) { if ((S.fdt || 0) > 0.034 || !leftEl.animate) return; /* 화면 가장자리 빛: 불투명도만 움직임(렉 없음) */ const d = document.createElement('div'), cl = h < 0 ? 'rgba(255,120,220,.6)' : 'hsla(' + h + ',100%,60%,.6)'; d.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:2;border-radius:inherit;opacity:0;background:radial-gradient(ellipse at 50% 45%,transparent 52%,' + cl + ' 100%)'; leftEl.appendChild(d); const an = d.animate([{ opacity: 0 }, { opacity: 1, offset: 0.12 }, { opacity: 0.35, offset: 0.3 }, { opacity: 0.9, offset: 0.45 }, { opacity: 0 }], { duration: dur || 1000, easing: 'ease-out' }); an.onfinish = an.oncancel = () => d.remove(); setTimeout(() => d.remove(), (dur || 1000) + 400); }
     function lxPull(res) { if (LX.w.length > 5) LX.w.shift(); LX.w.push(lxNow()); if (res && res.kind === 'SSR' && !(S.mode.random || S.mode.black)) lxEv(45, 100, 0.9); }
     function drawLights(c) {
       const t = lxNow(), fev = feverOn(), lag = (S.fdt || 0) > 0.034; let ev = LX.ev, k = 0; if (ev) { k = 1 - (t - ev.t) / ev.dur; if (k <= 0) { LX.ev = ev = null; k = 0; } else { k = Math.min(1, k * 1.6); if (ev.strobe && Math.sin(t * ev.strobe * TAU) < 0) k *= 0.3; } }
