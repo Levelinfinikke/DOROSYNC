@@ -1954,3 +1954,13 @@ button:not(.tr-clr):not(.tabs button):not(.tr-f):not(.pk-t):not(.pk-r){border-ra
 #tab-g48 .g48-k div{padding:5px 9px}#tab-g48 .g48-b{grid-column:auto;padding:9px 6px;font-size:14px}#tab-g48 .g48-msg{min-height:0}#tab-g48 .g48-hint{font-size:10.5px;line-height:1.45}
 #lb-back{margin-bottom:6px}
 }
+
+/* 전초기지: 테두리 전시 칸 고르기 */
+.frpick{position:fixed;inset:0;z-index:300;background:rgba(4,6,12,.7);display:grid;place-items:center;padding:14px}
+.frpick>.card{width:min(440px,100%);max-height:86vh;overflow:auto;margin:0}
+.frp-h{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}.frp-h b{font-size:15px}
+.frp-g{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+.frp-g button{appearance:none;border:1px solid var(--line);background:rgba(127,140,165,.08);border-radius:14px!important;min-height:0;padding:8px 6px 7px;cursor:pointer;color:var(--ink);display:grid;justify-items:center;gap:3px;font:inherit}
+.frp-g button:hover{border-color:var(--accent,#ffb21c)}.frp-g button.on{border-color:#ffb21c;background:rgba(255,178,28,.14)}
+.frp-g img{width:68px;height:68px;object-fit:contain}.frp-g span{font-size:12px;font-weight:800;line-height:1.25;text-align:center}.frp-g small{font-size:10.5px;color:var(--muted)}.frp-g button.on small{color:#ffb21c;font-weight:800}
+.frp-e{margin-top:12px}
