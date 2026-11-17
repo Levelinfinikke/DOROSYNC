@@ -112,7 +112,7 @@
 .pp-tip{font-size:13px;font-weight:700;opacity:.75;min-height:20px;text-align:center;position:relative;z-index:2}
 .pp-st{position:relative;width:var(--pw);aspect-ratio:9/16;display:grid;place-items:center;margin-bottom:34px;z-index:2}
 .pp-st .pp-wrap{position:absolute;left:0;top:4%;animation:ppBob 3.2s ease-in-out infinite}@keyframes ppBob{50%{transform:translateY(-9px)}}
-.pp-cut{position:absolute;left:0;height:4px;width:0;z-index:5;border-radius:4px;pointer-events:none;background:#fff;box-shadow:0 0 14px 5px var(--gc,#fff),0 0 40px 14px var(--gc,#fff)}
+.pp-cut{position:absolute;left:0;height:4px;width:0;opacity:0;z-index:5;border-radius:4px;pointer-events:none;background:#fff;box-shadow:0 0 14px 5px var(--gc,#fff),0 0 40px 14px var(--gc,#fff)}
 .pp-hint{position:absolute;left:0;right:0;height:9.5%;z-index:6;pointer-events:none;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;letter-spacing:.25em;color:#fff;text-shadow:0 1px 3px #000;animation:ppSw 1.5s ease-in-out infinite}@keyframes ppSw{0%{transform:translateX(-20%);opacity:0}30%{opacity:1}100%{transform:translateX(20%);opacity:0}}
 .pp-fl{position:absolute;left:50%;top:50%;width:10px;height:10px;border-radius:50%;pointer-events:none;z-index:6;opacity:0}
 .pp-cut.rb{background:linear-gradient(90deg,#ff5d8f,#ffb84d,#f6f05a,#5ef0a0,#5ab8ff,#b07aff,#ff5d8f);box-shadow:0 0 12px 4px rgba(255,255,255,.55);animation:ppHue 1.1s linear infinite}.pp-cut.rb:after{content:"";position:absolute;inset:-14px -6px;border-radius:20px;background:linear-gradient(90deg,#ff5d8f,#ffb84d,#f6f05a,#5ef0a0,#5ab8ff,#b07aff,#ff5d8f);filter:blur(14px);opacity:.95;z-index:-1}
@@ -317,8 +317,8 @@ svg.pp-strap{display:block;position:absolute;inset:0;width:100%;height:100%;over
       const dx = e.clientX - dn.x, dy = e.clientY - dn.y;
       if (dn.zone === 'back') { const p = Math.min(1, Math.abs(dy) / (dn.h * 0.62)); peel(p, dy > 0); if (Math.abs(p - lastS) > 0.07) { lastS = p; sfx.tear(p); } if (p >= 0.97) open('back'); }
       else { const p = Math.min(1, Math.abs(dx) / (dn.w * 0.85)), rt = dx > 0; curl(dn.zone, p, rt);
-        cut.style.top = dn.zone === 'top' ? 'calc(13% - 2px)' : 'calc(93.5% - 2px)'; cut.style.width = (p * 100) + '%'; cut.style.left = rt ? '0' : 'auto'; cut.style.right = rt ? 'auto' : '0'; if (Math.abs(p - lastS) > 0.07) { lastS = p; sfx.tear(p); } if (p >= 0.96) open(dn.zone); } });
-    const up = () => { pk.classList.remove('live'); if (!dn || done) { dn = null; return; } const z = dn.zone; dn = null; lastS = 0; if (z === 'back') { peel(0, true); hl.style.transform = ''; hr.style.transform = ''; const tb = $('.pp-tab', pk); if (tb) tb.style.display = ''; } else curl(z, 0, true); cut.style.width = '0'; };
+        cut.style.top = dn.zone === 'top' ? 'calc(13% - 2px)' : 'calc(93.5% - 2px)'; cut.style.width = (p * 100) + '%'; cut.style.opacity = p > 0.02 ? '1' : '0'; cut.style.left = rt ? '0' : 'auto'; cut.style.right = rt ? 'auto' : '0'; if (Math.abs(p - lastS) > 0.07) { lastS = p; sfx.tear(p); } if (p >= 0.96) open(dn.zone); } });
+    const up = () => { pk.classList.remove('live'); if (!dn || done) { dn = null; return; } const z = dn.zone; dn = null; lastS = 0; if (z === 'back') { peel(0, true); hl.style.transform = ''; hr.style.transform = ''; const tb = $('.pp-tab', pk); if (tb) tb.style.display = ''; } else curl(z, 0, true); cut.style.width = '0'; cut.style.opacity = '0'; };
     pk.addEventListener('pointerup', up); pk.addEventListener('pointercancel', up); pk.addEventListener('pointerleave', () => { if (!dn && !done) { pk.style.setProperty('--rx', '0deg'); pk.style.setProperty('--ry', '0deg'); } });
   }
   /* SSS 배경: 가챠 머신 DORO TIME 화면과 같은 구성(도는 무지개 + 바깥으로 흩날리는 꽃·빛줄기·점) */
