@@ -517,6 +517,19 @@ async function raid(req, env, out) {
     }
     return out(409, { ok: false, error: 'busy' });
   }
+  if (a === 'ach') { /* 가챠 머신 업적: 보상은 계정당 한 번. 달성 조건은 기기의 기록 기준(보상이 작고 1회성이라 서버는 중복 지급만 막음) */
+    const ACH_RW = { n1: [50, 0], n2: [100, 0], n3: [300, 0], n4: [1000, 1], n5: [3000, 5], s1: [50, 0], s2: [100, 0], s3: [300, 0], s4: [1000, 1], p1: [50, 0], p2: [100, 0], p3: [300, 0], p4: [1000, 1], c1: [50, 0], c2: [200, 0], c3: [500, 0], c4: [2000, 3], r1: [100, 0], r2: [300, 0], r3: [1000, 0], d1: [50, 0], d2: [150, 0], d3: [500, 0], t1: [150, 0], t2: [500, 0], q1: [500, 1], k1: [100, 0], k2: [500, 0], k3: [300, 1], f1: [100, 0], f2: [300, 0], f3: [1000, 0], l2: [200, 0], l3: [500, 1], l4: [1000, 2], x1: [100, 0], x2: [300, 0] };
+    const ids = Array.isArray(B.ids) ? Array.from(new Set(B.ids.slice(0, 60).map(String))).filter((x) => ACH_RW[x]) : [];
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const ud = await getDoc('users/' + uid); if (!ud) return out(404, { ok: false, error: 'nouser' });
+      const cv = ud.f.chipsV || { d: 0, r: 0 }, ach = Object.assign({}, ud.f.ach || {}), got = []; let d = cv.d || 0, r = cv.r || 0;
+      ids.forEach((x) => { if (ach[x]) return; ach[x] = 1; got.push(x); d += ACH_RW[x][0]; r += ACH_RW[x][1]; });
+      const chips = { d, r };
+      if (!got.length) return out(200, { ok: true, got, ach: Object.keys(ach), chips });
+      if (await commit([{ update: { name: ud.name, fields: { chipsV: fsv(chips), ach: fsv(ach) } }, updateMask: { fieldPaths: ['chipsV', 'ach'] }, currentDocument: { updateTime: ud.updateTime } }])) return out(200, { ok: true, got, ach: Object.keys(ach), chips });
+    }
+    return out(409, { ok: false, error: 'busy' });
+  }
   if (a === 'plinko') { /* 플링코: 서버가 결과를 정함. 환수율 약 95%, 양 끝 칸은 DORO칩 반드시 지급 */
     const rows = Math.floor(+B.rows), risk = Math.floor(+B.risk), val = { b: 1, s: 5, g: 10 }[B.bet], n = Math.max(1, Math.min(50, Math.floor(+B.n) || 1));
     if (rows !== 12 || !(risk >= 0 && risk <= 2) || !val) return out(400, { ok: false, error: 'bad' });
