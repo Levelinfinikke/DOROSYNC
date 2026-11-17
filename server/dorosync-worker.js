@@ -527,7 +527,7 @@ async function raid(req, env, out) {
       const ud = await getDoc('users/' + uid); if (!ud) return out(404, { ok: false, error: 'nouser' });
       const cv = ud.f.chipsV || { d: 0, r: 0 }; if ((cv.d || 0) < cost) return out(409, { ok: false, error: 'chips' });
       const balls = []; let win = 0, wr = 0;
-      for (let i = 0; i < n; i++) { let k = 0; for (let q = 0; q < rows; q++) if (Math.random() < 0.5) k++; const x = val * tb[k], pay = Math.floor(x) + (Math.random() < x - Math.floor(x) ? 1 : 0); const dr = k === 0 || k === rows ? Math.max(1, Math.round(val * Math.pow(2, rows - 1) / 1000)) : 0; /* 끝 칸: DORO칩 반드시 지급(1,000당 1개꼴, 최소 1) */ win += pay; wr += dr; balls.push([k, pay, dr]); }
+      for (let i = 0; i < n; i++) { let k = 0; for (let q = 0; q < rows; q++) if (Math.random() < 0.5) k++; const x = val * tb[k], pay = Math.floor(x) + (Math.random() < x - Math.floor(x) ? 1 : 0); const dr = k === 0 || k === rows ? Math.max(1, Math.round(val * Math.pow(2, rows - 1) / 4000)) : 0; /* 끝 칸: DORO칩 반드시 지급(4,000당 1개꼴, 최소 1 → 싱크칩 1·실버 3·골드 5) */ win += pay; wr += dr; balls.push([k, pay, dr]); }
       const chips = { d: (cv.d || 0) - cost + win, r: (cv.r || 0) + wr };
       if (await commit([{ update: { name: ud.name, fields: { chipsV: fsv(chips) } }, updateMask: { fieldPaths: ['chipsV'] }, currentDocument: { updateTime: ud.updateTime } }])) return out(200, { ok: true, balls, chips });
     }

@@ -1,10 +1,10 @@
 /* DOROSYNC DORO DROP(플링코) (관리자 전용 · 미공개)
    싱크칩(1)·실버칩(5)·골드칩(10)을 떨어뜨려 바닥 칸의 배수만큼 받음 · 위험도 3단계 · 12줄 고정
-   환수율 약 95% · 양 끝(최고 배수) 칸은 DORO칩을 반드시 지급(환수율과 별도, 건 값 1,000당 1개꼴)
+   환수율 약 95% · 양 끝(최고 배수) 칸은 DORO칩을 반드시 지급(환수율과 별도, 건 값 4,000당 1개꼴 · 최소 1개라 싱크칩으로 걸면 2배 효율)
    배포 사이트: 서버(/raid a=plinko)가 결과를 정하고 화면은 그 칸으로 떨어지는 연출만 함 · 미리보기: 이 기기에서 계산 */
 (() => {
   'use strict';
-  const PROD = /github\.io$/.test(location.hostname), RTP = 0.95, doroOf = (val, rows) => Math.max(1, Math.round(val * Math.pow(2, rows - 1) / 1000)); /* 끝 칸: DORO칩을 반드시 지급. 건 값 1,000당 1개꼴이 되도록(최소 1개) */
+  const PROD = /github\.io$/.test(location.hostname), RTP = 0.95, doroOf = (val, rows) => Math.max(1, Math.round(val * Math.pow(2, rows - 1) / 4000)); /* 끝 칸: DORO칩을 반드시 지급. 건 값 4,000당 1개꼴(최소 1개 → 싱크칩 1·실버 3·골드 5) */
   const RISK = ['LOW', 'MEDIUM', 'HIGH'], CH = [['b', '싱크칩', 1], ['s', '실버칩', 5], ['g', '골드칩', 10]], CNT = [1, 10, 50];
   /* 배수표(서버와 같은 식): 가운데가 가장 낮고 바깥으로 갈수록 커짐. 환수율에 맞춰 전체를 맞춘 뒤 보기 좋은 수로 반올림 */
   const table = (rows, risk) => { const m0 = [0.5, 0.35, 0.2][risk], c = [1.42, 1.85, 2.7][risk], P = [], raw = []; let b = 1, sum = 0;
