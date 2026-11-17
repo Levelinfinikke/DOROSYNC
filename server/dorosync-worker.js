@@ -674,13 +674,14 @@ async function adminView(req, env, out) {
     const w = await fetch('https://firestore.googleapis.com/v1/' + d.name + '?' + q, { method: 'PATCH', headers: Object.assign({ 'Content-Type': 'application/json' }, H), body: JSON.stringify({ fields: { autoDue: { stringValue: today }, auto: { mapValue: { fields: Object.assign(raw ? { openid: { stringValue: raw } } : {}, { area: { stringValue: String(area) } }) } } } }) });
     return out(w.ok ? 200 : 502, { ok: w.ok, error: w.ok ? undefined : 'write_' + w.status });
   }
-  const mask = ['nickname', 'username', 'chipsV', 'chipDay', 'createdAt', 'updatedAt', 'auto', 'autoDue'].map((f) => 'mask.fieldPaths=' + f).join('&');
+  const mask = ['nickname', 'username', 'chipsV', 'chipDay', 'createdAt', 'updatedAt', 'auto', 'autoDue', 'nsl', 'dex', 'ach', 'raidFrames'].map((f) => 'mask.fieldPaths=' + f).join('&');
   const users = []; let pt = '';
   for (let i = 0; i < 20; i++) {
     const r = await (await fetch(FS + '/users?pageSize=300&' + mask + (pt ? '&pageToken=' + encodeURIComponent(pt) : ''), { headers: H })).json();
     (r.documents || []).forEach((d) => { const f = {}; Object.entries(d.fields || {}).forEach(([k, v]) => { f[k] = dec(v); }); const au = f.auto || null;
       users.push({ id: d.name.split('/').pop().slice(0, 6), nick: f.nickname || f.username || '', created: f.createdAt || d.createTime, updated: f.updatedAt || d.updateTime, chips: f.chipsV || null, day: f.chipDay || null,
-        auto: au ? { on: !!au.on, area: au.area || '', since: au.since || 0, last: au.last ? { at: au.last.at || 0, ok: !!au.last.ok, s: au.last.s || 0, o: au.last.o || 0, code: au.last.code || '' } : null } : null, autoDue: f.autoDue || '', admin: ADMIN_UIDS.includes(d.name.split('/').pop()) }); });
+        auto: au ? { on: !!au.on, area: au.area || '', since: au.since || 0, last: au.last ? { at: au.last.at || 0, ok: !!au.last.ok, s: au.last.s || 0, o: au.last.o || 0, code: au.last.code || '' } : null } : null, autoDue: f.autoDue || '', admin: ADMIN_UIDS.includes(d.name.split('/').pop()),
+        nsl: f.nsl || null, dex: f.dex && typeof f.dex === 'object' ? Object.keys(f.dex).filter((k) => +f.dex[k] > 0).length : 0, ach: f.ach && typeof f.ach === 'object' ? Object.keys(f.ach).length : 0, frames: f.raidFrames && typeof f.raidFrames === 'object' ? Object.keys(f.raidFrames).length : 0 }); }); /* 니슬렁 기록: nsl은 기기가 보낸 값, 도감·업적·테두리는 서버가 지급한 값 */
     pt = r.nextPageToken; if (!pt) break;
   }
   let run = null; try { const d = await (await fetch(FS + '/meta/autoRun', { headers: H })).json(); if (d && d.fields) { run = {}; Object.entries(d.fields).forEach(([k, v]) => { run[k] = dec(v); }); } } catch (e) { /* 무시 */ }

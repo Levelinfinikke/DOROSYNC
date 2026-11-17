@@ -269,7 +269,11 @@
       data = j; if (sec === 'st') render();
     } catch (e) { body.textContent = '불러오지 못했습니다. 네트워크를 확인해 주세요.'; }
   }
-  const val = (u, k) => (k === 'nick' ? u.nick : k === 'chips' ? (u.chips ? u.chips.d : -1) : k === 'r' ? (u.chips ? u.chips.r : -1) : k === 'today' ? (u.day ? u.day.n : -1) : k === 'auto' ? (u.auto && u.auto.on ? (u.auto.last ? 2 : 1) : 0) : k === 'created' ? Date.parse(u.created) || 0 : k === 'updated' ? (+u.updated || Date.parse(u.updated) || 0) : 0);
+  const val = (u, k) => (k === 'nick' ? u.nick : k === 'chips' ? (u.chips ? u.chips.d : -1) : k === 'r' ? (u.chips ? u.chips.r : -1) : k === 'today' ? (u.day ? u.day.n : -1) : k === 'gn' ? (u.nsl ? +u.nsl.n || 0 : -1) : k === 'gs' ? (u.nsl ? +u.nsl.ssr || 0 : -1) : k === 'pk' ? (u.nsl ? +u.nsl.packs || 0 : -1) : k === 'dx' ? (u.dex || 0) : k === 'ac' ? (u.ach || 0) : k === 'rk' ? (u.nsl && u.nsl.rk > 0 ? -u.nsl.rk : -1e9) : k === 'auto' ? (u.auto && u.auto.on ? (u.auto.last ? 2 : 1) : 0) : k === 'created' ? Date.parse(u.created) || 0 : k === 'updated' ? (+u.updated || Date.parse(u.updated) || 0) : 0);
+  const nslTd = (u) => { const s = u.nsl, n = s ? +s.n || 0 : 0, td = (v, t) => '<td' + (t ? ' title="' + esc(t) + '"' : '') + '>' + v + '</td>';
+    const rk = s && s.rk > 0 ? '<b>' + fmt(s.rk) + '위</b>' + (s.rkN ? '<small style="opacity:.55">/' + fmt(s.rkN) + '</small>' : '') + (s.rkS ? ' <small style="opacity:.55">' + esc(s.rkS) + '</small>' : '') : '-';
+    return td(s ? fmt(n) : '-', s && s.t ? '기기에서 보낸 기록 · ' + kst(s.t) : '아직 기록을 보내지 않음(로그인 후 니슬렁을 하면 쌓임)') + td(s ? fmt(+s.ssr || 0) + (n ? ' <small style="opacity:.55">' + ((+s.ssr || 0) / n * 100).toFixed(1) + '%</small>' : '') : '-', s ? '픽업 ' + fmt(+s.pu || 0) + '장' : '')
+      + td(s ? fmt(+s.packs || 0) : '-') + td(u.dex ? fmt(u.dex) : '-', '서버 도감에 있는 카드 종류 수') + td(u.ach ? fmt(u.ach) : '-', '계정에 저장된 업적 수') + td(rk, s && s.rs ? '최고 점수 ' + fmt(s.rs) + (u.frames ? ' · 테두리 ' + u.frames + '개' : '') : ''); };
   function render() {
     const at = document.getElementById('adm-at'); if (at) at.textContent = kst(Date.now()) + ' 기준'; if (!document.getElementById('adm-body')) return;
     const U = (data.users || []).slice(), others = U.filter((u) => !u.admin), withC = others.filter((u) => u.chips), sumD = withC.reduce((a, u) => a + (u.chips.d || 0), 0), sumR = withC.reduce((a, u) => a + (u.chips.r || 0), 0);
@@ -282,13 +286,13 @@
       + '<div>자동 기록 켬<b>' + au.length + '</b></div><div>자동 기록 성공<b>' + auOk.length + '</b></div><div>자동 기록 실패<b class="' + (auBad.length ? 'adm-bad' : '') + '">' + auBad.length + '</b></div>'
       + (run ? '<div>마지막 자동 실행<b style="font-size:14px">' + kst(run.at || run.t) + '</b>' + esc(['n', 'ok', 'fail', 'stop'].filter((k) => run[k] != null && run[k] !== '').map((k) => k + ' ' + run[k]).join(' · ')) + '</div>' : '') + '</div>';
     const th = (k, t, l) => '<th' + (l ? ' class="l"' : '') + (k ? ' data-k="' + k + '"' : '') + '>' + t + (sortK === k ? (sortD < 0 ? ' ▼' : ' ▲') : '') + '</th>';
-    h += '<div style="overflow:auto;max-height:65vh"><table id="adm-t"><thead><tr>' + th('nick', '닉네임', 1) + th('chips', '싱크칩') + th('r', 'DORO칩') + th('today', '오늘 지급') + th('', '오늘 사용') + th('', '출석') + th('auto', '자동 기록', 1) + th('', '다음 처리') + th('created', '가입') + th('updated', '마지막 저장') + '</tr></thead><tbody>';
+    h += '<div style="overflow:auto;max-height:65vh"><table id="adm-t"><thead><tr>' + th('nick', '닉네임', 1) + th('chips', '싱크칩') + th('r', 'DORO칩') + th('today', '오늘 지급') + th('gn', '가챠') + th('gs', 'SSR') + th('pk', '카드팩') + th('dx', '도감') + th('ac', '업적') + th('rk', '레이드 최고') + th('auto', '자동 기록', 1) + th('', '다음 처리') + th('created', '가입') + th('updated', '마지막 저장') + '</tr></thead><tbody>';
     U.forEach((u) => {
       const d = u.day && u.day.d === today ? u.day : null, a = u.auto;
       const au2 = !a || !a.on ? '<span style="opacity:.5">꺼짐</span>' : '<span class="adm-on">켬</span> ' + (a.area ? '(' + esc(a.area) + ') ' : '') + (a.last ? (a.last.ok ? '최근 ' + kst(a.last.at) + ' · 싱크로 ' + a.last.s + ' · 전초기지 ' + a.last.o : '<span class="adm-bad">실패 ' + esc(a.last.code || '') + ' ' + kst(a.last.at) + '</span>') : '· 아직 실행 전 (' + kst(a.since) + '부터)');
-      h += '<tr' + (u.admin ? ' class="me"' : '') + '><td class="l">' + esc(u.nick || '(이름 없음)') + (u.admin ? ' · 관리자' : '') + ' <small style="opacity:.5">' + esc(u.id) + '</small></td><td>' + (u.chips ? fmt(u.chips.d) : '-') + '</td><td>' + (u.chips ? fmt(u.chips.r) : '-') + '</td><td>' + (d ? fmt(d.n) : '-') + '</td><td>' + (d && d.s ? fmt(d.s) : '-') + '</td><td>' + (d && d.a ? '✓' : '-') + '</td><td class="l">' + au2 + '</td><td>' + esc(u.autoDue || '-') + '</td><td>' + kst(u.created) + '</td><td>' + kst(u.updated) + '</td></tr>';
+      h += '<tr' + (u.admin ? ' class="me"' : '') + '><td class="l">' + esc(u.nick || '(이름 없음)') + (u.admin ? ' · 관리자' : '') + ' <small style="opacity:.5">' + esc(u.id) + '</small></td><td>' + (u.chips ? fmt(u.chips.d) : '-') + '</td><td>' + (u.chips ? fmt(u.chips.r) : '-') + '</td><td>' + (d ? fmt(d.n) : '-') + '</td>' + nslTd(u) + '<td class="l">' + au2 + '</td><td>' + esc(u.autoDue || '-') + '</td><td>' + kst(u.created) + '</td><td>' + kst(u.updated) + '</td></tr>';
     });
-    h += '</tbody></table></div><p class="adm-note">로그인한 계정만 보입니다(비회원 칩은 각자 브라우저에만 있음). 이메일은 표시하지 않습니다. 관리자 계정은 합계에서 뺐습니다. 열 제목을 누르면 정렬됩니다.</p>';
+    h += '</tbody></table></div><p class="adm-note">로그인한 계정만 보입니다(비회원 칩은 각자 브라우저에만 있음). 가챠·SSR·카드팩·레이드 최고는 유저 기기가 보낸 기록이라 참고용이고, 도감·업적은 서버가 지급한 값입니다. 칸에 마우스를 올리면 자세히 보입니다. 이메일은 표시하지 않습니다. 관리자 계정은 합계에서 뺐습니다. 열 제목을 누르면 정렬됩니다.</p>';
     document.getElementById('adm-body').innerHTML = h;
   }
   window.doroAdmin = { ok: canSee, show };
