@@ -303,7 +303,7 @@
 .gm-help{margin:0;padding-left:18px;font-size:12.5px;line-height:1.55;color:#dbe3f1;display:grid;gap:4px}
 .gm-fs{position:absolute;right:1.2%;top:1.4%}.gm-auto{position:absolute;right:calc(1.2% + 40px);top:1.4%;appearance:none;height:34px;padding:0 14px;border-radius:10px;border:1px solid rgba(255,255,255,.22);background:rgba(10,14,22,.72);color:#dfe7f5;font-weight:800;font-size:13px;letter-spacing:.5px;cursor:pointer}.gm-auto.on{background:linear-gradient(#ff8a5c,#ff5a7a);border-color:#ff8a5c;color:#fff}
 .gm-left.clean .gm-tools,.gm-left.clean .gm-auto,.gm-left.clean .gm-fs,.gm-left.clean .gm-lab,.gm-left.clean .gm-pop{display:none}
-.gm-left.clean .gm-btn[data-a="exch"]{width:28px;height:28px;padding:0;border-radius:50%;font-size:0;letter-spacing:0;display:grid;place-items:center;justify-self:end}.gm-left.clean .gm-btn[data-a="exch"]::before{content:"";width:12px;height:12px;border-radius:50%;background:linear-gradient(#6b4500 50%,#fff6d0 50%)} /* 화면 정리: 라벨 교환은 작은 노란 버튼만 */
+.gm-left.clean .gm-btn[data-a="exch"]{width:28px;height:28px;padding:0;border-radius:50%;font-size:0;letter-spacing:0;display:grid;place-items:center;justify-self:end}.gm-left.clean .gm-btn[data-a="exch"]::before{content:"";width:21px;height:21px;background:var(--lab) center/contain no-repeat;filter:drop-shadow(0 1px 1px rgba(0,0,0,.35))} /* 화면 정리: 라벨 교환은 작은 노란 버튼만 */
 .gm-hud{top:auto;bottom:22.5%}
 .gm-graph{background:#121722;border:1px solid #2a3348;border-radius:14px;padding:10px 12px}
 .gm-gh{display:flex;flex-wrap:wrap;align-items:center;gap:10px;font-size:13px;margin-bottom:6px}.gm-gh label{color:#9eaac0;font-size:12px}.gm-gh input{width:86px;background:#0c1019;border:1px solid #33405c;color:#eef3fb;border-radius:7px;padding:3px 6px;font:inherit}
@@ -847,7 +847,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     function achOpen() { const o = achGet(), host = document.fullscreenElement || document.body, m = document.createElement('div'), nOk = ACH_L.filter((a) => o.u[a[0]]).length; m.className = 'gm-achm'; const b = root.querySelector('[data-a="ach"]'); if (b) b.classList.remove('new');
       m.innerHTML = '<div><header><b>업적</b><span>' + nOk + ' / ' + ACH_L.length + '</span><button type="button" aria-label="닫기">×</button></header><ul>' + ACH_L.map((a) => { const ok = !!o.u[a[0]], cur = Math.min(a[4], achCur(o, a[3])); return '<li class="' + (ok ? 'ok' : '') + '"><b>' + a[1] + '</b><span class="rw">' + achRw(a[5], a[6], 15) + '</span><em>' + a[2] + (ok ? '' : ' · ' + cur.toLocaleString('ko-KR') + ' / ' + a[4].toLocaleString('ko-KR')) + '</em><u><s style="width:' + (ok ? 100 : Math.round(cur / a[4] * 100)) + '%"></s></u></li>'; }).join('') + '</ul></div>';
       m.addEventListener('click', (e) => { if (e.target === m || e.target.closest('header button')) m.remove(); }); host.appendChild(m); }
-    setTimeout(() => dmApply(S.doro, true), 0);
+    setTimeout(() => dmApply(S.doro, true), 0); try { leftEl.style.setProperty('--lab', 'url(' + IM.label.src + ')'); } catch (e) { /* 무시 */ }
     setTimeout(achCheck, 1500 + GM_ALL.length * 150); window.addEventListener('doroacct', () => setTimeout(achCheck, 1200));
     function multiPop(n, rv, rk) { lxEv(n >= 3 ? 4 : 24, 100, 1.4 + 0.4 * n, 9); lxEdge(n >= 3 ? 4 : 24, 900 + 250 * n); achHit(n >= 4 ? 'quad' : n === 3 ? 'tri' : 'dbl'); if (rv > 0) setTimeout(() => coinRain(false, null, { n: Math.max(8, Math.min(160, Math.round(rv * 1.2))), k: rk || 'b' }), 200); /* 칩 비: 고지할 때, 그 SSR들이 줄 칩만큼 */
       multiPop0(n); }
