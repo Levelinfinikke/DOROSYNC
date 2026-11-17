@@ -3709,7 +3709,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   function showTab(name) {
     if (name === 'admin' && !(window.doroAdmin && window.doroAdmin.ok())) name = 'main';
     if (name === 'gc' || name === 'gccs' || name === 'gcco' || name === 'gcdata' || name === 'gcm') name = 'gcmg'; // 가챠 탭은 없어짐: 가챠 머신은 니슬렁에서
-    if (name === 'raid' || name === 'dex' || name === 'pack' || name === 'plinko' || name === 'tabs' || name === 'g48') { let ok = false; try { ok = dexOk(); } catch (e) { /* 초기화 전 */ } if (!ok) name = 'game'; } const sec = name === 'gcmg' ? 'gcm' : name; curTab = sec; /* gcmg: 니슬렁 탭에서 여는 가챠 머신(같은 화면) */
+    if (name === 'raid' || name === 'dex' || name === 'pack' || name === 'plinko' || name === 'tabs' || name === 'g48') { let ok = false; try { ok = dexOk(); } catch (e) { /* 초기화 전 */ } if (!ok) name = 'game'; } const sec = name === 'gcmg' ? 'gcm' : name; if (sec === 'gcm' && curTab !== 'gcm') gmMount.wantFs = true; /* 모바일: 가챠 머신에 들어오면 바로 전체화면 */ curTab = sec; /* gcmg: 니슬렁 탭에서 여는 가챠 머신(같은 화면) */
     const grp = GRP[name] || name;
     if (lastGrp[grp]) lastGrp[grp] = name;
     $$('#tabs button').forEach((b) => b.classList.toggle('on', b.dataset.tab === grp));
@@ -3718,7 +3718,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
     $('#subtabs').classList.toggle('show', grp === 'main');
     curGrp = grp; subAlign(grp);
     $$('.tab').forEach((s) => s.classList.toggle('on', s.id === 'tab-' + (OLV[name] ? 'ol' : sec)));
-    if (sec === 'gcm') gmMount();
+    if (sec === 'gcm') { gmMount(); gmFsTry(); }
     if (name === 'daily') renderDaily();
     if (name === 'boss') renderBoss();
     if (name === 'data') renderData();
@@ -3727,9 +3727,9 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
     if (name === 'dex') renderDex();
     if (name === 'game') renderLobby();
     /* 모바일: 도로드롭·도로록·2048에 들어가면 게임이 한 화면에 들어오도록 그 위치로 스크롤(위에 붙는 머리줄 높이만큼 비움) */
-    if (['plinko', 'tabs', 'g48'].includes(name) && window.matchMedia('(max-width:760px)').matches) setTimeout(() => { const bk = $('#lb-back'), tp = document.querySelector('.top'); if (!bk || bk.hidden) return; const off = tp && getComputedStyle(tp).position === 'sticky' ? tp.offsetHeight : 0; window.scrollTo({ top: Math.max(0, bk.getBoundingClientRect().top + window.scrollY - off - 4) }); }, 120);
+    if (['plinko', 'tabs', 'g48'].includes(name) && window.matchMedia('(max-width:760px)').matches) setTimeout(() => { const bk = $('#tab-' + name), tp = document.querySelector('.top'); if (!bk) return; const off = tp && getComputedStyle(tp).position === 'sticky' ? tp.offsetHeight : 0; window.scrollTo({ top: Math.max(0, bk.getBoundingClientRect().top + window.scrollY - off - 4) }); }, 120);
     if (name === 'admin') window.doroAdmin.show();
-    { let bk = $('#lb-back'); if (!bk) { bk = document.createElement('button'); bk.id = 'lb-back'; bk.type = 'button'; bk.dataset.go = 'game'; bk.textContent = '← 니슬렁'; const tg = $('#tab-game'); tg.parentNode.insertBefore(bk, tg); } bk.hidden = !(grp === 'game' && name !== 'game'); }
+    { let bk = $('#lb-back'); if (!bk) { bk = document.createElement('button'); bk.id = 'lb-back'; bk.type = 'button'; bk.dataset.go = 'game'; bk.textContent = '← 니슬렁'; const tg = $('#tab-game'); tg.parentNode.insertBefore(bk, tg); } bk.hidden = !(grp === 'game' && name !== 'game' && !['tabs', 'g48', 'plinko', 'pack', 'raid'].includes(name)); } /* 도로록·2048·도로드롭·카드팩·포커레이드는 돌아가기 버튼 없음(위 니슬렁 탭으로 돌아감) */
     if (name === 'pack' && window.doroPack) window.doroPack.mount($('#tab-pack'));
     if (name === 'plinko' && window.doroPlinko) window.doroPlinko.mount($('#tab-plinko'));
     if (name === 'tabs' && window.doroTabs) window.doroTabs.mount($('#tab-tabs'));
@@ -4613,13 +4613,14 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   window.doroPickupList = () => { const now = Date.now(), L = cfgGet().gacha.filter((x) => (x.s || x.e) && (!x.s || now >= x.s) && (!x.e || now < x.e)), U = L.length ? L : [cfgFeat().m]; return U.map((m) => { const k = nkCode(m.n); return { n: m.n, code: k, img: m.face ? cfgImg(m.face) : k ? BL_IMG(k) : cfgImg(m.cover) }; }); };
   window.doroPickup = () => { const m = cfgFeat().m, k = nkCode(m.n); return { n: m.n, code: k, img: m.face ? cfgImg(m.face) : k ? BL_IMG(k) : cfgImg(m.cover) }; };
   function gmMount() {
-    if (gmInst) return; if (!window.DoroGacha) { /* 가챠 엔진은 가챠 탭을 처음 열 때 불러옴 */ if (!gmMount.w) { gmMount.w = 1; const sc = document.createElement('script'); sc.src = 'js/gacha.js?v=20261118z'; sc.onload = () => { gmMount.w = 0; const go = () => { if (curTab === 'gcm') gmMount(); }; if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go(); }; sc.onerror = () => { gmMount.w = 0; const r = document.getElementById('gm-root'); if (r) r.innerHTML = '<p class="muted" style="padding:20px">가챠 머신을 불러오지 못했습니다. 새로고침해 주세요.</p>'; }; document.head.appendChild(sc); } return; } let D; try { D = window.GM_ASSETS; if (!D) throw 0; } catch (e) { return; }
+    if (gmInst) return; if (!window.DoroGacha) { /* 가챠 엔진은 가챠 탭을 처음 열 때 불러옴 */ if (!gmMount.w) { gmMount.w = 1; const sc = document.createElement('script'); sc.src = 'js/gacha.js?v=20261119a'; sc.onload = () => { gmMount.w = 0; const go = () => { if (curTab === 'gcm') gmMount(); }; if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go(); }; sc.onerror = () => { gmMount.w = 0; const r = document.getElementById('gm-root'); if (r) r.innerHTML = '<p class="muted" style="padding:20px">가챠 머신을 불러오지 못했습니다. 새로고침해 주세요.</p>'; }; document.head.appendChild(sc); } return; } let D; try { D = window.GM_ASSETS; if (!D) throw 0; } catch (e) { return; }
     const corp = {}; GC_NK.forEach((r) => { if (r[2] === 'SSR') corp[r[0]] = r[1]; });
     const mk = (L, p, cp) => L.map((n) => { const k = nkCode(n) || nkCode({ '리틀 머메이드': '세이렌' }[n] || ''); return { n, c: corp[n] || cp || '', k, p, img: k ? BL_IMG(k) : '', tall: 1 }; });
     gmStockSync(); const fix = (L) => { L.forEach((x) => { if (!x.img) { x.img = nkFace(x.n); const g = cfgGet().gacha.find((q) => q.n === x.n); if (g && g.corp) x.c = g.corp; if (g && !g.face) x.tall = 0; } }); return L; }, M = (m) => { const PL = gmPoolOf(m), std = fix(mk(PL.std, 0)), pil = fix(mk(PL.pil, 1)); const two = +m.rate === 2, pu = mk([m.n], two ? 0 : 1, m.corp || (two ? '' : '필그림'))[0]; if (m.corp) pu.c = m.corp; if (m.face) pu.img = cfgImg(m.face); else if (!pu.img) { pu.img = cfgImg(m.cover); pu.tall = 0; } /* 픽업 2% = 일반 니케, 1% = 필그림·오버스펙 */
       return { assets: Object.assign({}, D.assets, { cover: cfgImg(m.cover) }), tiers: tierData(), chipTiers: chipTierData(), pools: { std, pil, pickup: pu }, pu: (n) => trPuSet.has(n), puRate: two ? 2 : 1, elc: (() => { try { const r = GC_NK.find((x) => x[0] === m.n && x[2] === 'SSR'), el = (r && r[3]) || m.el || ''; return (TR_EL[el] || [])[1] || ''; } catch (e) { return ''; } })(), /* 스킨: 표지에서 색을 못 읽을 때 속성 색 */ stock: gmStock, shared: true, title: m.n + ' 픽업' }; };
-    gmInst = window.DoroGacha.mountMulti(document.getElementById('gm-root'), cfgGet().gacha.map(M));
+    gmInst = window.DoroGacha.mountMulti(document.getElementById('gm-root'), cfgGet().gacha.map(M)); gmFsTry();
   }
+  function gmFsTry() { if (!gmMount.wantFs || !gmInst || curTab !== 'gcm') return; gmMount.wantFs = false; try { const mm = document.querySelector('#gm-root .gm-multi'); if (mm && !mm.classList.contains('fs') && window.matchMedia('(max-width:1000px),(pointer:coarse)').matches) gmInst.fs(); } catch (e) { /* 무시 */ } }
   /* ---------- 가챠 > 티어표 (솔레 / PvP) ---------- */
   const TR_KEY = 'dorosync-tiers-v2', TR_LV = ['SSS', 'SS', 'S', 'A', 'B', 'C', 'D', 'E', 'F'];
   const TR_COL = { SSS: '#ff7f7f', SS: '#ffbf7f', S: '#ffdf7f', A: '#ffff7f', B: '#bfff7f', C: '#7fff7f', D: '#7fffff', E: '#7fbfff', F: '#7f7fff' };
