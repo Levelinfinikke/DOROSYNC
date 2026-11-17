@@ -302,7 +302,8 @@
 .gm-pop[hidden]{display:none}.gm-pop small{font-size:11.5px;color:#9eaac0;font-weight:700}
 .gm-help{margin:0;padding-left:18px;font-size:12.5px;line-height:1.55;color:#dbe3f1;display:grid;gap:4px}
 .gm-fs{position:absolute;right:1.2%;top:1.4%}.gm-auto{position:absolute;right:calc(1.2% + 40px);top:1.4%;appearance:none;height:34px;padding:0 14px;border-radius:10px;border:1px solid rgba(255,255,255,.22);background:rgba(10,14,22,.72);color:#dfe7f5;font-weight:800;font-size:13px;letter-spacing:.5px;cursor:pointer}.gm-auto.on{background:linear-gradient(#ff8a5c,#ff5a7a);border-color:#ff8a5c;color:#fff}
-.gm-left.clean .gm-tools,.gm-left.clean .gm-auto,.gm-left.clean .gm-fs,.gm-left.clean .gm-hud,.gm-left.clean .gm-pop{display:none}
+.gm-left.clean .gm-tools,.gm-left.clean .gm-auto,.gm-left.clean .gm-fs,.gm-left.clean .gm-lab,.gm-left.clean .gm-pop{display:none}
+.gm-left.clean .gm-btn[data-a="exch"]{width:28px;height:28px;padding:0;border-radius:50%;font-size:0;letter-spacing:0;display:grid;place-items:center;justify-self:end}.gm-left.clean .gm-btn[data-a="exch"]::before{content:"";width:12px;height:12px;border-radius:50%;background:linear-gradient(#6b4500 50%,#fff6d0 50%)} /* 화면 정리: 라벨 교환은 작은 노란 버튼만 */
 .gm-hud{top:auto;bottom:22.5%}
 .gm-graph{background:#121722;border:1px solid #2a3348;border-radius:14px;padding:10px 12px}
 .gm-gh{display:flex;flex-wrap:wrap;align-items:center;gap:10px;font-size:13px;margin-bottom:6px}.gm-gh label{color:#9eaac0;font-size:12px}.gm-gh input{width:86px;background:#0c1019;border:1px solid #33405c;color:#eef3fb;border-radius:7px;padding:3px 6px;font:inherit}
