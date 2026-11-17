@@ -880,6 +880,8 @@
     const full = document.fullscreenElement === r, cw = fs ? Math.min(112, w * 0.108, (h - 96) / 4.14) : full ? Math.min(190, w * 0.105, (h - 150) / 4.2) : Math.min(112, w * 0.11);
     const fb = $('.rd-fsb'); if (fb) fb.textContent = full ? '✕' : '⛶';
     r.style.setProperty('--cw', Math.max(40, cw).toFixed(1) + 'px');
+    /* 왼쪽 패널이 화면 높이를 넘으면 그만큼 통째로 줄여서 스크롤 없이 다 보이게(모바일 가로 화면) */
+    const sd = $('.rd-side'); if (sd) { sd.style.zoom = ''; if (fs) { const need = sd.scrollHeight, have = sd.clientHeight; if (need > have + 1 && have > 0) sd.style.zoom = Math.max(0.6, have / need * 0.985).toFixed(3); } }
   }
   function setFs(on) {
     const r = rd(); if (!r) return; r.hidden = !on && isMobile(); r.classList.toggle('fs', !!on); document.documentElement.style.overflow = on ? 'hidden' : '';

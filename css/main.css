@@ -1935,3 +1935,22 @@ button:not(.tr-clr):not(.tabs button):not(.tr-f):not(.pk-t):not(.pk-r){border-ra
 @media(max-width:700px){#tab-game .lb-gc .lb-x em:not(:first-child){display:none}#tab-game .lb-x{margin-bottom:6px}}
 /* 모바일 니슬렁 머리줄: 제목 한 줄, 그 아래에 잔고(왼쪽)와 피드백 버튼(오른쪽)을 같은 높이로 나란히 */
 @media(max-width:700px){#tab-game .lb-hero{align-items:center;gap:10px 10px;margin-bottom:14px}#tab-game .lb-hero .lb-t{flex:1 1 100%}#tab-game .lb-hero .lb-bal{order:2;margin:0}#tab-game .lb-hero .lb-fb{order:3;margin:0 0 0 auto;top:0;align-self:center}}
+
+/* ===== 모바일: 도로드롭·도로록·2048을 한 화면에(게임판 + 조작부). 게임판 높이를 화면 높이에 맞춰 줄이고 조작부는 한 줄씩 촘촘하게 ===== */
+@media(max-width:760px){
+#tab-plinko .pl-main{padding:4px}#tab-plinko .pl-main canvas{width:auto;max-width:100%;max-height:44dvh}
+#tab-plinko .pl-side{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:6px 8px;padding:8px 10px 10px}
+#tab-plinko .pl-t{order:0;font-size:20px}#tab-plinko .pl-bal{order:1;justify-self:end;padding:5px 10px;font-size:13px}
+#tab-plinko .pl-g{order:2;grid-column:1/-1;display:flex;align-items:center;gap:8px}#tab-plinko .pl-g>span{margin:0;width:40px;flex:none}#tab-plinko .pl-g .pl-seg{flex:1;flex-wrap:nowrap}#tab-plinko .pl-seg button{padding:7px 4px}
+#tab-plinko .pl-go{order:3;grid-column:1/-1;padding:10px;font-size:16px}#tab-plinko .pl-msg{order:4;grid-column:1/-1;min-height:0}
+#tab-tabs .tbx{min-height:0}#tab-tabs .tb-st{min-height:0;padding:6px 8px;gap:4px}#tab-tabs .tb-pile{zoom:.66}#tab-tabs .tb-res{min-height:18px;font-size:15px}#tab-tabs .tb-ctl{min-height:32px}
+#tab-tabs .tb-mc{display:grid;grid-template-columns:1fr 1fr;gap:6px 8px;padding:8px 10px 10px;align-items:center}#tab-tabs .tb-mc>*{grid-column:1/-1;min-width:0}
+#tab-tabs .tb-view{display:none}#tab-tabs .tb-ttl{grid-row:1;grid-column:1;font-size:19px;padding:5px 4px;border-width:2px}#tab-tabs .tb-ttl small{display:none}#tab-tabs .tb-bal{grid-row:1;grid-column:2;padding:6px 8px;font-size:13px;gap:12px}
+#tab-tabs .tb-win{padding:5px 8px;font-size:11.5px;line-height:1.5;border-width:2px}#tab-tabs .tb-btn button{padding:8px 2px 6px;font-size:14px;box-shadow:0 4px 0 #6a3d00}
+#tab-tabs .tb-slot{height:12px;margin:2px 18px 0}#tab-tabs .tb-msg{min-height:0}#tab-tabs .tb-cl{display:none}#tab-tabs .tb-cin{grid-column:1;height:12px;width:auto;margin:0 6px}#tab-tabs .tb-opt{grid-column:2}#tab-tabs .tb-opt button{padding:5px 4px}
+#tab-g48 .g48-main{padding:8px}#tab-g48 .g48-bd{width:min(92vw,46dvh)}
+#tab-g48 .g48-side{display:grid;grid-template-columns:1fr 1fr;gap:6px 8px;padding:8px 10px 10px}#tab-g48 .g48-side>*{grid-column:1/-1;min-width:0}
+#tab-g48 .g48-t{display:none}#tab-g48 .g48-pk{grid-row:1;grid-column:1;padding:5px 8px}#tab-g48 .g48-ch{white-space:nowrap;padding:4px 8px}#tab-g48 .g48-bal{grid-row:1;grid-column:2;align-items:center;justify-content:center;padding:5px 8px;font-size:13px}
+#tab-g48 .g48-k div{padding:5px 9px}#tab-g48 .g48-b{grid-column:auto;padding:9px 6px;font-size:14px}#tab-g48 .g48-msg{min-height:0}#tab-g48 .g48-hint{font-size:10.5px;line-height:1.45}
+#lb-back{margin-bottom:6px}
+}
