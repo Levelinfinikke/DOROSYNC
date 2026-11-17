@@ -528,9 +528,9 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     const room = () => CAP - S.bask.length - S.cup.length - S.emerg.length - (S.dome.length - domeN());
     const allowed = () => (S.reveal || S.refill ? 0 : Math.max(0, Math.min(S.credN, room(), domeN())));
     function pull() { const c = S.cred[0]; if (!c) return; const b = domeTake(); if (!b) return; const res = b.res; c.n--; if (!c.n) S.cred.shift(); S.credN--;
-      S.stats.n++; S.stats.gold++; if (res.kind === 'SSR') { S.stats.ssr++; if (res.nk.pu) S.stats.pu++; } achPull(res); try { if (window.doroStat) window.doroStat.add({ n: 1, ssr: res.kind === 'SSR' ? 1 : 0, pu: res.kind === 'SSR' && res.nk.pu ? 1 : 0 }); } catch (e) { /* 기록 실패는 무시 */ } S.log.push(0); res.sq = S.sq.length; S.sq.push({ k: res.kind, d: 0, a: 0 }); res.blk = blockAdd(res.kind, res); gDirty = true; { const now = performance.now(), at = Math.max(now, (S._tk || 0) + 45); S._tk = at; if (at <= now) snd.tick(); else setTimeout(() => snd.tick(), at - now); } /* AUTO에서도 드르륵 10번 모두(겹치지 않게 45ms 간격) */ uiStat(); }
+      S.stats.n++; S.stats.gold++; if (res.kind === 'SSR') { S.stats.ssr++; if (res.nk.pu) S.stats.pu++; } achPull(res); lxPull(res); try { if (window.doroStat) window.doroStat.add({ n: 1, ssr: res.kind === 'SSR' ? 1 : 0, pu: res.kind === 'SSR' && res.nk.pu ? 1 : 0 }); } catch (e) { /* 기록 실패는 무시 */ } S.log.push(0); res.sq = S.sq.length; S.sq.push({ k: res.kind, d: 0, a: 0 }); res.blk = blockAdd(res.kind, res); gDirty = true; { const now = performance.now(), at = Math.max(now, (S._tk || 0) + 45); S._tk = at; if (at <= now) snd.tick(); else setTimeout(() => snd.tick(), at - now); } /* AUTO에서도 드르륵 10번 모두(겹치지 않게 45ms 간격) */ uiStat(); }
     /* 10연속 R·SR: 뽑은 순서 기준, 10개가 모두 까졌을 때 확률 고지 */
-    function streak(k) { achHit(k === 'SR' ? 'sSR' : 'sR'); const p = +(Math.pow(k === 'SR' ? 0.43 : 0.53, 10) * 100).toPrecision(2), ck = chipRoll(k === 'SR' ? 'stkSR' : 'stkR'); S.flash = 0.7; snd.burst(2); vib([40, 30, 40, 30, 120], true); sparks(480, 330, 70, k === 'SR' ? '#b06bff' : '#4f9bff', 700, 200); setTimeout(() => streakCut(k, p, ck), 260); } /* 10연속 보상: 고유 연출 뒤 보상 칩이 바구니로 */
+    function streak(k) { lxEv(k === 'SR' ? 275 : 215, 100, 3.4); achHit(k === 'SR' ? 'sSR' : 'sR'); const p = +(Math.pow(k === 'SR' ? 0.43 : 0.53, 10) * 100).toPrecision(2), ck = chipRoll(k === 'SR' ? 'stkSR' : 'stkR'); S.flash = 0.7; snd.burst(2); vib([40, 30, 40, 30, 120], true); sparks(480, 330, 70, k === 'SR' ? '#b06bff' : '#4f9bff', 700, 200); setTimeout(() => streakCut(k, p, ck), 260); } /* 10연속 보상: 고유 연출 뒤 보상 칩이 바구니로 */
     /* R·SR 10연속 컷인: ?칩이 박히고, 가운데 버튼을 꾹 누르면 단계가 오르내리다 보상이 정해짐. 3초 뒤 탭하여 계속(AUTO는 자동) */
     function streakCut(k, p, ck, demo) {
       rbFont(); S.stk = true; const sr = k === 'SR', ov = document.createElement('div'); ov.className = 'gm-rbcut gm-stk ' + (sr ? 'gm-stk-sr' : 'gm-stk-r');
@@ -793,7 +793,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
       m.innerHTML = '<div><header><b>업적</b><span>' + nOk + ' / ' + ACH_L.length + '</span><button type="button" aria-label="닫기">×</button></header><ul>' + ACH_L.map((a) => { const ok = !!o.u[a[0]], cur = Math.min(a[4], achCur(o, a[3])); return '<li class="' + (ok ? 'ok' : '') + '"><b>' + a[1] + '</b><span class="rw">' + achRw(a[5], a[6], 15) + '</span><em>' + a[2] + (ok ? '' : ' · ' + cur.toLocaleString('ko-KR') + ' / ' + a[4].toLocaleString('ko-KR')) + '</em><u><s style="width:' + (ok ? 100 : Math.round(cur / a[4] * 100)) + '%"></s></u></li>'; }).join('') + '</ul></div>';
       m.addEventListener('click', (e) => { if (e.target === m || e.target.closest('header button')) m.remove(); }); host.appendChild(m); }
     setTimeout(achCheck, 1500 + GM_ALL.length * 150); window.addEventListener('doroacct', () => setTimeout(achCheck, 1200));
-    function multiPop(n, rv, rk) { achHit(n >= 4 ? 'quad' : n === 3 ? 'tri' : 'dbl'); if (rv > 0) setTimeout(() => coinRain(false, null, { n: Math.max(8, Math.min(160, Math.round(rv * 1.2))), k: rk || 'b' }), 200); /* 칩 비: 고지할 때, 그 SSR들이 줄 칩만큼 */
+    function multiPop(n, rv, rk) { lxEv(n >= 3 ? 4 : 24, 100, 1.4 + 0.4 * n, 9); achHit(n >= 4 ? 'quad' : n === 3 ? 'tri' : 'dbl'); if (rv > 0) setTimeout(() => coinRain(false, null, { n: Math.max(8, Math.min(160, Math.round(rv * 1.2))), k: rk || 'b' }), 200); /* 칩 비: 고지할 때, 그 SSR들이 줄 칩만큼 */
       multiPop0(n); }
     function multiPop0(n) { const host = document.fullscreenElement || document.body, r = cvRect(), W2 = (feverOn() ? DNM : CNM)[n] || n + 'x'; quake(n); /* 기계 전체가 지진처럼 흔들림 */
       S.scrPop = { t0: performance.now(), n, w: W2, rb: feverOn() }; /* 픽업 표지 화면에 잠깐 번쩍 */
@@ -802,7 +802,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     /* ---- DORO TIME: 화면 아래 무지개 타이머, 기계 테두리 무지개 ---- */
     const FEV_LV = 'dsgm-dorotime-lv';
     const fevLv = () => { try { return feverOn() ? (+localStorage.getItem(FEV_LV) || 1) : 0; } catch (e) { return 0; } };
-    function feverStart(ms, up, n) { n = Math.max(1, n || 1); const lv = up ? fevLv() + n : n; /* DORO칩 n개 = n단계 */ try { localStorage.setItem(FEV_K, String(Date.now() + (ms || FEV_MS))); localStorage.setItem(FEV_LV, String(lv)); } catch (e) { /* 무시 */ } window.__fevEndT = 0; achHit('fev'); achHit('lv', lv, true); rbFont(); feverPop(lv); feverTick(); }
+    function feverStart(ms, up, n) { n = Math.max(1, n || 1); const lv = up ? fevLv() + n : n; /* DORO칩 n개 = n단계 */ try { localStorage.setItem(FEV_K, String(Date.now() + (ms || FEV_MS))); localStorage.setItem(FEV_LV, String(lv)); } catch (e) { /* 무시 */ } window.__fevEndT = 0; lxEv(-1, 100, 1.6, 10); achHit('fev'); achHit('lv', lv, true); rbFont(); feverPop(lv); feverTick(); }
     /* 남은 시간 계산·마지막 10초 효과음·끝날 때 회색 정지(표시는 기계의 픽업 표지 화면에서) */
     function feverTick() {
       if (window.__fevT && window.__fevT !== feverTick) { window.__fevT(); return; } window.__fevT = feverTick; /* 기계가 여러 대여도 타이머는 하나 */
@@ -1466,8 +1466,16 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     function buildStatic() {
       const mk = () => { const c = mkc(cv.width, cv.height), x = c.getContext('2d'); x.setTransform(scale, 0, 0, scale, 0, 0); return [c, x]; };
       let c, x, g; [c, x] = mk(); stA = c;
-      g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#1c2436'); g.addColorStop(1, '#0d1118'); x.fillStyle = g; x.fillRect(0, 0, W, H);
-      g = x.createRadialGradient(480, 280, 60, 480, 280, 620); g.addColorStop(0, 'rgba(90,140,255,.2)'); g.addColorStop(1, 'rgba(90,140,255,0)'); x.fillStyle = g; x.fillRect(0, 0, W, H);
+      // 배경: 방주 격납고 벽(패널 이음매 · 육각 격자 · 조명 기둥 · 바닥 경고띠)
+      g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#182030'); g.addColorStop(0.55, '#0f141e'); g.addColorStop(1, '#090c12'); x.fillStyle = g; x.fillRect(0, 0, W, H);
+      g = x.createRadialGradient(480, 300, 80, 480, 300, 640); g.addColorStop(0, 'rgba(70,150,230,.2)'); g.addColorStop(1, 'rgba(70,150,230,0)'); x.fillStyle = g; x.fillRect(0, 0, W, H);
+      { x.save(); x.beginPath(); x.rect(0, 0, W, 742); x.clip(); x.strokeStyle = 'rgba(140,200,255,.055)'; x.lineWidth = 1.2; const hr = 30, hw = hr * Math.sqrt(3); for (let row = 0; row * hr * 1.5 < 760; row++) for (let q = -1; q * hw < W + hw; q++) { const cx = q * hw + (row % 2 ? hw / 2 : 0), cy = row * hr * 1.5; if (cx > 190 && cx < 770) continue; x.beginPath(); for (let i = 0; i < 6; i++) { const a = Math.PI / 6 + i * Math.PI / 3; if (i) x.lineTo(cx + Math.cos(a) * hr, cy + Math.sin(a) * hr); else x.moveTo(cx + Math.cos(a) * hr, cy + Math.sin(a) * hr); } x.closePath(); x.stroke(); } x.restore(); }
+      x.fillStyle = 'rgba(0,0,0,.28)'; x.fillRect(0, 0, W, 22); x.fillStyle = 'rgba(255,255,255,.05)'; x.fillRect(0, 22, W, 1.5); [240, 720].forEach((sx) => { x.fillStyle = 'rgba(0,0,0,.25)'; x.fillRect(sx - 1, 22, 2, 720); x.fillStyle = 'rgba(255,255,255,.035)'; x.fillRect(sx + 1, 22, 1, 720); });
+      { const cone = (x0, dir) => { g = x.createLinearGradient(x0, 0, x0 + dir * 260, 620); g.addColorStop(0, 'rgba(190,225,255,.11)'); g.addColorStop(1, 'rgba(190,225,255,0)'); x.fillStyle = g; x.beginPath(); x.moveTo(x0 - 26, 0); x.lineTo(x0 + 26, 0); x.lineTo(x0 + dir * 420, 742); x.lineTo(x0 + dir * 120, 742); x.closePath(); x.fill(); }; cone(40, 1); cone(920, -1); }
+      x.save(); x.fillStyle = 'rgba(160,205,255,.1)'; x.font = '900 15px sans-serif'; x.textAlign = 'left'; x.translate(64, 716); x.rotate(-Math.PI / 2); x.fillText('ARK  SPECIAL  RECRUIT  //  UNIT 01', 0, 0); x.restore();
+      x.save(); x.fillStyle = 'rgba(160,205,255,.1)'; x.font = '900 15px sans-serif'; x.textAlign = 'left'; x.translate(896, 150); x.rotate(Math.PI / 2); x.fillText('CAPSULE  DISPENSER  //  GODDESS OF VICTORY', 0, 0); x.restore();
+      { x.save(); x.beginPath(); x.rect(0, 740, W, 14); x.clip(); x.fillStyle = '#0b0d12'; x.fillRect(0, 740, W, 14); x.fillStyle = 'rgba(255,196,40,.5)'; for (let sx = -20; sx < W + 20; sx += 28) { x.beginPath(); x.moveTo(sx, 754); x.lineTo(sx + 14, 740); x.lineTo(sx + 26, 740); x.lineTo(sx + 12, 754); x.closePath(); x.fill(); } x.restore(); x.fillStyle = 'rgba(255,255,255,.12)'; x.fillRect(0, 739, W, 1); }
+      PYL.forEach((px) => { x.save(); x.shadowColor = 'rgba(0,0,0,.6)'; x.shadowBlur = 14; g = x.createLinearGradient(px, 0, px + 36, 0); g.addColorStop(0, '#2b3345'); g.addColorStop(0.5, '#1a202c'); g.addColorStop(1, '#10141c'); x.fillStyle = g; rr(x, px, 84, 36, 660, 9); x.fill(); x.restore(); x.strokeStyle = 'rgba(255,255,255,.14)'; x.lineWidth = 1; rr(x, px + 0.5, 84.5, 35, 659, 9); x.stroke(); x.fillStyle = '#05070b'; for (let i = 0; i < PYN; i++) x.fillRect(px + 7, PYY - 1 + i * (PYH + PYG), 22, PYH + 2); x.fillStyle = '#3a4458'; rr(x, px - 5, 728, 46, 14, 4); x.fill(); rr(x, px - 3, 78, 42, 10, 4); x.fill(); });
       g = x.createLinearGradient(0, CT.y, 0, CT.y + CT.h); g.addColorStop(0, 'rgba(165,205,255,.3)'); g.addColorStop(1, 'rgba(40,60,120,.5)'); x.fillStyle = g; rr(x, CT.x, CT.y, CT.w, CT.h, CT.r); x.fill();
       [c, x] = mk(); stB = c;
       // 통 앞면(볼록한 플라스틱)
@@ -1479,18 +1487,18 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
       sticker(x);
       // 본체(정면)
       x.save(); x.shadowColor = 'rgba(0,0,0,.55)'; x.shadowBlur = 28; x.shadowOffsetY = 8; g = x.createLinearGradient(0, BODY.y, 0, BODY.y + BODY.h); g.addColorStop(0, '#ffffff'); g.addColorStop(1, '#dde3ed'); x.fillStyle = g; rr(x, BODY.x, BODY.y, BODY.w, BODY.h, 22); x.fill(); x.restore();
-      x.save(); rr(x, BODY.x, BODY.y, BODY.w, BODY.h, 22); x.clip(); x.fillStyle = '#8fdcd8'; x.fillRect(BODY.x, BODY.y, BODY.w, 26); x.fillStyle = 'rgba(255,255,255,.5)'; x.fillRect(BODY.x, BODY.y, BODY.w, 5); x.fillStyle = 'rgba(0,0,0,.1)'; x.fillRect(BODY.x, BODY.y + 26, BODY.w, 2); x.restore();
+      x.save(); rr(x, BODY.x, BODY.y, BODY.w, BODY.h, 22); x.clip(); x.fillStyle = '#1b2230'; x.fillRect(BODY.x, BODY.y, BODY.w, 26); x.fillStyle = 'rgba(255,255,255,.16)'; x.fillRect(BODY.x, BODY.y, BODY.w, 3); x.fillStyle = '#06080c'; rr(x, BODY.x + 30, BODY.y + 7, BODY.w - 60, 12, 4); x.fill(); x.fillStyle = 'rgba(0,0,0,.16)'; x.fillRect(BODY.x, BODY.y + 26, BODY.w, 2); x.fillStyle = '#ffc428'; x.fillRect(BODY.x, BODY.y + 28, 64, 4); x.fillRect(BODY.x + BODY.w - 64, BODY.y + 28, 64, 4); x.restore();
       g = x.createLinearGradient(0, 710, 0, 740); g.addColorStop(0, '#e2e7ef'); g.addColorStop(1, '#b3bccb'); x.fillStyle = g; rr(x, BODY.x - 18, 710, BODY.w + 36, 30, 12); x.fill();
-      x.fillStyle = '#eff2f7'; rr(x, 164, 488, 632, 216, 18); x.fill(); x.strokeStyle = '#d3d9e4'; x.lineWidth = 1.5; x.stroke();
+      x.fillStyle = '#eff2f7'; rr(x, 164, 488, 632, 216, 18); x.fill(); x.strokeStyle = '#d3d9e4'; x.lineWidth = 1.5; x.stroke(); [[174, 498], [786, 498], [174, 694], [786, 694]].forEach((q) => { x.fillStyle = '#c3cbd8'; x.beginPath(); x.arc(q[0], q[1], 4, 0, TAU); x.fill(); x.strokeStyle = '#8f9aad'; x.lineWidth = 1; x.beginPath(); x.moveTo(q[0] - 2.4, q[1] - 2.4); x.lineTo(q[0] + 2.4, q[1] + 2.4); x.stroke(); }); x.fillStyle = '#9aa5b8'; x.font = '800 9px sans-serif'; x.textAlign = 'center'; x.fillText('ARK RECRUIT SYSTEM', 480, 697); x.fillStyle = '#1b2230'; x.fillRect(348, 500, 3, 190); x.fillRect(609, 500, 3, 190); x.fillStyle = '#ffc428'; x.fillRect(348, 500, 3, 26); x.fillRect(609, 664, 3, 26);
       // 계기판·배출구
       x.fillStyle = '#10141b'; rr(x, LED.x, LED.y, LED.w, LED.h, 9); x.fill(); x.strokeStyle = '#5b6578'; x.lineWidth = 2; x.stroke();
       g = x.createLinearGradient(0, CH.y, 0, CH.y + CH.h); g.addColorStop(0, '#c9d1dd'); g.addColorStop(1, '#eef1f6'); x.fillStyle = g; rr(x, CH.x, CH.y, CH.w, CH.h, 18); x.fill(); x.strokeStyle = '#a9b3c3'; x.lineWidth = 1.5; x.stroke();
       g = x.createLinearGradient(0, CH.y, 0, CH.y + CH.h); g.addColorStop(0, '#05060a'); g.addColorStop(1, '#2a3040'); x.fillStyle = g; rr(x, CH.x + 10, CH.y + 10, CH.w - 20, CH.h - 20, 12); x.fill();
       // 레버 링
-      x.save(); x.translate(LV.x, LV.y); x.fillStyle = 'rgba(0,0,0,.18)'; x.beginPath(); x.arc(2, 5, LV.r + 3, 0, TAU); x.fill(); x.fillStyle = '#4a63e6'; x.beginPath(); x.arc(0, 0, LV.r, 0, TAU); x.fill();
+      x.save(); x.translate(LV.x, LV.y); x.fillStyle = 'rgba(0,0,0,.18)'; x.beginPath(); x.arc(2, 5, LV.r + 3, 0, TAU); x.fill(); { const lg = x.createLinearGradient(0, -LV.r, 0, LV.r); lg.addColorStop(0, '#343d52'); lg.addColorStop(1, '#161b26'); x.fillStyle = lg; } x.beginPath(); x.arc(0, 0, LV.r, 0, TAU); x.fill(); x.strokeStyle = '#5a6680'; x.lineWidth = 2; x.stroke();
       const Ra = LV.r - 8, a1 = -Math.PI * 0.14; x.strokeStyle = '#ffd93d'; x.lineWidth = 7; x.beginPath(); x.arc(0, 0, Ra, -Math.PI * 0.9, a1 - 0.08); x.stroke();
       { const px = Ra * Math.cos(a1), py = Ra * Math.sin(a1), tx = -Math.sin(a1), ty = Math.cos(a1), nx = Math.cos(a1), ny = Math.sin(a1); x.fillStyle = '#ffd93d'; x.beginPath(); x.moveTo(px + tx * 11, py + ty * 11); x.lineTo(px + nx * 9 - tx * 8, py + ny * 9 - ty * 8); x.lineTo(px - nx * 9 - tx * 8, py - ny * 9 - ty * 8); x.closePath(); x.fill(); }
-      for (let i = 0; i < 10; i++) { const a = i * TAU / 10 + Math.PI / 2; x.fillStyle = 'rgba(255,255,255,.75)'; x.beginPath(); x.arc(Math.cos(a) * Ra, Math.sin(a) * Ra, 2.5, 0, TAU); x.fill(); } x.restore();
+      for (let i = 0; i < 10; i++) { const a = i * TAU / 10 + Math.PI / 2; x.fillStyle = '#05070b'; x.beginPath(); x.arc(Math.cos(a) * Ra, Math.sin(a) * Ra, 5.2, 0, TAU); x.fill(); x.fillStyle = 'rgba(160,190,230,.35)'; x.beginPath(); x.arc(Math.cos(a) * Ra, Math.sin(a) * Ra, 2.2, 0, TAU); x.fill(); } x.restore();
       // 투입구
       const plate = (r, t) => { g = x.createLinearGradient(0, r.y, 0, r.y + r.h); g.addColorStop(0, '#3a4150'); g.addColorStop(1, '#232834'); x.fillStyle = g; rr(x, r.x, r.y, r.w, r.h, 10); x.fill(); x.strokeStyle = '#11141b'; x.lineWidth = 1.5; x.stroke(); x.fillStyle = '#aeb9cc'; x.font = 'bold 10.5px sans-serif'; x.textAlign = 'center'; x.fillText(t, r.x + r.w / 2, r.y + r.h - 7); };
       plate(SLOT.bill, 'TICKET'); x.fillStyle = '#8b96aa'; rr(x, SLIT.x - SLIT.w / 2 - 5, SLIT.y - 9, SLIT.w + 10, 18, 6); x.fill(); x.fillStyle = '#05060a'; rr(x, SLIT.x - SLIT.w / 2, SLIT.y - 4, SLIT.w, 8, 4); x.fill();
@@ -1525,12 +1533,40 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
       c.fillStyle = 'rgba(255,255,255,.5)'; rr(c, hx + 12, hy + 8, hw - 50, Math.max(2, 7 * (1 - a)), 3); c.fill(); c.fillStyle = 'rgba(240,246,255,.85)'; rr(c, CH.x + CH.w / 2 - 20, hy + lh - 11, 40, 8, 4); c.fill(); c.restore();
       c.fillStyle = '#9aa5b8'; rr(c, hx + 8, hy - 5, hw - 16, 7, 3); c.fill();
       if (S.cup.length && !Ld.push && Ld.a < 0.2 && !Ld.drag) { c.globalAlpha = 0.55 + 0.45 * Math.sin(S.time * 6); c.fillStyle = '#ffd93d'; c.font = 'bold 12px sans-serif'; c.textAlign = 'center'; c.fillText('▲ 뚜껑 올리기', CH.x + CH.w / 2, hy + hh - 16); c.globalAlpha = 1; } }
-    function drawCapLid(c) { const a = S.cap; c.save(); c.translate(LIDR.x + 860 * ease(a), LIDR.y + LIDR.h - 34 * Math.sin(Math.min(1, a) * Math.PI)); c.rotate(0.08 * Math.sin(Math.min(1, a) * Math.PI)); c.translate(0, -LIDR.h); let g = c.createLinearGradient(0, 0, 0, LIDR.h); g.addColorStop(0, '#ffffff'); g.addColorStop(1, '#d5dbe6'); c.shadowColor = 'rgba(0,0,0,.45)'; c.shadowBlur = 14; c.shadowOffsetY = 5; c.fillStyle = g; rr(c, 0, 0, LIDR.w, LIDR.h, 18); c.fill(); c.shadowColor = 'transparent'; c.fillStyle = '#8fdcd8'; rr(c, 14, LIDR.h - 16, LIDR.w - 28, 8, 4); c.fill(); c.fillStyle = 'rgba(0,0,0,.08)'; rr(c, LIDR.w / 2 - 90, 12, 180, 10, 5); c.fill(); c.restore(); }
+    function drawCapLid(c) { const a = S.cap; c.save(); c.translate(LIDR.x + 860 * ease(a), LIDR.y + LIDR.h - 34 * Math.sin(Math.min(1, a) * Math.PI)); c.rotate(0.08 * Math.sin(Math.min(1, a) * Math.PI)); c.translate(0, -LIDR.h); let g = c.createLinearGradient(0, 0, 0, LIDR.h); g.addColorStop(0, '#ffffff'); g.addColorStop(1, '#d5dbe6'); c.shadowColor = 'rgba(0,0,0,.45)'; c.shadowBlur = 14; c.shadowOffsetY = 5; c.fillStyle = g; rr(c, 0, 0, LIDR.w, LIDR.h, 18); c.fill(); c.shadowColor = 'transparent'; c.fillStyle = '#1b2230'; rr(c, 14, LIDR.h - 17, LIDR.w - 28, 10, 5); c.fill(); c.fillStyle = feverOn() ? 'hsl(' + ((performance.now() / 6) % 360 | 0) + ',100%,62%)' : '#46d9ff'; rr(c, 22, LIDR.h - 14, LIDR.w - 44, 4, 2); c.fill(); c.fillStyle = 'rgba(0,0,0,.08)'; rr(c, LIDR.w / 2 - 90, 12, 180, 10, 5); c.fill(); c.restore(); }
+    /* ---------- 반응형 조명 ---------- */
+    /* 기둥 조명 2개 · 통 테두리 · 본체 띠 · 레버 눈금 · 바닥 빛. 뽑기·SSR·DOUBLE·10연속·DORO TIME·리필에 반응. 프레임마다 사각형 수십 개와 그라디언트 몇 개뿐(렉 없음) */
+    const LX = { w: [], ev: null }, lxNow = () => performance.now() / 1000, PYL = [104, 820], PYN = 16, PYY = 104, PYH = 30, PYG = 7.5;
+    function lxEv(h, s, dur, strobe) { LX.ev = { h, s, t: lxNow(), dur, strobe: strobe || 0 }; } /* h < 0: 무지개 */
+    function lxPull(res) { if (LX.w.length > 5) LX.w.shift(); LX.w.push(lxNow()); if (res && res.kind === 'SSR' && !(S.mode.random || S.mode.black)) lxEv(45, 100, 0.9); }
+    function drawLights(c) {
+      const t = lxNow(), fev = feverOn(), lag = (S.fdt || 0) > 0.034; let ev = LX.ev, k = 0; if (ev) { k = 1 - (t - ev.t) / ev.dur; if (k <= 0) { LX.ev = ev = null; k = 0; } else { k = Math.min(1, k * 1.6); if (ev.strobe && Math.sin(t * ev.strobe * TAU) < 0) k *= 0.3; } }
+      const R = S.reveal, rvk = R && R.kind === 'SSR' && R.ph === 'show' ? 0.7 : 0, rf = S.refill ? 1 : 0, rb = ev ? ev.h < 0 : fev && !rvk;
+      const H0 = ev ? ev.h : rvk ? 45 : rf ? 200 : 188, S0 = ev ? ev.s : rf ? 25 : 100, I = Math.max(k, rvk, rf * 0.5, fev ? 0.6 : 0, S.auto ? 0.32 : 0.2 + 0.06 * Math.sin(t * 1.6));
+      const hue = (i) => (rb ? (t * 150 + i * 23) % 360 : H0), col = (i, l, a) => 'hsla(' + (hue(i) | 0) + ',' + S0 + '%,' + (l | 0) + '%,' + a.toFixed(2) + ')';
+      const p = (t * (0.5 + (S.auto || 0) * 0.14)) % 1.5, pr = 1 - (t * 1.1) % 1;
+      // 기둥 조명
+      for (let s = 0; s < 2; s++) { const x = PYL[s]; for (let i = 0; i < PYN; i++) { const u = i / (PYN - 1); let b = 0.14 + 0.55 * Math.max(0, 1 - Math.abs(p - u) * 4.5); for (const w of LX.w) { const d = (t - w) * 2.6 - u; if (d > -0.14 && d < 0.3) b += 1 - Math.abs(d - 0.08) / 0.22; } if (rf) b += 0.8 * Math.max(0, 1 - Math.abs(pr - u) * 5); b = Math.min(1.3, Math.max(0.1, b + k + rvk * 0.5 + (fev ? 0.3 : 0))); c.fillStyle = col(i + s * 5, 42 + 34 * Math.min(1, b), Math.min(1, 0.12 + 0.88 * b)); c.fillRect(x + 8, PYY + (PYN - 1 - i) * (PYH + PYG), 20, PYH); } }
+      c.save(); c.globalCompositeOperation = 'lighter';
+      if (!lag) for (let s = 0; s < 2; s++) { const x = PYL[s] + 18, g = c.createLinearGradient(x - 70, 0, x + 70, 0), a = 0.08 + 0.3 * I; g.addColorStop(0, col(s * 9, 60, 0)); g.addColorStop(0.5, col(s * 9, 60, a)); g.addColorStop(1, col(s * 9, 60, 0)); c.fillStyle = g; c.fillRect(x - 70, 80, 140, 660); }
+      // 통 테두리와 안쪽 빛
+      { const a = Math.max(0.1, 0.75 * Math.max(k, rvk * 0.6, fev ? 0.4 : 0)); c.strokeStyle = col(3, 66, a); c.lineWidth = 6; rr(c, CT.x - 1, CT.y - 1, CT.w + 2, CT.h + 2, CT.r); c.stroke(); }
+      if (k > 0.05 && !lag) { const g = c.createRadialGradient(480, 270, 40, 480, 270, 380); g.addColorStop(0, col(7, 62, 0.26 * k)); g.addColorStop(1, col(7, 62, 0)); c.fillStyle = g; c.fillRect(CT.x, CT.y, CT.w, CT.h); }
+      // 바닥 빛
+      if (!lag) { c.save(); c.translate(480, 744); c.scale(1, 0.075); const g = c.createRadialGradient(0, 0, 30, 0, 0, 430); g.addColorStop(0, col(11, 60, 0.2 + 0.5 * I)); g.addColorStop(1, col(11, 60, 0)); c.fillStyle = g; c.beginPath(); c.arc(0, 0, 430, 0, TAU); c.fill(); c.restore(); }
+      c.restore();
+      // 본체 띠 LED
+      { const M = 34, x0 = BODY.x + 34, wd = (BODY.w - 68) / M, q = 0.5 + 0.5 * Math.sin(t * 2.1); for (let i = 0; i < M; i++) { const u = i / (M - 1), e = Math.abs(u - 0.5) * 2; let b = 0.12 + 0.8 * Math.max(0, 1 - Math.abs(q - u) * 6); for (const w of LX.w) { const d = (t - w) * 2.8 - e; if (d > -0.12 && d < 0.3) b += 1 - Math.abs(d - 0.09) / 0.21; } b = Math.min(1.2, b + k + (fev ? 0.35 : 0)); c.fillStyle = col(i, 44 + 32 * Math.min(1, b), Math.min(1, 0.15 + 0.85 * b)); c.fillRect(x0 + i * wd + 1.5, BODY.y + 9, wd - 3, 8); } }
+      // 레버 눈금: 이번 10뽑 묶음이 몇 번째인지(SSR이 들어 있으면 금빛, 2장 이상이면 깜빡임)
+      { const B = S.blk, n = B ? B.n : 0, hid = S.mode.random || S.mode.black, ss = B && !hid ? B.c.SSR || 0 : 0, Ra = LV.r - 8, bl = ss >= 2 && Math.sin(t * 16) < 0; if (n > 0) { c.save(); c.translate(LV.x, LV.y); for (let i = 0; i < n && i < 10; i++) { const a = -Math.PI / 2 + i * TAU / 10, px = Math.cos(a) * Ra, py = Math.sin(a) * Ra; c.fillStyle = ss ? (bl ? 'rgba(255,255,255,.95)' : 'rgba(255,196,60,1)') : 'rgba(120,235,255,1)'; c.beginPath(); c.arc(px, py, 4.6, 0, TAU); c.fill(); c.fillStyle = ss ? 'rgba(255,190,50,.3)' : 'rgba(90,220,255,.28)'; c.beginPath(); c.arc(px, py, 9.5, 0, TAU); c.fill(); } c.restore(); } }
+      while (LX.w.length && t - LX.w[0] > 1) LX.w.shift();
+    }
     function draw() {
       let reb = false; if (dirty) { buildStatic(); reb = true; } const c = ctx, t = S.time, L = S.lev;
       const awake = S.dome.some((b) => !b.sl);
       if (reb || awake || domeStale) { const x = stD.getContext('2d'); x.setTransform(1, 0, 0, 1, 0, 0); x.drawImage(stA, 0, 0); x.setTransform(scale, 0, 0, scale, 0, 0); x.save(); rr(x, CT.x + 2, CT.y + 2, CT.w - 4, CT.h - 4, CT.r - 2); if (S.cap > 0.03) x.rect(CT.x + 12, -80, CT.w - 24, CT.y + 110); x.clip(); for (const b of S.dome) drawBodyAny(x, b); if (S.mode.black) { x.fillStyle = 'rgba(3,4,8,.93)'; x.fillRect(CT.x, CT.y, CT.w, CT.h); } x.restore(); x.setTransform(1, 0, 0, 1, 0, 0); x.drawImage(stB, 0, 0); domeStale = awake; }
       c.setTransform(1, 0, 0, 1, 0, 0); c.drawImage(stD, 0, 0); c.setTransform(scale, 0, 0, scale, 0, 0);
+      drawLights(c);
       drawScreen(c);
       drawCapLid(c);
       const pulse = 0.55 + 0.45 * Math.sin(t * 7);
