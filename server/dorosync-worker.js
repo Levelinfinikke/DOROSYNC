@@ -282,6 +282,9 @@ function customToken(sa, uid) {
  * 한 번 실행에 최대 BATCH명. 무료 요금제의 외부 요청 한도(50) 안: 조회 2 + 1명당 2(블라블라 1 + 저장 1) */
 const BATCH = 20;
 const kstDay = (ms) => new Date(ms + 9 * 3600000).toISOString().slice(0, 10);
+/* 오늘(한국 날짜) 칩 사용·당첨 기록: chipDay.u[게임] = { d: 쓴 싱크칩, r: 쓴 DORO칩, wd: 받은 싱크칩, wr: 받은 DORO칩 }. 관리 현황에서 봄 */
+const dayUse = (f, key, sd, sr, wd, wr) => { const today = kstDay(Date.now()), c = f && f.chipDay; const day = c && c.d === today ? JSON.parse(JSON.stringify(c)) : { d: today, n: 0, r: 0, g: 0, a: 0 };
+  const u = day.u = day.u || {}, o = u[key] = u[key] || {}; [['d', sd], ['r', sr], ['wd', wd], ['wr', wr]].forEach(([k, v]) => { v = Math.floor(+v || 0); if (v > 0) o[k] = (o[k] || 0) + v; }); return day; };
 const fsv = (v) => {
   if (v === null || v === undefined) return { nullValue: null };
   if (typeof v === 'string') return { stringValue: v };
@@ -379,7 +382,7 @@ async function chipsClaim(req, env, out) {
     for (const e of evs) {
       const k = String(e && e.k || ''), n = Math.floor(+(e && e.n) || 0), src = String(e && e.src || ''), t = +(e && e.t) || 0;
       if (src === 'idle') { /* 싱크칩 상자: 1분에 1개, 최대 10,000. 보낸 수량은 믿지 않고 마지막 수령 시각으로 계산(첫 수령만 최대 1,000까지 인정) */
-        if (idleSet) { rej++; continue; } const m = idleT ? Math.min(10000, Math.floor((now - idleT) / 60000)) : Math.max(0, Math.min(1000, n)); if (idleT && m < 1) { rej++; continue; } okD += m; idleT = now; idleSet = true; continue; }
+        if (idleSet) { rej++; continue; } const m = idleT ? Math.min(10000, Math.floor((now - idleT) / 60000)) : Math.max(0, Math.min(1000, n)); if (idleT && m < 1) { rej++; continue; } okD += m; day.i = (day.i || 0) + m; idleT = now; idleSet = true; continue; }
       const allow = CHIP_SRC[src] || ''; if (!allow.includes(k) || n < 1 || n > 500 || t > now + 120000 || t < now - 3 * 86400000) { rej++; continue; }
       if (src === 'spend') { const m = Math.min(n, cv.d + okD); okD -= m; day.s = (day.s || 0) + m; continue; } /* 뽑기에 쓴 칩 */
       if (src === 'daily') { if (day.a) { rej++; continue; } day.a = 1; okD += DAILY_D; continue; } /* 출석: 하루 한 번 100 */
@@ -478,7 +481,8 @@ async function raid(req, env, out) {
       if (bo && n === 20 && !draw.includes(boCode)) draw[Math.floor(Math.random() * draw.length)] = boCode; /* 하프박스: 픽업 최소 1장 */
       for (let p = 0; p < n; p++) { const cards = []; for (let i = 0; i < 5; i++) { const k = draw[p * 5 + i], have = Math.min(11, (+LK[k] || 0) + (+dex[k] || 0)), dup = have >= 11; if (dup) gold++; else dex[k] = (+dex[k] || 0) + 1; cards.push([k, dup ? 1 : 0, dup ? 11 : have + 1]); } packs.push(cards); }
       const chips = { d: (cv.d || 0) - (pil ? 0 : price) + gold * 10, r: (cv.r || 0) - (pil ? price : 0) };
-      if (await commit([{ update: { name: ud.name, fields: { chipsV: fsv(chips), dex: fsv(dex) } }, updateMask: { fieldPaths: ['chipsV', 'dex'] }, currentDocument: { updateTime: ud.updateTime } }])) return out(200, { ok: true, packs, chips, gold, dex });
+      const day = dayUse(ud.f, 'pk', pil ? 0 : price, pil ? price : 0, gold * 10, 0);
+      if (await commit([{ update: { name: ud.name, fields: { chipsV: fsv(chips), dex: fsv(dex), chipDay: fsv(day) } }, updateMask: { fieldPaths: ['chipsV', 'dex', 'chipDay'] }, currentDocument: { updateTime: ud.updateTime } }])) return out(200, { ok: true, packs, chips, gold, dex });
     }
     return out(409, { ok: false, error: 'busy' });
   }
@@ -495,8 +499,8 @@ async function raid(req, env, out) {
         if (!k) tix.push(['']); else if (k === 'r') { r++; tix.push(['r']); } else if (k[0] === 'g') { d += 10 * +k.slice(1); tix.push([k]); }
         else { const tv = TVT[k]; let pool = Object.keys(RAID_NK).filter((c) => +RAID_NK[c][4] === tv); if (!pool.length) pool = Object.keys(RAID_NK); const rr = tabsRng(pt.s ^ Math.imul(idx + 1, 2654435761)), code = pool[Math.floor(rr() * pool.length)], have = Math.min(11, (+LK[code] || 0) + (+dex[code] || 0)), dup = have >= 11;
           if (dup) d += 10 * DUPG[tv]; else dex[code] = (+dex[code] || 0) + 1; tix.push([k, code, dup ? 1 : 0, dup ? 11 : have + 1]); } }
-      pt = { s: pt.s, i: pt.i + n }; const chips = { d, r };
-      if (await commit([{ update: { name: ud.name, fields: { chipsV: fsv(chips), dex: fsv(dex), pt: fsv(pt) } }, updateMask: { fieldPaths: ['chipsV', 'dex', 'pt'] }, currentDocument: { updateTime: ud.updateTime } }])) return out(200, { ok: true, tix, chips, dex, left: leftOf(pt.i) });
+      pt = { s: pt.s, i: pt.i + n }; const chips = { d, r }, day = dayUse(ud.f, 'tb', 10 * n, 0, d - ((cv.d || 0) - 10 * n), r - (cv.r || 0));
+      if (await commit([{ update: { name: ud.name, fields: { chipsV: fsv(chips), dex: fsv(dex), pt: fsv(pt), chipDay: fsv(day) } }, updateMask: { fieldPaths: ['chipsV', 'dex', 'pt', 'chipDay'] }, currentDocument: { updateTime: ud.updateTime } }])) return out(200, { ok: true, tix, chips, dex, left: leftOf(pt.i) });
     }
     return out(409, { ok: false, error: 'busy' });
   }
@@ -505,7 +509,7 @@ async function raid(req, env, out) {
     for (let attempt = 0; attempt < 3; attempt++) {
       const ud = await getDoc('users/' + uid); if (!ud) return out(404, { ok: false, error: 'nouser' }); const cv = ud.f.chipsV || { d: 0, r: 0 };
       if (B.start) { if ((cv.d || 0) < 10) return out(409, { ok: false, error: 'chips' }); const seed = crypto.getRandomValues(new Uint32Array(1))[0], chips = { d: cv.d - 10, r: cv.r || 0 };
-        if (await commit([{ update: { name: ud.name, fields: { chipsV: fsv(chips), g48: fsv({ s: seed, t: now }) } }, updateMask: { fieldPaths: ['chipsV', 'g48'] }, currentDocument: { updateTime: ud.updateTime } }])) return out(200, { ok: true, seed, chips }); continue; }
+        if (await commit([{ update: { name: ud.name, fields: { chipsV: fsv(chips), g48: fsv({ s: seed, t: now }), chipDay: fsv(dayUse(ud.f, 'g4', 10, 0, 0, 0)) } }, updateMask: { fieldPaths: ['chipsV', 'g48', 'chipDay'] }, currentDocument: { updateTime: ud.updateTime } }])) return out(200, { ok: true, seed, chips }); continue; }
       const gm = ud.f.g48; if (!gm || gm.s == null) return out(409, { ok: false, error: 'nogame' });
       const rr = tabsRng(gm.s), c = Array(16).fill(0), sp = () => { const e = []; for (let i = 0; i < 16; i++) if (!c[i]) e.push(i); if (!e.length) return; const i = e[Math.floor(rr() * e.length)]; c[i] = rr() < 0.9 ? 1 : 2; };
       const LN = { L: [0, 1, 2, 3].map((r) => [0, 1, 2, 3].map((q) => r * 4 + q)), R: [0, 1, 2, 3].map((r) => [3, 2, 1, 0].map((q) => r * 4 + q)), U: [0, 1, 2, 3].map((q) => [0, 1, 2, 3].map((r) => r * 4 + q)), D: [0, 1, 2, 3].map((q) => [3, 2, 1, 0].map((r) => r * 4 + q)) };
@@ -513,7 +517,7 @@ async function raid(req, env, out) {
       for (const ch of mv) { const L = LN[ch]; if (!L) continue; let moved = false; L.forEach((ln) => { const t = ln.map((i) => c[i]).filter(Boolean), o = []; for (let i = 0; i < t.length; i++) { if (i + 1 < t.length && t[i] === t[i + 1]) { o.push(t[i] + 1); i++; } else o.push(t[i]); } ln.forEach((ci, k) => { const nv = o[k] || 0; if (nv !== c[ci]) moved = true; c[ci] = nv; }); }); if (moved) sp(); }
       const mx = Math.max.apply(null, c); let rw = [0, 0]; Object.keys(REW).forEach((k) => { if (mx >= +k) rw = REW[k]; });
       const chips = { d: (cv.d || 0) + rw[0], r: (cv.r || 0) + rw[1] };
-      if (await commit([{ update: { name: ud.name, fields: { chipsV: fsv(chips), g48: fsv(null) } }, updateMask: { fieldPaths: ['chipsV', 'g48'] }, currentDocument: { updateTime: ud.updateTime } }])) return out(200, { ok: true, max: mx, d: rw[0], r: rw[1], chips });
+      if (await commit([{ update: { name: ud.name, fields: { chipsV: fsv(chips), g48: fsv(null), chipDay: fsv(dayUse(ud.f, 'g4', 0, 0, rw[0], rw[1])) } }, updateMask: { fieldPaths: ['chipsV', 'g48', 'chipDay'] }, currentDocument: { updateTime: ud.updateTime } }])) return out(200, { ok: true, max: mx, d: rw[0], r: rw[1], chips });
     }
     return out(409, { ok: false, error: 'busy' });
   }
@@ -526,7 +530,7 @@ async function raid(req, env, out) {
       ids.forEach((x) => { if (ach[x]) return; ach[x] = 1; got.push(x); d += ACH_RW[x][0]; r += ACH_RW[x][1]; });
       const chips = { d, r };
       if (!got.length) return out(200, { ok: true, got, ach: Object.keys(ach), chips });
-      if (await commit([{ update: { name: ud.name, fields: { chipsV: fsv(chips), ach: fsv(ach) } }, updateMask: { fieldPaths: ['chipsV', 'ach'] }, currentDocument: { updateTime: ud.updateTime } }])) return out(200, { ok: true, got, ach: Object.keys(ach), chips });
+      if (await commit([{ update: { name: ud.name, fields: { chipsV: fsv(chips), ach: fsv(ach), chipDay: fsv(dayUse(ud.f, 'ac', 0, 0, d - (cv.d || 0), r - (cv.r || 0))) } }, updateMask: { fieldPaths: ['chipsV', 'ach', 'chipDay'] }, currentDocument: { updateTime: ud.updateTime } }])) return out(200, { ok: true, got, ach: Object.keys(ach), chips });
     }
     return out(409, { ok: false, error: 'busy' });
   }
@@ -542,7 +546,7 @@ async function raid(req, env, out) {
       const balls = []; let win = 0, wr = 0;
       for (let i = 0; i < n; i++) { let k = 0; for (let q = 0; q < rows; q++) if (Math.random() < 0.5) k++; const x = val * tb[k], pay = Math.floor(x) + (Math.random() < x - Math.floor(x) ? 1 : 0); const dr = k === 0 || k === rows ? Math.max(1, Math.round(val * Math.pow(2, rows - 1) / 4000)) : 0; /* 끝 칸: DORO칩 반드시 지급(4,000당 1개꼴, 최소 1 → 싱크칩 1·실버 3·골드 5) */ win += pay; wr += dr; balls.push([k, pay, dr]); }
       const chips = { d: (cv.d || 0) - cost + win, r: (cv.r || 0) + wr };
-      if (await commit([{ update: { name: ud.name, fields: { chipsV: fsv(chips) } }, updateMask: { fieldPaths: ['chipsV'] }, currentDocument: { updateTime: ud.updateTime } }])) return out(200, { ok: true, balls, chips });
+      if (await commit([{ update: { name: ud.name, fields: { chipsV: fsv(chips), chipDay: fsv(dayUse(ud.f, 'pl', cost, 0, win, wr)) } }, updateMask: { fieldPaths: ['chipsV', 'chipDay'] }, currentDocument: { updateTime: ud.updateTime } }])) return out(200, { ok: true, balls, chips });
     }
     return out(409, { ok: false, error: 'busy' });
   }
@@ -615,7 +619,7 @@ async function raid(req, env, out) {
     if (a === 'hint') { /* 추천 보기: 싱크칩 100 */
       const ud = await getDoc('users/' + uid), cv = (ud && ud.f.chipsV) || { d: 0, r: 0 }; if (!ud || (cv.d || 0) < 100) return out(409, { ok: false, error: 'chips' });
       const chips = cv.d - 100;
-      if (await commit([{ update: { name: ud.name, fields: { chipsV: fsv({ d: chips, r: cv.r || 0 }) } }, updateMask: { fieldPaths: ['chipsV'] }, currentDocument: { updateTime: ud.updateTime } }])) return out(200, { ok: true, chips });
+      if (await commit([{ update: { name: ud.name, fields: { chipsV: fsv({ d: chips, r: cv.r || 0 }), chipDay: fsv(dayUse(ud.f, 'rd', 100, 0, 0, 0)) } }, updateMask: { fieldPaths: ['chipsV', 'chipDay'] }, currentDocument: { updateTime: ud.updateTime } }])) return out(200, { ok: true, chips });
       continue;
     }
     if (a === 'discard') {
@@ -627,7 +631,7 @@ async function raid(req, env, out) {
       const g2 = Object.assign({}, g, { hand: hand.filter((k) => !pick.includes(k)).concat(got).join(','), deck: deck.join(','), rd: g.rd - 1 });
       const writes = [save({ g: g2 }, ['g'])]; let chips;
       if (cost) { const ud = await getDoc('users/' + uid), cv = (ud && ud.f.chipsV) || { d: 0, r: 0 }; if ((cv.d || 0) < cost) return out(409, { ok: false, error: 'chips' });
-        chips = cv.d - cost; writes.push({ update: { name: ud.name, fields: { chipsV: fsv({ d: chips, r: cv.r || 0 }) } }, updateMask: { fieldPaths: ['chipsV'] }, currentDocument: { updateTime: ud.updateTime } }); }
+        chips = cv.d - cost; writes.push({ update: { name: ud.name, fields: { chipsV: fsv({ d: chips, r: cv.r || 0 }), chipDay: fsv(dayUse(ud.f, 'rd', cost, 0, 0, 0)) } }, updateMask: { fieldPaths: ['chipsV', 'chipDay'] }, currentDocument: { updateTime: ud.updateTime } }); }
       if (await commit(writes)) return out(200, view(g2, { got: got.map((k) => [k, g.cnt[k] || 1]), chips }));
       continue;
     }
