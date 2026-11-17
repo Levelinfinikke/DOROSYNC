@@ -166,7 +166,7 @@
 .pp-ov{background:none}.pp-bgd{position:absolute;inset:0;background:radial-gradient(circle at 50% 44%,#232a3a,#0a0c12 62%,#030406)}
 svg.pp-top,svg.pp-bot{display:block;overflow:visible;position:absolute;left:0;width:100%;z-index:3}svg.pp-top{top:0;height:13%}svg.pp-bot{bottom:0;height:6.5%}
 .pp-top .sd,.pp-bot .sd{fill:var(--cs)}.pp-top .hl,.pp-bot .hl{fill:#0b0d12;stroke:rgba(255,255,255,.4);stroke-width:.5}
-.pp-gap{position:absolute;left:1.5%;right:1.5%;height:5%;background:linear-gradient(#000,#15181d);z-index:1}.pp-gap.t{top:9%}.pp-gap.b{bottom:3%}
+
 .pp-body{z-index:2;border-top:2px dashed rgba(255,255,255,.75);border-bottom:2px dashed rgba(255,255,255,.75)}
 svg.pp-strap{display:block;position:absolute;inset:0;width:100%;height:100%;overflow:visible;z-index:3;filter:drop-shadow(0 0 2px rgba(0,0,0,.6))}
 .pp-seam{display:block!important;border-left:2px dashed rgba(255,255,255,.75);z-index:2}
@@ -233,7 +233,7 @@ svg.pp-strap{display:block;position:absolute;inset:0;width:100%;height:100%;over
   const packHtml = (k) => { const d = data(), ico = k.co && d.coIco && d.coIco[k.co];
     const STAR = '<svg class="pp-star" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l3 6.6 7.1.8-5.3 4.9 1.5 7L12 17.7 5.7 21.3l1.5-7L1.9 9.4 9 8.6z" fill="#ffd23d" stroke="#7a4a00" stroke-width="1.4" stroke-linejoin="round"/></svg>';
     const face = k.bo ? '<i class="pp-cv" style="background-image:url(&quot;' + esc(k.cover) + '&quot;)"></i><div class="pp-frame"></div><div class="pp-ttl bo"><small>DOROSYNC</small>PICK' + STAR + 'UP<br>BOOSTER PACK</div><div class="pp-ring bo"><i style="background-image:url(&quot;' + esc(k.face) + '&quot;)"></i></div>' : '<div class="pp-frame"></div><div class="pp-ttl"><small>DOROSYNC</small>' + (k.r ? 'PILGRIM' : k.co ? 'CORP' : 'NIKKE') + '<br>CARD PACK</div><div class="pp-ring">' + chip(k.r ? 'r' : 'b', 120) + '</div>' + (ico ? '<img class="pp-co" alt="" src="' + ico + '">' : '') + '<div class="pp-n">5 CARDS<br>' + esc(k.nm) + '</div>';
-    return '<div class="pp-wrap"><div class="pp' + (k.r ? ' pil' : '') + (k.bo ? ' bo' : '') + '" style="--c1:' + k.c1 + ';--c2:' + k.c2 + '"><div class="pp-f"><div class="pp-all"><i class="pp-gap t"></i><i class="pp-gap b"></i>' + bandSvg('top') + '<div class="pp-body pp-skin">' + face + '<i class="pp-vinyl"></i></div>' + bandSvg('bot') + '</div></div><div class="pp-b"><div class="pp-in"></div><div class="pp-all"><div class="pp-h l pp-skin"><b class="pp-bsl"></b><b class="pp-bsl b"></b></div><div class="pp-h r pp-skin"><b class="pp-bsl"></b><b class="pp-bsl b"></b></div></div><div class="pp-seam"></div>' + strapSvg() + '<div class="pp-tab">스트랩 ↕</div></div></div></div>'; };
+    return '<div class="pp-wrap"><div class="pp' + (k.r ? ' pil' : '') + (k.bo ? ' bo' : '') + '" style="--c1:' + k.c1 + ';--c2:' + k.c2 + '"><div class="pp-f"><div class="pp-all">' + bandSvg('top') + '<div class="pp-body pp-skin">' + face + '<i class="pp-vinyl"></i></div>' + bandSvg('bot') + '</div></div><div class="pp-b"><div class="pp-in"></div><div class="pp-all"><div class="pp-h l pp-skin"><b class="pp-bsl"></b><b class="pp-bsl b"></b></div><div class="pp-h r pp-skin"><b class="pp-bsl"></b><b class="pp-bsl b"></b></div></div><div class="pp-seam"></div>' + strapSvg() + '<div class="pp-tab">스트랩 ↕</div></div></div></div>'; };
   function shop() {
     syncKinds();
     const o = window.doroChips ? window.doroChips.get() : { r: 0 }, bal = window.doroChips ? window.doroChips.total() : 0;
