@@ -402,7 +402,7 @@ async function chipsClaim(req, env, out) {
 /* ================= 포커레이드 =================
  * 카드는 서버가 뽑음: 덱 순서·손패는 서버 문서(raid_시즌/계정)에만 있고, 사이트는 고른 카드 코드만 보냄.
  * 덱 = 블라블라링크에서 서버가 직접 읽은 보유 SSR(명함 1 + 돌파 + 코강) + 계정 문서 dex(웹에서 얻은 카드), 니케당 최대 11장.
- * 점수 = 칩 합계 × 배수 합계 × 버스트 보정(우월코드 칩 +2, 3버스트 우월코드 +5). 하루(한국 시간) 3회, 시작하는 순간 1회 차감. 진행 중인 판은 다시 들어와도 그대로 이어짐.
+ * 점수 = 칩 합계 × 배수 합계 × 버스트 보정(우월코드 칩 +2, 3버스트 우월코드 +5). 돌파·코강 장당 칩 +1. 버리기는 도감 25%마다 1회(최대 3), 필터는 한 판에 한 번·조건 1개·장당 500. 하루(한국 시간) 3회, 시작하는 순간 1회 차감. 진행 중인 판은 다시 들어와도 그대로 이어짐.
  * RAID_OPEN이 false면 관리자만 사용할 수 있음(미공개). */
 const RAID_OPEN = true, RAID_TRIES = 3;
 const RAID_NK0 = {"1007":["엘리시온","풍","SMG",3,3],"1010":["미실리스","철","RL",3,6],"1012":["테트라","작","SR",1,5],"1019":["미실리스","풍","AR",3,5],"1020":["미실리스","철","RL",1,2],"1021":["테트라","전","AR",1,8],"1022":["테트라","수","SG",2,5],"3004":["테트라","작","RL",1,3],"5001":["미실리스","철","SR",3,6],"5002":["테트라","철","SG",3,7],"5003":["테트라","전","SR",1,5],"5004":["테트라","작","SR",3,7],"5005":["엘리시온","작","MG",1,1],"5006":["미실리스","작","RL",2,1],"5007":["엘리시온","수","AR",3,8],"5008":["테트라","풍","AR",2,6],"5009":["테트라","풍","SG",3,5],"5010":["테트라","철","SR",1,4],"5011":["미실리스","철","SMG",1,7],"5012":["필그림","철","AR",3,7],"5013":["필그림","전","SG",3,7],"5014":["미실리스","철","AR",3,5],"5015":["엘리시온","작","SMG",2,1],"5016":["엘리시온","수","SG",2,4],"5017":["엘리시온","작","SMG",1,7],"5018":["엘리시온","수","AR",3,1],"5019":["엘리시온","철","SMG",3,4],"5020":["엘리시온","풍","MG",2,4],"5021":["미실리스","철","RL",2,6],"5022":["엘리시온","수","RL",3,2],"5023":["엘리시온","작","SR",2,1],"5024":["미실리스","작","SG",3,7],"5025":["미실리스","작","SMG",3,2],"5026":["테트라","수","SG",1,1],"5027":["미실리스","풍","SG",1,3],"5028":["테트라","수","SR",1,3],"5029":["테트라","작","SR",3,4],"5030":["미실리스","풍","SR",2,3],"5031":["엘리시온","전","MG",3,4],"5032":["엘리시온","전","SG",3,3],"5033":["테트라","수","SMG",1,2],"5034":["테트라","철","AR",2,3],"5035":["테트라","작","RL",1,2],"5036":["테트라","풍","SR",2,5],"5037":["테트라","철","SMG",2,4],"5038":["미실리스","풍","SMG",3,3],"5039":["테트라","수","AR",2,3],"5040":["필그림","철","RL",1,5],"5041":["필그림","전","AR",3,5],"5042":["필그림","전","SR",3,1],"5043":["필그림","풍","RL",2,3],"5044":["필그림","작","MG",3,5],"5045":["테트라","전","MG",1,6],"5046":["테트라","풍","AR",2,3],"5048":["엘리시온","철","SG",2,5],"5049":["테트라","전","SR",1,7],"5050":["테트라","작","SR",1,3],"5051":["테트라","작","MG",1,2],"5053":["미실리스","작","MG",3,1],"5054":["테트라","전","RL",2,4],"5055":["미실리스","풍","SG",2,5],"5056":["필그림","작","SR",2,2],"5059":["미실리스","전","AR",2,2],"5061":["필그림","수","AR",1,5],"5064":["테트라","수","SR",1,4],"5065":["필그림","철","MG",2,9],"5066":["엘리시온","수","SR",3,7],"5068":["테트라","작","SMG",2,2],"5069":["테트라","수","SMG",1,1],"5070":["테트라","수","MG",2,3],"5071":["엘리시온","수","MG",3,2],"5074":["테트라","전","RL",1,5],"5075":["테트라","풍","SMG",1,6],"5077":["미실리스","전","SR",3,6],"5078":["미실리스","전","SMG",2,3],"5079":["엘리시온","전","SMG",2,4],"5081":["미실리스","수","AR",1,7],"5082":["엘리시온","풍","RL",3,2],"5085":["미실리스","풍","RL",2,3],"5087":["테트라","전","AR",1,2],"5088":["엘리시온","전","SG",1,7],"5089":["어브노멀","수","SMG",2,2],"5090":["어브노멀","작","RL",3,3],"5092":["테트라","수","SG",2,5],"5094":["어브노멀","작","AR",3,4],"5095":["어브노멀","작","RL",3,4],"5097":["테트라","전","SG",3,7],"5098":["엘리시온","철","AR",2,6],"5099":["미실리스","전","SG",2,6],"5100":["미실리스","철","RL",1,6],"5101":["필그림","철","SR","A",7],"5102":["필그림","철","AR",3,4],"5103":["테트라","수","MG",3,7],"5104":["테트라","철","SMG",1,5],"5105":["필그림","풍","RL",3,8],"5106":["엘리시온","전","SG",3,5],"5107":["미실리스","전","MG",2,4],"5108":["어브노멀","수","MG",2,5],"5109":["어브노멀","수","RL",3,4],"5110":["엘리시온","작","SR",1,6],"5111":["테트라","작","RL",2,3],"5112":["미실리스","작","SR",3,3],"5113":["테트라","철","SG",3,6],"5114":["테트라","수","SMG",1,5],"5115":["테트라","전","SMG",2,5],"5116":["테트라","풍","AR",2,6],"5117":["테트라","풍","AR",3,5],"5118":["어브노멀","작","AR",3,5],"5119":["어브노멀","작","MG",3,6],"5120":["어브노멀","전","SR",2,6],"5121":["미실리스","수","SMG",3,6],"5122":["엘리시온","수","AR",3,6],"5123":["필그림","철","SR",1,3],"5124":["필그림","전","RL",3,8],"5125":["필그림","작","AR",2,7],"5126":["미실리스","전","MG",2,8],"5127":["엘리시온","전","RL",3,7],"5128":["엘리시온","수","AR",3,6],"5129":["엘리시온","작","MG",3,9],"5130":["엘리시온","수","MG",2,8],"5131":["엘리시온","수","RL",2,7],"5132":["어브노멀","풍","AR",3,6],"5133":["어브노멀","풍","MG",3,7],"5134":["미실리스","전","RL",2,5],"5135":["테트라","수","SR",3,6],"5136":["테트라","수","RL",2,5],"5137":["필그림","풍","SMG",1,8],"5138":["미실리스","작","MG",3,8],"5139":["미실리스","풍","AR",2,2],"5140":["엘리시온","전","RL",2,7],"5141":["엘리시온","전","SMG",3,4],"5142":["어브노멀","철","AR",3,6],"5143":["어브노멀","철","RL",3,7],"5144":["엘리시온","풍","RL",1,3],"5145":["필그림","수","SG",3,8],"5146":["미실리스","수","MG",3,7],"5147":["엘리시온","작","MG",1,6],"5148":["엘리시온","작","RL",3,5],"5149":["엘리시온","작","SR",2,6],"5150":["테트라","철","SR",3,7],"5151":["테트라","철","SR",2,7],"5152":["어브노멀","전","RL",3,7],"5153":["어브노멀","전","AR",3,5],"5154":["엘리시온","수","MG",2,5],"5155":["필그림","풍","SMG",2,8],"5156":["필그림","풍","SR",3,8],"5157":["필그림","철","SMG",2,5],"5158":["엘리시온","수","SG",1,6],"5159":["엘리시온","작","RL",3,8],"5160":["엘리시온","작","SG",2,7],"5161":["필그림","수","SR",3,9],"5162":["엘리시온","철","AR",1,5],"5163":["테트라","풍","SR",2,7],"5164":["어브노멀","철","SMG",3,6],"5165":["어브노멀","철","SR",2,6],"5166":["엘리시온","풍","SMG",3,5],"5167":["엘리시온","작","SG",2,7],"5168":["미실리스","수","SR",2,3],"5169":["테트라","전","RL",1,9],"5170":["미실리스","전","RL",3,8],"5171":["엘리시온","전","MG",1,4],"5172":["테트라","철","RL",2,8],"5173":["테트라","수","SR",2,8],"5174":["테트라","풍","AR",3,6],"5175":["필그림","철","MG",3,9],"5176":["엘리시온","철","AR",3,6],"5177":["미실리스","풍","RL",3,7],"5178":["미실리스","풍","SR",2,6],"5179":["어브노멀","작","SG",3,6],"5180":["어브노멀","작","MG",3,7],"5181":["미실리스","풍","SG",3,7],"5182":["미실리스","수","SR",3,6],"5183":["미실리스","수","SR",3,6],"5184":["테트라","수","RL",2,6],"5185":["필그림","작","MG",3,9],"5186":["필그림","작","AR",3,9],"5187":["필그림","작","RL",2,6]}; /* 코드: [기업, 우월코드, 총기, 버스트, 티어 점수] (js/app.js 기본 솔레 티어에서 생성) */
@@ -413,18 +413,18 @@ let RAID_NK = RAID_NK0, RAID_TVK = ''; /* 실제로 쓰는 표: 관리 탭의 �
 const RAID_SETS = []; /* 세트 니케(둘 다 편성하면 배수 +2): 지금은 끔. 예: [['5130', '5131'], ['5172', '5173'], ['5008', '5009'], ['5140', '5013'], ['5180', '5179']] */
 const R_CYC = ['작', '풍', '철', '전', '수'], R_RNG = { NEAR: ['SG', 'SMG'], MID: ['AR', 'MG'], FAR: ['SR'] };
 const rSup = (e) => R_CYC[(R_CYC.indexOf(e) + 4) % 5];
-const rBrk = (cnt) => Math.min(3, Math.max(0, cnt - 1)) + (cnt >= 11 ? 2 : 0);
+const rBrk = (cnt) => Math.min(10, Math.max(0, cnt - 1)); /* 돌파·코강 한 장당 +1(풀코강 11장 = +10) */
 function rHand(vals) {
   const n = vals.length; if (!n) return 0; const m = {}; vals.forEach((v) => { m[v] = (m[v] || 0) + 1; });
   const c = Object.values(m).sort((a, b) => b - a), a = c[0], b = c[1] || 0;
-  if (a === 5) return 8; if (a === 4) return 7; if (a === 3 && b === 2) return 6; if (a === 3) return 4; if (a === 2 && b === 2) return 3; if (a === 2) return 2; return n === 5 ? 5 : 1;
+  if (a === 5) return 11; if (a === 4) return 8; if (a === 3 && b === 2) return 6; if (a === 3) return 4; if (a === 2 && b === 2) return 3; if (a === 2) return 2; return n === 5 ? 3 : 1; /* 배수: 하이카드 1 · 페어 2 · 투페어 3 · 스트레이트(전부 다름) 3 · 트리플 4 · 풀하우스 6 · 포카드 8 · 플러시(전부 같음) 11 */
 }
 function rEval(codes, cnt, boss) {
   const sp = rSup(boss.e); let chips = 0; const bs = new Set();
   const D = codes.map((k) => RAID_NK[k]);
   D.forEach((x, i) => { chips += x[4] + rBrk(cnt[codes[i]] || 1) + (R_RNG[boss.r].includes(x[2]) ? 2 : x[2] === 'RL' ? 1 : 0) + (x[1] === sp ? (x[3] === 3 || x[3] === 'A' ? 5 : 2) : 0); bs.add(x[3]); }); /* 우월코드 +2, 3버스트 우월코드 +5 */
   const hc = rHand(D.map((x) => x[0])), he = rHand(D.map((x) => x[1]));
-  const mult = ((hc === 8 && he === 5) || (hc === 5 && he === 8) ? 13 : hc + he) + 2 * RAID_SETS.filter((p) => codes.includes(p[0]) && codes.includes(p[1])).length;
+  const mult = hc + he + 2 * RAID_SETS.filter((p) => codes.includes(p[0]) && codes.includes(p[1])).length;
   const n123 = [1, 2, 3].filter((b) => bs.has(b)).length, f = n123 === 3 || (bs.has('A') && n123 >= 2) ? 1 : 0.8;
   return { chips, mult, f, score: Math.round(chips * mult * f) };
 }
@@ -580,7 +580,7 @@ async function raid(req, env, out) {
     const my = await getDoc(col + '/' + uid), f = my ? my.f : {};
     const n = f.day === today ? (f.n || 0) : 0, g = f.g && f.g.hand ? f.g : null;
     const mx = RAID_TRIES + (f.x1 ? 1 : 0); /* 도감 100%: 하루 핸드 +1 */
-    const view = (g2, extra) => Object.assign({ ok: true, season, admin, tries: n, max: mx, best: f.sc || 0, game: g2 ? { hand: rList(g2.hand).map((k) => [k, g2.cnt[k] || 1]), rd: g2.rd, left: rList(g2.deck).length, pool: rList(g2.deck).sort().map((k) => [k, g2.cnt[k] || 1]), total: g2.total } : null }, extra || {});
+    const view = (g2, extra) => Object.assign({ ok: true, season, admin, tries: n, max: mx, best: f.sc || 0, game: g2 ? { hand: rList(g2.hand).map((k) => [k, g2.cnt[k] || 1]), rd: g2.rd, fu: g2.fu ? 1 : 0, left: rList(g2.deck).length, pool: rList(g2.deck).sort().map((k) => [k, g2.cnt[k] || 1]), total: g2.total } : null }, extra || {});
     const pre = my ? { updateTime: my.updateTime } : { exists: false };
     const save = (fields, mask) => ({ update: { name: docName(col + '/' + uid), fields: fsv(fields).mapValue.fields }, updateMask: { fieldPaths: mask }, currentDocument: pre });
     if (a === 'state') { const ud = await getDoc('users/' + uid); let fr = (ud && ud.f.raidFrames) || {}, newFrame = 0;
@@ -607,7 +607,7 @@ async function raid(req, env, out) {
       { const gb = ud && ud.f.g48b, gm = gb && gb.sid === sn.id ? gb.m || (gb.code ? { [gb.code]: gb.v } : {}) : {}; Object.keys(gm).forEach((k) => { if (RAID_NK[k]) cnt[k] = Math.max(cnt[k] || 0, Math.min(11, Math.floor(+gm[k] || 0))); }); } /* 2048에서 합성한 픽업 니케 단계(이번 시즌만) */
       const codes = Object.keys(cnt).filter((k) => cnt[k] > 0); if (codes.length < 7) return out(409, { ok: false, error: 'deck', have: codes.length });
       rShuffle(codes);
-      const NKN = Object.keys(RAID_NK).length, x1 = codes.length >= NKN ? 1 : 0, rd = 1 + Math.min(3, Math.floor(codes.length / NKN * 4)); /* 버리기: 기본 1, 도감 25%마다 +1(최대 4). 100%는 하루 핸드 +1 */
+      const NKN = Object.keys(RAID_NK).length, x1 = codes.length >= NKN ? 1 : 0, rd = Math.min(3, Math.floor(codes.length / NKN * 4)); /* 버리기: 기본 0, 도감 25%마다 +1(최대 3). 100%는 하루 핸드 +1 */
       const g2 = { hand: codes.slice(0, 7).join(','), deck: codes.slice(7).join(','), cnt, rd, total: codes.length, t: now };
       const nick = String((ud && (ud.f.nickname || ud.f.username)) || '').slice(0, 24);
       const pf = String(B.pf || '').replace(/\D/g, '').slice(0, 6), rf = (ud && ud.f.raidFrames) || {}, fm = String(B.fr || '').match(/^([0-9a-zA-Z-]{1,20}):([123])$/), fr = fm ? (+rf[fm[1]] === +fm[2] ? fm[0] : 0) : [1, 2, 3].includes(+B.fr) && Object.values(rf).map(Number).includes(+B.fr) ? +B.fr : 0; /* 랭킹에 보일 프로필 니케·테두리(가진 테두리만) */
@@ -624,11 +624,12 @@ async function raid(req, env, out) {
     }
     if (a === 'discard') {
       if (pick.length < 1 || pick.length > 5 || g.rd < 1) return out(400, { ok: false, error: 'bad' });
-      const fl = B.flt || {}, conds = ['e', 'c', 'b', 'r'].filter((k) => fl[k]), cost = conds.length ? 100 * Math.pow(2, conds.length - 1) * (fl.c === '필그림' ? 2 : 1) : 0; /* 필그림 지정은 2배 */
+      const fl = B.flt || {}, conds = ['e', 'c', 'b', 'r'].filter((k) => fl[k]); if (conds.length > 1 || (conds.length && g.fu)) return out(400, { ok: false, error: 'bad' }); /* 필터: 한 판에 한 번, 조건 1개 */
+      const cost = conds.length ? 500 * pick.length * (fl.c === '필그림' ? 2 : 1) : 0; /* 버리는 카드 한 장당 500(필그림 지정 1,000) */
       const match = (k) => { const x = RAID_NK[k]; return (!fl.e || x[1] === fl.e) && (!fl.c || x[0] === fl.c) && (!fl.b || String(x[3]) === String(fl.b) || x[3] === 'A') && (!fl.r || (R_RNG[fl.r] || []).includes(x[2])); };
       const deck = rList(g.deck), got = [];
       for (let i = 0; i < pick.length && deck.length; i++) { let j = cost ? deck.findIndex(match) : 0; if (j < 0) j = 0; got.push(deck.splice(j, 1)[0]); }
-      const g2 = Object.assign({}, g, { hand: hand.filter((k) => !pick.includes(k)).concat(got).join(','), deck: deck.join(','), rd: g.rd - 1 });
+      const g2 = Object.assign({}, g, { hand: hand.filter((k) => !pick.includes(k)).concat(got).join(','), deck: deck.join(','), rd: g.rd - 1 }, cost ? { fu: 1 } : {});
       const writes = [save({ g: g2 }, ['g'])]; let chips;
       if (cost) { const ud = await getDoc('users/' + uid), cv = (ud && ud.f.chipsV) || { d: 0, r: 0 }; if ((cv.d || 0) < cost) return out(409, { ok: false, error: 'chips' });
         chips = cv.d - cost; writes.push({ update: { name: ud.name, fields: { chipsV: fsv({ d: chips, r: cv.r || 0 }), chipDay: fsv(dayUse(ud.f, 'rd', cost, 0, 0, 0)) } }, updateMask: { fieldPaths: ['chipsV', 'chipDay'] }, currentDocument: { updateTime: ud.updateTime } }); }

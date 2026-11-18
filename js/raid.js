@@ -1,7 +1,7 @@
 /* 포커레이드 (관리자 전용·미공개)
    점수 = 칩 합계 × 배수 합계 × 버스트 보정
-   칩(니케별): 티어 9~1 · 돌파 별당 +1, 풀코강 +2(최대 +5) · 적정 사거리 +2(RL +1) · 우월코드 +2(3버스트 니케는 +5)
-   배수: 족보 1~8을 기업·우월코드에서 각각 계산해 더함 · 스트레이트 플러시(한쪽 플러시 + 다른 쪽 스트레이트) +13
+   칩(니케별): 티어 9~1 · 돌파·코강 한 장당 +1(풀코강 +10) · 적정 사거리 +2(RL +1) · 우월코드 +2(3버스트 니케는 +5)
+   배수: 족보(하이카드 1 · 페어 2 · 투페어 3 · 스트레이트 3 · 트리플 4 · 풀하우스 6 · 포카드 8 · 플러시 11)를 기업·우월코드에서 각각 계산해 더함
    버스트 보정: 1·2·3버스트가 다 있으면 ×1, 아니면 ×0.8
    모드: 테스트 덱·내 도감 덱(이 브라우저가 카드를 뽑는 연습) / 실전(서버가 카드를 뽑고 점수·랭킹을 기록: server/dorosync-worker.js /raid) */
 (function () {
@@ -20,7 +20,8 @@
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const fmt = (n) => Math.round(n).toLocaleString('ko-KR');
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms)), slow = (ms) => sleep(ms * SLOW);
-  const brkChip = (cnt) => Math.min(3, Math.max(0, cnt - 1)) + (cnt >= 11 ? 2 : 0);
+  const brkChip = (cnt) => Math.min(10, Math.max(0, cnt - 1)); /* 돌파·코강 한 장당 +1 */
+  const HM = { 0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 3, 6: 6, 7: 8, 8: 11 }, HORD = [1, 2, 3, 5, 4, 6, 7, 8]; /* 족보 번호 → 배수, 표에 적는 순서 */
   const BEST_K = 'dorosync-raid-sian', SND_K = 'dorosync-raid-snd', PROD = /github\.io$/.test(location.hostname); /* 배포 사이트: 효과음 버튼 없이 항상 켬 */
   const SETS = []; /* 세트 니케(둘 다 편성하면 배수 +2): 지금은 끔(서버와 같게). 예: [['5130', '5131'], ['5172', '5173'], ['5008', '5009'], ['5140', '5013'], ['5180', '5179']] */
   const SLOW = 1 / 0.7 / 1.2; /* 정산 속도 */
@@ -396,7 +397,7 @@
       chips += v; return { v, parts: [['티어 ' + x.t, x.tv], ['돌파', k], [x.w === 'RL' ? '사거리(RL)' : '적정 사거리', r], [e === 5 ? '3버스트 우월코드' : '우월코드', e]] };
     });
     const hc = handRank(D.map((x) => x.c)), he = handRank(D.map((x) => x.e));
-    const steps = (hc === 8 && he === 5) || (hc === 5 && he === 8) ? [{ l: '스트레이트 플러시!', v: 13, big: 1, h: '<span class="rd-hl"><em style="color:#ffd24a">스트레이트 플러시</em></span>' }] : [{ l: '기업 ' + HN[hc], v: hc, h: handHtml(D, 'c', hc) }, { l: '우월코드 ' + HN[he], v: he, h: handHtml(D, 'e', he) }];
+    const steps = [{ l: '기업 ' + HN[hc], v: HM[hc], big: hc === 8 ? 1 : 0, h: handHtml(D, 'c', hc) }, { l: '우월코드 ' + HN[he], v: HM[he], big: he === 8 ? 1 : 0, h: handHtml(D, 'e', he) }];
     SETS.forEach((p) => { const a = D.find((x) => x.code === p[0]), b = D.find((x) => x.code === p[1]); if (a && b) steps.push({ l: '세트 니케', v: 2, h: '<span class="rd-hl"><em style="color:#8df0b0">세트</em> <small>' + esc(a.n.split(' : ')[0]) + ' + ' + esc(b.n.split(' : ')[0]) + '</small></span>' }); });
     const mult = D.length ? steps.reduce((a, s) => a + s.v, 0) : 0;
     const bs = new Set(D.map((x) => x.b)), n123 = [1, 2, 3].filter((b) => bs.has(b)).length, full = n123 === 3 || (bs.has('A') && n123 >= 2);
@@ -448,7 +449,7 @@
       const o = before[id]; if (!o) return; const d = loc(o[0] - n[0], o[1] - n[1]); if (Math.abs(d[0]) + Math.abs(d[1]) < 1) return;
       e.animate([{ transform: 'translate(' + d[0] + 'px,' + d[1] + 'px)' }, { transform: 'none' }], { duration: 300, easing: 'cubic-bezier(.3,1.35,.5,1)' }); });
   }
-  function fltCost() { const n = Object.values(S.flt).filter(Boolean).length; return n ? 100 * Math.pow(2, n - 1) * (S.flt.c === '필그림' ? 2 : 1) : 0; } /* 조건마다 2배, 필그림 지정은 다시 2배 */
+  const FLT_C = 500; function fltCost() { const n = Object.values(S.flt).filter(Boolean).length; return n && !S.fltUsed ? FLT_C * Math.max(1, S.sel.size) * (S.flt.c === '필그림' ? 2 : 1) : 0; } /* 필터: 한 판에 한 번, 조건 1개. 버리는 카드 한 장당 500(필그림 지정 1,000) */
   const poolNow = () => (S.mode === 'live' ? S.pool || [] : L.deck);
   let poolKey = '';
   function poolUi() { /* 지금 고른 필터로 나올 수 있는 니케 */
@@ -476,7 +477,7 @@
       for (let i = deck.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const t = deck[i]; deck[i] = deck[j]; deck[j] = t; }
       if (deck.length < 7) throw new Error('deck');
       L.deck = deck; const total = deck.length;
-      return { hand: L.deck.splice(0, 7), rd: S.mode === 'mine' ? 1 + Math.min(3, Math.floor(total / Math.max(1, d.list.length) * 4)) : 4, left: L.deck.length, total, tries: S.tries + 1, max: 3, chips: S.chips };
+      return { hand: L.deck.splice(0, 7), rd: S.mode === 'mine' ? Math.min(3, Math.floor(total / Math.max(1, d.list.length) * 4)) : 3, left: L.deck.length, total, tries: S.tries + 1, max: 3, chips: S.chips };
     },
     async discard(ids, flt, cost) { const got = []; for (let k = 0; k < ids.length && L.deck.length; k++) { let i = cost ? L.deck.findIndex(fltMatch) : 0; if (i < 0) i = 0; got.push(L.deck.splice(i, 1)[0]); } return { got, left: L.deck.length, chips: PROD ? S.chips : S.chips - cost }; }, /* 모의전은 실제 싱크칩을 쓰지 않음 */
     async play(ids) { const R = evalSquad(C(ids), S.boss), nb = R.score > best(); if (nb) { try { localStorage.setItem(BEST_K, String(R.score)); } catch (e) { /* 무시 */ } } return { score: R.score, newBest: nb, best: Math.max(best(), R.score) }; }
@@ -508,8 +509,8 @@
     dc.innerHTML = '버리기' + (cost ? ' <small>−' + fmt(cost) + '</small>' : '');
     $$('.rd-sort .rb').forEach((b) => { b.classList.toggle('org', b.dataset.s === S.sort); b.classList.toggle('gry', b.dataset.s !== S.sort); });
     $$('.rd-fg button').forEach((b) => b.classList.toggle('on', S.flt[b.dataset.k] === b.dataset.v));
-    $('.rd-fc').innerHTML = cost ? chipIco(14) + ' ' + fmt(cost) : '';
-    const fbn = $('[data-r=flt]'); fbn.classList.toggle('org', cost > 0); fbn.classList.toggle('gry', !cost); fbn.innerHTML = chipIco(15) + '필터' + (cost ? ' ✓' : '');
+    $('.rd-fc').innerHTML = S.fltUsed ? '<span style="color:#ff8a7a">이번 판에 이미 사용</span>' : cost ? chipIco(14) + ' ' + fmt(cost) + ' <small style="opacity:.75;font-weight:700">(' + Math.max(1, nsel) + '장 × ' + fmt(FLT_C * (S.flt.c === '필그림' ? 2 : 1)) + ')</small>' : '<small style="opacity:.75;font-weight:700">한 판에 한 번 · 조건 1개 · 장당 ' + fmt(FLT_C) + '</small>';
+    const fbn = $('[data-r=flt]'); fbn.classList.toggle('org', cost > 0); fbn.classList.toggle('gry', !cost); fbn.innerHTML = chipIco(15) + '필터' + (S.fltUsed ? ' <small>사용함</small>' : cost ? ' ✓' : ''); fbn.style.opacity = S.fltUsed ? '.5' : '';
     if (!$('.rd-flt').hidden) poolUi();
     if (!pick) return;
     const hn = $('.rd-hn'), ex = $('.rd-ex b'), msg = $('.rd-msg'); msg.className = 'rd-msg'; msg.textContent = '';
@@ -527,7 +528,7 @@
   function clearTable() { bgm.stop(); Object.keys(els).forEach((id) => els[id].remove()); els = {}; S.cards = {}; S.hand = []; S.squad = EMPTY(); S.sel = new Set(); poolKey = ''; S.flt = { e: '', c: '', b: '', r: '' }; $('.rd-main').classList.remove('atk'); $('.rd-total b').textContent = '0억'; $$('.rd-dmg,.rd-ban,.rd-burst').forEach((e) => e.remove()); $('.rd-fin').hidden = true; $('.rd-flt').hidden = true; }
   function gate(html) { const g = $('.rd-gate'); g.hidden = !html; if (html) g.querySelector('.rd-box').innerHTML = html; }
   function applyGame(v, isNew) {
-    clearTable(); S.phase = 'pick'; S.redraws = v.rd; S.deckLeft = v.left; S.deckN = v.total; S.tries = v.tries; S.max = v.max || 3; if (v.chips != null) S.chips = v.chips;
+    clearTable(); S.phase = 'pick'; S.fltUsed = !!v.fu; S.redraws = v.rd; S.deckLeft = v.left; S.deckN = v.total; S.tries = v.tries; S.max = v.max || 3; if (v.chips != null) S.chips = v.chips;
     v.hand.forEach((c) => { S.cards[c.id] = c; S.hand.push(c.id); }); sortHand(); gate('');
     place(isNew ? S.hand.slice() : null); ui();
   }
@@ -557,7 +558,7 @@
     const ids = S.hand.filter((id) => S.sel.has(id)), cost = fltCost(); if (!ids.length || busy) return;
     busy = true; ui(); let r;
     try { r = await E().discard(ids, Object.assign({}, S.flt), cost); } catch (e) { busy = false; ui(); $('.rd-msg').textContent = errMsg(e); return; }
-    if (cost) chipFx($('[data-r=disc]'), cost);
+    if (cost) { chipFx($('[data-r=disc]'), cost); S.fltUsed = true; }
     sfx.disc(); const mr = $('.rd-main').getBoundingClientRect(), rot = rd().classList.contains('rot'); /* 발라트로처럼: 살짝 움찔한 뒤 비스듬히 누워서 화면 오른쪽 가운데로 날아감(흐려지지 않음) */
     ids.forEach((id, i) => { const c = ctr(els[id]), t = rot ? loc(mr.left + mr.width / 2 - c[0], mr.bottom + 160 - c[1]) : [mr.right + 160 - c[0], mr.top + mr.height / 2 - c[1]], P = 'perspective(800px) ';
       els[id].style.zIndex = 9; els[id].animate([{ transform: P + 'translate(0px,-18%) rotateX(0deg) rotateZ(0deg) scale(1)' }, { transform: P + 'translate(-16px,-24%) rotateX(18deg) rotateZ(-6deg) scale(1.04)', offset: 0.22 }, { transform: P + 'translate(' + (t[0] * 0.55).toFixed(0) + 'px,' + (t[1] * 0.8).toFixed(0) + 'px) rotateX(58deg) rotateZ(48deg) scale(.7)', offset: 0.66 }, { transform: P + 'translate(' + t[0].toFixed(0) + 'px,' + t[1].toFixed(0) + 'px) rotateX(66deg) rotateZ(78deg) scale(.42)' }], { duration: 400, delay: i * 55, easing: 'cubic-bezier(.5,0,.85,.6)', fill: 'forwards' }); });
@@ -668,7 +669,7 @@
   function fastScore(D, boss) {
     const sp = supOf(boss.e), rg = RNG[boss.r]; let chips = 0; const bs = {};
     for (const x of D) { chips += x.tv + brkChip(x.cnt) + (rg.includes(x.w) ? 2 : x.w === 'RL' ? 1 : 0) + (x.e === sp ? (x.b === 3 || x.b === 'A' ? 5 : 2) : 0); bs[x.b] = 1; }
-    const hc = handRank(D.map((x) => x.c)), he = handRank(D.map((x) => x.e)), mult = (hc === 8 && he === 5) || (hc === 5 && he === 8) ? 13 : hc + he;
+    const hc = handRank(D.map((x) => x.c)), he = handRank(D.map((x) => x.e)), mult = HM[hc] + HM[he];
     const n123 = (bs[1] ? 1 : 0) + (bs[2] ? 1 : 0) + (bs[3] ? 1 : 0), full = n123 === 3 || (bs.A && n123 >= 2);
     return Math.round(chips * mult * (full ? 1 : 0.8));
   }
@@ -676,9 +677,9 @@
   const best5 = (cards, boss) => { let bs = -1, bc = null; combos(cards, 5).forEach((c) => { const v = fastScore(c, boss); if (v > bs) { bs = v; bc = c; } }); return { score: bs, cards: bc }; };
   const FOPT = CYC.map((v) => ({ e: v })).concat(COS.map((v) => ({ c: v })), ['1', '2', '3'].map((v) => ({ b: v })), ['NEAR', 'MID', 'FAR'].map((v) => ({ r: v })));
   const matchF = (x, f) => (!f.e || x.e === f.e) && (!f.c || x.c === f.c) && (!f.b || String(x.b) === f.b || x.b === 'A') && (!f.r || RNG[f.r].includes(x.w));
-  const costF = (f) => { const n = Object.keys(f).length; return n ? 100 * Math.pow(2, n - 1) * (f.c === '필그림' ? 2 : 1) : 0; };
+  const costF = (f, k) => (Object.keys(f).length ? FLT_C * Math.max(1, k || 1) * (f.c === '필그림' ? 2 : 1) : 0);
   const nameF = (f) => (f.e ? ELN[f.e] : f.c ? f.c : f.b ? 'I'.repeat(+f.b) + '버스트' : f.r ? RNG[f.r].join('·') : '');
-  const aimOf = (cards) => { const hc = handRank(cards.map((x) => x.c)), he = handRank(cards.map((x) => x.e)); return (hc === 8 && he === 5) || (hc === 5 && he === 8) ? '스트레이트 플러시' : hc >= he ? '기업 ' + HN[hc] : '우월코드 ' + HN[he]; };
+  const aimOf = (cards) => { const hc = handRank(cards.map((x) => x.c)), he = handRank(cards.map((x) => x.e)); return HM[hc] >= HM[he] ? '기업 ' + HN[hc] : '우월코드 ' + HN[he]; };
   function simEV(keep, k, pool, T, f, boss) { boss = boss || S.boss; /* k장을 새로 받는 경우를 T번 뽑아 보고 평균 점수와 가장 자주 나오는 족보를 냄 */
     const P1 = f ? pool.filter((x) => matchF(x, f)) : pool, tally = {}; let sum = 0;
     for (let t = 0; t < T; t++) { const got = [], used = new Set();
@@ -693,7 +694,7 @@
       cand.sort((a, b) => b.ev - a.ev);
       cand.slice(0, 6).forEach((c) => { /* 유망한 버리기 조합만 더 정밀하게: 필터 없이 / 필터 1개씩 */
         const base = simEV(c.keep, c.out.length, pool, 60, null, boss); if (!bd || base.ev > bd.ev) bd = Object.assign({ out: c.out, f: null, base: base.ev }, base);
-        if (!noFilter) FOPT.forEach((f) => { if (costF(f) > chips || pool.filter((x) => matchF(x, f)).length < 1) return; const r = simEV(c.keep, c.out.length, pool, 36, f, boss); if (r.ev > base.ev * 1.05 && r.ev > bd.ev) bd = Object.assign({ out: c.out, f, base: base.ev }, r); });
+        if (!noFilter) FOPT.forEach((f) => { if (costF(f, c.out.length) > chips || pool.filter((x) => matchF(x, f)).length < 1) return; const r = simEV(c.keep, c.out.length, pool, 36, f, boss); if (r.ev > base.ev * 1.05 && r.ev > bd.ev) bd = Object.assign({ out: c.out, f, base: base.ev }, r); });
       });
     }
     return { now, bd: bd && bd.ev > now.score * 1.04 ? bd : null, alt: bd };
@@ -708,7 +709,7 @@
   }
   function hint() {
     if (S.phase !== 'pick') return; recClear(); sfx.ok();
-    const all = C(sqIds().concat(S.hand)), pl = hintPlan(all, poolNow(), S.redraws, S.chips, S.boss), now = pl.now; let bd = pl.bd;
+    const all = C(sqIds().concat(S.hand)), pl = hintPlan(all, poolNow(), S.redraws, S.chips, S.boss, !!S.fltUsed), now = pl.now; let bd = pl.bd;
     const msg = $('.rd-msg'), toHand = (ids) => { ids.forEach((id) => { const i = S.squad.indexOf(id); if (i >= 0) { S.squad[i] = null; S.hand.push(id); } }); };
     if (bd) { const ids = bd.out.map((x) => x.id); toHand(ids); sortHand(); S.sel = new Set(ids); S.flt = Object.assign({ e: '', c: '', b: '', r: '' }, bd.f || {}); poolKey = ''; place(); ui();
       ids.forEach((id) => els[id].classList.add('recx')); msg.className = 'rd-msg ok';
@@ -728,7 +729,7 @@
       ['카드 7장 중 <b>5명</b>을 골라 스쿼드를 짭니다. 카드를 누르면 선택됩니다.', row((k, x) => card(k, x, [0, 2, 3, 4, 6].indexOf(k) >= 0 ? 'hv-pick' : '', 'animation-delay:' + (k * 0.12) + 's'))],
       ['<b>위로 쓸어 올리거나 끌어서</b> 원하는 칸에 미리 배치할 수 있습니다.', slots + row((k, x) => card(k, x, k === 1 ? 'hv-up' : k === 4 ? 'hv-up' : '', k === 1 ? '--dx:62px' : k === 4 ? '--dx:0px;animation-delay:.5s' : ''))],
       ['마음에 안 드는 카드는 골라서 <b>버리기</b>. 버린 만큼 새로 받습니다.', row((k, x) => card(k, x, k === 5 || k === 6 ? 'hv-out' : '')) + card(8, 44 + 5 * 62, 'hv-in') + card(9, 44 + 6 * 62, 'hv-in', 'animation-delay:.15s')],
-      ['<b>필터</b>에서 조건을 누르면 버릴 때 <b>그 조건의 니케만</b> 새로 받습니다. 나올 수 있는 니케를 미리 볼 수 있습니다.', '<div class="hv-fb">' + CYC.map((e2) => '<img alt="" class="' + (e2 === fe ? 'on' : '') + '" src="' + (d.elIco ? d.elIco[e2] : '') + '">').join('') + '</div><i class="hv-cur" style="margin-left:' + (-131 + CYC.indexOf(fe) * 60) + 'px"></i>' + row((k, x) => card(k, x, smp(k).e === fe ? '' : 'hv-fade'))],
+      ['<b>필터</b>에서 조건 하나를 누르면 버릴 때 <b>그 조건의 니케만</b> 새로 받습니다. 한 판에 한 번, 버리는 카드 한 장당 싱크칩 500입니다.', '<div class="hv-fb">' + CYC.map((e2) => '<img alt="" class="' + (e2 === fe ? 'on' : '') + '" src="' + (d.elIco ? d.elIco[e2] : '') + '">').join('') + '</div><i class="hv-cur" style="margin-left:' + (-131 + CYC.indexOf(fe) * 60) + 'px"></i>' + row((k, x) => card(k, x, smp(k).e === fe ? '' : 'hv-fade'))],
       ['점수는 <b style="color:#4db5ff">칩</b> × <b style="color:#ff6b5e">배수</b> 입니다.', '<div class="hv-big"><b class="c">칩 42</b><span>×</span><b class="m">배수 7</b><span>=</span><span class="s">294억</span></div><div class="hv-sub"><i style="background:#0d8bf2">칩</i> 높은 티어 · 돌파 · 우월코드 · 추천 총기<br><i style="background:#f0483c">배수</i> 같은 기업 · 같은 우월코드를 모은 족보</div>'],
       ['<b>1·2·3버스트</b>를 모두 넣으세요. 하나라도 빠지면 점수가 20% 깎입니다.', '<div class="hv-bx">' + hxs(['I', 'II', 'III']) + '</div><div class="hv-pen">×0.8</div>'],
       ['<b>출격</b>하면 스쿼드가 차례로 사격합니다. 맞을 때마다 피해가 쌓이고, 가장 높은 점수가 랭킹에 기록됩니다.', (() => { const cr = d.list.find((x) => x.n === '크라운') || L0[0], rest = L0.filter((x) => x !== cr), s2 = rest.find((x) => x.w === 'SR' || x.w === 'RL') || rest[0], oth = rest.filter((x) => x !== s2).slice(0, 3);
@@ -821,7 +822,7 @@
     const md = t.closest('.rd-modal'); if (md && !t.closest('.rd-mb')) { md.hidden = true; clearTimeout(hvT); return; }
     if (busy) return;
     const sb = t.closest('[data-s]'); if (sb && S.phase === 'pick') { S.sort = sb.dataset.s; sortHand(); place(); ui(); return; }
-    const fb = t.closest('.rd-fg button'); if (fb) { const k = fb.dataset.k; S.flt[k] = S.flt[k] === fb.dataset.v ? '' : fb.dataset.v; sfx.sel(); ui(); }
+    const fb = t.closest('.rd-fg button'); if (fb) { const k = fb.dataset.k, on = S.flt[k] === fb.dataset.v; S.flt = { e: '', c: '', b: '', r: '' }; if (!on && !S.fltUsed) S.flt[k] = fb.dataset.v; sfx.sel(); ui(); } /* 조건은 하나만 */
   }
   /* 카드 누르기·끌기: 누르면 고르기(스쿼드에 놓인 카드는 손패로), 끌어서 스쿼드↔손패로 옮기기 */
   const recClear = () => $$('.pk.rec,.pk.recx').forEach((e) => e.classList.remove('rec', 'recx'));
@@ -920,10 +921,10 @@
       '<div class="rd-ov rd-fin" hidden><div class="rd-box"><h3>RAID SCORE</h3><div class="rd-fs"><b>0</b><small>억</small></div><div class="rd-rkl"></div><div class="rd-fd"></div><button type="button" class="rb blue" data-r="again">재도전</button><button type="button" class="rb pur" data-r="rank">랭킹</button></div></div>' +
       '</main>' +
       '<div class="rd-modal rd-rule" hidden><div class="rd-mb"><h3>족보</h3><div class="rd-eq">점수 = <b class="c">칩</b> × <b class="m">배수</b> × <b class="f">버스트</b></div><div class="rd-rg">' +
-      '<div class="rd-w c"><h4>칩</h4><table><tr><td>티어</td><td>SSS 9 → F 1</td></tr><tr><td>돌파 (별 1개당)</td><td>+1</td></tr><tr><td>풀코강</td><td>+2</td></tr>' +
+      '<div class="rd-w c"><h4>칩</h4><table><tr><td>티어</td><td>SSS 9 → F 1</td></tr><tr><td>돌파 · 코강 (1장당)</td><td>+1</td></tr><tr><td>풀코강</td><td>합계 +10</td></tr>' +
       '<tr><td>추천 총기</td><td>+2 <small style="font-weight:700;opacity:.85">(<span class="pk-hx" style="font-size:8px;display:inline-grid;vertical-align:middle"><img alt="RL" src="assets/img/wp-RL.png"></span> +1)</small></td></tr>' +
       '<tr><td>우월코드</td><td>+2 <small style="font-weight:700;opacity:.85">(<span class="pk-hx" style="font-size:8px;display:inline-grid;vertical-align:middle">III</span> +5)</small></td></tr></table><p style="margin:4px 0 0;opacity:.85;font-size:12px">카드 오른쪽 위 숫자 = 티어 + 돌파</p></div>' +
-      '<div class="rd-w m"><h4>배수</h4><table>' + [1, 2, 3, 4, 5, 6, 7, 8].map((k) => '<tr><td>' + HN[k] + '</td><td>+' + k + '</td></tr>').join('') + '<tr><td>스트레이트 플러시</td><td>+13</td></tr></table></div>' +
+      '<div class="rd-w m"><h4>배수</h4><table>' + HORD.map((k) => '<tr><td>' + HN[k] + '</td><td>+' + HM[k] + '</td></tr>').join('') + '</table><p style="margin:4px 0 0;opacity:.85;font-size:12px">기업과 우월코드에서 각각 계산해 더합니다</p></div>' +
       '<div class="rd-w f"><table><tr><td>1 2 3버스트 누락</td><td>0.8x</td></tr></table></div></div>' +
       '<div style="text-align:center;margin-top:12px"><button type="button" class="rb gry" data-r="mx">닫기</button></div></div></div>' +
       '<div class="rd-modal rd-help" hidden><div class="rd-mb"><div class="hv-st"></div><div class="hv-bar"><i></i></div><div class="hv-cap"></div>' +
@@ -957,8 +958,8 @@
     /* 추천 효율 측정(로컬 전용): 같은 패로 ① 안 버림 ② 추천(필터 없이) ③ 추천(필터 포함)을 n판씩 */
     _sim(n) { if (PROD) return null; const d = data(), tc = () => { const u = Math.random(); return u < 0.3 ? 1 : u < 0.5 ? 2 + Math.floor(Math.random() * 2) : u < 0.7 ? 4 : u < 0.88 ? 5 + Math.floor(Math.random() * 6) : 11; }, sum = [0, 0, 0], chipsUsed = [0, 0, 0], disc = [0, 0, 0];
       for (let g = 0; g < n; g++) { const deck0 = d.list.map((x) => Object.assign({}, x, { id: String(x.code || x.n), tv: TS[x.t] || 1, cnt: tc() })); for (let i = deck0.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const t = deck0[i]; deck0[i] = deck0[j]; deck0[j] = t; }
-        for (let p = 0; p < 3; p++) { const deck = deck0.slice(), hand = deck.splice(0, 7); let rd2 = p ? 3 : 0, chips = 10000;
-          while (rd2 > 0) { const pl = hintPlan(hand, deck, rd2, chips, BOSS0, p === 1); if (!pl.bd) break; const f = pl.bd.f, cost = f ? costF(f) : 0;
+        for (let p = 0; p < 3; p++) { const deck = deck0.slice(), hand = deck.splice(0, 7); let rd2 = p ? 3 : 0, chips = 10000, fu = false;
+          while (rd2 > 0) { const pl = hintPlan(hand, deck, rd2, chips, BOSS0, p === 1 || fu); if (!pl.bd) break; const f = pl.bd.f, cost = f ? costF(f, pl.bd.out.length) : 0; if (f) fu = true;
             pl.bd.out.forEach((x) => { hand.splice(hand.indexOf(x), 1); let i = f ? deck.findIndex((y) => matchF(y, f)) : 0; if (i < 0) i = 0; hand.push(deck.splice(i, 1)[0]); }); chips -= cost; chipsUsed[p] += cost; disc[p]++; rd2--; }
           sum[p] += best5(hand, BOSS0).score; } }
       return { n, none: Math.round(sum[0] / n), hint: Math.round(sum[1] / n), hintFilter: Math.round(sum[2] / n), chipsPerGame: Math.round(chipsUsed[2] / n), discardsPerGame: [disc[1] / n, disc[2] / n] }; }
