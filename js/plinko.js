@@ -85,7 +85,7 @@
 .pl-msg{min-height:16px;font-size:12px;color:#ff9a8a;font-weight:700}
 .pl-main{position:relative;background:radial-gradient(ellipse at 50% 30%,#1c4c8e,#0b2247 70%,#071630);padding:8px}
 .pl-main canvas{display:block;width:100%;max-width:640px;height:auto;margin:0 auto}
-.pl-log{position:absolute;right:8px;top:8px;display:flex;flex-direction:column;gap:3px}.pl-log span{font:900 11px "Arial Black",Arial,sans-serif;border-radius:5px;padding:2px 6px;text-align:center;min-width:38px;animation:plIn .25s}@keyframes plIn{from{transform:translateX(20px);opacity:0}}
+.pl-log{position:absolute;right:8px;top:8px;bottom:8px;overflow:hidden;display:flex;flex-direction:column;gap:3px}.pl-log span{flex:none}.pl-log span{font:900 11px "Arial Black",Arial,sans-serif;border-radius:5px;padding:2px 6px;text-align:center;min-width:38px;animation:plIn .25s}@keyframes plIn{from{transform:translateX(20px);opacity:0}}
 .pl-win{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%) scale(.5);opacity:0;pointer-events:none;white-space:nowrap;font:900 26px "Arial Black","Pretendard",sans-serif;color:#ffe58a;text-shadow:0 3px 0 #7a4a00,0 0 20px rgba(255,200,80,.8);display:flex;align-items:center;gap:6px}
 .pl-win.on{animation:plWin 1.5s cubic-bezier(.2,1.5,.4,1) forwards}@keyframes plWin{0%{opacity:0;transform:translate(-50%,-50%) scale(.3)}18%{opacity:1;transform:translate(-50%,-50%) scale(1.15)}30%,75%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-90%) scale(1)}}
 @media(max-width:760px){.pl{grid-template-columns:1fr}.pl-main{order:-1}.pl-t{font-size:24px}.pl-side{gap:9px}}
