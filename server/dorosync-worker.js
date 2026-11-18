@@ -429,6 +429,23 @@ function rEval(codes, cnt, boss) { /* 니케별 칩과 크리티컬 확률, 배�
   const n123 = [1, 2, 3].filter((b) => bs.has(b)).length, f = n123 === 3 || (bs.has('A') && n123 >= 2) ? 1 : 0.8;
   return { ch, pc, chips, mult, f, score: Math.round(chips * mult * f) };
 }
+/* 랭킹의 AI 기록: 순위표가 비어 보이지 않게, 시즌마다 정해진 가상 참가자(12~20명)가 시간이 지나며 하나씩 들어오고 조금씩 기록을 올림. DB에 쓰지 않고 시즌 ID로 매번 똑같이 만들어 냄.
+ * 점수는 실제 참가자 상위 30% 경계보다 항상 낮게(참가자가 4명 미만이면 700 기준). 관리자에게만 AI 표시가 감 */
+const BOT_A = ['도로', '라피', '네온', '아니스', '방주', '전초', '셔플', '럭키', '밤샘', '코어', '버스트', '홍련', '모더', '엘리', '미실', '테트라', '필그림', '라플', '앨리스', '루주', '헬름', '슈가', '프리바', '율하', '디젤', '메이든', '노아', '사쿠라', '블랑', '누아르', 'Rapi', 'Neon', 'doro', 'Ark', 'Nikke'], BOT_B = ['', '', '짱', '단', '러', '킹', '님', '77', '99', '0', '7', '123', '_kr', '02', '츄', '쓰', 'x', '11'];
+function raidBots(sid, sn, now, real, final) {
+  let h = 2166136261; for (const ch of String(sid)) h = Math.imul(h ^ ch.charCodeAt(0), 16777619);
+  const r0 = tabsRng(h), K = 12 + Math.floor(r0() * 9), st = +sn.start || 0, len = Math.max(1, (+sn.end || now) - st), prog = final || !st ? 1 : (now - st) / len, codes = Object.keys(RAID_NK), out = [];
+  const ref = real.length >= 4 ? real[Math.floor(real.length * 0.3)].sc : 700, boss = { e: R_CYC.includes(sn.e) ? sn.e : '작', r: R_RNG[sn.r] ? sn.r : 'MID' };
+  for (let i = 0; i < K && codes.length >= 5; i++) {
+    const rb = tabsRng(h ^ Math.imul(i + 1, 2654435761)), join = 0.02 + rb() * 0.85, lvl = 0.35 + 0.6 * rb(), s1 = join + (1 - join) * (0.2 + 0.3 * rb()), s2 = s1 + (1 - s1) * (0.3 + 0.4 * rb()), nick = BOT_A[Math.floor(rb() * BOT_A.length)] + BOT_B[Math.floor(rb() * BOT_B.length)];
+    if (prog < join) continue; const stage = prog >= s2 ? 2 : prog >= s1 ? 1 : 0, target = ref * lvl * [0.62, 0.82, 1][stage], rc = tabsRng(h ^ Math.imul(i + 1, 40503) ^ (stage + 1) * 977); let best = null;
+    for (let q = 0; q < 40; q++) { const cs = []; while (cs.length < 5) { const k = codes[Math.floor(rc() * codes.length)]; if (!cs.includes(k)) cs.push(k); } const cnt = {}; cs.forEach((k) => { cnt[k] = 1 + Math.floor(Math.pow(rc(), 2) * 7); });
+      const R = rEval(cs, cnt, boss), sc = Math.round(R.score * (1 + rc() * 0.55)), d = Math.abs(sc - target); if (sc > 0 && sc < ref * 0.97 && (!best || d < best.d)) best = { d, sc, cs, cnt, R }; }
+    if (!best) continue;
+    out.push({ uid: 'ai:' + i, ai: 1, nick, sc: best.sc, at: st + Math.round([join, s1, s2][stage] * len), deck: best.cs.map((k) => k + ':' + best.cnt[k]).join(','), chips: best.R.chips, mult: best.R.mult, f: best.R.f, pf: best.cs[0], fr: 0 });
+  }
+  return out;
+}
 const rShuffle = (a) => { const r = new Uint32Array(a.length); crypto.getRandomValues(r); for (let i = a.length - 1; i > 0; i--) { const j = r[i] % (i + 1); const t = a[i]; a[i] = a[j]; a[j] = t; } return a; };
 const rList = (s) => (s ? String(s).split(',').filter(Boolean) : []);
 async function raid(req, env, out) {
@@ -453,6 +470,7 @@ async function raid(req, env, out) {
   const rankOf = async (colId) => { const q = await (await fetch(FS + ':runQuery', { method: 'POST', headers: H, body: JSON.stringify({ structuredQuery: { from: [{ collectionId: colId }], where: { fieldFilter: { field: { fieldPath: 'sc' }, op: 'GREATER_THAN', value: { integerValue: '0' } } }, orderBy: [{ field: { fieldPath: 'sc' }, direction: 'DESCENDING' }], limit: 1000 } }) })).json();
     const rows = (Array.isArray(q) ? q : []).filter((x) => x.document).map((x) => { const f = {}; Object.entries(x.document.fields || {}).forEach(([k, v]) => { f[k] = dec(v); }); return { uid: x.document.name.split('/').pop(), nick: f.nick || '', sc: f.sc || 0, at: f.at || 0, deck: f.bd || '', chips: f.bc || 0, mult: f.bm || 0, f: f.bf || 1, pf: f.pf || '', fr: f.fr || 0 }; });
     rows.sort((x, y) => y.sc - x.sc || x.at - y.at); return rows; };
+  const rankAll = async (colId, snx, final) => { const real = await rankOf(colId); let bots = []; try { bots = raidBots(String(colId).replace(/^raid_/, ''), snx || {}, now, real, final); } catch (e) { bots = []; } return real.concat(bots).sort((x, y) => y.sc - x.sc || x.at - y.at); }; /* 실제 기록 + AI 기록 */
   const tierOf = (i, N) => (i < 0 ? 0 : i < Math.max(3, Math.ceil(N * 0.03)) ? 1 : i < Math.max(10, Math.ceil(N * 0.1)) ? 2 : i < Math.max(30, Math.ceil(N * 0.3)) ? 3 : 0); /* 테두리: 3%·3위 / 10%·10위 / 30%·30위 */
   const maskNick = (v) => { const c = Array.from(String(v || '지휘관')); return c.length <= 2 ? c[0] + '*' : c[0] + '*'.repeat(c.length - 2) + c[c.length - 1]; };
   if (a === 'set') { /* 관리자: 시즌 열기·닫기 { e, r, days } / { off: true } */
@@ -573,7 +591,7 @@ async function raid(req, env, out) {
   if (!sn) return out(200, { ok: true, season: null, admin });
   const col = 'raid_' + sn.id;
   if (a === 'rank') {
-    const all = await rankOf(col), N = all.length, pub = (x, k) => ({ rank: k + 1, me: x.uid === uid, nick: maskNick(x.nick), sc: x.sc, deck: x.deck, chips: x.chips, mult: x.mult, f: x.f, pf: x.pf, fr: x.fr });
+    const all = await rankAll(col, sn, now >= sn.end), N = all.length, pub = (x, k) => Object.assign({ rank: k + 1, me: x.uid === uid, nick: maskNick(x.nick), sc: x.sc, deck: x.deck, chips: x.chips, mult: x.mult, f: x.f, pf: x.pf, fr: x.fr }, admin && x.ai ? { ai: 1 } : {}); /* AI 표시는 관리자에게만 */
     const mi = all.findIndex((x) => x.uid === uid);
     return out(200, { ok: true, season, total: N, cut: [Math.max(3, Math.ceil(N * 0.03)), Math.max(10, Math.ceil(N * 0.1)), Math.max(30, Math.ceil(N * 0.3))], rows: all.slice(0, 100).map(pub), mine: mi >= 0 ? pub(all[mi], mi) : null });
   }
@@ -586,7 +604,7 @@ async function raid(req, env, out) {
     const save = (fields, mask) => ({ update: { name: docName(col + '/' + uid), fields: fsv(fields).mapValue.fields }, updateMask: { fieldPaths: mask }, currentDocument: pre });
     if (a === 'state') { const ud = await getDoc('users/' + uid); let fr = (ud && ud.f.raidFrames) || {}, newFrame = 0;
       const ended = now >= sn.end ? sn : (sn.prev && sn.prev.id ? sn.prev : null); /* 끝난 시즌의 순위로 프로필 테두리 지급(한 번만) */
-      if (ended && ud && fr[ended.id] == null) { const all = await rankOf('raid_' + ended.id), t = tierOf(all.findIndex((x) => x.uid === uid), all.length); fr = Object.assign({}, fr, { [ended.id]: t });
+      if (ended && ud && fr[ended.id] == null) { const all = await rankAll('raid_' + ended.id, ended, true), t = tierOf(all.findIndex((x) => x.uid === uid), all.length); fr = Object.assign({}, fr, { [ended.id]: t });
         if (await commit([{ update: { name: ud.name, fields: { raidFrames: fsv(fr) } }, updateMask: { fieldPaths: ['raidFrames'] } }])) newFrame = t; }
       return out(200, view(g, { chips: (ud && ud.f.chipsV && ud.f.chipsV.d) || 0, frames: Array.from(new Set(Object.values(fr).map(Number).filter((t) => t > 0))), newFrame })); }
     if (a === 'giveup') { /* 진행 중인 판 포기: 쓴 횟수는 돌아오지 않고 기록도 남지 않음 */
@@ -633,7 +651,7 @@ async function raid(req, env, out) {
     if (a === 'discard') {
       if (pick.length < 1 || pick.length > 5 || g.rd < 1 || g.sq) return out(400, { ok: false, error: 'bad' });
       const fl = B.flt || {}, conds = ['e', 'c', 'b', 'r'].filter((k) => fl[k]); if (conds.length > 1 || (conds.length && g.fu)) return out(400, { ok: false, error: 'bad' }); /* 필터: 한 판에 한 번, 조건 1개 */
-      const cost = conds.length ? 500 * pick.length * (fl.c === '필그림' ? 2 : 1) : 0; /* 버리는 카드 한 장당 500(필그림 지정 1,000) */
+      const cost = conds.length ? 500 * pick.length * (fl.c === '필그림' ? 2 : 1) * (fl.e && fl.e === rSup(sn.e) ? 2 : 1) : 0; /* 버리는 카드 한 장당 500. 필그림 지정과 약점 우월코드 지정은 2배 */
       const match = (k) => { const x = RAID_NK[k]; return (!fl.e || x[1] === fl.e) && (!fl.c || x[0] === fl.c) && (!fl.b || String(x[3]) === String(fl.b) || x[3] === 'A') && (!fl.r || (R_RNG[fl.r] || []).includes(x[2])); };
       const deck = rList(g.deck), got = [];
       for (let i = 0; i < pick.length && deck.length; i++) { let j = cost ? deck.findIndex(match) : 0; if (j < 0) j = 0; got.push(deck.splice(j, 1)[0]); }
