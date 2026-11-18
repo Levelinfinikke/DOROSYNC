@@ -99,7 +99,7 @@
  repeating-linear-gradient(180deg,transparent 0 52px,rgba(15,17,20,.9) 52px 58px,transparent 58px 120px),
  linear-gradient(90deg,transparent 0 18%,#5f6775 18% 21%,#c9d0da 21% 30%,#5f6775 30% 34%,transparent 34% 66%,#5f6775 66% 70%,#c9d0da 70% 79%,#5f6775 79% 82%,transparent 82%)}.rd-in-sh .s.b{left:57%} /* 천천히 흘러가는 레일 한 세트(레일 두 줄 + 표시등). 가운데를 비우고 좌우에 한 세트씩 */
 .rd-in-sh .fl{background:radial-gradient(ellipse 70% 60% at 50% 50%,rgba(210,225,255,.55),transparent 75%);top:0;height:100%;opacity:0;mix-blend-mode:screen} /* 빠르게 지나가는 벽등: 번쩍임 */
-.rd-in-sil{opacity:0;background:var(--rd-boss,url(${BOSS_IMG})) 50% 12%/cover;filter:grayscale(1) contrast(1.6) brightness(.8)}
+.rd-in-sil{opacity:0;overflow:hidden}.rd-in-sil i{position:absolute;inset:0;background:var(--rd-boss,url(${BOSS_IMG})) 50% 12%/cover;will-change:transform} /* 구멍(마스크)은 제자리에 있고, 그 뒤에서 보스 원본 그림만 올라옴 */
 .rd-in-gear{position:absolute;left:50%;top:var(--sy,50%);height:var(--gs,min(60cqh,72cqw));aspect-ratio:1;transform:translate(-50%,-260%);filter:drop-shadow(0 14px 18px rgba(0,0,0,.75))}
 .rd-in-gear svg{position:absolute;inset:0;width:100%;height:100%;will-change:transform}
 .rd-in-grime{position:absolute;inset:0;border-radius:50%;pointer-events:none;background:radial-gradient(ellipse 30% 22% at 24% 22%,rgba(0,0,0,.4),transparent 70%),radial-gradient(ellipse 24% 30% at 80% 74%,rgba(0,0,0,.42),transparent 70%),radial-gradient(ellipse 16% 26% at 74% 20%,rgba(96,50,16,.3),transparent 72%),radial-gradient(ellipse 22% 14% at 30% 86%,rgba(90,48,16,.28),transparent 70%),radial-gradient(ellipse 8% 30% at 9% 56%,rgba(0,0,0,.34),transparent 72%),linear-gradient(112deg,transparent 57%,rgba(255,255,255,.05) 57.3% 57.7%,transparent 58%)} /* 낡은 금속의 때와 녹 */
@@ -903,7 +903,7 @@
     snd(() => { tone(60, 0.9, 'sawtooth', 0.04, 110); noise(0.8, 0.06, 0, 400); });
     { let r = 1; const dec = setInterval(() => { r = Math.max(0, r - 0.09); run.forEach((a) => { try { a.updatePlaybackRate(r); } catch (e) { /* 무시 */ } }); if (r <= 0) clearInterval(dec); }, 70); } /* 승강기가 느려지며 멈춤 */
     A(sh, [{ opacity: 1 }, { opacity: 0.35 }], 800, 'ease-out');
-    await A(sil, [{ opacity: 0, transform: 'translateY(34%)' }, { opacity: 0.62, transform: 'translateY(0)' }], 900, 'cubic-bezier(.2,.7,.3,1)'); /* 보스가 구멍 사이로 떠오름 */
+    A(sil, [{ opacity: 0 }, { opacity: 0.9 }], 500, 'ease-out'); await A(sil.firstElementChild, [{ transform: 'translateY(34%)' }, { transform: 'translateY(0)' }], 900, 'cubic-bezier(.2,.7,.3,1)'); /* 보스가 구멍 사이로 떠오름 */
     snd(() => { noise(0.2, 0.4, 0, 500); tone(70, 0.3, 'sine', 0.5, 40); metal(700, 0.16, 0.05, 0.01); }); quake([0, 4, 0], 160); await sleep(220);
     snd(() => { for (let q = 0; q < 4; q++) noise(0.03, 0.1, q * 0.06, 2400); });
     await A(gear, [{ transform: 'translate(-50%,-50%) scale(1)' }, { transform: 'translate(-50%,-57%) scale(1.035)' }], 300, 'cubic-bezier(.3,1.5,.5,1)'); await sleep(140); /* 톱니바퀴가 먼저 들려 올라감 */
@@ -911,7 +911,7 @@
     await A(gear, [{ transform: 'translate(-50%,-57%) scale(1.035) rotate(0deg)' }, { transform: 'translate(-50%,-320%) scale(1.035) rotate(150deg)' }], 460, 'cubic-bezier(.6,0,.8,.4)'); await sleep(120);
     if (pick === 'chal') { if (!liveOn()) goChal(); } else setMode(pracMode()); /* 이어서 도전: 깔려 있는 판 그대로 */ /* 게이트가 열리는 동안 판이 깔림 */
     snd(() => { noise(0.5, 0.3, 0, 350); tone(50, 0.5, 'sine', 0.4, 90); });
-    A(sil, [{ opacity: 0.62 }, { opacity: 0 }], 300); A(sh, [{ opacity: 0.35 }, { opacity: 0 }], 200); A(gt, [{ transform: 'translateY(0)' }, { transform: 'translateY(-101%)' }], 560, 'cubic-bezier(.5,0,.6,1)'); await A(gb, [{ transform: 'translateY(0)' }, { transform: 'translateY(101%)' }], 560, 'cubic-bezier(.5,0,.6,1)');
+    A(sil, [{ opacity: 0.9 }, { opacity: 0 }], 300); A(sh, [{ opacity: 0.35 }, { opacity: 0 }], 200); A(gt, [{ transform: 'translateY(0)' }, { transform: 'translateY(-101%)' }], 560, 'cubic-bezier(.5,0,.6,1)'); await A(gb, [{ transform: 'translateY(0)' }, { transform: 'translateY(101%)' }], 560, 'cubic-bezier(.5,0,.6,1)');
     run.forEach((a) => a.cancel()); I.hidden = true; gear.style.transform = ''; I.querySelectorAll('*').forEach((e) => e.getAnimations().forEach((x) => x.cancel())); S.introOn = false;
   }
   function onClick(ev) {
@@ -1021,7 +1021,7 @@
     const d0 = data(), smp = d0.list.slice().sort((a, b) => (TS[b.t] || 0) - (TS[a.t] || 0)).slice(0, 5).map((x, i) => cardHtml(Object.assign({}, x, { cnt: [4, 11, 11, 7, 1][i] }), BOSS0)).join('');
     const hx = (inner, cls) => '<span class="pk-hx ' + (cls || '') + '">' + inner + '</span>', wpi = (w) => '<img alt="' + w + '" src="assets/img/wp-' + w + '.png">';
     root.innerHTML = '<div class="rd-launch" hidden><div class="rd-lt"><small>POKER RAID</small>' + bossNm() + '</div><div class="rd-lc">' + smp + '</div><button type="button" class="rd-go" data-fs="1" aria-label="플레이">▶</button><div class="rd-lp">가로 화면으로 시작</div></div>' +
-      '<div class="rd"><div class="rd-in" hidden><div class="rd-in-w"><div class="rd-in-g t"><i class="rd-in-bar"></i></div><div class="rd-in-g b"><i class="rd-in-bar"></i></div><div class="rd-in-sh"><i class="f"></i><i class="s"></i><i class="s b"></i><i class="fl"></i></div><div class="rd-in-sil"></div><div class="rd-in-gear"><svg class="rd-in-rs" viewBox="-104 -104 208 208" aria-hidden="true"><defs><linearGradient id="rdGo" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#666b74"/><stop offset="1" stop-color="#2c2f35"/></linearGradient></defs>' + /* 회전 세트: 가장 바깥 테두리 + 접합부 3개 + 원형 경고 줄무늬(한 몸, 왼쪽으로 돎). 톱니바퀴 뒤에 깔림 */
+      '<div class="rd"><div class="rd-in" hidden><div class="rd-in-w"><div class="rd-in-g t"><i class="rd-in-bar"></i></div><div class="rd-in-g b"><i class="rd-in-bar"></i></div><div class="rd-in-sh"><i class="f"></i><i class="s"></i><i class="s b"></i><i class="fl"></i></div><div class="rd-in-sil"><i></i></div><div class="rd-in-gear"><svg class="rd-in-rs" viewBox="-104 -104 208 208" aria-hidden="true"><defs><linearGradient id="rdGo" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#666b74"/><stop offset="1" stop-color="#2c2f35"/></linearGradient></defs>' + /* 회전 세트: 가장 바깥 테두리 + 접합부 3개 + 원형 경고 줄무늬(한 몸, 왼쪽으로 돎). 톱니바퀴 뒤에 깔림 */
         '<circle r="103" fill="#121315"/><circle r="98.5" fill="none" stroke="url(#rdGo)" stroke-width="8"/><circle r="102.5" fill="none" stroke="rgba(255,255,255,.14)" stroke-width="1"/><circle r="94" fill="#1c1e22" stroke="#0b0c0d" stroke-width="1.5"/>' +
         [30, 150, 270].map((a) => '<g transform="rotate(' + a + ')"><rect x="-9.5" y="-99.5" width="19" height="27" rx="2" fill="#1d1f23" stroke="#060707" stroke-width="1.2"/><rect x="-8" y="-98" width="16" height="24" rx="1.2" fill="#3a3e45"/><rect x="-8" y="-98" width="16" height="2.2" fill="#6e737c"/><rect x="-6.6" y="-94.6" width="13.2" height="12.6" fill="#0c0d0f"/>' +
           [[-6, -94], [0.4, -94], [-6, -88], [0.4, -88]].map((q) => '<rect x="' + q[0] + '" y="' + q[1] + '" width="5.6" height="5.4" fill="#2a2d33" stroke="#787d86" stroke-width=".7"/><rect x="' + (q[0] + 0.9) + '" y="' + (q[1] + 0.9) + '" width="3.8" height="1.3" fill="rgba(255,255,255,.2)"/>').join('') +
