@@ -23,7 +23,8 @@
   const brkChip = (cnt) => Math.min(10, Math.max(0, cnt - 1)); /* 돌파·코강 한 장당 +1 */
   const HM = { 0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 3, 6: 6, 7: 8, 8: 11 }, HORD = [1, 2, 3, 5, 4, 6, 7, 8]; /* 족보 번호 → 배수, 표에 적는 순서 */
   const BEST_K = 'dorosync-raid-sian', SND_K = 'dorosync-raid-snd', PROD = /github\.io$/.test(location.hostname); /* 배포 사이트: 효과음 버튼 없이 항상 켬 */
-  const SETS = []; /* 세트 니케(둘 다 편성하면 배수 +2): 지금은 끔(서버와 같게). 예: [['5130', '5131'], ['5172', '5173'], ['5008', '5009'], ['5140', '5013'], ['5180', '5179']] */
+  const SETS0 = [['5130', '5131'], ['5172', '5173'], ['5008', '5009'], ['5140', '5013'], ['5180', '5179']], setsNow = () => { const d = data(); return Array.isArray(d.sets) ? d.sets : SETS0; }; /* 세트 니케(숨은 규칙, 족보 창에 없음): 둘 다 편성하면 각각 칩 +2. 서버와 같은 목록 */
+  const CRIT = { base: 0.15, rng: 0.5, rl: 0.25, dmg: 0.5 }, CORE = [0, 0.1, 0.25, 0.5], ZN = ['MISS', '1존', '2존', '3존']; /* 크리티컬 확률(기본·추천 총기·RL)과 대미지, 코어 판정별 대미지. 서버와 같은 값 */
   const SLOW = 1 / 0.7 / 1.2; /* 정산 속도 */
   /* 효과음: 파일 없이 브라우저에서 바로 만듦. 칩이 오를수록 음이 높아짐 */
   let AC = null, sndMode = 1; try { const v = localStorage.getItem(SND_K); sndMode = 1; void v; } catch (e) { /* 무시 */ } /* 효과음 버튼은 없앰: 항상 켬 */ /* 1 전장(사슬·총·탄피) · 2 아케이드 · 0 끔 */
@@ -211,7 +212,22 @@
 .rd-tgt{position:absolute;left:50%;top:27%;width:1px;height:1px;z-index:1}
 .rd-burst{position:absolute;left:50%;top:27%;width:220px;height:220px;margin:-110px 0 0 -110px;border-radius:50%;z-index:4;pointer-events:none;background:radial-gradient(circle,#fff 0,rgba(255,210,74,.9) 22%,rgba(255,90,40,.55) 45%,rgba(255,90,40,0) 70%);animation:rdBurst .42s ease-out forwards}
 @keyframes rdBurst{0%{transform:scale(.1);opacity:1}100%{transform:scale(calc(.5 + 1.6*var(--hk,1)));opacity:0}}
-.rd-dmg{position:absolute;z-index:9;pointer-events:none;font-size:34px;color:#ffb347;text-shadow:0 3px 0 #7a2a00,0 0 12px rgba(0,0,0,.8);white-space:nowrap;animation:rdDmg 1s cubic-bezier(.2,1.5,.4,1) forwards}
+.rd-dmg{position:absolute;z-index:9;pointer-events:none;font-size:34px;white-space:nowrap;animation:rdDmg 1.2s cubic-bezier(.2,1.5,.4,1) forwards;font-family:"Anton","Arial Narrow","Arial Black",Arial,sans-serif;font-stretch:condensed;line-height:1;display:grid;justify-items:center}
+.rd-dmg b{font-weight:900;letter-spacing:.01em;color:#fff;-webkit-text-stroke:.055em #1c1c20;paint-order:stroke fill;text-shadow:0 .06em 0 #1c1c20,0 0 .35em rgba(0,0,0,.75)}
+.rd-dmg em{font-style:normal;font-size:.4em;font-weight:900;letter-spacing:.04em;margin-bottom:-.08em;color:#ffb3ae;-webkit-text-stroke:.09em #7a1512;paint-order:stroke fill}
+.rd-dmg svg{position:absolute;left:-.62em;top:-.3em;width:.62em;height:.62em;fill:#ffb21c;stroke:#fff;stroke-width:1.6;paint-order:stroke fill;filter:drop-shadow(0 1px 0 rgba(0,0,0,.6))}
+.rd-dmg.t1 b{color:#ffb21c;-webkit-text-stroke-color:#5a3200;text-shadow:0 .06em 0 #5a3200,0 0 .4em rgba(255,150,20,.6)}
+.rd-dmg.t2 b{color:#f6a6a2;-webkit-text-stroke-color:#8c1d1a;text-shadow:0 .06em 0 #8c1d1a,0 0 .4em rgba(230,60,50,.55)}
+.rd-dmg.t3 b{color:#ee4a47;-webkit-text-stroke-color:#5c0b0b;text-shadow:0 .06em 0 #5c0b0b,0 0 .45em rgba(255,40,40,.7)}.rd-dmg.t3 em{color:#ff8a84}.rd-dmg.t3 svg{fill:#141416;stroke:#ffb21c}
+.rd-aim{position:absolute;inset:0;z-index:12;display:grid;place-items:center;touch-action:none;user-select:none;-webkit-user-select:none;cursor:pointer;font-family:"Pretendard","Malgun Gothic",sans-serif}
+.ra-box{width:min(430px,88%);margin-top:-6%;padding:10px 14px 12px;border-radius:14px;background:rgba(12,14,18,.9);border:2px solid #ffd24a;box-shadow:0 10px 30px rgba(0,0,0,.6);animation:raIn .16s ease-out}@keyframes raIn{from{transform:scale(.9);opacity:0}}
+.ra-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:8px;color:#fff}.ra-top b{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ra-top span{font-size:12px;color:#c9d2e0;white-space:nowrap}.ra-top u{text-decoration:none;color:#ffd24a;font-weight:900}
+.ra-bar{position:relative;height:26px;border-radius:8px;background:#1b0d06;box-shadow:inset 0 0 0 2px #05070a;overflow:hidden}
+.ra-bar i{position:absolute;top:0;bottom:0}.ra-bar .z1{background:#7a3a12}.ra-bar .z2{background:#d0762a}.ra-bar .z3{background:#ffe7a6;box-shadow:0 0 10px #ffd24a}
+.ra-fill{position:absolute;left:0;top:0;bottom:0;width:0;background:rgba(120,220,255,.45);text-decoration:none}.rd-aim.T .ra-fill{display:none}
+.ra-nd{position:absolute;top:-3px;bottom:-3px;width:4px;margin-left:-2px;left:0;background:#fff;box-shadow:0 0 6px #fff,0 0 0 1px #000;text-decoration:none}.rd-aim.R .ra-nd{background:#ff6b5e;box-shadow:0 0 6px #ff6b5e}
+.ra-res{height:20px;margin-top:6px;text-align:center;font-weight:900;font-size:14px;color:transparent}.ra-res.on{animation:raIn .15s}.ra-res.z0{color:#9aa3b2}.ra-res.z1{color:#e39a55}.ra-res.z2{color:#ffb84d}.ra-res.z3{color:#ffe7a6;text-shadow:0 0 10px #ffd24a}
+.ra-btn{display:block;width:100%;margin-top:4px;height:44px;border:0;border-radius:11px;background:linear-gradient(#ff6b5e,#d83a2e);color:#fff;font-size:17px;font-weight:900;letter-spacing:.06em;box-shadow:0 4px 0 #8c1d1a;cursor:pointer;pointer-events:none}.rd-aim.hold .ra-btn,.rd-aim:active .ra-btn{transform:translateY(3px);box-shadow:0 1px 0 #8c1d1a}.rd-aim.end .ra-btn{opacity:.4}
 @keyframes rdDmg{0%{transform:translate(-50%,-50%) scale(.2) rotate(-8deg);opacity:0}18%{transform:translate(-50%,-50%) scale(1.35) rotate(4deg);opacity:1}60%{transform:translate(-50%,-110%) scale(1);opacity:1}100%{transform:translate(-50%,-170%) scale(.9);opacity:0}}
 .rd-ban{position:absolute;left:50%;top:30%;z-index:9;pointer-events:none;text-align:center;white-space:nowrap;animation:rdBan .9s cubic-bezier(.2,1.5,.4,1) forwards}
 .rd-ban b{display:block;font-size:30px;text-shadow:0 3px 0 rgba(0,0,0,.6),0 0 14px rgba(0,0,0,.8)}.rd-ban i{display:inline-block;font-style:normal;font-size:20px;margin-top:4px;padding:2px 12px;border-radius:9px;background:#f0483c;box-shadow:0 3px 0 rgba(0,0,0,.4)}
@@ -390,19 +406,20 @@
     const m = {}; D.forEach((x) => { m[x[key]] = (m[x[key]] || 0) + 1; }); let vs = Object.keys(m).sort((a, b) => m[b] - m[a]); if (rank !== 5 && rank !== 1) vs = vs.filter((v) => m[v] >= 2);
     return '<span class="rd-hl' + (rank === 1 ? ' dim' : '') + '">' + vs.map((v) => icoOf(key, v)).join('') + '<em>' + HN[rank] + '</em></span>';
   }
-  function evalSquad(D, boss) { /* 1~5장: 5장 미만이면 그때까지의 족보(스트레이트·플러시는 5장부터) */
-    const sp = supOf(boss.e); let chips = 0;
+  function evalSquad(D, boss) { /* 1~5장: 5장 미만이면 그때까지의 족보(스트레이트·플러시는 5장부터). score = 크리티컬·코어 없는 기본 점수 */
+    const sp = supOf(boss.e); let chips = 0; const inSet = {}, sets = [];
+    setsNow().forEach((p) => { const a = D.find((x) => String(x.code) === p[0]), b = D.find((x) => String(x.code) === p[1]); if (a && b) { inSet[a.id] = 1; inSet[b.id] = 1; sets.push([a, b]); } });
     const cards = D.map((x) => {
-      const r = RNG[boss.r].includes(x.w) ? 2 : x.w === 'RL' ? 1 : 0, e = x.e === sp ? (x.b === 3 || x.b === 'A' ? 5 : 2) : 0, k = brkChip(x.cnt), v = x.tv + k + r + e;
-      chips += v; return { v, parts: [['티어 ' + x.t, x.tv], ['돌파', k], [x.w === 'RL' ? '사거리(RL)' : '적정 사거리', r], [e === 5 ? '3버스트 우월코드' : '우월코드', e]] };
+      const e = x.e === sp ? (x.b === 3 || x.b === 'A' ? 5 : 2) : 0, k = brkChip(x.cnt), st = inSet[x.id] ? 2 : 0, v = x.tv + k + e + st;
+      chips += v; return { v, pc: Math.min(1, CRIT.base + (RNG[boss.r].includes(x.w) ? CRIT.rng : x.w === 'RL' ? CRIT.rl : 0)), parts: [['티어 ' + x.t, x.tv], ['돌파', k], [e === 5 ? '3버스트 우월코드' : '우월코드', e], ['세트', st]] };
     });
     const hc = handRank(D.map((x) => x.c)), he = handRank(D.map((x) => x.e));
-    const steps = [{ l: '기업 ' + HN[hc], v: HM[hc], big: hc === 8 ? 1 : 0, h: handHtml(D, 'c', hc) }, { l: '우월코드 ' + HN[he], v: HM[he], big: he === 8 ? 1 : 0, h: handHtml(D, 'e', he) }];
-    SETS.forEach((p) => { const a = D.find((x) => x.code === p[0]), b = D.find((x) => x.code === p[1]); if (a && b) steps.push({ l: '세트 니케', v: 2, h: '<span class="rd-hl"><em style="color:#8df0b0">세트</em> <small>' + esc(a.n.split(' : ')[0]) + ' + ' + esc(b.n.split(' : ')[0]) + '</small></span>' }); });
-    const mult = D.length ? steps.reduce((a, s) => a + s.v, 0) : 0;
+    const steps = (hc === 8 && he === 5) || (hc === 5 && he === 8) ? [{ l: '스트레이트 플러시!', v: HM[8] + HM[5], big: 1, h: '<span class="rd-hl"><em style="color:#ffd24a">스트레이트 플러시</em></span>' }] /* 한쪽 플러시 + 다른 쪽 스트레이트: 배수는 둘의 합(14) 그대로, 이름만 따로 */
+      : [{ l: '기업 ' + HN[hc], v: HM[hc], big: hc === 8 ? 1 : 0, h: handHtml(D, 'c', hc) }, { l: '우월코드 ' + HN[he], v: HM[he], big: he === 8 ? 1 : 0, h: handHtml(D, 'e', he) }];
+    const mult = D.length ? steps.reduce((a, s2) => a + s2.v, 0) : 0;
     const bs = new Set(D.map((x) => x.b)), n123 = [1, 2, 3].filter((b) => bs.has(b)).length, full = n123 === 3 || (bs.has('A') && n123 >= 2);
     const f = D.length === 5 && !full ? 0.8 : 1;
-    return { cards, chips, hc, he, steps, mult, f, n: D.length, score: Math.round(chips * mult * f) };
+    return { cards, chips, hc, he, steps, sets, mult, f, n: D.length, score: Math.round(chips * mult * f) };
   }
 
   /* ---------- 카드 ---------- */
@@ -480,13 +497,13 @@
       return { hand: L.deck.splice(0, 7), rd: S.mode === 'mine' ? Math.min(3, Math.floor(total / Math.max(1, d.list.length) * 4)) : 3, left: L.deck.length, total, tries: S.tries + 1, max: 3, chips: S.chips };
     },
     async discard(ids, flt, cost) { const got = []; for (let k = 0; k < ids.length && L.deck.length; k++) { let i = cost ? L.deck.findIndex(fltMatch) : 0; if (i < 0) i = 0; got.push(L.deck.splice(i, 1)[0]); } return { got, left: L.deck.length, chips: PROD ? S.chips : S.chips - cost }; }, /* 모의전은 실제 싱크칩을 쓰지 않음 */
-    async play(ids) { const R = evalSquad(C(ids), S.boss), nb = R.score > best(); if (nb) { try { localStorage.setItem(BEST_K, String(R.score)); } catch (e) { /* 무시 */ } } return { score: R.score, newBest: nb, best: Math.max(best(), R.score) }; }
+    async play(ids, zones) { const R = evalSquad(C(ids), S.boss), crit = R.cards.map((c) => (Math.random() < c.pc ? 1 : 0)), dmg = R.cards.map((c, i) => Math.round(c.v * R.mult * R.f * (1 + CRIT.dmg * crit[i] + CORE[zones[i] || 0]))), score = dmg.reduce((a, v) => a + v, 0), nb = score > best(); if (nb) { try { localStorage.setItem(BEST_K, String(score)); } catch (e) { /* 무시 */ } } return { score, crit, dmg, newBest: nb, best: Math.max(best(), score) }; }
   };
   const Live = {
     async start() { const d = data(), j = await api('start', { openid: d.purl, area: +d.area || 0, pf: d.pf || '', fr: d.fr || 0 }); return Live.view(j); },
     view(j) { S.pool = (j.game.pool || []).map(liveCard).filter(Boolean); return { hand: j.game.hand.map(liveCard).filter(Boolean), rd: j.game.rd, left: j.game.left, total: j.game.total, tries: j.tries, max: j.max, chips: j.chips }; },
     async discard(ids, flt) { const j = await api('discard', { codes: ids, flt }); S.pool = (j.game.pool || []).map(liveCard).filter(Boolean); return { got: j.got.map(liveCard).filter(Boolean), left: j.game.left, chips: j.chips }; },
-    async play(ids) { const j = await api('play', { codes: ids }); return { score: j.result.score, newBest: j.newBest, best: j.best }; }
+    async play(ids, zones) { const j = await api('play', { codes: ids, core: zones }), r = j.result; return { score: r.score, crit: r.crit || [], dmg: r.dmg || null, newBest: j.newBest, best: j.best }; }
   };
   const E = () => (S.mode === 'live' ? Live : Local);
 
@@ -577,11 +594,37 @@
   const bossFlash = (k) => { /* k: 세기(0~1) */
     const m = $('.rd-main'), bg = $('.rd-bg'); m.style.setProperty('--sk', (1 + 9 * k).toFixed(1) + 'px'); m.style.setProperty('--hk', (0.15 + 1.1 * k).toFixed(2));
     bg.classList.remove('hit'); void bg.offsetWidth; bg.classList.add('hit'); if (k > 0.3) shake(); };
-  const dmgNum = (dmg, i, k) => { const m = $('.rd-main'), d = document.createElement('div'); d.className = 'rd-dmg'; d.textContent = '-' + fmt(dmg) + '억'; d.style.fontSize = (20 + 36 * k).toFixed(0) + 'px'; d.style.left = (50 + (i - 2) * 7) + '%'; d.style.top = (27 + (i % 2 ? 6 : -3)) + '%'; m.appendChild(d); setTimeout(() => d.remove(), 1050); };
+  const SHARD = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 3l9 4 2-6 2 8 8-2-6 6 5 6-8-3-3 7-1-9-9 1 6-5z"/></svg>';
+  const dmgNum = (dmg, i, k, ty) => { /* ty: 0 일반(흰색) · 1 크리티컬(노랑 + 파편) · 2 코어(빨강) · 3 크리티컬 코어(짙은 빨강 + 검은 파편) */
+    const m = $('.rd-main'), d = document.createElement('div'); d.className = 'rd-dmg t' + (ty || 0); d.innerHTML = (ty & 1 ? SHARD : '') + (ty & 2 ? '<em>CORE HIT</em>' : '') + '<b>' + fmt(dmg) + '</b>'; d.style.fontSize = ((28 + 30 * k) * (ty ? 1.12 : 1)).toFixed(0) + 'px'; d.style.left = (50 + (i - 2) * 7) + '%'; d.style.top = (27 + (i % 2 ? 6 : -3)) + '%'; m.appendChild(d); setTimeout(() => d.remove(), 1250); };
+  /* ---------- 사격 판정(코어 히트): 니케마다 총기에 맞는 조작. AR·SG 타이밍 · SR·RL 차지 · MG·SMG 연타. 결과 0(MISS)~3존 ---------- */
+  function aimOne(x, card) { return new Promise((done) => {
+    const main = $('.rd-main'), ty = x.w === 'SR' || x.w === 'RL' ? 'C' : x.w === 'MG' || x.w === 'SMG' ? 'R' : 'T', el = document.createElement('div'); el.className = 'rd-aim ' + ty;
+    const zs = ty === 'T' ? [[32, 68], [41, 59], [46.5, 53.5]] : ty === 'C' ? [[68, 92], [74, 86], [77.5, 82.5]] : [[7 / 13 * 100, 100], [10 / 13 * 100, 100], [96, 100]];
+    el.innerHTML = '<div class="ra-box"><div class="ra-top"><b>' + esc(x.n) + '</b><span>' + (ty === 'T' ? '바늘이 가운데 올 때 <u>사격</u>' : ty === 'C' ? '<u>꾹 눌러</u> 모았다가 밝은 칸에서 놓기' : '<u>빠르게 연타</u>') + '</span></div><div class="ra-bar">' + zs.map((z, q) => '<i class="z' + (q + 1) + '" style="left:' + z[0] + '%;width:' + (z[1] - z[0]) + '%"></i>').join('') + '<u class="ra-fill"></u><s class="ra-nd"></s></div><div class="ra-res"></div><button type="button" class="ra-btn">' + (ty === 'C' ? '차지' : ty === 'R' ? '연타!' : '사격') + '</button></div>';
+    main.appendChild(el); const nd = el.querySelector('.ra-nd'), fill = el.querySelector('.ra-fill'), rs = el.querySelector('.ra-res');
+    card.style.zIndex = 8; card.animate([{ transform: 'none' }, { transform: 'translateY(-8%) scale(1.08)' }], { duration: 180, fill: 'forwards' });
+    let t0 = performance.now(), raf = 0, over = false, hold = 0, taps = 0, tapT = 0, pos = 0;
+    const zoneOf = (v) => { let z = 0; zs.forEach((r, q) => { if (v >= r[0] && v <= r[1]) z = q + 1; }); return z; };
+    const end = (z) => { if (over) return; over = true; cancelAnimationFrame(raf); removeEventListener('keydown', kd, true); removeEventListener('keyup', ku, true);
+      rs.className = 'ra-res on z' + z; rs.textContent = z ? ZN[z] + ' · 코어 +' + Math.round(CORE[z] * 100) + '%' : 'MISS'; el.classList.add('end'); try { z ? sfx.ok() : sfx.bad(); } catch (e) { /* 무시 */ }
+      pop(card, z ? 'CORE ' + ZN[z] : 'MISS', z === 3); card.animate([{ transform: 'translateY(-8%) scale(1.08)' }, { transform: 'none' }], { duration: 160, fill: 'forwards' });
+      setTimeout(() => { el.remove(); card.style.zIndex = ''; done(z); }, 430); };
+    const frame = (now) => { if (over) return; const t = now - t0;
+      if (ty === 'T') { const u = (t % 1400) / 700; pos = (u <= 1 ? u : 2 - u) * 100; nd.style.left = pos + '%'; if (t > 5600) return end(0); }
+      else if (ty === 'C') { if (hold) { pos = Math.min(100, (now - hold) / 1300 * 100); fill.style.width = pos + '%'; nd.style.left = pos + '%'; if (pos >= 100) return end(0); } else if (t > 4000) return end(0); }
+      else { if (tapT) { const left = 1 - (now - tapT) / 1800; nd.style.left = Math.max(0, left * 100) + '%'; if (left <= 0) return end(taps >= 13 ? 3 : taps >= 10 ? 2 : taps >= 7 ? 1 : 0); } else if (t > 4000) return end(0); }
+      raf = requestAnimationFrame(frame); };
+    const down = () => { if (over) return; if (ty === 'T') end(zoneOf(pos)); else if (ty === 'C') { if (!hold) { hold = performance.now(); el.classList.add('hold'); try { sfx.charge(x.w); } catch (e) { /* 무시 */ } } } else { if (!tapT) tapT = performance.now(); taps++; fill.style.width = Math.min(100, taps / 13 * 100) + '%'; try { sfx.tap(); } catch (e) { /* 무시 */ } if (taps >= 13) end(3); } };
+    const up = () => { if (!over && ty === 'C' && hold) end(zoneOf(pos)); };
+    const kd = (e) => { if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); e.stopPropagation(); if (!e.repeat) down(); } }, ku = (e) => { if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); up(); } };
+    el.addEventListener('pointerdown', (e) => { e.preventDefault(); down(); }); el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up); el.addEventListener('pointerleave', up);
+    addEventListener('keydown', kd, true); addEventListener('keyup', ku, true); raf = requestAnimationFrame(frame);
+  }); }
+  async function aimAll(ids, D) { const zones = []; banner('사격 준비', '코어를 노리세요', ''); await slow(650); for (let i = 0; i < ids.length; i++) { zones.push(window.__rdAuto != null ? window.__rdAuto : await aimOne(D[i], els[ids[i]])); await sleep(90); } return zones; } /* __rdAuto: 자동 시험용 */
   async function play() {
     const ids = picks(); if (ids.length !== 5 || busy) return;
     recClear(); busy = true; ui(); let res;
-    try { res = await E().play(ids); } catch (e) { busy = false; ui(); $('.rd-msg').textContent = errMsg(e); return; }
     const rest = S.hand.filter((id) => !S.sel.has(id));
     rest.forEach((id, i) => els[id].animate([{ opacity: 1 }, { opacity: 0, transform: 'translateY(45%) scale(.8)' }], { duration: 220, delay: i * 30, fill: 'forwards' }));
     sfx.go(); setTimeout(() => bgm.start(), 700); await sleep(260);
@@ -591,12 +634,13 @@
     place(); /* 스쿼드가 아래 줄로 내려오고, 위에는 보스가 드러남 */
     hn.innerHTML = '출격!'; cb.textContent = '0'; mb.textContent = '0'; ex.textContent = '0억'; tot.textContent = '0억'; msg.className = 'rd-msg'; msg.textContent = '';
     banner('출격!', '', 'big'); await slow(700); sfx.ban();
+    for (const st of R.sets) { banner('세트 니케', st[0].n.split(' : ')[0] + ' + ' + st[1].n.split(' : ')[0], ''); [st[0].id, st[1].id].forEach((id) => { if (els[id]) els[id].animate([{ filter: 'brightness(1)' }, { filter: 'brightness(1.7) drop-shadow(0 0 10px #8df0b0)' }, { filter: 'brightness(1)' }], { duration: 700 }); }); sfx.ok(); await slow(850); } /* 숨은 규칙: 세트 니케 */
     let chips = 0, mult = 0, tick = 0;
     for (let i = 0; i < 5; i++) { /* 니케별 칩: 항목마다 하나씩 */
       const e = els[ids[i]], c = R.cards[i];
       e.animate([{ transform: 'translateY(0) scale(1)' }, { transform: 'translateY(-12%) scale(1.12) rotate(' + (i % 2 ? 4 : -4) + 'deg)' }, { transform: 'translateY(-6%) scale(1.06)' }], { duration: 260, easing: 'cubic-bezier(.3,1.6,.5,1)', fill: 'forwards' });
       for (const p of c.parts) { if (!p[1]) continue;
-        pop(e, p[0] + ' +' + p[1], p[1] >= 5 && p[0].indexOf('티어') < 0);
+        pop(e, p[0] + ' +' + p[1], (p[1] >= 5 && p[0].indexOf('티어') < 0) || p[0] === '세트');
         chips += p[1]; cb.textContent = chips; punch(cb); sfx.chip(tick++); await slow(210); }
       e.animate([{ transform: 'translateY(-6%) scale(1.06)' }, { transform: 'none' }], { duration: 160, fill: 'forwards' });
       await slow(130);
@@ -613,8 +657,13 @@
     if (R.f < 1) { banner('1 2 3버스트 누락', '0.8x', 'bad'); sfx.bad(); await slow(800); }
     hn.innerHTML = fmt(chips) + ' × ' + mult + (R.f < 1 ? ' × 0.8' : ''); punch(hn); punch(cb); punch(mb);
     await slow(350);
-    const score = res.score, dmgs = [], mx = Math.max.apply(null, R.cards.map((c) => c.v)), mn = Math.min.apply(null, R.cards.map((c) => c.v)); let done = 0, acc = 0;
-    for (let i = 0; i < 5; i++) { const v = i < 4 ? Math.round(score * R.cards[i].v / Math.max(1, R.chips)) : score - acc; acc += v; dmgs.push(v); }
+    /* 사격 판정(코어 히트) → 서버에 제출(크리티컬은 서버가 굴림) → 사격 */
+    const zones = await aimAll(ids, D);
+    for (let t = 0; t < 3 && !res; t++) { try { res = await E().play(ids, zones); } catch (e) { msg.textContent = errMsg(e); if (t < 2) await sleep(1500); } }
+    if (!res) { msg.className = 'rd-msg warn'; msg.textContent = '서버에 닿지 못했습니다. 새로고침하면 이 판을 이어서 할 수 있습니다.'; bgm.stop(); busy = false; S.phase = 'done'; ui(); return; }
+    msg.textContent = '';
+    const score = res.score, crit = res.crit || [], mx = Math.max.apply(null, R.cards.map((c) => c.v)), mn = Math.min.apply(null, R.cards.map((c) => c.v)); let done = 0, acc = 0;
+    const dmgs = res.dmg && res.dmg.length === 5 ? res.dmg.slice() : R.cards.map((c, i) => Math.round(c.v * R.mult * R.f * (1 + CRIT.dmg * (crit[i] ? 1 : 0) + CORE[zones[i] || 0])));
     /* 제자리에서 총기별로 사격: 총구 불꽃 → 예광탄 → 탄착군(반짝하고 천천히 흐려짐). 연사(AR·SMG·MG)는 맞을 때마다 점수가 오름. SR·RL은 모았다가 발사 */
     const mainEl = $('.rd-main'), lp = (el) => { let x = el.offsetWidth / 2, y = el.offsetHeight * 0.12, n = el; while (n && n !== mainEl) { x += n.offsetLeft; y += n.offsetTop; n = n.offsetParent; } return [x, y]; };
     const fx = (cls, x, y, css, ttl) => { const d = document.createElement('div'); d.className = cls; d.style.cssText = 'left:' + x.toFixed(1) + 'px;top:' + y.toFixed(1) + 'px;' + (css || ''); mainEl.appendChild(d); setTimeout(() => d.remove(), ttl); };
@@ -635,14 +684,14 @@
         bossFlash(big ? 0.45 + 0.55 * k : 0.1 + 0.15 * k); tot.textContent = fmt(done) + '억'; ex.textContent = fmt(done) + '억'; if (big || h === n - 1) punch(ex);
         if (h < n - 1) await sleep(g[1]);
       }
-      dmgNum(dmg, i, k); e.animate([{ transform: 'translateY(-5%) scale(1.05)' }, { transform: 'none' }], { duration: 180, fill: 'forwards' }); await slow(big ? 340 : 200); e.style.zIndex = '';
+      dmgNum(dmg, i, k, (crit[i] ? 1 : 0) + (zones[i] > 0 ? 2 : 0)); e.animate([{ transform: 'translateY(-5%) scale(1.05)' }, { transform: 'none' }], { duration: 180, fill: 'forwards' }); await slow(big ? 340 : 200); e.style.zIndex = '';
     }
     await slow(450);
     ex.textContent = fmt(score) + '억'; tot.textContent = fmt(score) + '억'; S.phase = 'done'; if (S.mode === 'live') { api('rank').then((j) => { if (j.mine && window.doroStat) window.doroStat.raid(j.season && j.season.id, j.mine.rank, j.total || 0, j.mine.sc || 0); }).catch(() => {}); /* 통합 기록: 최고 등수 */ S.liveBest = res.best; S.info = { tries: S.tries, max: S.max }; }
     const live = S.mode === 'live', left = S.max - S.tries, fin = $('.rd-fin'), ag = $('.rd-fin [data-r=again]'); bgm.stop(); fin.hidden = false; msg.textContent = '';
     fin.querySelector('h3').textContent = res.newBest ? 'NEW BEST!' : 'RAID SCORE';
     $('.rd-rkl').textContent = '';
-    $('.rd-fin .rd-fd').innerHTML = R.steps.map((x) => '<span class="rd-fh">' + x.h + '<b>+' + x.v + '</b></span>').join('') + '<br>칩 ' + fmt(chips) + ' × 배수 ' + mult + (R.f < 1 ? ' × 0.8' : '');
+    $('.rd-fin .rd-fd').innerHTML = R.steps.map((x) => '<span class="rd-fh">' + x.h + '<b>+' + x.v + '</b></span>').join('') + '<br>칩 ' + fmt(chips) + ' × 배수 ' + mult + (R.f < 1 ? ' × 0.8' : '') + '<br><small>크리티컬 ' + crit.filter(Boolean).length + '회 · 코어 히트 ' + zones.map((z) => (z ? z + '존' : 'MISS')).join(' ') + '</small>';
     ag.hidden = live && left <= 0; ag.textContent = left > 0 ? '재도전 (남은 ' + left + '회)' : '재도전'; $('.rd-fin [data-r=rank]').hidden = !live;
     if (live) api('rank').then((j) => { const i = j.rows.findIndex((r) => r.me); if (i >= 0) $('.rd-rkl').innerHTML = '<b>' + (i + 1) + '위</b> / ' + j.rows.length + '명'; }).catch(() => {});
     $('.rd-main').style.setProperty('--sk', '7px'); shake(); sfx.fin(res.newBest); let ci = 0; const ct = setInterval(() => sfx.count(ci++), 70); await countTo($('.rd-fs b'), 0, score, Math.min(1400, 500 + score)); clearInterval(ct);
@@ -666,9 +715,11 @@
     } catch (e) { box.innerHTML = '<p style="padding:14px">' + esc(errMsg(e)) + '</p>'; }
   }
   /* ---------- 추천: 지금 바로 낼 수 있는 최고 스쿼드와, 버리고 새로 받을 때의 기대 점수를 견줌 ---------- */
-  function fastScore(D, boss) {
-    const sp = supOf(boss.e), rg = RNG[boss.r]; let chips = 0; const bs = {};
-    for (const x of D) { chips += x.tv + brkChip(x.cnt) + (rg.includes(x.w) ? 2 : x.w === 'RL' ? 1 : 0) + (x.e === sp ? (x.b === 3 || x.b === 'A' ? 5 : 2) : 0); bs[x.b] = 1; }
+  function fastScore(D, boss) { /* 추천용: 크리티컬 기대값까지 넣은 점수 */
+    const sp = supOf(boss.e), rg = RNG[boss.r], SL = setsNow(); let chips = 0; const bs = {}, ids = {};
+    for (const x of D) ids[x.code] = 1;
+    for (const x of D) { let st = 0; for (const q of SL) if ((q[0] === String(x.code) && ids[q[1]]) || (q[1] === String(x.code) && ids[q[0]])) { st = 2; break; }
+      chips += (x.tv + brkChip(x.cnt) + (x.e === sp ? (x.b === 3 || x.b === 'A' ? 5 : 2) : 0) + st) * (1 + CRIT.dmg * Math.min(1, CRIT.base + (rg.includes(x.w) ? CRIT.rng : x.w === 'RL' ? CRIT.rl : 0))); bs[x.b] = 1; }
     const hc = handRank(D.map((x) => x.c)), he = handRank(D.map((x) => x.e)), mult = HM[hc] + HM[he];
     const n123 = (bs[1] ? 1 : 0) + (bs[2] ? 1 : 0) + (bs[3] ? 1 : 0), full = n123 === 3 || (bs.A && n123 >= 2);
     return Math.round(chips * mult * (full ? 1 : 0.8));
@@ -679,7 +730,7 @@
   const matchF = (x, f) => (!f.e || x.e === f.e) && (!f.c || x.c === f.c) && (!f.b || String(x.b) === f.b || x.b === 'A') && (!f.r || RNG[f.r].includes(x.w));
   const costF = (f, k) => (Object.keys(f).length ? FLT_C * Math.max(1, k || 1) * (f.c === '필그림' ? 2 : 1) : 0);
   const nameF = (f) => (f.e ? ELN[f.e] : f.c ? f.c : f.b ? 'I'.repeat(+f.b) + '버스트' : f.r ? RNG[f.r].join('·') : '');
-  const aimOf = (cards) => { const hc = handRank(cards.map((x) => x.c)), he = handRank(cards.map((x) => x.e)); return HM[hc] >= HM[he] ? '기업 ' + HN[hc] : '우월코드 ' + HN[he]; };
+  const aimOf = (cards) => { const hc = handRank(cards.map((x) => x.c)), he = handRank(cards.map((x) => x.e)); return (hc === 8 && he === 5) || (hc === 5 && he === 8) ? '스트레이트 플러시' : HM[hc] >= HM[he] ? '기업 ' + HN[hc] : '우월코드 ' + HN[he]; };
   function simEV(keep, k, pool, T, f, boss) { boss = boss || S.boss; /* k장을 새로 받는 경우를 T번 뽑아 보고 평균 점수와 가장 자주 나오는 족보를 냄 */
     const P1 = f ? pool.filter((x) => matchF(x, f)) : pool, tally = {}; let sum = 0;
     for (let t = 0; t < T; t++) { const got = [], used = new Set();
@@ -730,7 +781,7 @@
       ['<b>위로 쓸어 올리거나 끌어서</b> 원하는 칸에 미리 배치할 수 있습니다.', slots + row((k, x) => card(k, x, k === 1 ? 'hv-up' : k === 4 ? 'hv-up' : '', k === 1 ? '--dx:62px' : k === 4 ? '--dx:0px;animation-delay:.5s' : ''))],
       ['마음에 안 드는 카드는 골라서 <b>버리기</b>. 버린 만큼 새로 받습니다.', row((k, x) => card(k, x, k === 5 || k === 6 ? 'hv-out' : '')) + card(8, 44 + 5 * 62, 'hv-in') + card(9, 44 + 6 * 62, 'hv-in', 'animation-delay:.15s')],
       ['<b>필터</b>에서 조건 하나를 누르면 버릴 때 <b>그 조건의 니케만</b> 새로 받습니다. 한 판에 한 번, 버리는 카드 한 장당 싱크칩 500입니다.', '<div class="hv-fb">' + CYC.map((e2) => '<img alt="" class="' + (e2 === fe ? 'on' : '') + '" src="' + (d.elIco ? d.elIco[e2] : '') + '">').join('') + '</div><i class="hv-cur" style="margin-left:' + (-131 + CYC.indexOf(fe) * 60) + 'px"></i>' + row((k, x) => card(k, x, smp(k).e === fe ? '' : 'hv-fade'))],
-      ['점수는 <b style="color:#4db5ff">칩</b> × <b style="color:#ff6b5e">배수</b> 입니다.', '<div class="hv-big"><b class="c">칩 42</b><span>×</span><b class="m">배수 7</b><span>=</span><span class="s">294억</span></div><div class="hv-sub"><i style="background:#0d8bf2">칩</i> 높은 티어 · 돌파 · 우월코드 · 추천 총기<br><i style="background:#f0483c">배수</i> 같은 기업 · 같은 우월코드를 모은 족보</div>'],
+      ['점수는 <b style="color:#4db5ff">칩</b> × <b style="color:#ff6b5e">배수</b> 입니다.', '<div class="hv-big"><b class="c">칩 42</b><span>×</span><b class="m">배수 7</b><span>=</span><span class="s">294억</span></div><div class="hv-sub"><i style="background:#0d8bf2">칩</i> 높은 티어 · 돌파 · 우월코드<br><i style="background:#f0483c">배수</i> 같은 기업 · 같은 우월코드를 모은 족보</div>'],
       ['<b>1·2·3버스트</b>를 모두 넣으세요. 하나라도 빠지면 점수가 20% 깎입니다.', '<div class="hv-bx">' + hxs(['I', 'II', 'III']) + '</div><div class="hv-pen">×0.8</div>'],
       ['<b>출격</b>하면 스쿼드가 차례로 사격합니다. 맞을 때마다 피해가 쌓이고, 가장 높은 점수가 랭킹에 기록됩니다.', (() => { const cr = d.list.find((x) => x.n === '크라운') || L0[0], rest = L0.filter((x) => x !== cr), s2 = rest.find((x) => x.w === 'SR' || x.w === 'RL') || rest[0], oth = rest.filter((x) => x !== s2).slice(0, 3);
         const sq5 = [oth[0], cr, oth[1], s2, oth[2]], cx = (k) => 106 + k * 62 + 26; let h = '<div class="hv-tot">0억</div>';
@@ -921,11 +972,11 @@
       '<div class="rd-ov rd-fin" hidden><div class="rd-box"><h3>RAID SCORE</h3><div class="rd-fs"><b>0</b><small>억</small></div><div class="rd-rkl"></div><div class="rd-fd"></div><button type="button" class="rb blue" data-r="again">재도전</button><button type="button" class="rb pur" data-r="rank">랭킹</button></div></div>' +
       '</main>' +
       '<div class="rd-modal rd-rule" hidden><div class="rd-mb"><h3>족보</h3><div class="rd-eq">점수 = <b class="c">칩</b> × <b class="m">배수</b> × <b class="f">버스트</b></div><div class="rd-rg">' +
-      '<div class="rd-w c"><h4>칩</h4><table><tr><td>티어</td><td>SSS 9 → F 1</td></tr><tr><td>돌파 · 코강 (1장당)</td><td>+1</td></tr><tr><td>풀코강</td><td>합계 +10</td></tr>' +
-      '<tr><td>추천 총기</td><td>+2 <small style="font-weight:700;opacity:.85">(<span class="pk-hx" style="font-size:8px;display:inline-grid;vertical-align:middle"><img alt="RL" src="assets/img/wp-RL.png"></span> +1)</small></td></tr>' +
+      '<div class="rd-w c"><h4>칩</h4><table><tr><td>티어</td><td>SSS 9 → F 1</td></tr><tr><td>돌파 · 코강 (1장당)</td><td>+1</td></tr>' +
       '<tr><td>우월코드</td><td>+2 <small style="font-weight:700;opacity:.85">(<span class="pk-hx" style="font-size:8px;display:inline-grid;vertical-align:middle">III</span> +5)</small></td></tr></table><p style="margin:4px 0 0;opacity:.85;font-size:12px">카드 오른쪽 위 숫자 = 티어 + 돌파</p></div>' +
       '<div class="rd-w m"><h4>배수</h4><table>' + HORD.map((k) => '<tr><td>' + HN[k] + '</td><td>+' + HM[k] + '</td></tr>').join('') + '</table><p style="margin:4px 0 0;opacity:.85;font-size:12px">기업과 우월코드에서 각각 계산해 더합니다</p></div>' +
-      '<div class="rd-w f"><table><tr><td>1 2 3버스트 누락</td><td>0.8x</td></tr></table></div></div>' +
+      '<div class="rd-w f"><table><tr><td>1 2 3버스트 누락</td><td>0.8x</td></tr></table></div>' +
+      '<div class="rd-w f" style="grid-column:1/-1"><h4 style="margin:0 0 4px">크리티컬 · 코어 히트 <small style="font-weight:700;opacity:.8">니케마다 따로 판정 · 둘은 더합니다(둘 다 = 최대 2배)</small></h4><table><tr><td>크리티컬 대미지</td><td>+50%</td></tr><tr><td>크리티컬 확률</td><td>기본 15% · 추천 총기 +50% · RL +25%</td></tr><tr><td>코어 히트 (출격 때 사격 판정)</td><td>1존 +10% · 2존 +25% · 3존 +50%</td></tr></table></div></div>' +
       '<div style="text-align:center;margin-top:12px"><button type="button" class="rb gry" data-r="mx">닫기</button></div></div></div>' +
       '<div class="rd-modal rd-help" hidden><div class="rd-mb"><div class="hv-st"></div><div class="hv-bar"><i></i></div><div class="hv-cap"></div>' +
       '<div class="hv-ft"><button type="button" class="rb gry" data-r="hv" data-d="-1">◀</button><div class="hv-dots"></div><button type="button" class="rb gry" data-r="hv" data-d="1">▶</button><button type="button" class="rb blue" data-r="mx">닫기</button></div></div></div>' +

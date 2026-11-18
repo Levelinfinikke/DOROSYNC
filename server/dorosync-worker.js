@@ -410,7 +410,8 @@ const TABS_OUT = (() => { const o = []; [['S', 5], ['SS', 2], ['SSS', 1], ['r', 
 const tabsRng = (a) => () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
 const tabsOrder = (seed) => { const r = tabsRng(seed), a = TABS_OUT.map((_, i) => i); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; };
 let RAID_NK = RAID_NK0, RAID_TVK = ''; /* 실제로 쓰는 표: 관리 탭의 절대 티어표(meta/site의 tv: 코드→등급 1~9)가 있으면 등급만 덮어씀 */
-const RAID_SETS = []; /* 세트 니케(둘 다 편성하면 배수 +2): 지금은 끔. 예: [['5130', '5131'], ['5172', '5173'], ['5008', '5009'], ['5140', '5013'], ['5180', '5179']] */
+const RAID_SETS0 = [['5130', '5131'], ['5172', '5173'], ['5008', '5009'], ['5140', '5013'], ['5180', '5179']]; let RAID_SETS = RAID_SETS0; /* 세트 니케(숨은 규칙: 둘 다 편성하면 각각 칩 +2). 관리 탭에서 저장한 목록(sets)이 있으면 그것을 씀 */
+const R_CRIT = { base: 0.15, rng: 0.5, rl: 0.25, dmg: 0.5 }, R_CORE = [0, 0.1, 0.25, 0.5]; /* 크리티컬: 기본 15% · 추천 총기 +50% · RL +25%, 대미지 +50%. 코어 판정(꽝·1존·2존·3존): 대미지 +0·10·25·50%. 둘은 더함 */
 const R_CYC = ['작', '풍', '철', '전', '수'], R_RNG = { NEAR: ['SG', 'SMG'], MID: ['AR', 'MG'], FAR: ['SR'] };
 const rSup = (e) => R_CYC[(R_CYC.indexOf(e) + 4) % 5];
 const rBrk = (cnt) => Math.min(10, Math.max(0, cnt - 1)); /* 돌파·코강 한 장당 +1(풀코강 11장 = +10) */
@@ -419,14 +420,14 @@ function rHand(vals) {
   const c = Object.values(m).sort((a, b) => b - a), a = c[0], b = c[1] || 0;
   if (a === 5) return 11; if (a === 4) return 8; if (a === 3 && b === 2) return 6; if (a === 3) return 4; if (a === 2 && b === 2) return 3; if (a === 2) return 2; return n === 5 ? 3 : 1; /* 배수: 하이카드 1 · 페어 2 · 투페어 3 · 스트레이트(전부 다름) 3 · 트리플 4 · 풀하우스 6 · 포카드 8 · 플러시(전부 같음) 11 */
 }
-function rEval(codes, cnt, boss) {
-  const sp = rSup(boss.e); let chips = 0; const bs = new Set();
-  const D = codes.map((k) => RAID_NK[k]);
-  D.forEach((x, i) => { chips += x[4] + rBrk(cnt[codes[i]] || 1) + (R_RNG[boss.r].includes(x[2]) ? 2 : x[2] === 'RL' ? 1 : 0) + (x[1] === sp ? (x[3] === 3 || x[3] === 'A' ? 5 : 2) : 0); bs.add(x[3]); }); /* 우월코드 +2, 3버스트 우월코드 +5 */
-  const hc = rHand(D.map((x) => x[0])), he = rHand(D.map((x) => x[1]));
-  const mult = hc + he + 2 * RAID_SETS.filter((p) => codes.includes(p[0]) && codes.includes(p[1])).length;
+function rEval(codes, cnt, boss) { /* 니케별 칩과 크리티컬 확률, 배수, 버스트 보정. score = 크리·코어 없는 기본 점수 */
+  const sp = rSup(boss.e), bs = new Set(), D = codes.map((k) => RAID_NK[k]), inSet = {};
+  RAID_SETS.forEach((p) => { if (codes.includes(p[0]) && codes.includes(p[1])) { inSet[p[0]] = 1; inSet[p[1]] = 1; } });
+  const ch = D.map((x, i) => { bs.add(x[3]); return x[4] + rBrk(cnt[codes[i]] || 1) + (x[1] === sp ? (x[3] === 3 || x[3] === 'A' ? 5 : 2) : 0) + (inSet[codes[i]] ? 2 : 0); }); /* 우월코드 +2, 3버스트 우월코드 +5, 세트 +2 */
+  const pc = D.map((x) => Math.min(1, R_CRIT.base + (R_RNG[boss.r].includes(x[2]) ? R_CRIT.rng : x[2] === 'RL' ? R_CRIT.rl : 0)));
+  const chips = ch.reduce((a, v) => a + v, 0), mult = rHand(D.map((x) => x[0])) + rHand(D.map((x) => x[1]));
   const n123 = [1, 2, 3].filter((b) => bs.has(b)).length, f = n123 === 3 || (bs.has('A') && n123 >= 2) ? 1 : 0.8;
-  return { chips, mult, f, score: Math.round(chips * mult * f) };
+  return { ch, pc, chips, mult, f, score: Math.round(chips * mult * f) };
 }
 const rShuffle = (a) => { const r = new Uint32Array(a.length); crypto.getRandomValues(r); for (let i = a.length - 1; i > 0; i--) { const j = r[i] % (i + 1); const t = a[i]; a[i] = a[j]; a[j] = t; } return a; };
 const rList = (s) => (s ? String(s).split(',').filter(Boolean) : []);
@@ -440,7 +441,7 @@ async function raid(req, env, out) {
   let B; try { B = await req.json(); } catch (e) { return out(400, { ok: false, error: 'bad' }); }
   const a = String(B.a || 'state');
   let SITE = null; /* 관리 탭 설정: 절대 티어표의 등급(tv), 신규 니케 카드(nk), 부스터팩(packs) */
-  try { SITE = await siteTv(env); const tv = SITE && SITE.tv, key = JSON.stringify([tv || {}, (SITE && SITE.nk) || []]); if (key !== RAID_TVK) { const nk = {};
+  try { SITE = await siteTv(env); RAID_SETS = SITE && SITE.sets ? SITE.sets : RAID_SETS0; const tv = SITE && SITE.tv, key = JSON.stringify([tv || {}, (SITE && SITE.nk) || []]); if (key !== RAID_TVK) { const nk = {};
       ((SITE && SITE.nk) || []).forEach((x) => { const k = String(x.code); if (/^\d{3,6}$/.test(k) && !RAID_NK0[k]) nk[k] = [x.corp || '', x.el || '', x.wp || '', x.bu === 'A' ? 'A' : +x.bu || 3, 9]; }); /* 신규 니케: 등급은 티어표에 없으면 SSS(★) */
       Object.keys(RAID_NK0).forEach((k) => { nk[k] = RAID_NK0[k].slice(); }); Object.keys(nk).forEach((k) => { const v = tv && +tv[k]; if (v >= 1 && v <= 9) nk[k][4] = Math.floor(v); }); RAID_NK = nk; RAID_TVK = key; } } catch (e) { /* 설정을 못 읽으면 직전 표 그대로 */ }
   const sa = JSON.parse(env.FIREBASE_SA), at = await saToken(sa, 'https://www.googleapis.com/auth/datastore'), H = { Authorization: 'Bearer ' + at, 'Content-Type': 'application/json' };
@@ -638,7 +639,10 @@ async function raid(req, env, out) {
     }
     if (a === 'play') {
       if (pick.length !== 5) return out(400, { ok: false, error: 'bad' });
-      const R = rEval(pick, g.cnt, sn), up = R.score > (f.sc || 0);
+      const R = rEval(pick, g.cnt, sn), zs = Array.isArray(B.core) ? B.core : [];
+      R.crit = R.pc.map((p0) => (Math.random() < p0 ? 1 : 0)); R.core = pick.map((k, i) => { const z = Math.floor(+zs[i]); return z >= 0 && z <= 3 ? z : 0; }); /* 크리티컬은 서버가 굴림. 코어 판정(0~3존)은 기기에서 한 사격 결과 */
+      R.dmg = R.ch.map((c, i) => Math.round(c * R.mult * R.f * (1 + R_CRIT.dmg * R.crit[i] + R_CORE[R.core[i]]))); R.base = R.score; R.score = R.dmg.reduce((a, v) => a + v, 0); delete R.pc;
+      const up = R.score > (f.sc || 0);
       const fields = { g: null }, mask = ['g'];
       if (up) { Object.assign(fields, { sc: R.score, at: now, bd: pick.map((k) => k + ':' + (g.cnt[k] || 1)).join(','), bc: R.chips, bm: R.mult, bf: R.f }); mask.push('sc', 'at', 'bd', 'bc', 'bm', 'bf'); }
       if (await commit([save(fields, mask)])) return out(200, { ok: true, season, tries: n, max: mx, best: up ? R.score : (f.sc || 0), result: R, newBest: up, game: null });
@@ -712,7 +716,7 @@ async function siteConfig(env, out) {
   return out(200, Object.assign({ ok: true, now }, CFG_MEM.body), { 'Cache-Control': 'public, max-age=30' });
 }
 let TV_MEM = null;
-async function siteTv(env) { const now = Date.now(); if (TV_MEM && now - TV_MEM.t < 30000) return TV_MEM.tv; const st = await fsGet('meta/site', await saHead(env)); let tv = null; try { const c = st && st.f.j ? JSON.parse(st.f.j) : null; tv = c ? { tv: c.tv || null, nk: c.nk || [], packs: c.packs || [], gacha: c.gacha || [] } : null; } catch (e) { tv = null; } TV_MEM = { t: now, tv }; return tv; }
+async function siteTv(env) { const now = Date.now(); if (TV_MEM && now - TV_MEM.t < 30000) return TV_MEM.tv; const st = await fsGet('meta/site', await saHead(env)); let tv = null; try { const c = st && st.f.j ? JSON.parse(st.f.j) : null; tv = c ? { tv: c.tv || null, nk: c.nk || [], packs: c.packs || [], gacha: c.gacha || [], sets: Array.isArray(c.sets) ? c.sets : null } : null; } catch (e) { tv = null; } TV_MEM = { t: now, tv }; return tv; }
 async function siteImg(id, env, out) {
   if (!/^[a-z0-9]{8,24}$/.test(id) || !env.FIREBASE_SA) return out(404, { ok: false, error: 'not found' });
   const d = await fsGet('img/' + id, await saHead(env)); if (!d || !d.f.b) return out(404, { ok: false, error: 'not found' });
@@ -737,6 +741,7 @@ async function adminSite(b, H0, out) {
     const cfg = { gacha: g, raid: { nm: str(c.raid && c.raid.nm, 30), img: ref(c.raid && c.raid.img) }, notice: str(c.notice, 200), frames: {}, at: now };
     Object.keys(c.frames && typeof c.frames === 'object' ? c.frames : {}).slice(0, 40).forEach((sid) => { if (!/^[0-9a-zA-Z-]{1,20}$/.test(sid)) return; const o = {}; [1, 2, 3].forEach((t) => { const v = ref(c.frames[sid] && c.frames[sid][t]); if (v) o[t] = v; }); if (Object.keys(o).length) cfg.frames[sid] = o; }); /* 시즌별 순위 보상 테두리(1 = 상위 3%, 2 = 10%, 3 = 30%) */
     cfg.nk = (Array.isArray(c.nk) ? c.nk : []).slice(0, 40).map((x) => ({ n: str(x.n, 40), code: String(x.code || '').replace(/\D/g, '').slice(0, 6), corp: ['엘리시온', '미실리스', '테트라', '필그림', '어브노멀'].includes(x.corp) ? x.corp : '', el: R_CYC.includes(x.el) ? x.el : '', wp: ['AR', 'SMG', 'SG', 'SR', 'RL', 'MG'].includes(x.wp) ? x.wp : '', bu: x.bu === 'A' ? 'A' : [1, 2, 3].includes(+x.bu) ? +x.bu : 3, img: ref(x.img) })).filter((x) => x.n && x.code.length >= 3 && x.corp && x.el && x.wp && !RAID_NK0[x.code]); /* 도감에 없는 신규 니케의 카드 정보 */
+    if (Array.isArray(c.sets)) cfg.sets = c.sets.slice(0, 60).map((p) => (Array.isArray(p) ? p.slice(0, 2).map((k) => String(k || '').replace(/\D/g, '').slice(0, 6)) : [])).filter((p) => p.length === 2 && p[0].length >= 3 && p[1].length >= 3 && p[0] !== p[1]); /* 세트 니케(숨은 규칙) */
     cfg.packs = (Array.isArray(c.packs) ? c.packs : []).slice(0, 12).map((x) => ({ id: str(x.id, 20).replace(/[^0-9a-zA-Z_-]/g, ''), n: str(x.n, 40), code: String(x.code || '').replace(/\D/g, '').slice(0, 6), cover: ref(x.cover), c2: /^#[0-9a-fA-F]{6}$/.test(x.c2) ? x.c2 : '#ffcf5a', rate: +x.rate === 1 ? 1 : 2 })).filter((x) => x.id && x.n && x.code && x.cover); /* 픽업 부스터팩 */
     if (c.tiers && typeof c.tiers === 'object') { /* 절대 티어표: 이름→티어(솔레·PvP), 픽업(★) 목록, 서버용 코드→등급 */
       const LV = ['SSS', 'SS', 'S', 'A', 'B', 'C', 'D', 'E', 'F'], tm = (m) => { const o = {}; Object.keys(m && typeof m === 'object' ? m : {}).slice(0, 600).forEach((n) => { const k = str(n, 40); if (k && LV.includes(m[n])) o[k] = m[n]; }); return o; };
