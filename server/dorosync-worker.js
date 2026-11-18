@@ -581,7 +581,7 @@ async function raid(req, env, out) {
     const my = await getDoc(col + '/' + uid), f = my ? my.f : {};
     const n = f.day === today ? (f.n || 0) : 0, g = f.g && f.g.hand ? f.g : null;
     const mx = RAID_TRIES + (f.x1 ? 1 : 0); /* 도감 100%: 하루 핸드 +1 */
-    const view = (g2, extra) => Object.assign({ ok: true, season, admin, tries: n, max: mx, best: f.sc || 0, game: g2 ? { hand: rList(g2.hand).map((k) => [k, g2.cnt[k] || 1]), rd: g2.rd, fu: g2.fu ? 1 : 0, left: rList(g2.deck).length, pool: rList(g2.deck).sort().map((k) => [k, g2.cnt[k] || 1]), total: g2.total } : null }, extra || {});
+    const view = (g2, extra) => Object.assign({ ok: true, season, admin, tries: n, max: mx, best: f.sc || 0, game: g2 ? { hand: rList(g2.hand).map((k) => [k, g2.cnt[k] || 1]), rd: g2.rd, fu: g2.fu ? 1 : 0, sq: g2.sq ? rList(g2.sq) : null, cr: g2.sq ? String(g2.cr || '').split('').map(Number) : null, left: rList(g2.deck).length, pool: rList(g2.deck).sort().map((k) => [k, g2.cnt[k] || 1]), total: g2.total } : null }, extra || {});
     const pre = my ? { updateTime: my.updateTime } : { exists: false };
     const save = (fields, mask) => ({ update: { name: docName(col + '/' + uid), fields: fsv(fields).mapValue.fields }, updateMask: { fieldPaths: mask }, currentDocument: pre });
     if (a === 'state') { const ud = await getDoc('users/' + uid); let fr = (ud && ud.f.raidFrames) || {}, newFrame = 0;
@@ -623,8 +623,15 @@ async function raid(req, env, out) {
       if (await commit([{ update: { name: ud.name, fields: { chipsV: fsv({ d: chips, r: cv.r || 0 }), chipDay: fsv(dayUse(ud.f, 'rd', 100, 0, 0, 0)) } }, updateMask: { fieldPaths: ['chipsV', 'chipDay'] }, currentDocument: { updateTime: ud.updateTime } }])) return out(200, { ok: true, chips });
       continue;
     }
+    if (a === 'lock') { /* 편성 확정: 이때 크리티컬을 굴려 판에 적어 둠(사격 판정 전에 알려 주되, 다시 굴리거나 편성을 바꿀 수 없음) */
+      if (g.sq) return out(200, { ok: true, sq: rList(g.sq), crit: String(g.cr || '').split('').map(Number) });
+      if (pick.length !== 5) return out(400, { ok: false, error: 'bad' });
+      const R0 = rEval(pick, g.cnt, sn), cr = R0.pc.map((p0) => (Math.random() < p0 ? 1 : 0)), g2 = Object.assign({}, g, { sq: pick.join(','), cr: cr.join('') });
+      if (await commit([save({ g: g2 }, ['g'])])) return out(200, { ok: true, sq: pick, crit: cr });
+      continue;
+    }
     if (a === 'discard') {
-      if (pick.length < 1 || pick.length > 5 || g.rd < 1) return out(400, { ok: false, error: 'bad' });
+      if (pick.length < 1 || pick.length > 5 || g.rd < 1 || g.sq) return out(400, { ok: false, error: 'bad' });
       const fl = B.flt || {}, conds = ['e', 'c', 'b', 'r'].filter((k) => fl[k]); if (conds.length > 1 || (conds.length && g.fu)) return out(400, { ok: false, error: 'bad' }); /* 필터: 한 판에 한 번, 조건 1개 */
       const cost = conds.length ? 500 * pick.length * (fl.c === '필그림' ? 2 : 1) : 0; /* 버리는 카드 한 장당 500(필그림 지정 1,000) */
       const match = (k) => { const x = RAID_NK[k]; return (!fl.e || x[1] === fl.e) && (!fl.c || x[0] === fl.c) && (!fl.b || String(x[3]) === String(fl.b) || x[3] === 'A') && (!fl.r || (R_RNG[fl.r] || []).includes(x[2])); };
@@ -638,13 +645,13 @@ async function raid(req, env, out) {
       continue;
     }
     if (a === 'play') {
-      if (pick.length !== 5) return out(400, { ok: false, error: 'bad' });
-      const R = rEval(pick, g.cnt, sn), zs = Array.isArray(B.core) ? B.core : [];
-      R.crit = R.pc.map((p0) => (Math.random() < p0 ? 1 : 0)); R.core = pick.map((k, i) => { const z = Math.floor(+zs[i]); return z >= 0 && z <= 3 ? z : 0; }); /* 크리티컬은 서버가 굴림. 코어 판정(0~3존)은 기기에서 한 사격 결과 */
+      const sq = g.sq ? rList(g.sq) : pick; if (sq.length !== 5) return out(400, { ok: false, error: 'bad' }); /* 확정한 편성이 있으면 그것으로 */
+      const R = rEval(sq, g.cnt, sn), zs = Array.isArray(B.core) ? B.core : [];
+      R.crit = g.sq ? String(g.cr || '').split('').map((v) => (+v ? 1 : 0)) : R.pc.map((p0) => (Math.random() < p0 ? 1 : 0)); while (R.crit.length < 5) R.crit.push(0); R.core = sq.map((k, i) => { const z = Math.floor(+zs[i]); return z >= 0 && z <= 3 ? z : 0; }); /* 크리티컬은 서버가 굴림. 코어 판정(0~3존)은 기기에서 한 사격 결과 */
       R.dmg = R.ch.map((c, i) => Math.round(c * R.mult * R.f * (1 + R_CRIT.dmg * R.crit[i] + R_CORE[R.core[i]]))); R.base = R.score; R.score = R.dmg.reduce((a, v) => a + v, 0); delete R.pc;
       const up = R.score > (f.sc || 0);
       const fields = { g: null }, mask = ['g'];
-      if (up) { Object.assign(fields, { sc: R.score, at: now, bd: pick.map((k) => k + ':' + (g.cnt[k] || 1)).join(','), bc: R.chips, bm: R.mult, bf: R.f }); mask.push('sc', 'at', 'bd', 'bc', 'bm', 'bf'); }
+      if (up) { Object.assign(fields, { sc: R.score, at: now, bd: sq.map((k) => k + ':' + (g.cnt[k] || 1)).join(','), bc: R.chips, bm: R.mult, bf: R.f }); mask.push('sc', 'at', 'bd', 'bc', 'bm', 'bf'); }
       if (await commit([save(fields, mask)])) return out(200, { ok: true, season, tries: n, max: mx, best: up ? R.score : (f.sc || 0), result: R, newBest: up, game: null });
       continue;
     }
