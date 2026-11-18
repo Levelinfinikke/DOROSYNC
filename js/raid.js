@@ -81,19 +81,22 @@
   const CSS = `
 /* ---- 입장 연출: 승강기 게이트가 위아래로 닫히고, 톱니 장치가 내려와 박힌 뒤 모의전/도전 선택 → 보스가 올라오고 게이트가 열림 ---- */
 .rd-in{position:absolute;inset:0;z-index:60;overflow:hidden;font-family:"Arial Black","Pretendard","Malgun Gothic",sans-serif;container-type:size}.rd-in[hidden]{display:none}
-.rd-in-g{position:absolute;left:0;right:0;height:50.3%;background:radial-gradient(circle,rgba(0,0,0,.75) 1.2px,transparent 1.8px) 0 0/7px 7px,linear-gradient(90deg,rgba(0,0,0,.55),transparent 12%,transparent 88%,rgba(0,0,0,.55)),linear-gradient(#25272b,#18191c);box-shadow:inset 0 0 60px rgba(0,0,0,.7)}
-.rd-in-g.t{top:0;transform:translateY(-101%);border-bottom:3px solid #0a0b0c}.rd-in-g.b{bottom:0;transform:translateY(101%);border-top:2px solid #3a3d42}
-.rd-in-g:before{content:"";position:absolute;left:0;right:0;height:24%;background:repeating-linear-gradient(-55deg,#17181a 0 30px,#56533a 30px 60px);opacity:.75;border-top:3px solid #0c0d0e;border-bottom:3px solid #0c0d0e;box-shadow:0 0 0 1px rgba(255,255,255,.06)}
-.rd-in-g.t:before{bottom:14%}.rd-in-g.b:before{top:14%}
-.rd-in-g:after{content:"";position:absolute;left:0;right:0;height:9%;background:repeating-linear-gradient(-55deg,#141516 0 16px,#3c3a2c 16px 32px);opacity:.6}.rd-in-g.t:after{top:8%}.rd-in-g.b:after{bottom:10%}
-.rd-in-sil{position:absolute;inset:0;opacity:0;background:var(--rd-boss,url(${BOSS_IMG})) 50% 12%/cover;filter:grayscale(1) contrast(1.6) brightness(.8);-webkit-mask-image:radial-gradient(circle,#000 1.5px,transparent 2.1px);mask-image:radial-gradient(circle,#000 1.5px,transparent 2.1px);-webkit-mask-size:6px 6px;mask-size:6px 6px}
-.rd-in-gear{position:absolute;left:50%;top:40%;height:min(58cqh,70cqw);aspect-ratio:1;transform:translate(-50%,-260%);filter:drop-shadow(0 14px 18px rgba(0,0,0,.7))}
+.rd-in-g{position:absolute;left:0;right:0;height:50.2%;background:linear-gradient(90deg,rgba(0,0,0,.6),transparent 14%,transparent 86%,rgba(0,0,0,.6)),linear-gradient(#2a2c31,#1b1c20);box-shadow:inset 0 0 70px rgba(0,0,0,.75)}
+.rd-in-g.t{top:0;transform:translateY(-101%);border-bottom:3px solid #050506}.rd-in-g.b{bottom:0;transform:translateY(101%);border-top:2px solid #474a50}
+.rd-in-g:before{content:"";position:absolute;left:0;right:0;height:27%;background:repeating-linear-gradient(-55deg,#141517 0 44px,#6a6440 44px 88px);opacity:.8;border-top:3px solid #0a0b0c;border-bottom:3px solid #0a0b0c;box-shadow:0 0 0 1px rgba(255,255,255,.07),inset 0 0 30px rgba(0,0,0,.55)}
+.rd-in-g.t:before{bottom:5%}.rd-in-g.b:before{top:5%} /* 경고 줄무늬 두 줄: 가운데 이음매(= 톱니바퀴 중심)를 사이에 두고 위아래로 */
+.rd-in-g:after{content:"";position:absolute;left:0;right:0;height:5%;background:linear-gradient(#0c0d0f,#25272c 45%,#0c0d0f)}.rd-in-g.t:after{bottom:0}.rd-in-g.b:after{top:0}
+.rd-in-sh,.rd-in-sil{position:absolute;inset:0;-webkit-mask-image:radial-gradient(circle,#000 1.7px,transparent 2.3px);mask-image:radial-gradient(circle,#000 1.7px,transparent 2.3px);-webkit-mask-size:7px 7px;mask-size:7px 7px} /* 타공 철판의 구멍으로만 뒤가 보임 */
+.rd-in-sh{opacity:0;overflow:hidden;background:#050607}.rd-in-sh i{position:absolute;left:0;right:0;top:-100%;height:200%;background:linear-gradient(90deg,rgba(150,165,190,.5),transparent 9%,transparent 91%,rgba(150,165,190,.5)),repeating-linear-gradient(180deg,transparent 0 120px,rgba(120,132,150,.75) 120px 132px,transparent 132px 240px),repeating-linear-gradient(90deg,transparent 0 23%,rgba(90,100,118,.5) 23% 24.5%,transparent 24.5% 50%),#3c4049}
+.rd-in-sh u{position:absolute;left:0;right:0;top:0;height:22%;transform:translateY(-120%);background:linear-gradient(transparent,rgba(255,236,190,.95) 45%,#fff 50%,rgba(255,236,190,.95) 55%,transparent);text-decoration:none}.rd-in-sh u.o{background:linear-gradient(transparent,rgba(255,150,60,.9) 45%,#ffd9a0 50%,rgba(255,150,60,.9) 55%,transparent);height:14%}
+.rd-in-sil{opacity:0;background:var(--rd-boss,url(${BOSS_IMG})) 50% 12%/cover;filter:grayscale(1) contrast(1.6) brightness(.8)}
+.rd-in-gear{position:absolute;left:50%;top:50%;height:min(60cqh,72cqw);aspect-ratio:1;transform:translate(-50%,-260%);filter:drop-shadow(0 14px 18px rgba(0,0,0,.75))}
 .rd-in-gear svg{position:absolute;inset:0;width:100%;height:100%}
-.rd-in-scr{position:absolute;inset:17%;border-radius:50%;overflow:hidden;background:radial-gradient(circle at 50% 45%,#2a0505,#0a0202 75%);box-shadow:inset 0 0 26px #000;display:grid;place-items:center;text-align:center;color:#ff2a22;container-type:inline-size}
+.rd-in-scr{position:absolute;inset:19.6%;border-radius:50%;overflow:hidden;background:repeating-linear-gradient(98deg,rgba(0,0,0,.2) 0 2px,transparent 2px 9px),repeating-linear-gradient(84deg,rgba(255,60,40,.05) 0 5px,transparent 5px 17px),radial-gradient(circle at 50% 45%,#2a0505,#0a0202 75%);box-shadow:inset 0 0 30px #000,inset 0 0 0 2px #000;display:grid;place-items:center;text-align:center;color:#ff2a22;container-type:inline-size}
 .rd-in-scr:after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(0,0,0,.28) 0 2px,transparent 2px 4px);pointer-events:none}
 .rd-in-scr>div{grid-area:1/1;opacity:0}
 .rd-in-scr .es{font-size:15cqw;line-height:1.05;font-style:italic;letter-spacing:-.02em;transform:rotate(-7deg);text-shadow:0 0 14px #ff1a12;border-top:.5cqw dashed #ff2a22;border-bottom:.5cqw dashed #ff2a22;padding:3cqw 0}
-.rd-in-scr.on{background:radial-gradient(circle at 50% 45%,#8c0d0a,#3a0504 55%,#120202 85%)}.rd-in-scr.on .es{animation:rdInFl .9s steps(1) forwards}.rd-in-scr.nm .es{animation:none;opacity:0}
+.rd-in-scr.on{background:repeating-linear-gradient(98deg,rgba(0,0,0,.2) 0 2px,transparent 2px 9px),repeating-linear-gradient(84deg,rgba(255,90,60,.06) 0 5px,transparent 5px 17px),radial-gradient(circle at 50% 45%,#8c0d0a,#3a0504 55%,#120202 85%)}.rd-in-scr.on .es{animation:rdInFl .9s steps(1) forwards}.rd-in-scr.nm .es{animation:none;opacity:0}
 @keyframes rdInFl{0%{opacity:0}8%{opacity:1}16%{opacity:.2}24%{opacity:1}100%{opacity:1}}
 .rd-in-scr .bn{display:flex;flex-direction:column;align-items:center;gap:2cqw;transition:opacity .35s}.rd-in-scr.nm .bn{opacity:1}
 .rd-in-scr .bn small{font-size:5cqw;letter-spacing:.3em;color:#ff7a6e;opacity:.8}.rd-in-scr .bn b{font-size:15cqw;line-height:1.1;text-shadow:0 0 16px #ff1a12;font-family:"Pretendard","Malgun Gothic",sans-serif;font-weight:900;word-break:keep-all;max-width:88cqw}.rd-in-scr .bn span{font-size:5.4cqw;color:#ffb3a8;font-family:"Pretendard","Malgun Gothic",sans-serif;font-weight:700}
@@ -539,10 +542,14 @@
     const hn = $('.rd-hn'), ex = $('.rd-ex b'), msg = $('.rd-msg'); msg.className = 'rd-msg'; msg.textContent = '';
     if (n >= 1 && n <= 5) { const R = evalSquad(C(P), S.boss); /* 고른 카드(배치한 카드 포함)의 칩·배수·점수를 바로 보여 줌 */
       hn.innerHTML = R.steps.map((s) => '<div>' + s.h + '</div>').join('');
-      $('.rd-chips').textContent = R.chips; $('.rd-mult').textContent = R.mult; ex.innerHTML = fmt(R.score) + '<small>~</small>' + fmt(R.cards.reduce((a, c) => a + Math.round(c.v * R.mult * R.f * (1 + CRIT.dmg + CORE[3])), 0)) + '억'; ex.title = '최저(크리티컬·코어 없음) ~ 최고(전부 크리티컬 + 3존)'; ex.classList.add('rg');
+      $('.rd-chips').textContent = R.chips; $('.rd-mult').textContent = R.mult; { const q = n === 5 ? exRange(R) : null; if (q) { ex.innerHTML = fmt(q[0]) + '<small>~</small>' + fmt(q[1]) + '억'; ex.title = '크리티컬과 코어 판정을 넣어 600번 돌려 본 점수의 하위 25% ~ 상위 25% (코어는 보통 실력 기준)'; ex.classList.add('rg'); } else { ex.textContent = fmt(R.score) + '억'; ex.title = ''; ex.classList.remove('rg'); } }
       if (n === 5 && R.f < 1) { msg.textContent = '버스트 단계 누락 ×0.8'; msg.classList.add('bad'); }
     } else { hn.innerHTML = n > 5 ? '5장 초과' : ''; $('.rd-chips').textContent = n > 5 ? '-' : '0'; $('.rd-mult').textContent = n > 5 ? '-' : '0'; ex.textContent = n > 5 ? '-' : '0억'; }
   }
+  /* 예상 점수 범위: 크리티컬(확률대로)과 코어 판정(보통 실력: MISS 15 · 1존 30 · 2존 35 · 3존 20%)을 넣어 600번 돌려 본 하위 25% ~ 상위 25%. 같은 편성이면 늘 같은 값이 나오도록 정해진 난수를 씀 */
+  function exRange(R) { let sd = 12345; const rnd = () => { sd = (sd * 1664525 + 1013904223) >>> 0; return sd / 4294967296; }, N = 600, out = new Array(N), k = R.mult * R.f;
+    for (let t = 0; t < N; t++) { let v = 0; for (const c of R.cards) { const u = rnd(), z = u < 0.15 ? 0 : u < 0.45 ? 1 : u < 0.8 ? 2 : 3; v += Math.round(c.v * k * (1 + (rnd() < c.pc ? CRIT.dmg : 0) + CORE[z])); } out[t] = v; }
+    out.sort((a, b) => a - b); return [out[Math.floor(N * 0.25)], out[Math.floor(N * 0.75)]]; }
   function setBoss(b) {
     S.boss = b; const d = data(), sp = supOf(b.e);
     $('.rd-bn').innerHTML = (d.elIco ? '<img alt="" src="' + d.elIco[b.e] + '">' : '') + bossNm();
@@ -773,7 +780,7 @@
     }
     return { now, bd: bd && bd.ev > now.score * 1.04 ? bd : null, alt: bd };
   }
-  const chipFx = (to, n) => { try { if (window.doroChipFly) window.doroChipFly($('.rd-st .ch'), to, n, { size: 18 }); } catch (e) { /* 무시 */ } }; /* 잔고에서 싱크칩이 퍼져 나와 버튼으로 빨려 들어감 */
+  const chipFx = (to, n) => { try { if (window.doroChipFly) window.doroChipFly($('.rd-st .ch'), to, n, { size: 18, max: 10, stag: 55 }); } catch (e) { /* 무시 */ } }; /* 잔고에서 싱크칩이 퍼져 나와 버튼으로 빨려 들어감 */
   const HINT_COST = 100;
   async function payHint() { /* 싱크칩 100을 내고 추천을 봄(모의전은 미리보기 서버에서만 차감, 실전은 서버가 차감) */
     const msg = $('.rd-msg'); if (S.chips < HINT_COST) { msg.className = 'rd-msg warn'; msg.textContent = '싱크칩이 부족합니다'; return; }
@@ -839,7 +846,7 @@
   function introRem() { const e = $('.rd-in-rem'); if (!e || !S) return; const a0 = acct(), i = S.info || {}; $('.rd-in-cl').textContent = liveOn() || i.game ? '이어서 도전하기' : '도전하기'; e.textContent = a0 && a0.user ? '남은 기록 횟수 ' + Math.max(0, (i.max || 3) - (i.tries || 0)) + '/' + (i.max || 3) : '로그인 필요'; }
   async function intro() {
     const I = $('.rd-in'); if (!I || S.introOn) return; S.introOn = true; I.querySelectorAll('*').forEach((e) => e.getAnimations().forEach((x) => x.cancel())); I.hidden = false;
-    const gt = $('.rd-in-g.t'), gb = $('.rd-in-g.b'), gear = $('.rd-in-gear'), scr = $('.rd-in-scr'), pnl = $('.rd-in-p'), sil = $('.rd-in-sil'), A = (el, kf, ms, ez) => el.animate(kf, { duration: ms, fill: 'forwards', easing: ez || 'ease-in' }).finished.catch(() => {});
+    const gt = $('.rd-in-g.t'), gb = $('.rd-in-g.b'), gear = $('.rd-in-gear'), sh = $('.rd-in-sh'), scr = $('.rd-in-scr'), pnl = $('.rd-in-p'), sil = $('.rd-in-sil'), A = (el, kf, ms, ez) => el.animate(kf, { duration: ms, fill: 'forwards', easing: ez || 'ease-in' }).finished.catch(() => {});
     scr.classList.remove('on', 'nm'); scr.querySelector('.bn b').textContent = bossNm(); introRem();
     { const a0 = acct(); if (a0 && a0.user && !liveOn()) api('state').then((j) => { S.info = { tries: j.tries || 0, max: j.max || 3, game: !!j.game }; introRem(); }).catch(() => {}); }
     { let t = ''; try { const sn = window.doroCfg.get().season, now = Date.now(); if (sn && now >= sn.start && now < sn.end) { const h = Math.floor((sn.end - now) / 3600000); t = '시즌 종료까지 ' + (h >= 24 ? Math.floor(h / 24) + '일 ' : '') + (h % 24) + '시간'; } else if (sn && now < sn.start) t = '시즌 준비 중'; } catch (e) { /* 설정 전 */ } scr.querySelector('.bn span').textContent = t; }
@@ -847,7 +854,11 @@
     snd(() => { noise(0.38, 0.12, 0, 600); tone(70, 0.4, 'sawtooth', 0.05, 45); });
     A(gt, [{ transform: 'translateY(-101%)' }, { transform: 'translateY(0)' }], 380, 'cubic-bezier(.6,0,.9,.5)'); await A(gb, [{ transform: 'translateY(101%)' }, { transform: 'translateY(0)' }], 380, 'cubic-bezier(.6,0,.9,.5)');
     snd(() => { noise(0.3, 0.5, 0, 300); tone(55, 0.45, 'sine', 0.6, 28); metal(420, 0.25, 0.05, 0.02); });
-    I.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(5px)' }, { transform: 'translateY(-3px)' }, { transform: 'translateY(0)' }], { duration: 200 }); await sleep(260);
+    I.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(5px)' }, { transform: 'translateY(-3px)' }, { transform: 'translateY(0)' }], { duration: 200 });
+    /* 승강기가 올라가는 중: 구멍 사이로 통로의 골조가 아래로 흘러가고, 조명이 가끔 스쳐 지나감 */
+    const run = [sh.querySelector('i').animate([{ transform: 'translateY(0)' }, { transform: 'translateY(240px)' }], { duration: 520, iterations: Infinity, easing: 'linear' })];
+    sh.querySelectorAll('u').forEach((u, q) => run.push(u.animate([{ transform: 'translateY(-120%)', offset: 0 }, { transform: 'translateY(-120%)', offset: 0.72 }, { transform: 'translateY(560%)', offset: 1 }], { duration: q ? 3700 : 2300, delay: q ? 900 : 300, iterations: Infinity, easing: 'linear' })));
+    A(sh, [{ opacity: 0 }, { opacity: 1 }], 320, 'ease-out'); await sleep(260);
     snd(() => { for (let q = 0; q < 7; q++) { noise(0.03, 0.12, q * 0.06, 2400); tone(160, 0.04, 'square', 0.03, 120, q * 0.06); } });
     await A(gear, [{ transform: 'translate(-50%,-260%) rotate(-150deg)' }, { transform: 'translate(-50%,-50%) rotate(0deg)' }], 520, 'cubic-bezier(.3,.9,.4,1)');
     gear.style.transform = 'translate(-50%,-50%)'; snd(() => { noise(0.22, 0.45, 0, 500); tone(80, 0.3, 'sine', 0.5, 40); metal(900, 0.18, 0.06, 0.01); });
@@ -857,13 +868,18 @@
     const pick = await new Promise((res) => { introPick = res; }); introPick = null; sfx.tap();
     await A(pnl, [{ transform: 'translateY(0)' }, { transform: 'translateY(105%)' }], 220);
     snd(() => { tone(60, 0.9, 'sawtooth', 0.04, 110); noise(0.8, 0.06, 0, 400); });
-    await A(sil, [{ opacity: 0, transform: 'translateY(22%)' }, { opacity: 0.5, transform: 'translateY(0)' }], 700, 'cubic-bezier(.2,.7,.3,1)'); await sleep(150);
+    { let r = 1; const dec = setInterval(() => { r = Math.max(0, r - 0.09); run.forEach((a) => { try { a.updatePlaybackRate(r); } catch (e) { /* 무시 */ } }); if (r <= 0) clearInterval(dec); }, 70); } /* 승강기가 느려지며 멈춤 */
+    A(sh, [{ opacity: 1 }, { opacity: 0.35 }], 800, 'ease-out');
+    await A(sil, [{ opacity: 0, transform: 'translateY(34%)' }, { opacity: 0.62, transform: 'translateY(0)' }], 900, 'cubic-bezier(.2,.7,.3,1)'); /* 보스가 구멍 사이로 떠오름 */
+    snd(() => { noise(0.2, 0.4, 0, 500); tone(70, 0.3, 'sine', 0.5, 40); metal(700, 0.16, 0.05, 0.01); }); I.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(4px)' }, { transform: 'translateY(0)' }], { duration: 160 }); await sleep(220);
+    snd(() => { for (let q = 0; q < 4; q++) noise(0.03, 0.1, q * 0.06, 2400); });
+    await A(gear, [{ transform: 'translate(-50%,-50%) scale(1)' }, { transform: 'translate(-50%,-57%) scale(1.035)' }], 300, 'cubic-bezier(.3,1.5,.5,1)'); await sleep(140); /* 톱니바퀴가 먼저 들려 올라감 */
     snd(() => { for (let q = 0; q < 6; q++) noise(0.03, 0.1, q * 0.06, 2400); });
-    await A(gear, [{ transform: 'translate(-50%,-50%) rotate(0deg)' }, { transform: 'translate(-50%,-320%) rotate(150deg)' }], 460, 'cubic-bezier(.6,0,.8,.4)'); await sleep(120);
+    await A(gear, [{ transform: 'translate(-50%,-57%) scale(1.035) rotate(0deg)' }, { transform: 'translate(-50%,-320%) scale(1.035) rotate(150deg)' }], 460, 'cubic-bezier(.6,0,.8,.4)'); await sleep(120);
     if (pick === 'chal') { if (!liveOn()) goChal(); } else setMode(pracMode()); /* 이어서 도전: 깔려 있는 판 그대로 */ /* 게이트가 열리는 동안 판이 깔림 */
     snd(() => { noise(0.5, 0.3, 0, 350); tone(50, 0.5, 'sine', 0.4, 90); });
-    A(sil, [{ opacity: 0.5 }, { opacity: 0 }], 380); A(gt, [{ transform: 'translateY(0)' }, { transform: 'translateY(-101%)' }], 560, 'cubic-bezier(.5,0,.6,1)'); await A(gb, [{ transform: 'translateY(0)' }, { transform: 'translateY(101%)' }], 560, 'cubic-bezier(.5,0,.6,1)');
-    I.hidden = true; gear.style.transform = ''; I.querySelectorAll('*').forEach((e) => e.getAnimations().forEach((x) => x.cancel())); S.introOn = false;
+    A(sil, [{ opacity: 0.62 }, { opacity: 0 }], 300); A(sh, [{ opacity: 0.35 }, { opacity: 0 }], 200); A(gt, [{ transform: 'translateY(0)' }, { transform: 'translateY(-101%)' }], 560, 'cubic-bezier(.5,0,.6,1)'); await A(gb, [{ transform: 'translateY(0)' }, { transform: 'translateY(101%)' }], 560, 'cubic-bezier(.5,0,.6,1)');
+    run.forEach((a) => a.cancel()); I.hidden = true; gear.style.transform = ''; I.querySelectorAll('*').forEach((e) => e.getAnimations().forEach((x) => x.cancel())); S.introOn = false;
   }
   function onClick(ev) {
     { const ib = ev.target.closest('[data-in]'); if (ib) { if (introPick) introPick(ib.dataset.in); return; } if (S && S.introOn) return; }
@@ -972,7 +988,12 @@
     const d0 = data(), smp = d0.list.slice().sort((a, b) => (TS[b.t] || 0) - (TS[a.t] || 0)).slice(0, 5).map((x, i) => cardHtml(Object.assign({}, x, { cnt: [4, 11, 11, 7, 1][i] }), BOSS0)).join('');
     const hx = (inner, cls) => '<span class="pk-hx ' + (cls || '') + '">' + inner + '</span>', wpi = (w) => '<img alt="' + w + '" src="assets/img/wp-' + w + '.png">';
     root.innerHTML = '<div class="rd-launch" hidden><div class="rd-lt"><small>POKER RAID</small>' + bossNm() + '</div><div class="rd-lc">' + smp + '</div><button type="button" class="rd-go" data-fs="1" aria-label="플레이">▶</button><div class="rd-lp">가로 화면으로 시작</div></div>' +
-      '<div class="rd"><div class="rd-in" hidden><div class="rd-in-g t"></div><div class="rd-in-g b"></div><div class="rd-in-sil"></div><div class="rd-in-gear"><svg viewBox="-104 -104 208 208" aria-hidden="true">' + Array.from({ length: 16 }, (_, i) => '<rect x="-9" y="-100" width="18" height="16" rx="2" fill="#4a4e55" transform="rotate(' + i * 22.5 + ')"/>').join('') + '<circle r="88" fill="#2b2e33" stroke="#6a6f77" stroke-width="5"/><circle r="76" fill="#1b1d20" stroke="#8f949b" stroke-width="2"/><circle r="72" fill="none" stroke="#101112" stroke-width="8"/><circle r="72" fill="none" stroke="#e0b62f" stroke-width="7" stroke-dasharray="7 7.14"/><circle r="66" fill="none" stroke="#9aa0a8" stroke-width="2"/></svg><div class="rd-in-scr"><div class="es">EMERGENCY<br>SCRAMBLE</div><div class="bn"><small>POKER RAID</small><b></b><span></span></div></div></div>' +
+      '<div class="rd"><div class="rd-in" hidden><div class="rd-in-g t"></div><div class="rd-in-g b"></div><div class="rd-in-sh"><i></i><u></u><u class="o"></u></div><div class="rd-in-sil"></div><div class="rd-in-gear"><svg viewBox="-104 -104 208 208" aria-hidden="true"><defs><linearGradient id="rdGm" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#dcd9cf"/><stop offset=".5" stop-color="#aaa79d"/><stop offset="1" stop-color="#77756d"/></linearGradient><linearGradient id="rdGo" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#666b74"/><stop offset="1" stop-color="#2c2f35"/></linearGradient></defs>' +
+        '<circle r="103" fill="#121315"/><circle r="98.5" fill="none" stroke="url(#rdGo)" stroke-width="8"/><circle r="102.5" fill="none" stroke="rgba(255,255,255,.14)" stroke-width="1"/><circle r="94" fill="#1c1e22" stroke="#0b0c0d" stroke-width="1.5"/>' +
+        Array.from({ length: 16 }, (_, i) => '<path d="M-9.5 -79L9.5 -79L5.5 -91.5L-5.5 -91.5Z" fill="#5a5f67" stroke="#24262a" stroke-width="1.2" transform="rotate(' + (i * 22.5 + 11.25) + ')"/><path d="M-5 -90.5L5 -90.5" stroke="rgba(255,255,255,.3)" stroke-width="1" transform="rotate(' + (i * 22.5 + 11.25) + ')"/>').join('') +
+        '<circle r="80.5" fill="url(#rdGm)" stroke="#55534c" stroke-width="1.2"/>' + Array.from({ length: 16 }, (_, i) => '<circle cx="0" cy="-77" r="1.5" fill="#6d6a62" stroke="#3c3a35" stroke-width=".5" transform="rotate(' + i * 22.5 + ')"/>').join('') +
+        '<circle r="73.5" fill="#0c0d0f"/>' + Array.from({ length: 40 }, (_, i) => '<rect x="-2.7" y="-72.6" width="5.4" height="8.2" fill="#e3b82f" transform="rotate(' + i * 9 + ') skewX(-30)"/>').join('') + '<circle r="64" fill="none" stroke="#918e84" stroke-width="1.8"/><circle r="73.2" fill="none" stroke="#000" stroke-width="1" opacity=".6"/>' +
+        [48, 132, 268].map((a) => '<g transform="rotate(' + a + ')"><rect x="-7.5" y="-97.5" width="15" height="14" rx="1.6" fill="#2f3237" stroke="#0a0b0c" stroke-width="1.2"/><rect x="-5" y="-95" width="10" height="5" fill="#8d929a"/><rect x="-5" y="-88.6" width="4.4" height="3.2" fill="#1a1c1f"/><rect x=".6" y="-88.6" width="4.4" height="3.2" fill="#1a1c1f"/></g>').join('') + '</svg><div class="rd-in-scr"><div class="es">EMERGENCY<br>SCRAMBLE</div><div class="bn"><small>POKER RAID</small><b></b><span></span></div></div></div>' +
       '<div class="rd-in-p"><em>CHALLENGE MODE</em><p>도전하기는 기록이 순위에 남습니다 · 모의전은 기록과 싱크칩 차감 없이 연습합니다</p><div><button type="button" class="rd-in-b" data-in="prac">모의전</button><button type="button" class="rd-in-b red" data-in="chal"><span class="rd-in-cl">도전하기</span><small class="rd-in-rem"></small></button></div></div></div><aside class="rd-side">' +
       '<div class="pn rd-boss"><div class="rd-bn"></div><div class="rd-bi"></div></div>' +
       '<div class="pn rd-hp"><div class="rd-hn"></div><div class="rd-cm"><b class="rd-chips">0</b><i>×</i><b class="rd-mult">0</b></div><div class="rd-ex"><span>예상 점수</span><b>0억</b></div></div>' +
