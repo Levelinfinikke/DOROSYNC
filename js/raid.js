@@ -560,14 +560,14 @@
     const hn = $('.rd-hn'), ex = $('.rd-ex b'), msg = $('.rd-msg'); msg.className = 'rd-msg'; msg.textContent = '';
     if (n >= 1 && n <= 5) { const R = evalSquad(C(P), S.boss); /* 고른 카드(배치한 카드 포함)의 칩·배수·점수를 바로 보여 줌 */
       hn.innerHTML = R.steps.map((s) => '<div>' + s.h + '</div>').join('');
-      $('.rd-chips').textContent = R.chips; $('.rd-mult').textContent = R.mult; { const q = n === 5 ? exRange(R) : null; if (q) { ex.innerHTML = fmt(q[0]) + '<small>~</small>' + fmt(q[1]) + '억'; ex.title = '크리티컬과 코어 판정을 넣어 600번 돌려 본 점수의 하위 25% ~ 상위 25% (코어는 보통 실력 기준)'; ex.classList.add('rg'); } else { ex.textContent = fmt(R.score) + '억'; ex.title = ''; ex.classList.remove('rg'); } }
+      $('.rd-chips').textContent = R.chips; $('.rd-mult').textContent = R.mult; { const q = n === 5 ? exRange(R) : null; if (q) { ex.innerHTML = fmt(q[0]) + '<small>~</small>' + fmt(q[1]) + '억'; ex.title = '크리티컬과 코어 판정을 넣어 600번 돌려 본 점수의 상위 30% ~ 상위 10% (코어는 보통 실력 기준)'; ex.classList.add('rg'); } else { ex.textContent = fmt(R.score) + '억'; ex.title = ''; ex.classList.remove('rg'); } }
       if (n === 5 && R.f < 1) { msg.textContent = '버스트 단계 누락 ×0.8'; msg.classList.add('bad'); }
     } else { hn.innerHTML = n > 5 ? '5장 초과' : ''; $('.rd-chips').textContent = n > 5 ? '-' : '0'; $('.rd-mult').textContent = n > 5 ? '-' : '0'; ex.textContent = n > 5 ? '-' : '0억'; }
   }
-  /* 예상 점수 범위: 크리티컬(확률대로)과 코어 판정(보통 실력: MISS 15 · 1존 30 · 2존 35 · 3존 20%)을 넣어 600번 돌려 본 하위 25% ~ 상위 25%. 같은 편성이면 늘 같은 값이 나오도록 정해진 난수를 씀 */
+  /* 예상 점수 범위: 크리티컬(확률대로)과 코어 판정(보통 실력: MISS 15 · 1존 30 · 2존 35 · 3존 20%)을 넣어 600번 돌려 본 상위 30% ~ 상위 10%. 같은 편성이면 늘 같은 값이 나오도록 정해진 난수를 씀 */
   function exRange(R) { let sd = 12345; const rnd = () => { sd = (sd * 1664525 + 1013904223) >>> 0; return sd / 4294967296; }, N = 600, out = new Array(N), k = R.mult * R.f;
     for (let t = 0; t < N; t++) { let v = 0; for (const c of R.cards) { const u = rnd(), z = u < 0.15 ? 0 : u < 0.45 ? 1 : u < 0.8 ? 2 : 3; v += Math.round(c.v * k * (1 + (rnd() < c.pc ? CRIT.dmg : 0) + CORE[z])); } out[t] = v; }
-    out.sort((a, b) => a - b); return [out[Math.floor(N * 0.25)], out[Math.floor(N * 0.75)]]; }
+    out.sort((a, b) => a - b); return [out[Math.floor(N * 0.7)], out[Math.floor(N * 0.9)]]; }
   function setBoss(b) {
     S.boss = b; const d = data(), sp = supOf(b.e);
     $('.rd-bn').innerHTML = (d.elIco ? '<img alt="" src="' + d.elIco[b.e] + '">' : '') + bossNm();
