@@ -2005,11 +2005,14 @@ html .daily-note{left:10px;right:10px;transform:translateY(20px);justify-content
 /* 로비 랭킹: 다시 시도 */
 .lb-rk .e{text-align:center;flex-direction:column;align-items:center}.lb-rk .lb-rt{display:block;white-space:nowrap;width:auto;height:auto;margin:8px auto 0;padding:5px 12px;font-size:12px;font-weight:700;border-radius:999px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:inherit;cursor:pointer}
 
-/* 웹앱 설치: 니슬렁 모음 우상단(휴대폰) */
-.lb-hero .lb-app{position:absolute;top:2px;right:0;display:inline-flex;align-items:center;gap:5px;height:34px;padding:0 13px 0 10px;border:1px solid rgba(255,207,90,.55);background:linear-gradient(180deg,rgba(255,196,60,.22),rgba(255,160,0,.1));color:#ffd56a;font-size:13px;font-weight:800;letter-spacing:-.01em;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.35)}
-.lb-hero .lb-app[hidden]{display:none}
-.lb-hero .lb-app svg{width:17px;height:17px}
-:root[data-theme="light"] .lb-hero .lb-app{color:#b06d00;background:#fff4d6;border-color:#f0c25a}
+/* 니슬렁 모음 우상단: 앱 설치(휴대폰) · 피드백 — 같은 원형 버튼 */
+.lb-hero .lb-acts{display:flex;gap:8px;align-items:center;margin-left:auto;align-self:center;flex:none}
+#tab-game .lb-hero .lb-acts .lb-app,#tab-game .lb-hero .lb-acts .lb-fb{position:static;width:40px;height:40px;min-width:40px;padding:0;margin:0;top:auto;order:0;border-radius:50%!important;display:grid;place-items:center;flex:none;border:1px solid rgba(255,207,90,.55);background:linear-gradient(180deg,rgba(255,196,60,.22),rgba(255,160,0,.1));color:#ffd56a;box-shadow:0 2px 10px rgba(0,0,0,.35);cursor:pointer;transition:transform .15s}
+#tab-game .lb-hero .lb-acts .lb-app[hidden]{display:none}
+#tab-game .lb-hero .lb-acts>button:hover{transform:scale(1.08)}
+#tab-game .lb-hero .lb-acts svg{width:20px;height:20px}
+:root[data-theme="light"] #tab-game .lb-hero .lb-acts>button{color:#b06d00;background:#fff4d6;border-color:#f0c25a}
+@media(max-width:700px){#tab-game .lb-hero .lb-acts{position:absolute;top:0;right:0;margin:0}#tab-game .lb-hero .lb-t{padding-right:96px;box-sizing:border-box}}
 .pwa-ov{position:fixed;inset:0;z-index:9999;background:rgba(5,8,12,.62);display:flex;align-items:flex-end;justify-content:center;padding:12px 12px calc(12px + env(safe-area-inset-bottom));-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
 .pwa-m{position:relative;width:min(420px,100%);background:#1c222c;color:#e8ecf2;border:1px solid #2f3a48;border-radius:22px;padding:18px 18px 16px;box-shadow:0 20px 50px rgba(0,0,0,.5);animation:pwaUp .25s ease-out}
 @keyframes pwaUp{from{transform:translateY(30px);opacity:0}to{transform:none;opacity:1}}
