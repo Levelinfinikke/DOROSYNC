@@ -434,7 +434,7 @@ function rEval(codes, cnt, boss) { /* 니케별 칩과 크리티컬 확률, 배�
 const BOT_A = ['도로', '라피', '네온', '아니스', '방주', '전초', '셔플', '럭키', '밤샘', '코어', '버스트', '홍련', '모더', '엘리', '미실', '테트라', '필그림', '라플', '앨리스', '루주', '헬름', '슈가', '프리바', '율하', '디젤', '메이든', '노아', '사쿠라', '블랑', '누아르', 'Rapi', 'Neon', 'doro', 'Ark', 'Nikke'], BOT_B = ['', '', '짱', '단', '러', '킹', '님', '77', '99', '0', '7', '123', '_kr', '02', '츄', '쓰', 'x', '11'];
 function raidBots(sid, sn, now, real, final) {
   let h = 2166136261; for (const ch of String(sid)) h = Math.imul(h ^ ch.charCodeAt(0), 16777619);
-  const r0 = tabsRng(h), K = 12 + Math.floor(r0() * 9), st = +sn.start || 0, len = Math.max(1, (+sn.end || now) - st), prog = final || !st ? 1 : (now - st) / len, codes = Object.keys(RAID_NK), out = [];
+  const r0 = tabsRng(h), K = 12 + Math.floor(r0() * 9), st = +sn.start || 0, len = Math.max(1, (+sn.end || now) - st), prog = final || !st ? 1 : (now - st) / len, codes = Object.keys(RAID_NK), sTop = codes.filter((k) => RAID_NK[k][4] >= 7), out = [];
   const ref = real.length >= 4 ? real[Math.floor(real.length * 0.1)].sc : 1200, boss = { e: R_CYC.includes(sn.e) ? sn.e : '작', r: R_RNG[sn.r] ? sn.r : 'MID' };
   for (let i = 0; i < K && codes.length >= 5; i++) {
     const pre = i < 5, rb = tabsRng(h ^ Math.imul(i + 1, 2654435761)), join = pre ? 0 : 0.02 + rb() * 0.85, /* 앞의 다섯은 시즌 시작부터 있는 기록(700~1,200) */ lvl = 0.12 + 0.88 * rb(), s1 = join + (1 - join) * (0.2 + 0.3 * rb()), s2 = s1 + (1 - s1) * (0.3 + 0.4 * rb()), nick = BOT_A[Math.floor(rb() * BOT_A.length)] + BOT_B[Math.floor(rb() * BOT_B.length)];
@@ -442,7 +442,7 @@ function raidBots(sid, sn, now, real, final) {
     for (let q = 0; q < 160; q++) { const cs = []; while (cs.length < 5) { const k = codes[Math.floor(rc() * codes.length)]; if (!cs.includes(k)) cs.push(k); } const cnt = {}; cs.forEach((k) => { cnt[k] = 1 + Math.floor(Math.pow(rc(), 2.2 - 1.6 * lvl) * 11); });
       const R = rEval(cs, cnt, boss), sc = Math.round(R.score * (1 + rc() * 0.9)), d = Math.abs(sc - target); if (sc > 0 && (pre ? sc >= 700 && sc <= 1200 : sc < ref * 0.97) && (!best || d < best.d)) best = { d, sc, cs, cnt, R }; }
     if (!best) continue;
-    out.push({ uid: 'ai:' + i, ai: 1, nick, sc: best.sc, at: st + (pre ? i * 60000 : Math.round([join, s1, s2][stage] * len)), deck: best.cs.map((k) => k + ':' + best.cnt[k]).join(','), chips: best.R.chips, mult: best.R.mult, f: best.R.f, pf: best.cs[0], fr: 0 });
+    out.push({ uid: 'ai:' + i, ai: 1, nick, sc: best.sc, at: st + (pre ? i * 60000 : Math.round([join, s1, s2][stage] * len)), deck: best.cs.map((k) => k + ':' + best.cnt[k]).join(','), chips: best.R.chips, mult: best.R.mult, f: best.R.f, pf: sTop.length ? sTop[Math.floor(rb() * sTop.length)] : best.cs[0], fr: 0 }); /* 프로필 사진: S급 이상 니케 가운데 */
   }
   return out;
 }
@@ -458,7 +458,7 @@ async function raid(req, env, out) {
     uid = (lk && lk.users && lk.users[0] && lk.users[0].localId) || ''; }
   /* 비로그인 참가: 연동한 게임 계정(프로필 주소)이 곧 참가자. 같은 게임 계정은 어느 기기에서 해도 한 사람(하루 횟수·기록 공유).
      포커레이드 진행과 순위표만 가능하고, 싱크칩을 쓰는 추천·필터와 카드팩 등 다른 동작은 로그인 필요 */
-  let guest = false; if (!idt) { const gid = toIntlId(B.openid), ga = Number(B.area); if (gid && /^[0-9A-Za-z]{6,40}$/.test(gid) && AREAS.includes(ga)) { uid = 'g' + ga + '_' + gid; guest = true; } }
+  let guest = false, gKey = ''; if (!idt) { const gid = toIntlId(B.openid), ga = Number(B.area); if (gid && /^[0-9A-Za-z]{6,40}$/.test(gid) && AREAS.includes(ga)) { uid = 'g' + ga + '_' + gid; guest = true; gKey = ga + '_' + gid; } }
   if (!uid && (idt || a !== 'rank')) return out(401, { ok: false, error: 'auth' });
   if (guest && !['rank', 'state', 'start', 'giveup', 'lock', 'discard', 'play'].includes(a)) return out(401, { ok: false, error: 'login' });
   const admin = !!uid && ADMIN_UIDS.includes(uid); if (!RAID_OPEN && !admin) return out(403, { ok: false, error: 'closed' });
@@ -473,8 +473,10 @@ async function raid(req, env, out) {
   const now = Date.now(), today = kstDay(now);
   /* 순위: 점수 높은 순, 같은 점수는 먼저 낸 순 */
   const rankOf = async (colId) => { const q = await (await fetch(FS + ':runQuery', { method: 'POST', headers: H, body: JSON.stringify({ structuredQuery: { from: [{ collectionId: colId }], where: { fieldFilter: { field: { fieldPath: 'sc' }, op: 'GREATER_THAN', value: { integerValue: '0' } } }, orderBy: [{ field: { fieldPath: 'sc' }, direction: 'DESCENDING' }], limit: 1000 } }) })).json();
-    const rows = (Array.isArray(q) ? q : []).filter((x) => x.document).map((x) => { const f = {}; Object.entries(x.document.fields || {}).forEach(([k, v]) => { f[k] = dec(v); }); return { uid: x.document.name.split('/').pop(), nick: f.nick || '', sc: f.sc || 0, at: f.at || 0, deck: f.bd || '', chips: f.bc || 0, mult: f.bm || 0, f: f.bf || 1, pf: f.pf || '', fr: f.fr || 0 }; });
-    rows.sort((x, y) => y.sc - x.sc || x.at - y.at); return rows; };
+    const rows = (Array.isArray(q) ? q : []).filter((x) => x.document).map((x) => { const f = {}; Object.entries(x.document.fields || {}).forEach(([k, v]) => { f[k] = dec(v); }); return { uid: x.document.name.split('/').pop(), k: f.oid ? (f.area || 0) + '_' + f.oid : '', nick: f.nick || '', sc: f.sc || 0, at: f.at || 0, deck: f.bd || '', chips: f.bc || 0, mult: f.bm || 0, f: f.bf || 1, pf: f.pf || '', fr: f.fr || 0 }; });
+    rows.sort((x, y) => y.sc - x.sc || x.at - y.at);
+    const seen = {}, one = []; rows.forEach((x) => { const k = x.k || x.uid; if (seen[k]) { seen[k].al.push(x.uid); return; } x.al = []; seen[k] = x; one.push(x); }); return one; }; /* 같은 게임 계정(로그인 + 비로그인으로 각각 도전)은 가장 높은 기록 한 줄만 */
+  const isMe = (x) => !!uid && (x.uid === uid || (x.al || []).includes(uid) || (!!gKey && x.k === gKey));
   const rankAll = async (colId, snx, final) => { const real = await rankOf(colId); let bots = []; try { bots = raidBots(String(colId).replace(/^raid_/, ''), snx || {}, now, real, final); } catch (e) { bots = []; } return real.concat(bots).sort((x, y) => y.sc - x.sc || x.at - y.at); }; /* 실제 기록 + AI 기록 */
   const tierOf = (i, N) => (i < 0 ? 0 : i < Math.max(3, Math.ceil(N * 0.03)) ? 1 : i < Math.max(10, Math.ceil(N * 0.1)) ? 2 : i < Math.max(30, Math.ceil(N * 0.3)) ? 3 : 0); /* 테두리: 3%·3위 / 10%·10위 / 30%·30위 */
   const RANK_ALIAS = { '벨벳탄환주머니': '내일캐삭' }; /* 관리자 계정이 순위표에 보이는 이름 */
@@ -597,8 +599,8 @@ const maskNick = (v) => { const c = Array.from(String(v || '지휘관')); return
   if (!sn) return out(200, { ok: true, season: null, admin });
   const col = 'raid_' + sn.id;
   if (a === 'rank') {
-    const all = await rankAll(col, sn, now >= sn.end), N = all.length, pub = (x, k) => Object.assign({ rank: k + 1, me: !!uid && x.uid === uid, nick: maskNick(ADMIN_UIDS.includes(x.uid) && RANK_ALIAS[x.nick] ? RANK_ALIAS[x.nick] : x.nick), sc: x.sc, deck: x.deck, chips: x.chips, mult: x.mult, f: x.f, pf: x.pf, fr: x.fr }, admin && x.ai ? { ai: 1 } : {}); /* AI 표시는 관리자에게만 */
-    const mi = uid ? all.findIndex((x) => x.uid === uid) : -1;
+    const all = await rankAll(col, sn, now >= sn.end), N = all.length, pub = (x, k) => Object.assign({ rank: k + 1, me: isMe(x), nick: maskNick(ADMIN_UIDS.includes(x.uid) && RANK_ALIAS[x.nick] ? RANK_ALIAS[x.nick] : x.nick), sc: x.sc, deck: x.deck, chips: x.chips, mult: x.mult, f: x.f, pf: x.pf, fr: x.fr }, admin && x.ai ? { ai: 1 } : {}); /* AI 표시는 관리자에게만 */
+    const mi = uid ? all.findIndex(isMe) : -1;
     return out(200, { ok: true, season, total: N, cut: [Math.max(3, Math.ceil(N * 0.03)), Math.max(10, Math.ceil(N * 0.1)), Math.max(30, Math.ceil(N * 0.3))], rows: all.slice(0, 100).map(pub), mine: mi >= 0 ? pub(all[mi], mi) : null });
   }
   for (let attempt = 0; attempt < 3; attempt++) {
@@ -608,10 +610,12 @@ const maskNick = (v) => { const c = Array.from(String(v || '지휘관')); return
     const view = (g2, extra) => Object.assign({ ok: true, season, admin, tries: n, max: mx, best: f.sc || 0, game: g2 ? { hand: rList(g2.hand).map((k) => [k, g2.cnt[k] || 1]), rd: g2.rd, fu: g2.fu ? 1 : 0, sq: g2.sq ? rList(g2.sq) : null, cr: g2.sq ? String(g2.cr || '').split('').map(Number) : null, left: rList(g2.deck).length, pool: rList(g2.deck).sort().map((k) => [k, g2.cnt[k] || 1]), total: g2.total } : null }, extra || {});
     const pre = my ? { updateTime: my.updateTime } : { exists: false };
     const save = (fields, mask) => ({ update: { name: docName(col + '/' + uid), fields: fsv(fields).mapValue.fields }, updateMask: { fieldPaths: mask }, currentDocument: pre });
+    const pfFr = (rf) => { const pf = String(B.pf || '').replace(/\D/g, '').slice(0, 6), fm = String(B.fr || '').match(/^([0-9a-zA-Z-]{1,20}):([123])$/), fr = fm ? (+rf[fm[1]] === +fm[2] ? fm[0] : 0) : [1, 2, 3].includes(+B.fr) && Object.values(rf).map(Number).includes(+B.fr) ? +B.fr : 0; return [pf, fr]; }; /* 랭킹에 보일 프로필 니케·테두리(가진 테두리만) */
     if (a === 'state') { const ud = await getDoc('users/' + uid); let fr = (ud && ud.f.raidFrames) || {}, newFrame = 0;
       const ended = now >= sn.end ? sn : (sn.prev && sn.prev.id ? sn.prev : null); /* 끝난 시즌의 순위로 프로필 테두리 지급(한 번만) */
-      if (ended && ud && fr[ended.id] == null) { const all = await rankAll('raid_' + ended.id, ended, true), t = tierOf(all.findIndex((x) => x.uid === uid), all.length); fr = Object.assign({}, fr, { [ended.id]: t });
+      if (ended && ud && fr[ended.id] == null) { const all = await rankAll('raid_' + ended.id, ended, true), t = tierOf(all.findIndex(isMe), all.length); fr = Object.assign({}, fr, { [ended.id]: t });
         if (await commit([{ update: { name: ud.name, fields: { raidFrames: fsv(fr) } }, updateMask: { fieldPaths: ['raidFrames'] } }])) newFrame = t; }
+      if (my && B.pf != null) { const [p2, f2] = pfFr(fr); if (p2 !== String(f.pf || '') || String(f2) !== String(f.fr || 0)) await commit([{ update: { name: docName(col + '/' + uid), fields: fsv({ pf: p2, fr: f2 }).mapValue.fields }, updateMask: { fieldPaths: ['pf', 'fr'] }, currentDocument: { exists: true } }]); } /* 프로필 니케·테두리를 바꾸면 순위표에도 반영 */
       return out(200, view(g, { chips: (ud && ud.f.chipsV && ud.f.chipsV.d) || 0, frames: Array.from(new Set(Object.values(fr).map(Number).filter((t) => t > 0))), newFrame })); }
     if (a === 'giveup') { /* 진행 중인 판 포기: 쓴 횟수는 돌아오지 않고 기록도 남지 않음 */
       if (!g) return out(200, view(null));
@@ -636,7 +640,7 @@ const maskNick = (v) => { const c = Array.from(String(v || '지휘관')); return
       const g2 = { hand: codes.slice(0, 7).join(','), deck: codes.slice(7).join(','), cnt, rd, total: codes.length, t: now };
       let nick = String((ud && (ud.f.nickname || ud.f.username)) || '').slice(0, 24);
       if (guest) { try { const bi = (await post('GetUserProfileBasicInfo', { intl_open_id: id, nikke_area_id: area }, env.BLA_COOKIE)).basic_info || {}; nick = String(bi.nickname || bi.role_name || '').slice(0, 24); } catch (e) { nick = ''; } } /* 비로그인: 게임 닉네임으로 등재 */
-      const pf = String(B.pf || '').replace(/\D/g, '').slice(0, 6), rf = (ud && ud.f.raidFrames) || {}, fm = String(B.fr || '').match(/^([0-9a-zA-Z-]{1,20}):([123])$/), fr = fm ? (+rf[fm[1]] === +fm[2] ? fm[0] : 0) : [1, 2, 3].includes(+B.fr) && Object.values(rf).map(Number).includes(+B.fr) ? +B.fr : 0; /* 랭킹에 보일 프로필 니케·테두리(가진 테두리만) */
+      const [pf, fr] = pfFr((ud && ud.f.raidFrames) || {});
       if (await commit([save({ uid, nick, oid: id, area, day: today, n: n + 1, g: g2, pf, fr, x1 }, ['uid', 'nick', 'oid', 'area', 'day', 'n', 'g', 'pf', 'fr', 'x1'])].concat(ud ? [{ update: { name: ud.name, fields: { dexL: fsv(dexL) } }, updateMask: { fieldPaths: ['dexL'] } }] : []))) { const v = view(g2); v.tries = n + 1; v.max = RAID_TRIES + x1; return out(200, v); }
       continue;
     }

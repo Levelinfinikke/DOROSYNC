@@ -506,9 +506,10 @@
   /* ---------- 진행 엔진: 연습(이 브라우저) / 실전(서버) ---------- */
   /* 비로그인 참가: 프로필 주소를 연동했으면 그 게임 계정으로 도전·랭킹 등재(추천·필터는 로그인 필요) */
   const isGuest = () => { const ac = acct(); return !(ac && ac.user); }, guestId = () => { try { const d = data(); return d && d.purl ? { openid: d.purl, area: +d.area || 0 } : null; } catch (e) { return null; } }, canLive = () => !isGuest() || !!guestId();
+  const pfNow = () => { try { const d = data(); return { pf: d.pf || '', fr: d.fr || 0 }; } catch (e) { return {}; } }; /* 상태를 물을 때마다 지금 프로필 니케·테두리를 함께 보내 순위표에 반영 */
   async function api(a, body) {
     const ac = acct(), on = !!(ac && ac.user), gd = on ? null : guestId(); if (!on && !gd && a !== 'rank') throw new Error('login'); /* 순위표는 로그인 없이도 봄 · 비로그인은 연동한 게임 계정으로 참가 */
-    const r = await fetch(WORKER + '/raid', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, on ? { Authorization: 'Bearer ' + (await ac.token()) } : {}), body: JSON.stringify(Object.assign({ a }, gd || {}, body || {})) });
+    const r = await fetch(WORKER + '/raid', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, on ? { Authorization: 'Bearer ' + (await ac.token()) } : {}), body: JSON.stringify(Object.assign({ a }, gd || {}, a === 'state' ? pfNow() : {}, body || {})) });
     const j = await r.json().catch(() => ({})); if (!j.ok) { const e = new Error(j.error || ('http' + r.status)); e.j = j; throw e; } return j;
   }
   const liveCard = (p) => { const b = DB[p[0]]; return b ? Object.assign({}, b, { id: String(p[0]), cnt: p[1], tv: TS[b.t] || 1 }) : null; };
@@ -737,7 +738,7 @@
     fin.querySelector('h3').textContent = res.newBest ? 'NEW BEST!' : 'RAID SCORE';
     $('.rd-rkl').textContent = '';
     $('.rd-fin .rd-fd').innerHTML = R.steps.map((x) => '<span class="rd-fh">' + x.h + '<b>+' + x.v + '</b></span>').join('') + '<br>칩 ' + fmt(chips) + ' × 배수 ' + mult + (R.f < 1 ? ' × 0.8' : '') + '<br><small>크리티컬 ' + crit.filter(Boolean).length + '회 · 코어 히트 ' + zones.map((z) => (z ? z + '존' : 'MISS')).join(' ') + '</small>';
-    ag.hidden = live && left <= 0; ag.textContent = left > 0 ? '재도전 (남은 ' + left + '회)' : '재도전'; $('.rd-fin [data-r=rank]').hidden = !live;
+    ag.hidden = live && left <= 0; ag.textContent = left > 0 ? '재도전 (남은 ' + left + '회)' : '재도전'; $('.rd-fin [data-r=rank]').hidden = false;
     if (live) api('rank').then((j) => { const i = j.rows.findIndex((r) => r.me); if (i >= 0) $('.rd-rkl').innerHTML = '<b>' + (i + 1) + '위</b> / ' + j.rows.length + '명'; }).catch(() => {});
     $('.rd-main').style.setProperty('--sk', '7px'); shake(); sfx.fin(res.newBest); let ci = 0; const ct = setInterval(() => sfx.count(ci++), 70); await countTo($('.rd-fs b'), 0, score, Math.min(1400, 500 + score)); clearInterval(ct);
     busy = false; ui();
@@ -749,11 +750,10 @@
       '<div class="rk-deck" hidden>' + String(r.deck).split(',').filter(Boolean).map((p) => { const c = liveCard([p.split(':')[0], +p.split(':')[1] || 1]); return c ? cardHtml(c, S.boss) : ''; }).join('') + '<small>' + fmt(r.chips) + ' × ' + r.mult + (r.f < 1 ? ' × 0.8' : '') + '</small></div></div>'; };
   async function showRank() {
     const m = $('.rd-rank'), box = m.querySelector('.rd-rl'), me = m.querySelector('.rk-me'); m.hidden = false; me.innerHTML = ''; sfx.open();
-    const tl = m.querySelector('.rk-left'), tick = () => { if (m.hidden || !root.isConnected) { clearInterval(S.rkT); return; } const ms = (S.end || 0) - Date.now(); if (S.mode !== 'live' || !S.end) { tl.textContent = ''; return; } if (ms <= 0) { tl.textContent = '종료'; return; } const z = (n) => String(n).padStart(2, '0'); tl.textContent = '남은 시간 ' + Math.floor(ms / 86400000) + '일 ' + z(Math.floor(ms % 86400000 / 3600000)) + '시간 ' + z(Math.floor(ms % 3600000 / 60000)) + '분 ' + z(Math.floor(ms % 60000 / 1000)) + '초'; };
+    const tl = m.querySelector('.rk-left'), tick = () => { if (m.hidden || !root.isConnected) { clearInterval(S.rkT); return; } const ms = (S.end || 0) - Date.now(); if (!S.end) { tl.textContent = ''; return; } if (ms <= 0) { tl.textContent = '종료'; return; } const z = (n) => String(n).padStart(2, '0'); tl.textContent = '남은 시간 ' + Math.floor(ms / 86400000) + '일 ' + z(Math.floor(ms % 86400000 / 3600000)) + '시간 ' + z(Math.floor(ms % 3600000 / 60000)) + '분 ' + z(Math.floor(ms % 60000 / 1000)) + '초'; };
     clearInterval(S.rkT); S.rkT = setInterval(tick, 1000); tick();
-    if (S.mode !== 'live') { box.innerHTML = '<p style="padding:14px">랭킹은 실전 모드에서만 기록됩니다.</p>'; return; }
     box.innerHTML = '<p style="padding:14px">불러오는 중…</p>';
-    try { const j = await api('rank'); if (j.season && j.season.end) { S.end = j.season.end; tick(); } try { if (j.mine && window.doroStat) window.doroStat.raid(j.season && j.season.id, j.mine.rank, j.total || 0, j.mine.sc || 0); } catch (e2) { /* 무시 */ } const N = j.total || j.rows.length, cut = j.cut || [], d = data(), CL = ['상위 3%', '상위 10%', '상위 30%'];
+    try { const j = await api('rank'); if (!j.season || !j.rows) { box.innerHTML = '<p style="padding:14px">지금은 열린 시즌이 없습니다.</p>'; return; } if (j.season && j.season.end) { S.end = j.season.end; tick(); } try { if (j.mine && window.doroStat) window.doroStat.raid(j.season && j.season.id, j.mine.rank, j.total || 0, j.mine.sc || 0); } catch (e2) { /* 무시 */ } const N = j.total || j.rows.length, cut = j.cut || [], d = data(), CL = ['상위 3%', '상위 10%', '상위 30%'];
       let h = ''; j.rows.forEach((r, i) => { h += rkRow(r, N); cut.forEach((c, k) => { if (r.rank === c && (i < j.rows.length - 1 || N > j.rows.length)) h += '<div class="rk-cut">' + (d.frImg ? '<img alt="" src="' + esc(d.frImg((j.season && j.season.id ? j.season.id + ':' : '') + (k + 1))) + '">' : '') + CL[k] + ' 선</div>'; }); });
       box.innerHTML = h || '<p style="padding:14px">아직 기록이 없습니다.</p>';
       me.innerHTML = j.mine ? rkRow(j.mine, N, true) : '';
@@ -1071,7 +1071,7 @@
     window.addEventListener('pointermove', onMoveDrag); window.addEventListener('pointerup', onUp); window.addEventListener('pointercancel', onUp);
     window.addEventListener('resize', fit); document.addEventListener('fullscreenchange', () => { fit(); setTimeout(fit, 200); }); try { new ResizeObserver(fit).observe(root); } catch (e) { /* 미지원 */ }
   }
-  window.doroRaid = { rank: () => api('rank'), /* 로비의 실시간 랭킹 */
+  window.doroRaid = { rank: () => api('rank'), pfSync: () => (canLive() ? api('state').catch(() => null) : Promise.resolve(null)), /* 프로필을 바꾼 직후 순위표에 반영 */ /* 로비의 실시간 랭킹 */
     api: (a, body) => api(a, body),
     card: (x, boss) => { addCss(); return cardHtml(x, boss); },
     mount(el) {
