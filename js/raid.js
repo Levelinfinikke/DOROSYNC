@@ -310,7 +310,11 @@
 .rd-box{text-align:center;padding:16px 24px;border-radius:18px;background:#16191e;border:3px solid #ffd24a;box-shadow:0 8px 0 rgba(0,0,0,.4);animation:rdPunch .4s cubic-bezier(.2,1.8,.4,1);max-width:94%}
 .rd-box h3{margin:0;font-size:14px;letter-spacing:.1em;color:#ffd24a}
 .rd-lk{display:flex;flex-direction:column;align-items:center;gap:6px;margin:0 auto 10px;padding:10px 12px;max-width:520px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,210,74,.35);font-family:"Pretendard","Malgun Gothic",sans-serif}
-.rd-lk b{font-size:13.5px;color:#ffd24a}.rd-lk small{font-size:11.5px;line-height:1.5;opacity:.8;font-weight:600}.rd-lk span{display:flex;gap:6px;width:100%}
+.rd-lk>b{font-size:13.5px;color:#ffd24a}.rd-lk>span{display:flex;gap:6px;width:100%}.rd-lk{text-align:left;align-items:stretch;color:#e8ecf2}.rd-lk .blintro{margin:0;font-size:13px;line-height:1.6;text-align:center}.rd-lk .blg>summary{cursor:pointer;font-size:13px;color:#ffd24a}
+.rd-lk .blcards>li{background:#0e1014;border-color:#3a404a;color:#e8ecf2}.rd-lk .blcards a{color:#8fc7ff}.rd-lk .blcards p{font-size:12.5px}.rd-lk .blc-h{font-size:14px}
+.rd-gate .rd-box{position:relative;max-height:92%;overflow-y:auto;overscroll-behavior:contain}.rd-gx{position:absolute;right:8px;top:8px;width:30px;height:30px;border-radius:50%;border:0;background:rgba(255,255,255,.12);color:#fff;font-size:15px;font-weight:900;cursor:pointer;z-index:2}
+.rd-chal.rd-lk-go{align-self:center;min-width:240px;margin-top:4px;padding:10px 18px}.rd-chal.rd-lk-go b{position:relative;font-size:17px;text-shadow:0 2px 0 rgba(0,0,0,.45)}
+.rd-fl{display:block;margin-top:6px;font:700 12.5px/1.6 "Pretendard","Malgun Gothic",sans-serif;color:#8df0b0}.rd-fl .rb{display:block;margin:6px auto 0;min-width:120px;font-size:13px}
 .rd-lk select,.rd-lk input{font:inherit;font-size:13px;font-weight:600;padding:8px 9px;border-radius:9px;border:1px solid #454c58;background:#0e1014;color:#fff;min-width:0}.rd-lk input{flex:1 1 0!important;width:0!important;user-select:text;-webkit-user-select:text}.rd-lk select{flex:0 0 96px!important;width:96px!important}
 .rd-lk em{font-style:normal;font-size:12px;font-weight:700;color:#ff9a8a;min-height:0}.rd-lk em:empty{display:none}
 .rd-fs{font-size:52px;line-height:1.15;text-shadow:0 4px 0 #7a2a00;color:#ffb347}
@@ -512,8 +516,8 @@
   const isGuest = () => { const ac = acct(); return !(ac && ac.user); }, guestId = () => { try { const d = data(); return d && d.purl ? { openid: d.purl, area: +d.area || 0 } : null; } catch (e) { return null; } }, canLive = () => !isGuest() || !!guestId();
   const pfNow = () => { try { const d = data(); return { pf: d.pf || '', fr: d.fr || 0 }; } catch (e) { return {}; } }; /* 상태를 물을 때마다 지금 프로필 니케·테두리를 함께 보내 순위표에 반영 */
   async function api(a, body) {
-    const ac = acct(), on = !!(ac && ac.user), gd = on ? null : guestId(); if (!on && !gd && a !== 'rank') throw new Error('login'); /* 순위표는 로그인 없이도 봄 · 비로그인은 연동한 게임 계정으로 참가 */
-    const r = await fetch(WORKER + '/raid', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, on ? { Authorization: 'Bearer ' + (await ac.token()) } : {}), body: JSON.stringify(Object.assign({ a }, gd || {}, a === 'state' ? pfNow() : {}, body || {})) });
+    const ac = acct(), on = !!(ac && ac.user), gd = guestId(); if (!on && !gd && a !== 'rank') throw new Error('login'); /* 순위표는 로그인 없이도 봄 · 비로그인은 연동한 게임 계정으로 참가 */
+    const r = await fetch(WORKER + '/raid', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, on ? { Authorization: 'Bearer ' + (await ac.token()) } : {}), body: JSON.stringify(Object.assign({ a }, !on || a === 'state' || a === 'rank' ? gd || {} : {}, a === 'state' ? pfNow() : {}, body || {})) }); /* 연동한 게임 계정을 함께 보냄: 비로그인은 그것이 참가자, 로그인은 그 계정의 기록을 내 것으로 봄 */
     const j = await r.json().catch(() => ({})); if (!j.ok) { const e = new Error(j.error || ('http' + r.status)); e.j = j; throw e; } return j;
   }
   const liveCard = (p) => { const b = DB[p[0]]; return b ? Object.assign({}, b, { id: String(p[0]), cnt: p[1], tv: TS[b.t] || 1 }) : null; };
@@ -584,7 +588,8 @@
   function clearTable() { bgm.stop(); Object.keys(els).forEach((id) => els[id].remove()); els = {}; S.cards = {}; S.hand = []; S.squad = EMPTY(); S.sel = new Set(); poolKey = ''; S.flt = { e: '', c: '', b: '', r: '' }; $('.rd-main').classList.remove('atk'); $('.rd-total b').textContent = '0억'; $$('.rd-dmg,.rd-ban,.rd-burst').forEach((e) => e.remove()); $('.rd-fin').hidden = true; $('.rd-flt').hidden = true; }
   /* 프로필 연동 칸: 로그인 없이도 여기서 바로 프로필 주소를 넣고 도전(연동이 안 됐거나 보유 정보를 못 읽었을 때 보임) */
   const LK_ERR = ['link', 'bla', 'auth', 'login'], lkBox = () => { let ar = '83', u = ''; try { ar = localStorage.getItem('dorosync-bl-area') || '83'; u = localStorage.getItem('dorosync-bl-purl') || ''; } catch (e) { /* 무시 */ } const sel = document.getElementById('bl-area'), opts = sel ? sel.innerHTML : '<option value="83">한국</option>';
-    return '<div class="rd-lk"><b>블라블라링크 프로필 연동</b><small>블라블라링크 앱 → 내 프로필 → 공유 → 링크 복사 후 붙여 넣으세요. 로그인 없이도 도전할 수 있습니다.</small><span><select class="rd-lk-a" data-v="' + esc(ar) + '">' + opts + '</select><input class="rd-lk-u" type="url" inputmode="url" autocomplete="off" placeholder="https://www.blablalink.com/…?openid=…" value="' + esc(u) + '"></span><em class="rd-lk-m"></em><button type="button" class="rb org" data-r="lk">연동하고 도전하기</button></div>'; };
+    const gi = document.querySelector('#bl-url .blintro'), gg = document.getElementById('bl-url-guide'); /* 안내는 전초기지 탭의 것(사진 포함)을 그대로 */
+    return '<button type="button" class="rd-gx" data-r="gx" aria-label="닫기">✕</button><div class="rd-lk">' + (gi ? '<p class="blintro">' + gi.innerHTML + '</p>' : '<b>블라블라링크 프로필 연동</b>') + (gg ? '<details class="me-guide blg">' + gg.innerHTML + '</details>' : '') + '<span><select class="rd-lk-a" data-v="' + esc(ar) + '">' + opts + '</select><input class="rd-lk-u" type="url" inputmode="url" autocomplete="off" placeholder="https://www.blablalink.com/…?openid=…" value="' + esc(u) + '"></span><em class="rd-lk-m"></em><button type="button" class="rd-chal rd-lk-go" data-r="lk"><b>연동하고 도전하기</b></button></div>'; };
   function lkGo() { const u = $('.rd-lk-u'), a = $('.rd-lk-a'), m = $('.rd-lk-m'); if (!u) return; const raw = u.value.trim(); if (!/openid=[^&\s]{6,}/i.test(raw) && !/^\d{6,25}$/.test(raw)) { m.textContent = '프로필 공유 링크(…?openid=…)를 넣어 주세요.'; u.focus(); return; }
     try { localStorage.setItem('dorosync-bl-area', a.value); localStorage.setItem('dorosync-bl-purl', raw); } catch (e) { /* 무시 */ }
     try { const A = document.getElementById('bl-area'), U = document.getElementById('bl-purl'), G = document.getElementById('bl-url-go'); if (A && U && G) { A.value = a.value; U.value = raw; G.click(); } } catch (e) { /* 전초기지 쪽 연동(내 카드 등)은 실패해도 도전에는 지장 없음 */ }
@@ -603,7 +608,7 @@
       if (S.mode !== 'live' && S.tries >= 3) S.tries = 0;
       const v = await E().start(); busy = false; applyGame(v, true);
     } catch (e) { busy = false; clearTable(); S.phase = 'idle'; place(); ui();
-      gate('<h3>포커레이드</h3><div class="rd-fd">' + esc(S.mode === 'live' ? errMsg(e) : '내 도감에 SSR 카드가 7장 이상 필요합니다.') + '</div>' + (S.mode === 'live' && LK_ERR.includes(e && e.message) ? lkBox() : '') + '<button type="button" class="rb blue" data-r="prac">모의전</button>'); }
+      gate('<h3>포커레이드</h3><div class="rd-fd">' + esc(S.mode === 'live' ? errMsg(e) : '내 도감에 SSR 카드가 7장 이상 필요합니다.') + '</div>' + (S.mode === 'live' && LK_ERR.includes(e && e.message) ? lkBox() : '<button type="button" class="rb blue" data-r="prac">모의전</button>')); }
   }
   async function enterLive() { /* 실전: 시즌·내 기록을 받아 와서 이어 하거나 시작 버튼을 보여 줌 */
     clearTable(); S.phase = 'idle'; place(); busy = true; ui(); gate('<h3>실전</h3><div class="rd-fd">서버에서 레이드 정보를 불러오는 중입니다…</div>');
@@ -616,7 +621,7 @@
       if (left > 0) { deal(false); return; } /* 도전하기: 남은 횟수가 있으면 바로 시작 */
       ui();
       gate('<h3>RAID · ' + ELN[S.boss.e] + ' 보스</h3><div class="rd-fd">' + (S.newFrame ? '<b style="color:#8df0b0">지난 레이드 보상: 새 프로필 테두리 획득!</b><br>' : '') + '남은 기간 ' + dl + '일 · 오늘 핸드 ' + S.tries + '/' + S.max + ' · 내 최고 ' + fmt(S.liveBest) + '억</div>' + (left > 0 ? '<button type="button" class="rb blue" data-r="start">핸드 시작</button>' : '<div class="rd-fd">오늘 핸드를 모두 썼습니다.</div>') + '<button type="button" class="rb pur" data-r="rank">랭킹</button><button type="button" class="rb blue" data-r="prac">모의전</button>');
-    } catch (e) { busy = false; ui(); gate('<h3>실전</h3><div class="rd-fd">' + esc(errMsg(e)) + '</div>' + (LK_ERR.includes(e && e.message) ? lkBox() : '') + '<button type="button" class="rb blue" data-r="prac">모의전</button>'); }
+    } catch (e) { busy = false; ui(); gate('<h3>실전</h3><div class="rd-fd">' + esc(errMsg(e)) + '</div>' + (LK_ERR.includes(e && e.message) ? lkBox() : '<button type="button" class="rb blue" data-r="prac">모의전</button>')); }
   }
   async function discard() {
     const ids = S.hand.filter((id) => S.sel.has(id)), cost = fltCost(); if (!ids.length || busy) return;
@@ -750,7 +755,9 @@
     $('.rd-rkl').textContent = '';
     $('.rd-fin .rd-fd').innerHTML = R.steps.map((x) => '<span class="rd-fh">' + x.h + '<b>+' + x.v + '</b></span>').join('') + '<br>칩 ' + fmt(chips) + ' × 배수 ' + mult + (R.f < 1 ? ' × 0.8' : '') + '<br><small>크리티컬 ' + crit.filter(Boolean).length + '회 · 코어 히트 ' + zones.map((z) => (z ? z + '존' : 'MISS')).join(' ') + '</small>';
     ag.hidden = live && left <= 0; ag.textContent = left > 0 ? '재도전 (남은 ' + left + '회)' : '재도전'; $('.rd-fin [data-r=rank]').hidden = false;
-    if (live) api('rank').then((j) => { const i = j.rows.findIndex((r) => r.me); if (i >= 0) $('.rd-rkl').innerHTML = '<b>' + (i + 1) + '위</b> / ' + j.rows.length + '명'; }).catch(() => {});
+    if (live) api('rank').then((j) => { const mine = j.mine, cut = j.cut || []; if (!mine) return; let h = '<b>' + mine.rank + '위</b> / ' + (j.total || j.rows.length) + '명';
+      if (isGuest() && cut[1] && mine.rank <= cut[1]) h += '<span class="rd-fl">지금 상위 ' + (mine.rank <= cut[0] ? 3 : 10) + '% 안입니다. 시즌이 끝날 때 테두리 보상을 받으려면 로그인해 주세요.<button type="button" class="rb blue" data-r="login">로그인</button></span>'; /* 테두리는 계정에 주는 보상: 3% · 10% 안에 들었을 때만 권함 */
+      $('.rd-rkl').innerHTML = h; }).catch(() => {});
     $('.rd-main').style.setProperty('--sk', '7px'); shake(); sfx.fin(res.newBest); let ci = 0; const ct = setInterval(() => sfx.count(ci++), 70); await countTo($('.rd-fs b'), 0, score, Math.min(1400, 500 + score)); clearInterval(ct);
     busy = false; ui();
   }
@@ -874,7 +881,7 @@
       gate('<h3>포기했습니다</h3><div class="rd-fd">이번 판은 기록되지 않습니다 · 오늘 핸드 ' + S.tries + '/' + S.max + '</div>' + (left > 0 ? '<button type="button" class="rb org" data-r="chal">다시 도전하기</button>' : '<div class="rd-fd">오늘 핸드를 모두 썼습니다.</div>') + '<button type="button" class="rb pur" data-r="rank">랭킹</button><button type="button" class="rb blue" data-r="prac">모의전</button>');
     } catch (e) { busy = false; ui(); $('.rd-msg').textContent = errMsg(e); }
   }
-  function goChal() { if (canLive()) setMode('live'); else { if (window.doroNeedLogin) window.doroNeedLogin('도전하기는 로그인 또는 프로필 연동이 필요합니다'); S.mode = 'live'; clearTable(); S.phase = 'idle'; place(); ui(); gate('<h3>도전하기</h3><div class="rd-fd" style="font-size:16px;font-weight:900;color:#ffd24a">로그인하거나, 아래에 프로필 주소를 넣어 주세요.</div>' + lkBox() + '<button type="button" class="rb blue" data-r="prac">모의전</button>'); } }
+  function goChal() { if (canLive()) setMode('live'); else { if (window.doroNeedLogin) window.doroNeedLogin('도전하기는 로그인 또는 프로필 연동이 필요합니다'); S.mode = 'live'; clearTable(); S.phase = 'idle'; place(); ui(); gate('<h3>도전하기</h3><div class="rd-fd" style="font-size:16px;font-weight:900;color:#ffd24a">프로필 주소만 연동하면 로그인 없이 도전할 수 있습니다.</div>' + lkBox()); } }
   /* 입장 연출(솔로레이드 입장처럼): 게이트 닫힘 → 톱니 장치 하강 → 모의전/도전 선택 → 보스 실루엣이 올라오고 장치 상승 → 게이트 열리며 시작 */
   let introPick = null;
   const liveOn = () => !!(S && S.mode === 'live' && S.phase === 'pick'); /* 도전 중인 판이 깔려 있음 */
@@ -939,13 +946,14 @@
       if (a === 'full') { const r = rd(); try { if (document.fullscreenElement) document.exitFullscreen(); else if (r.requestFullscreen) r.requestFullscreen(); } catch (e) { /* 미지원 */ } return; }
       if (a === 'hv') { hvShow(hvI + (+rb.dataset.d || 1)); return; }
       if (a === 'dk') { const dk = rb.closest('.rd-rk').querySelector('.rk-deck'); dk.hidden = !dk.hidden; sfx.tap(); return; }
-      if (a === 'hint') { if (busy) return; if (S.mode === 'live' && isGuest()) { if (window.doroNeedLogin) window.doroNeedLogin('추천은 로그인이 필요합니다'); return; } if (!armed) { hh.classList.add('arm'); sfx.sel && sfx.sel(); } else payHint(); return; }
+      if (a === 'hint') { if (busy) return; if (!armed) { hh.classList.add('arm'); sfx.sel && sfx.sel(); } else payHint(); return; }
       sfx.tap();
       if (a === 'mx') { rb.closest('.rd-modal').hidden = true; clearTimeout(hvT); return; }
       if (a === 'rank') { showRank(); return; }
       if (a === 'exit') { setFs(false); return; }
       if (busy) return;
-      if (a === 'lk') { lkGo(); return; }
+      if (a === 'lk') { lkGo(); return; } if (a === 'gx') { gate(''); return; }
+      if (a === 'login') { setFs(false); try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) { /* 무시 */ } const ab = document.getElementById('btn-acct'); if (ab) ab.click(); return; }
       if (a === 'go') play(); else if (a === 'disc') discard();
       else if (a === 'again') { if (S.mode === 'live') enterLive(); else deal(false); }
       else if (a === 'start') deal(false);
@@ -953,7 +961,7 @@
       else if (a === 'prac') { setMode(pracMode()); } /* 모의전: 내 도감 덱(7장 이상일 때), 아니면 테스트 덱. 기록·싱크칩 차감 없음 */
       else if (a === 'chal') { if (liveOn()) giveUp(); else goChal(); }
       else if (a === 'open') { busy = true; api('set', { days: 5 }).then(() => { busy = false; enterLive(); }).catch((e) => { busy = false; gate('<h3>실전</h3><div class="rd-fd">' + esc(errMsg(e)) + '</div><button type="button" class="rb blue" data-r="prac">모의전</button>'); }); }
-      else if (a === 'flt') { if (S.mode === 'live' && isGuest()) { if (window.doroNeedLogin) window.doroNeedLogin('필터는 로그인이 필요합니다'); return; } fp.hidden = !fp.hidden; poolKey = ''; sfx.open(); ui(); }
+      else if (a === 'flt') { fp.hidden = !fp.hidden; poolKey = ''; sfx.open(); ui(); }
       else if (a === 'chips' && S.mode !== 'live' && !PROD) { S.chips = 10000; ui(); }
       return; }
     const md = t.closest('.rd-modal'); if (md && !t.closest('.rd-mb')) { md.hidden = true; clearTimeout(hvT); return; }

@@ -460,7 +460,8 @@ async function raid(req, env, out) {
      포커레이드 진행과 순위표만 가능하고, 싱크칩을 쓰는 추천·필터와 카드팩 등 다른 동작은 로그인 필요 */
   let guest = false, gKey = ''; if (!idt) { const gid = toIntlId(B.openid), ga = Number(B.area); if (gid && /^[0-9A-Za-z]{6,40}$/.test(gid) && AREAS.includes(ga)) { uid = 'g' + ga + '_' + gid; guest = true; gKey = ga + '_' + gid; } }
   if (!uid && (idt || a !== 'rank')) return out(401, { ok: false, error: 'auth' });
-  if (guest && !['rank', 'state', 'start', 'giveup', 'lock', 'discard', 'play'].includes(a)) return out(401, { ok: false, error: 'login' });
+  if (!guest && uid) { const gid = toIntlId(B.openid), ga = Number(B.area); if (gid && AREAS.includes(ga)) gKey = ga + '_' + gid; } /* 로그인한 사람도 연동한 게임 계정의 기록(비로그인으로 낸 기록 포함)을 자기 것으로 봄: 내 순위 · 테두리 보상 */
+  if (guest && !['rank', 'state', 'start', 'giveup', 'lock', 'discard', 'play', 'hint'].includes(a)) return out(401, { ok: false, error: 'login' });
   const admin = !!uid && ADMIN_UIDS.includes(uid); if (!RAID_OPEN && !admin) return out(403, { ok: false, error: 'closed' });
   let SITE = null; /* 관리 탭 설정: 절대 티어표의 등급(tv), 신규 니케 카드(nk), 부스터팩(packs) */
   try { SITE = await siteTv(env); RAID_SETS = SITE && SITE.sets ? SITE.sets : RAID_SETS0; const tv = SITE && SITE.tv, key = JSON.stringify([tv || {}, (SITE && SITE.nk) || []]); if (key !== RAID_TVK) { const nk = {};
@@ -668,7 +669,7 @@ const maskNick = (v) => { const c = Array.from(String(v || '지휘관')); return
       for (let i = 0; i < pick.length && deck.length; i++) { let j = cost ? deck.findIndex(match) : 0; if (j < 0) j = 0; got.push(deck.splice(j, 1)[0]); }
       const g2 = Object.assign({}, g, { hand: hand.filter((k) => !pick.includes(k)).concat(got).join(','), deck: deck.join(','), rd: g.rd - 1 }, cost ? { fu: 1 } : {});
       const writes = [save({ g: g2 }, ['g'])]; let chips;
-      if (cost && guest) return out(401, { ok: false, error: 'login' });
+      if (cost && guest) return out(409, { ok: false, error: 'chips' }); /* 비로그인은 서버에 싱크칩이 없음 */
       if (cost) { const ud = await getDoc('users/' + uid), cv = (ud && ud.f.chipsV) || { d: 0, r: 0 }; if ((cv.d || 0) < cost) return out(409, { ok: false, error: 'chips' });
         chips = cv.d - cost; writes.push({ update: { name: ud.name, fields: { chipsV: fsv({ d: chips, r: cv.r || 0 }), chipDay: fsv(dayUse(ud.f, 'rd', cost, 0, 0, 0)) } }, updateMask: { fieldPaths: ['chipsV', 'chipDay'] }, currentDocument: { updateTime: ud.updateTime } }); }
       if (await commit(writes)) return out(200, view(g2, { got: got.map((k) => [k, g.cnt[k] || 1]), chips }));
