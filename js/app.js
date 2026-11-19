@@ -4042,7 +4042,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   }
   /* ---------- 인벤토리 사진 인식: 칸 찾기 → 아이콘 비교 → 숫자 읽기 (모두 브라우저 안에서 처리) ---------- */
   const INV = (() => {
-    let REF = null; const refLoad = () => (REF ? Promise.resolve() : new Promise((ok, no) => { const sc = document.createElement('script'); sc.src = 'js/inv-ref.js?v=20261121q'; sc.onload = () => { REF = self.DORO_INV_REF; REF ? ok() : no(new Error('ref')); }; sc.onerror = () => no(new Error('ref')); document.head.appendChild(sc); })); /* 아이콘 견본은 사진 인식을 쓸 때만 읽음 */
+    let REF = null; const refLoad = () => (REF ? Promise.resolve() : new Promise((ok, no) => { const sc = document.createElement('script'); sc.src = 'js/inv-ref.js?v=20261121r'; sc.onload = () => { REF = self.DORO_INV_REF; REF ? ok() : no(new Error('ref')); }; sc.onerror = () => no(new Error('ref')); document.head.appendChild(sc); })); /* 아이콘 견본은 사진 인식을 쓸 때만 읽음 */
     const TW = 10, TH = 14, FW = 20, FH = 14, SH = 24, GBW = 200, NW = 111, NH = 115, BW = 34, BH = 18;
     const mk = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; };
     const load = (src) => new Promise((ok, no) => { const im = new Image(); im.onload = () => ok(im); im.onerror = no; im.src = src; });
@@ -4510,6 +4510,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
       more: '<svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>',
       share: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M8 7l4-4 4 4"/><path d="M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1"/></svg>',
       add: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M12 8v8M8 12h8"/></svg>',
+      menu: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 6.5h16M4 12h16M4 17.5h12"/></svg>',
       dots: '<svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>' };
     let ov = null;
     function closeOv() { if (ov) { ov.remove(); ov = null; } }
@@ -4530,7 +4531,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
       }
       if (evt) { const e = evt; e.prompt(); (e.userChoice || Promise.resolve({})).then((r) => { if (r && r.outcome === 'accepted') { evt = null; done = true; try { localStorage.setItem('dorosync-pwa', '1'); } catch (x) { /* 저장 불가 */ } sync(); } }).catch(() => {}); return; }
       if (ios && crIos) { open('홈 화면에 추가하기', '<ol class="pwa-s">' + step(1, '주소창 오른쪽 ' + chip(I.share, '공유') + ' 버튼') + step(2, '아래로 내려 ' + chip(I.add, '홈 화면에 추가')) + step(3, '이름이 <b>도로싱크</b>인지 보고 ' + chip('', '추가')) + '</ol>' + login()); return; }
-      if (ios) { open('홈 화면에 추가하기', '<ol class="pwa-s">' + step(1, '화면 아래 ' + chip(I.more, '') + ' 버튼<small>공유 버튼 ' + chip(I.share, '') + '이 바로 보이면 그걸 누르고 2번은 건너뛰세요</small>') + step(2, chip(I.share, '공유')) + step(3, '아래로 내려 ' + chip(I.add, '홈 화면에 추가')) + step(4, chip('<s class="pwa-tg"></s>', '웹 앱으로 열기') + '가 켜진 채로 ' + chip('', '추가')) + '</ol>' + login()); return; }
+      if (ios) { open('홈 화면에 추가하기', '<ol class="pwa-s">' + step(1, '화면 아래 ' + chip(I.more, '') + ' 또는 ' + chip(I.menu, '') + ' 버튼<small>공유 버튼 ' + chip(I.share, '') + '이 바로 보이면 그걸 누르고 2번은 건너뛰세요</small>') + step(2, chip(I.share, '공유')) + step(3, '아래로 내려 ' + chip(I.add, '홈 화면에 추가')) + step(4, chip('<s class="pwa-tg"></s>', '웹 앱으로 열기') + '가 켜진 채로 ' + chip('', '추가')) + '</ol>' + login()); return; }
       open('홈 화면에 추가하기', '<ol class="pwa-s">' + step(1, '브라우저 메뉴 ' + chip(I.dots, '') + ' 버튼') + step(2, chip(I.add, '앱 설치') + ' 또는 ' + chip(I.add, '홈 화면에 추가')) + '</ol><p class="pwa-n">이미 설치했다면 홈 화면의 <b>도로싱크</b> 아이콘으로 열어 주세요.</p>');
     }
     return { show, sync, go };
@@ -4700,7 +4701,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   window.doroPickupList = () => { const now = Date.now(), L = cfgGet().gacha.filter((x) => (x.s || x.e) && (!x.s || now >= x.s) && (!x.e || now < x.e)), U = L.length ? L : [cfgFeat().m]; return U.map((m) => { const k = nkCode(m.n); return { n: m.n, code: k, img: m.face ? cfgImg(m.face) : k ? BL_IMG(k) : cfgImg(m.cover) }; }); };
   window.doroPickup = () => { const m = cfgFeat().m, k = nkCode(m.n); return { n: m.n, code: k, img: m.face ? cfgImg(m.face) : k ? BL_IMG(k) : cfgImg(m.cover) }; };
   function gmMount() {
-    if (gmInst) return; if (!window.DoroGacha) { /* 가챠 엔진은 가챠 탭을 처음 열 때 불러옴 */ if (!gmMount.w) { gmMount.w = 1; const sc = document.createElement('script'); sc.src = 'js/gacha.js?v=20261121q'; sc.onload = () => { gmMount.w = 0; const go = () => { if (curTab === 'gcm') gmMount(); }; if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go(); }; sc.onerror = () => { gmMount.w = 0; const r = document.getElementById('gm-root'); if (r) r.innerHTML = '<p class="muted" style="padding:20px">가챠 머신을 불러오지 못했습니다. 새로고침해 주세요.</p>'; }; document.head.appendChild(sc); } return; } let D; try { D = window.GM_ASSETS; if (!D) throw 0; } catch (e) { return; }
+    if (gmInst) return; if (!window.DoroGacha) { /* 가챠 엔진은 가챠 탭을 처음 열 때 불러옴 */ if (!gmMount.w) { gmMount.w = 1; const sc = document.createElement('script'); sc.src = 'js/gacha.js?v=20261121r'; sc.onload = () => { gmMount.w = 0; const go = () => { if (curTab === 'gcm') gmMount(); }; if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go(); }; sc.onerror = () => { gmMount.w = 0; const r = document.getElementById('gm-root'); if (r) r.innerHTML = '<p class="muted" style="padding:20px">가챠 머신을 불러오지 못했습니다. 새로고침해 주세요.</p>'; }; document.head.appendChild(sc); } return; } let D; try { D = window.GM_ASSETS; if (!D) throw 0; } catch (e) { return; }
     const corp = {}; GC_NK.forEach((r) => { if (r[2] === 'SSR') corp[r[0]] = r[1]; });
     const mk = (L, p, cp) => L.map((n) => { const k = nkCode(n) || nkCode({ '리틀 머메이드': '세이렌' }[n] || ''); return { n, c: corp[n] || cp || '', k, p, img: k ? BL_IMG(k) : '', tall: 1 }; });
     gmStockSync(); const fix = (L) => { L.forEach((x) => { if (!x.img) { x.img = nkFace(x.n); const g = cfgGet().gacha.find((q) => q.n === x.n); if (g && g.corp) x.c = g.corp; if (g && !g.face) x.tall = 0; } }); return L; }, M = (m) => { const PL = gmPoolOf(m), std = fix(mk(PL.std, 0)), pil = fix(mk(PL.pil, 1)); const two = +m.rate === 2, pu = mk([m.n], two ? 0 : 1, m.corp || (two ? '' : '필그림'))[0]; if (m.corp) pu.c = m.corp; if (m.face) pu.img = cfgImg(m.face); else if (!pu.img) { pu.img = cfgImg(m.cover); pu.tall = 0; } /* 픽업 2% = 일반 니케, 1% = 필그림·오버스펙 */
