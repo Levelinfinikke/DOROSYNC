@@ -504,9 +504,11 @@
   const fltMatch = (x) => { const f = S.flt; return (!f.e || x.e === f.e) && (!f.c || x.c === f.c) && (!f.b || String(x.b) === f.b || x.b === 'A') && (!f.r || RNG[f.r].includes(x.w)); };
 
   /* ---------- 진행 엔진: 연습(이 브라우저) / 실전(서버) ---------- */
+  /* 비로그인 참가: 프로필 주소를 연동했으면 그 게임 계정으로 도전·랭킹 등재(추천·필터는 로그인 필요) */
+  const isGuest = () => { const ac = acct(); return !(ac && ac.user); }, guestId = () => { try { const d = data(); return d && d.purl ? { openid: d.purl, area: +d.area || 0 } : null; } catch (e) { return null; } }, canLive = () => !isGuest() || !!guestId();
   async function api(a, body) {
-    const ac = acct(), on = !!(ac && ac.user); if (!on && a !== 'rank') throw new Error('login'); /* 순위표는 로그인 없이도 봄 */
-    const r = await fetch(WORKER + '/raid', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, on ? { Authorization: 'Bearer ' + (await ac.token()) } : {}), body: JSON.stringify(Object.assign({ a }, body || {})) });
+    const ac = acct(), on = !!(ac && ac.user), gd = on ? null : guestId(); if (!on && !gd && a !== 'rank') throw new Error('login'); /* 순위표는 로그인 없이도 봄 · 비로그인은 연동한 게임 계정으로 참가 */
+    const r = await fetch(WORKER + '/raid', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, on ? { Authorization: 'Bearer ' + (await ac.token()) } : {}), body: JSON.stringify(Object.assign({ a }, gd || {}, body || {})) });
     const j = await r.json().catch(() => ({})); if (!j.ok) { const e = new Error(j.error || ('http' + r.status)); e.j = j; throw e; } return j;
   }
   const liveCard = (p) => { const b = DB[p[0]]; return b ? Object.assign({}, b, { id: String(p[0]), cnt: p[1], tv: TS[b.t] || 1 }) : null; };
@@ -861,11 +863,11 @@
       gate('<h3>포기했습니다</h3><div class="rd-fd">이번 판은 기록되지 않습니다 · 오늘 핸드 ' + S.tries + '/' + S.max + '</div>' + (left > 0 ? '<button type="button" class="rb org" data-r="chal">다시 도전하기</button>' : '<div class="rd-fd">오늘 핸드를 모두 썼습니다.</div>') + '<button type="button" class="rb pur" data-r="rank">랭킹</button><button type="button" class="rb blue" data-r="prac">모의전</button>');
     } catch (e) { busy = false; ui(); $('.rd-msg').textContent = errMsg(e); }
   }
-  function goChal() { const ac2 = acct(); if (ac2 && ac2.user) setMode('live'); else { if (window.doroNeedLogin) window.doroNeedLogin('도전하기는 로그인이 필요합니다'); S.mode = 'live'; clearTable(); S.phase = 'idle'; place(); ui(); gate('<h3>도전하기</h3><div class="rd-fd" style="font-size:16px;font-weight:900;color:#ffd24a">로그인이 필요합니다.</div><button type="button" class="rb blue" data-r="prac">모의전</button>'); } }
+  function goChal() { if (canLive()) setMode('live'); else { if (window.doroNeedLogin) window.doroNeedLogin('도전하기는 로그인 또는 프로필 연동이 필요합니다'); S.mode = 'live'; clearTable(); S.phase = 'idle'; place(); ui(); gate('<h3>도전하기</h3><div class="rd-fd" style="font-size:16px;font-weight:900;color:#ffd24a">로그인하거나, 전초기지 탭에서<br>블라블라링크 프로필 주소를 연동해 주세요.</div><button type="button" class="rb blue" data-r="prac">모의전</button>'); } }
   /* 입장 연출(솔로레이드 입장처럼): 게이트 닫힘 → 톱니 장치 하강 → 모의전/도전 선택 → 보스 실루엣이 올라오고 장치 상승 → 게이트 열리며 시작 */
   let introPick = null;
   const liveOn = () => !!(S && S.mode === 'live' && S.phase === 'pick'); /* 도전 중인 판이 깔려 있음 */
-  function introRem() { const e = $('.rd-in-rem'); if (!e || !S) return; const a0 = acct(), i = S.info || {}; $('.rd-in-cl').textContent = liveOn() || i.game ? '이어서 도전하기' : '도전하기'; e.textContent = a0 && a0.user ? '남은 기록 횟수 ' + Math.max(0, (i.max || 3) - (i.tries || 0)) + '/' + (i.max || 3) : '로그인 필요'; }
+  function introRem() { const e = $('.rd-in-rem'); if (!e || !S) return; const a0 = acct(), i = S.info || {}; $('.rd-in-cl').textContent = liveOn() || i.game ? '이어서 도전하기' : '도전하기'; e.textContent = canLive() ? '남은 기록 횟수 ' + Math.max(0, (i.max || 3) - (i.tries || 0)) + '/' + (i.max || 3) : '로그인 또는 프로필 연동 필요'; }
   async function intro() {
     const I = $('.rd-in'); if (!I || S.introOn) return; S.introOn = true; I.querySelectorAll('*').forEach((e) => e.getAnimations().forEach((x) => x.cancel())); I.hidden = false;
     const gt = $('.rd-in-g.t'), gb = $('.rd-in-g.b'), gear = $('.rd-in-gear'), sh = $('.rd-in-sh'), scr = $('.rd-in-scr'), pnl = $('.rd-in-p'), sil = $('.rd-in-sil'), A = (el, kf, ms, ez) => el.animate(kf, { duration: ms, fill: 'forwards', easing: ez || 'ease-in' }).finished.catch(() => {});
@@ -875,7 +877,7 @@
       const st = I.style, px = (k, v) => st.setProperty(k, Math.round(v) + 'px'); px('--sy', M + sy); px('--gs', gs); px('--bh', bh); px('--th', th); px('--t0', M + t0); px('--t1', M + t0 + th); px('--b0', M + sy - bh - 42); px('--b1', M + sy + bh + 42); px('--u0', sy - t0 - th); px('--t2', M + vis - t0 - th); px('--t3', M + vis - t0); };
     lay(); /* 아래 선택 창을 뺀 보이는 영역의 한가운데에 톱니바퀴와 줄무늬를 둠 */
     const quake = (ys, ms, k) => Wp.animate(ys.map((y, q) => ({ transform: 'translate(' + ((q % 2 ? 1 : -1) * Math.abs(y) * 0.22 * (k || 0)).toFixed(1) + 'px,' + y.toFixed(1) + 'px)', easing: 'ease-in-out' })), { duration: ms });
-    { const a0 = acct(); if (a0 && a0.user && !liveOn()) api('state').then((j) => { S.info = { tries: j.tries || 0, max: j.max || 3, game: !!j.game }; introRem(); }).catch(() => {}); }
+    { if (canLive() && !liveOn()) api('state').then((j) => { S.info = { tries: j.tries || 0, max: j.max || 3, game: !!j.game }; introRem(); }).catch(() => {}); }
     { let t = ''; try { const sn = window.doroCfg.get().season, now = Date.now(); if (sn && now >= sn.start && now < sn.end) { const h = Math.floor((sn.end - now) / 3600000); t = '시즌 종료까지 ' + (h >= 24 ? Math.floor(h / 24) + '일 ' : '') + (h % 24) + '시간'; } else if (sn && now < sn.start) t = '시즌 준비 중'; } catch (e) { /* 설정 전 */ } scr.querySelector('.bn span').textContent = t; }
     const snd = (f) => { try { if (sndMode) f(); } catch (e) { /* 소리 실패는 무시 */ } };
     snd(() => { noise(0.38, 0.12, 0, 600); tone(70, 0.4, 'sawtooth', 0.05, 45); });
@@ -926,7 +928,7 @@
       if (a === 'full') { const r = rd(); try { if (document.fullscreenElement) document.exitFullscreen(); else if (r.requestFullscreen) r.requestFullscreen(); } catch (e) { /* 미지원 */ } return; }
       if (a === 'hv') { hvShow(hvI + (+rb.dataset.d || 1)); return; }
       if (a === 'dk') { const dk = rb.closest('.rd-rk').querySelector('.rk-deck'); dk.hidden = !dk.hidden; sfx.tap(); return; }
-      if (a === 'hint') { if (busy) return; if (!armed) { hh.classList.add('arm'); sfx.sel && sfx.sel(); } else payHint(); return; }
+      if (a === 'hint') { if (busy) return; if (S.mode === 'live' && isGuest()) { if (window.doroNeedLogin) window.doroNeedLogin('추천은 로그인이 필요합니다'); return; } if (!armed) { hh.classList.add('arm'); sfx.sel && sfx.sel(); } else payHint(); return; }
       sfx.tap();
       if (a === 'mx') { rb.closest('.rd-modal').hidden = true; clearTimeout(hvT); return; }
       if (a === 'rank') { showRank(); return; }
@@ -939,7 +941,7 @@
       else if (a === 'prac') { setMode(pracMode()); } /* 모의전: 내 도감 덱(7장 이상일 때), 아니면 테스트 덱. 기록·싱크칩 차감 없음 */
       else if (a === 'chal') { if (liveOn()) giveUp(); else goChal(); }
       else if (a === 'open') { busy = true; api('set', { days: 5 }).then(() => { busy = false; enterLive(); }).catch((e) => { busy = false; gate('<h3>실전</h3><div class="rd-fd">' + esc(errMsg(e)) + '</div><button type="button" class="rb blue" data-r="prac">모의전</button>'); }); }
-      else if (a === 'flt') { fp.hidden = !fp.hidden; poolKey = ''; sfx.open(); ui(); }
+      else if (a === 'flt') { if (S.mode === 'live' && isGuest()) { if (window.doroNeedLogin) window.doroNeedLogin('필터는 로그인이 필요합니다'); return; } fp.hidden = !fp.hidden; poolKey = ''; sfx.open(); ui(); }
       else if (a === 'chips' && S.mode !== 'live' && !PROD) { S.chips = 10000; ui(); }
       return; }
     const md = t.closest('.rd-modal'); if (md && !t.closest('.rd-mb')) { md.hidden = true; clearTimeout(hvT); return; }
@@ -1080,7 +1082,7 @@
       S = { mode: 'test', boss: null, cards: {}, hand: [], squad: [null, null, null, null, null], sel: new Set(), redraws: 3, tries: 0, max: 3, phase: 'idle', chips: 10000, sort: 'c', flt: { e: '', c: '', b: '', r: '' }, deckLeft: 0, deckN: 0, liveBest: 0 };
       S.mode = pracMode(); if (PROD) S.chips = realChips(); S.info = { tries: 0, max: 3 };
       build(); setInterval(() => { if (root && root.isConnected && S && !busy) ui(); }, 30000);
-      { const a0 = acct(); if (a0 && a0.user) api('state').then((j) => { S.info = { tries: j.tries || 0, max: j.max || 3, game: !!j.game }; if (S.mode !== 'live') ui(); introRem(); }).catch(() => {}); } /* 남은 기록 횟수 */
+      { if (canLive()) api('state').then((j) => { S.info = { tries: j.tries || 0, max: j.max || 3, game: !!j.game }; if (S.mode !== 'live') ui(); introRem(); }).catch(() => {}); } /* 남은 기록 횟수 */
       if (isMobile()) { rd().hidden = true; root.querySelector('.rd-launch').hidden = false; }
       fit(); setBoss(BOSS0); S.phase = 'idle'; place(); ui(); /* 판은 입장 연출에서 모의전/도전을 고른 뒤에 깔림 */
       if (isMobile()) S.needIntro = 1; else intro();

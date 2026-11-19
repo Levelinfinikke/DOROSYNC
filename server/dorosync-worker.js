@@ -456,7 +456,11 @@ async function raid(req, env, out) {
   let uid = ''; /* 순위표(rank)만은 로그인하지 않아도 볼 수 있음. 그 밖의 모든 동작은 로그인 필요 */
   if (idt) { const lk = await (await fetch('https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=' + FB_API_KEY, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ idToken: idt }) })).json();
     uid = (lk && lk.users && lk.users[0] && lk.users[0].localId) || ''; }
+  /* 비로그인 참가: 연동한 게임 계정(프로필 주소)이 곧 참가자. 같은 게임 계정은 어느 기기에서 해도 한 사람(하루 횟수·기록 공유).
+     포커레이드 진행과 순위표만 가능하고, 싱크칩을 쓰는 추천·필터와 카드팩 등 다른 동작은 로그인 필요 */
+  let guest = false; if (!idt) { const gid = toIntlId(B.openid), ga = Number(B.area); if (gid && /^[0-9A-Za-z]{6,40}$/.test(gid) && AREAS.includes(ga)) { uid = 'g' + ga + '_' + gid; guest = true; } }
   if (!uid && (idt || a !== 'rank')) return out(401, { ok: false, error: 'auth' });
+  if (guest && !['rank', 'state', 'start', 'giveup', 'lock', 'discard', 'play'].includes(a)) return out(401, { ok: false, error: 'login' });
   const admin = !!uid && ADMIN_UIDS.includes(uid); if (!RAID_OPEN && !admin) return out(403, { ok: false, error: 'closed' });
   let SITE = null; /* 관리 탭 설정: 절대 티어표의 등급(tv), 신규 니케 카드(nk), 부스터팩(packs) */
   try { SITE = await siteTv(env); RAID_SETS = SITE && SITE.sets ? SITE.sets : RAID_SETS0; const tv = SITE && SITE.tv, key = JSON.stringify([tv || {}, (SITE && SITE.nk) || []]); if (key !== RAID_TVK) { const nk = {};
@@ -630,7 +634,8 @@ const maskNick = (v) => { const c = Array.from(String(v || '지휘관')); return
       rShuffle(codes);
       const NKN = Object.keys(RAID_NK).length, x1 = codes.length >= NKN ? 1 : 0, rd = Math.min(3, Math.floor(codes.length / NKN * 4)); /* 버리기: 기본 0, 도감 25%마다 +1(최대 3). 100%는 하루 핸드 +1 */
       const g2 = { hand: codes.slice(0, 7).join(','), deck: codes.slice(7).join(','), cnt, rd, total: codes.length, t: now };
-      const nick = String((ud && (ud.f.nickname || ud.f.username)) || '').slice(0, 24);
+      let nick = String((ud && (ud.f.nickname || ud.f.username)) || '').slice(0, 24);
+      if (guest) { try { const bi = (await post('GetUserProfileBasicInfo', { intl_open_id: id, nikke_area_id: area }, env.BLA_COOKIE)).basic_info || {}; nick = String(bi.nickname || bi.role_name || '').slice(0, 24); } catch (e) { nick = ''; } } /* 비로그인: 게임 닉네임으로 등재 */
       const pf = String(B.pf || '').replace(/\D/g, '').slice(0, 6), rf = (ud && ud.f.raidFrames) || {}, fm = String(B.fr || '').match(/^([0-9a-zA-Z-]{1,20}):([123])$/), fr = fm ? (+rf[fm[1]] === +fm[2] ? fm[0] : 0) : [1, 2, 3].includes(+B.fr) && Object.values(rf).map(Number).includes(+B.fr) ? +B.fr : 0; /* 랭킹에 보일 프로필 니케·테두리(가진 테두리만) */
       if (await commit([save({ uid, nick, oid: id, area, day: today, n: n + 1, g: g2, pf, fr, x1 }, ['uid', 'nick', 'oid', 'area', 'day', 'n', 'g', 'pf', 'fr', 'x1'])].concat(ud ? [{ update: { name: ud.name, fields: { dexL: fsv(dexL) } }, updateMask: { fieldPaths: ['dexL'] } }] : []))) { const v = view(g2); v.tries = n + 1; v.max = RAID_TRIES + x1; return out(200, v); }
       continue;
@@ -659,6 +664,7 @@ const maskNick = (v) => { const c = Array.from(String(v || '지휘관')); return
       for (let i = 0; i < pick.length && deck.length; i++) { let j = cost ? deck.findIndex(match) : 0; if (j < 0) j = 0; got.push(deck.splice(j, 1)[0]); }
       const g2 = Object.assign({}, g, { hand: hand.filter((k) => !pick.includes(k)).concat(got).join(','), deck: deck.join(','), rd: g.rd - 1 }, cost ? { fu: 1 } : {});
       const writes = [save({ g: g2 }, ['g'])]; let chips;
+      if (cost && guest) return out(401, { ok: false, error: 'login' });
       if (cost) { const ud = await getDoc('users/' + uid), cv = (ud && ud.f.chipsV) || { d: 0, r: 0 }; if ((cv.d || 0) < cost) return out(409, { ok: false, error: 'chips' });
         chips = cv.d - cost; writes.push({ update: { name: ud.name, fields: { chipsV: fsv({ d: chips, r: cv.r || 0 }), chipDay: fsv(dayUse(ud.f, 'rd', cost, 0, 0, 0)) } }, updateMask: { fieldPaths: ['chipsV', 'chipDay'] }, currentDocument: { updateTime: ud.updateTime } }); }
       if (await commit(writes)) return out(200, view(g2, { got: got.map((k) => [k, g.cnt[k] || 1]), chips }));
