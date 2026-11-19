@@ -359,7 +359,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
 /* 휴대폰 세로: 머신이 주인공. 위 = 얇은 재화 바, 가운데 = 머신(양옆 배경을 잘라 크게), 아래 = 머신에 붙은 서랍(SSR 보관함 ↔ 수지 그래프) */
 @media (max-width:1000px) and (orientation:portrait){
 .gm-multi.fs .gm{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto minmax(110px,1fr);gap:0}
-.gm-multi.fs .gm-wal{grid-area:1/1;height:50px;border-radius:12px 12px 0 0;border-width:1.5px 1.5px 0;margin-bottom:0}
+.gm-multi.fs .gm-wal{grid-area:1/1;height:50px;border-radius:12px 12px 0 0;border-width:1.5px;margin-bottom:0} /* 아래쪽 파란 선 = 머신과의 경계 */
 .gm-multi.fs .gm-wcv{display:none}
 .gm-multi.fs .gm-wt{display:flex;align-items:center;gap:10px;height:100%;padding:0 84px 0 10px;flex-wrap:nowrap;min-width:0}.gm-multi.fs .gm-wt>*{margin:0!important}.gm-multi.fs .gm-wt small{display:none}
 .gm-multi.fs .gm-jw{font-size:22px;gap:5px}.gm-multi.fs .gm-jw img{height:19px}.gm-multi.fs .gm-chip{font-size:13px;padding:1px 7px 1px 3px}.gm-multi.fs .gm-chip img{height:18px}.gm-multi.fs .gm-pulls{font-size:11.5px;opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
