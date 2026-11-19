@@ -2003,4 +2003,29 @@ html .daily-note{left:10px;right:10px;transform:translateY(20px);justify-content
 .tabs-ar svg{width:9px;height:15px;filter:drop-shadow(0 0 3px var(--card))}
 @media (min-width:761px){.tabs-ar{display:none}}
 /* 로비 랭킹: 다시 시도 */
-.lb-rk .lb-rt{display:block;margin:8px auto 0;padding:5px 12px;font-size:12px;font-weight:700;border-radius:999px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:inherit;cursor:pointer}
+.lb-rk .e{text-align:center;flex-direction:column;align-items:center}.lb-rk .lb-rt{display:block;white-space:nowrap;width:auto;height:auto;margin:8px auto 0;padding:5px 12px;font-size:12px;font-weight:700;border-radius:999px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:inherit;cursor:pointer}
+
+/* 웹앱 설치: 니슬렁 모음 우상단(휴대폰) */
+.lb-hero .lb-app{position:absolute;top:2px;right:0;display:inline-flex;align-items:center;gap:5px;height:34px;padding:0 13px 0 10px;border:1px solid rgba(255,207,90,.55);background:linear-gradient(180deg,rgba(255,196,60,.22),rgba(255,160,0,.1));color:#ffd56a;font-size:13px;font-weight:800;letter-spacing:-.01em;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.35)}
+.lb-hero .lb-app[hidden]{display:none}
+.lb-hero .lb-app svg{width:17px;height:17px}
+:root[data-theme="light"] .lb-hero .lb-app{color:#b06d00;background:#fff4d6;border-color:#f0c25a}
+.pwa-ov{position:fixed;inset:0;z-index:9999;background:rgba(5,8,12,.62);display:flex;align-items:flex-end;justify-content:center;padding:12px 12px calc(12px + env(safe-area-inset-bottom));-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+.pwa-m{position:relative;width:min(420px,100%);background:#1c222c;color:#e8ecf2;border:1px solid #2f3a48;border-radius:22px;padding:18px 18px 16px;box-shadow:0 20px 50px rgba(0,0,0,.5);animation:pwaUp .25s ease-out}
+@keyframes pwaUp{from{transform:translateY(30px);opacity:0}to{transform:none;opacity:1}}
+.pwa-x{position:absolute;top:10px;right:10px;width:32px;height:32px;border:0;background:rgba(255,255,255,.08);color:#cfd6e0;font-size:15px;cursor:pointer;padding:0}
+.pwa-hd{display:flex;gap:12px;align-items:center;margin:0 34px 14px 0}
+.pwa-hd img{width:52px;height:52px;border-radius:12px;flex:none;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+.pwa-hd b{display:block;font-size:17px;font-weight:800}.pwa-hd small{display:block;margin-top:3px;font-size:12px;color:#9aa5b5;line-height:1.4}
+.pwa-s{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.pwa-s li{display:flex;gap:10px;align-items:flex-start;background:#252d39;border-radius:14px;padding:10px 12px;font-size:14.5px;line-height:1.5}
+.pwa-s li>i{flex:none;width:22px;height:22px;border-radius:50%;background:#f5b301;color:#1a1200;font-style:normal;font-weight:900;font-size:13px;display:grid;place-items:center;margin-top:2px}
+.pwa-s li small{display:block;font-size:12px;color:#9aa5b5;margin-top:2px}
+.pwa-c{display:inline-flex;align-items:center;gap:5px;vertical-align:middle;font-style:normal;font-weight:700;background:#3a4352;border-radius:9px;padding:2px 9px;margin:0 1px;white-space:nowrap}
+.pwa-c u{display:inline-flex;text-decoration:none}.pwa-c svg{width:17px;height:17px;fill:currentColor}.pwa-c svg[fill=none]{fill:none}
+.pwa-tg{display:inline-block;width:30px;height:18px;border-radius:9px;background:#34c759;position:relative;text-decoration:none}.pwa-tg::after{content:'';position:absolute;right:2px;top:2px;width:14px;height:14px;border-radius:50%;background:#fff}
+.pwa-p{margin:0 0 12px;font-size:14.5px;line-height:1.55}
+.pwa-n{margin:12px 0 0;font-size:12.5px;line-height:1.5;color:#aab4c3}.pwa-n b{color:#ffd56a}
+.pwa-row{display:flex;gap:8px;margin-top:4px}
+.pwa-b{flex:1;display:flex;align-items:center;justify-content:center;height:44px;border-radius:999px;background:#f5b301;color:#1a1200;font-weight:800;font-size:14.5px;text-decoration:none;border:0;cursor:pointer}.pwa-b.g{background:#3a4352;color:#e8ecf2}
+.pwa-ok{display:block;width:100%;height:46px;margin-top:14px;border:0;background:#f5b301;color:#1a1200;font-weight:800;font-size:15px;cursor:pointer}

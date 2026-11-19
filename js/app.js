@@ -4042,7 +4042,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   }
   /* ---------- 인벤토리 사진 인식: 칸 찾기 → 아이콘 비교 → 숫자 읽기 (모두 브라우저 안에서 처리) ---------- */
   const INV = (() => {
-    let REF = null; const refLoad = () => (REF ? Promise.resolve() : new Promise((ok, no) => { const sc = document.createElement('script'); sc.src = 'js/inv-ref.js?v=20261121o'; sc.onload = () => { REF = self.DORO_INV_REF; REF ? ok() : no(new Error('ref')); }; sc.onerror = () => no(new Error('ref')); document.head.appendChild(sc); })); /* 아이콘 견본은 사진 인식을 쓸 때만 읽음 */
+    let REF = null; const refLoad = () => (REF ? Promise.resolve() : new Promise((ok, no) => { const sc = document.createElement('script'); sc.src = 'js/inv-ref.js?v=20261121p'; sc.onload = () => { REF = self.DORO_INV_REF; REF ? ok() : no(new Error('ref')); }; sc.onerror = () => no(new Error('ref')); document.head.appendChild(sc); })); /* 아이콘 견본은 사진 인식을 쓸 때만 읽음 */
     const TW = 10, TH = 14, FW = 20, FH = 14, SH = 24, GBW = 200, NW = 111, NH = 115, BW = 34, BH = 18;
     const mk = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; };
     const load = (src) => new Promise((ok, no) => { const im = new Image(); im.onload = () => ok(im); im.onerror = no; im.src = src; });
@@ -4492,6 +4492,49 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   const dexStage = (c) => (!c ? '미보유' : c === 1 ? '명함' : c < 4 ? (c - 1) + '돌파' : c === 4 ? '풀돌' : c < DEX_MAX ? '코강 ' + (c - 4) : '풀코강');
   const dexList = () => { const seen = {}; return GC_NK.filter((r) => { if (seen[r[0]]) return false; seen[r[0]] = 1; return true; }); };
   /* 니슬렁(게임) 로비: 각 게임으로 들어가는 입구. 게임 본체는 들어갈 때 불러옴 */
+  /* ---------- 웹앱 설치: 니슬렁 모음 우상단 버튼(휴대폰만). 안드로이드 = 브라우저 설치 창, 아이폰 = 절차 안내 ---------- */
+  const PWA = (() => {
+    let evt = null; const ua = navigator.userAgent;
+    const standalone = () => { try { return matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches || navigator.standalone === true; } catch (e) { return false; } };
+    const ios = /iPhone|iPod|iPad/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const kakao = /KAKAOTALK/i.test(ua), inApp = kakao || /NAVER\(|Instagram|FBAN|FBAV|FB_IAB|Line\/|DaumApps|everytimeApp|Whale\/.*Mobile.*inapp|; wv\)/i.test(ua) || (ios && !/Safari\//.test(ua) && !/CriOS|FxiOS|EdgiOS/.test(ua));
+    const crIos = ios && /CriOS|FxiOS|EdgiOS/.test(ua);
+    const mob = () => { try { return matchMedia('(max-width:1000px)').matches && matchMedia('(pointer:coarse)').matches; } catch (e) { return false; } };
+    let done = false; try { done = localStorage.getItem('dorosync-pwa') === '1'; } catch (e) { /* 저장 불가 */ }
+    const show = () => mob() && !standalone() && !(done && !ios && !evt);
+    const sync = () => { $$('#tab-game .lb-app').forEach((b) => { b.hidden = !show(); }); };
+    window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); evt = e; sync(); });
+    window.addEventListener('appinstalled', () => { evt = null; done = true; try { localStorage.setItem('dorosync-pwa', '1'); } catch (e) { /* 저장 불가 */ } sync(); closeOv(); toast('홈 화면에 도로싱크를 추가했습니다'); });
+    if (standalone()) { try { if (!sessionStorage.getItem('dorosync-app')) { sessionStorage.setItem('dorosync-app', '1'); const c = () => { if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({ path: 'app-launch', title: '웹앱 실행', event: true }); else if (c.n++ < 20) setTimeout(c, 500); }; c.n = 0; setTimeout(c, 1500); } } catch (e) { /* 무시 */ } }
+    const I = { /* 사파리 화면에 나오는 모양 그대로 */
+      more: '<svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>',
+      share: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M8 7l4-4 4 4"/><path d="M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1"/></svg>',
+      add: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M12 8v8M8 12h8"/></svg>',
+      dots: '<svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>' };
+    let ov = null;
+    function closeOv() { if (ov) { ov.remove(); ov = null; } }
+    function open(title, body, foot) {
+      closeOv(); ov = document.createElement('div'); ov.className = 'pwa-ov'; ov.innerHTML = '<div class="pwa-m" role="dialog" aria-modal="true" aria-label="' + title + '"><button type="button" class="pwa-x" aria-label="닫기">✕</button><div class="pwa-hd"><img alt="" src="assets/img/app-180.png"><div><b>' + title + '</b><small>홈 화면에서 바로 열리고, 주소창 없이 전체 화면으로 쓸 수 있어요</small></div></div>' + body + (foot || '') + '<button type="button" class="pwa-ok">확인</button></div>';
+      ov.addEventListener('click', (e) => { if (e.target === ov || e.target.closest('.pwa-x,.pwa-ok')) closeOv(); const cp = e.target.closest('[data-pwa-copy]'); if (cp) { const u = location.origin + location.pathname; (navigator.clipboard ? navigator.clipboard.writeText(u) : Promise.reject()).then(() => { cp.textContent = '복사했어요'; }).catch(() => { prompt('주소를 복사해 주세요', u); }); } });
+      document.body.appendChild(ov);
+    }
+    const step = (n, html) => '<li><i>' + n + '</i><span>' + html + '</span></li>';
+    const chip = (ic, t) => '<em class="pwa-c">' + (ic ? '<u>' + ic + '</u>' : '') + t + '</em>';
+    const login = () => { let a = null; try { a = acctUser(); } catch (e) { /* 초기화 전 */ } return '<p class="pwa-n">' + (a ? '홈 화면 앱은 사파리와 따로 저장돼서, 처음 열면 <b>한 번 더 로그인</b>해 주세요. 기록은 그대로 이어집니다.' : '홈 화면 앱은 사파리와 따로 저장돼요. <b>로그인한 뒤</b> 추가하면 칩·도감 기록이 그대로 이어집니다.') + '</p>'; };
+    function go() {
+      const url = location.origin + location.pathname;
+      if (inApp) {
+        const ext = kakao ? 'kakaotalk://web/openExternal?url=' + encodeURIComponent(url) : !ios ? 'intent://' + url.replace(/^https?:\/\//, '') + '#Intent;scheme=https;package=com.android.chrome;end' : '';
+        open('앱으로 설치하기', '<p class="pwa-p">지금은 ' + (kakao ? '카카오톡' : '앱') + ' 안의 브라우저라 설치할 수 없어요. <b>' + (ios ? 'Safari' : 'Chrome') + '</b>에서 열어 주세요.</p>', '<div class="pwa-row">' + (ext ? '<a class="pwa-b" href="' + ext + '">' + (ios ? 'Safari' : 'Chrome') + '로 열기</a>' : '') + '<button type="button" class="pwa-b g" data-pwa-copy>주소 복사</button></div>' + (ios ? '<p class="pwa-n">오른쪽 아래(또는 위) 메뉴에서 <b>Safari로 열기</b>를 찾아도 됩니다.</p>' : ''));
+        return;
+      }
+      if (evt) { const e = evt; e.prompt(); (e.userChoice || Promise.resolve({})).then((r) => { if (r && r.outcome === 'accepted') { evt = null; done = true; try { localStorage.setItem('dorosync-pwa', '1'); } catch (x) { /* 저장 불가 */ } sync(); } }).catch(() => {}); return; }
+      if (ios && crIos) { open('홈 화면에 추가하기', '<ol class="pwa-s">' + step(1, '주소창 오른쪽 ' + chip(I.share, '공유') + ' 버튼') + step(2, '아래로 내려 ' + chip(I.add, '홈 화면에 추가')) + step(3, '이름이 <b>도로싱크</b>인지 보고 ' + chip('', '추가')) + '</ol>' + login()); return; }
+      if (ios) { open('홈 화면에 추가하기', '<ol class="pwa-s">' + step(1, '화면 아래 ' + chip(I.more, '') + ' 버튼<small>공유 버튼 ' + chip(I.share, '') + '이 바로 보이면 그걸 누르고 2번은 건너뛰세요</small>') + step(2, chip(I.share, '공유')) + step(3, '아래로 내려 ' + chip(I.add, '홈 화면에 추가')) + step(4, chip('<s class="pwa-tg"></s>', '웹 앱으로 열기') + '가 켜진 채로 ' + chip('', '추가')) + '</ol>' + login()); return; }
+      open('홈 화면에 추가하기', '<ol class="pwa-s">' + step(1, '브라우저 메뉴 ' + chip(I.dots, '') + ' 버튼') + step(2, chip(I.add, '앱 설치') + ' 또는 ' + chip(I.add, '홈 화면에 추가')) + '</ol><p class="pwa-n">이미 설치했다면 홈 화면의 <b>도로싱크</b> 아이콘으로 열어 주세요.</p>');
+    }
+    return { show, sync, go };
+  })();
   function renderLobby() {
     const root = $('#tab-game'); if (!root) return; const adm = dexOk(), o = chipRaw();
     const G = [['gcmg', '가챠 머신', '캡슐을 뽑고 싱크칩을 모으세요', 'lb-gc', 1], ['raid', '포커레이드', '모은 카드로 족보를 만들어 보스를 잡으세요', 'lb-rd', adm], ['pack', '카드팩', '팩을 뜯어 니케 카드를 모으세요', 'lb-pk', adm], ['dex', '내 카드', '모은 카드와 수집 보상', 'lb-dx', adm],
@@ -4519,7 +4562,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
     const ex = {}, sty = {}, C = cfgGet(); { const ft = cfgFeat(), m = ft.m; const elC = (g) => { let c = ''; try { const r = GC_NK.find((x) => x[0] === g.n && x[2] === 'SSR'), el = (r && r[3]) || g.el || ''; c = (TR_EL[el] || [])[1] || ''; } catch (e) { c = ''; } return c ? ' style="color:' + c + '"' : ''; }; /* 글자색 = 그 니케의 코드(속성) 색 */
       ex.gcmg = '<span class="lb-x"><em' + elC(m) + '>' + (ft.st === 'next' ? '다음 픽업' : '현재 픽업') + ': ' + esc(m.n) + '</em>' + (m.s || m.e ? '<em>' + cfgDate(m.s) + ' ~ ' + cfgDate(m.e) + '</em>' : '') + ((nx) => (nx ? '<em class="nx"' + elC(nx) + '>다음 픽업: ' + esc(nx.n) + '</em><em>' + cfgDate(nx.s) + ' ~ ' + cfgDate(nx.e) + '</em>' : ''))(cfgNext()) + '</span>'; ex.raid = '<span class="lb-x lb-cd"></span><span class="lb-rk"></span>'; if (C.raid.img) sty.raid = ';--art:url(&quot;' + esc(new URL(cfgImg(C.raid.img), location.href).href) + '&quot;)'; }
     const logged = !!(window.doroAccount && window.doroAccount.user);
-    root.innerHTML = '<div class="lb"><div class="lb-hero"><div class="lb-t">니슬렁 모음</div><button type="button" class="lb-fb" data-fb="1" title="피드백 · 버그 제보" aria-label="피드백 · 버그 제보"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M12 8v4"/><path d="M12 15.5v.01"/></svg></button><div class="lb-bal"><span>' + window.doroChipSvg('b', 26) + '<b class="num">' + fmt(o.d) + '</b></span><span>' + window.doroChipSvg('r', 26) + '<b class="num">' + fmt(o.r) + '</b></span></div></div>' + (C.notice ? '<div class="lb-nt"><b>공지</b>' + esc(C.notice) + '</div>' : '') + 
+    root.innerHTML = '<div class="lb"><div class="lb-hero"><div class="lb-t">니슬렁 모음</div><button type="button" class="lb-app" data-app="1"' + (PWA.show() ? '' : ' hidden') + '><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M12 7.5v7M9 11.5l3 3 3-3"/></svg>앱 설치</button><button type="button" class="lb-fb" data-fb="1" title="피드백 · 버그 제보" aria-label="피드백 · 버그 제보"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M12 8v4"/><path d="M12 15.5v.01"/></svg></button><div class="lb-bal"><span>' + window.doroChipSvg('b', 26) + '<b class="num">' + fmt(o.d) + '</b></span><span>' + window.doroChipSvg('r', 26) + '<b class="num">' + fmt(o.r) + '</b></span></div></div>' + (C.notice ? '<div class="lb-nt"><b>공지</b>' + esc(C.notice) + '</div>' : '') + 
       '<div class="lb-grid">' + idleCard() + G.map((g, i) => '<button type="button" class="lb-g ' + g[3] + (g[0] ? '' : ' soon') + '"' + (g[0] ? ' data-go="' + g[0] + '"' : ' disabled') + ' style="--i:' + (i + 1) + (sty[g[0]] || '') + '"><span class="lb-art" aria-hidden="true">' + (art[g[0]] || '') + '</span><b>' + g[1] + '</b><small>' + g[2] + '</small>' + (ex[g[0]] || '') + (g[0] ? '<i>입장 ▶</i>' : '<i>COMING SOON</i>') + '</button>').join('') + '</div></div>';
     lbCd(); lbRank();
   }
@@ -4556,7 +4599,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
       else if (o.r >= GUEST_R && !lastR) { localStorage.setItem('dorosync-chipnag-r', '1'); window.doroNeedLogin('비회원 DORO칩 소지 상한(' + GUEST_R + ')에 도달했습니다. 더는 적립되지 않습니다. 로그인하면 계속 모을 수 있습니다.'); }
       if (o.d < 1000 && last) localStorage.setItem('dorosync-chipnag', '0'); if (o.r < GUEST_R && lastR) localStorage.removeItem('dorosync-chipnag-r'); } catch (e) { /* 무시 */ } };
   window.addEventListener('dorochips', () => { clearTimeout(chipNag.t); chipNag.t = setTimeout(chipNag, 1200); }); setTimeout(chipNag, 4000);
-  (() => { const root = $('#tab-game'); if (!root) return; root.addEventListener('click', (e) => { if (e.target.closest('[data-fb]')) { fbOpen(); return; } if (e.target.closest('[data-login]')) { const ab = document.getElementById('btn-acct'); if (ab) ab.click(); return; } if (e.target.closest('.lb-rk')) return; const b = e.target.closest('[data-go]'); if (b) showTab(b.dataset.go); }); window.addEventListener('dorochips', () => { if (curTab === 'game') { const o2 = chipRaw(), sp = document.querySelectorAll('#tab-game .lb-bal b'); if (sp[0]) sp[0].textContent = fmt(o2.d); if (sp[1]) sp[1].textContent = fmt(o2.r); } }); /* 잔고 숫자만 바꿈(위젯을 다시 그리지 않음) */
+  (() => { const root = $('#tab-game'); if (!root) return; root.addEventListener('click', (e) => { if (e.target.closest('[data-app]')) { PWA.go(); return; } if (e.target.closest('[data-fb]')) { fbOpen(); return; } if (e.target.closest('[data-login]')) { const ab = document.getElementById('btn-acct'); if (ab) ab.click(); return; } if (e.target.closest('.lb-rk')) return; const b = e.target.closest('[data-go]'); if (b) showTab(b.dataset.go); }); window.addEventListener('dorochips', () => { if (curTab === 'game') { const o2 = chipRaw(), sp = document.querySelectorAll('#tab-game .lb-bal b'); if (sp[0]) sp[0].textContent = fmt(o2.d); if (sp[1]) sp[1].textContent = fmt(o2.r); } }); /* 잔고 숫자만 바꿈(위젯을 다시 그리지 않음) */
     const ic = document.querySelector('#tabs .gmtic'); if (ic && window.doroChipSvg) ic.innerHTML = window.doroChipSvg('b', 18, false, true); })();
   function dexGate() {
     const on = dexOk();
@@ -4657,7 +4700,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   window.doroPickupList = () => { const now = Date.now(), L = cfgGet().gacha.filter((x) => (x.s || x.e) && (!x.s || now >= x.s) && (!x.e || now < x.e)), U = L.length ? L : [cfgFeat().m]; return U.map((m) => { const k = nkCode(m.n); return { n: m.n, code: k, img: m.face ? cfgImg(m.face) : k ? BL_IMG(k) : cfgImg(m.cover) }; }); };
   window.doroPickup = () => { const m = cfgFeat().m, k = nkCode(m.n); return { n: m.n, code: k, img: m.face ? cfgImg(m.face) : k ? BL_IMG(k) : cfgImg(m.cover) }; };
   function gmMount() {
-    if (gmInst) return; if (!window.DoroGacha) { /* 가챠 엔진은 가챠 탭을 처음 열 때 불러옴 */ if (!gmMount.w) { gmMount.w = 1; const sc = document.createElement('script'); sc.src = 'js/gacha.js?v=20261121o'; sc.onload = () => { gmMount.w = 0; const go = () => { if (curTab === 'gcm') gmMount(); }; if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go(); }; sc.onerror = () => { gmMount.w = 0; const r = document.getElementById('gm-root'); if (r) r.innerHTML = '<p class="muted" style="padding:20px">가챠 머신을 불러오지 못했습니다. 새로고침해 주세요.</p>'; }; document.head.appendChild(sc); } return; } let D; try { D = window.GM_ASSETS; if (!D) throw 0; } catch (e) { return; }
+    if (gmInst) return; if (!window.DoroGacha) { /* 가챠 엔진은 가챠 탭을 처음 열 때 불러옴 */ if (!gmMount.w) { gmMount.w = 1; const sc = document.createElement('script'); sc.src = 'js/gacha.js?v=20261121p'; sc.onload = () => { gmMount.w = 0; const go = () => { if (curTab === 'gcm') gmMount(); }; if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go(); }; sc.onerror = () => { gmMount.w = 0; const r = document.getElementById('gm-root'); if (r) r.innerHTML = '<p class="muted" style="padding:20px">가챠 머신을 불러오지 못했습니다. 새로고침해 주세요.</p>'; }; document.head.appendChild(sc); } return; } let D; try { D = window.GM_ASSETS; if (!D) throw 0; } catch (e) { return; }
     const corp = {}; GC_NK.forEach((r) => { if (r[2] === 'SSR') corp[r[0]] = r[1]; });
     const mk = (L, p, cp) => L.map((n) => { const k = nkCode(n) || nkCode({ '리틀 머메이드': '세이렌' }[n] || ''); return { n, c: corp[n] || cp || '', k, p, img: k ? BL_IMG(k) : '', tall: 1 }; });
     gmStockSync(); const fix = (L) => { L.forEach((x) => { if (!x.img) { x.img = nkFace(x.n); const g = cfgGet().gacha.find((q) => q.n === x.n); if (g && g.corp) x.c = g.corp; if (g && !g.face) x.tall = 0; } }); return L; }, M = (m) => { const PL = gmPoolOf(m), std = fix(mk(PL.std, 0)), pil = fix(mk(PL.pil, 1)); const two = +m.rate === 2, pu = mk([m.n], two ? 0 : 1, m.corp || (two ? '' : '필그림'))[0]; if (m.corp) pu.c = m.corp; if (m.face) pu.img = cfgImg(m.face); else if (!pu.img) { pu.img = cfgImg(m.cover); pu.tall = 0; } /* 픽업 2% = 일반 니케, 1% = 필그림·오버스펙 */
