@@ -1992,4 +1992,6 @@ mask:linear-gradient(#000 0 0) 0 0/100% .26em no-repeat,linear-gradient(#000 0 0
 @media (max-width:900px){.jwgrid #jw-out{order:-1}}
 
 /* 모바일 안내(로그인 권유 · 토스트): left:50% 때문에 폭이 화면 절반으로 줄어 세로로 길어지던 것 → 화면 양옆 여백만 남기고 꽉 채움 */
-@media (max-width:700px){#need-login{left:10px;right:10px;transform:translateY(-140%);padding:11px 10px 11px 14px;gap:10px}#need-login.on{transform:translateY(0)}#need-login b{flex:1;min-width:0;font-size:14px;word-break:keep-all}#need-login button{flex:none;padding:8px 14px}.toast{left:10px;right:10px;transform:none;max-width:none;text-align:center}}
+@media (max-width:700px){#need-login{left:10px;right:10px;transform:translateY(-140%);padding:11px 10px 11px 14px;gap:10px}#need-login.on{transform:translateY(0)}#need-login b{flex:1;min-width:0;font-size:14px;word-break:keep-all}#need-login button{flex:none;padding:8px 14px}.toast{left:10px;right:10px;transform:none;max-width:none;text-align:center;word-break:keep-all}
+.acct-undo{left:10px;right:10px;transform:none;max-width:none;border-radius:16px;justify-content:space-between}.acct-undo>span{flex:1;min-width:0;word-break:keep-all}.acct-undo button{flex:none;white-space:nowrap}
+html .daily-note{left:10px;right:10px;transform:translateY(20px);justify-content:center;white-space:normal;word-break:keep-all;text-align:center;border-radius:16px;flex-wrap:wrap}html .daily-note.on{transform:none}}
