@@ -448,6 +448,7 @@ function raidBots(sid, sn, now, real, final) {
 }
 const rShuffle = (a) => { const r = new Uint32Array(a.length); crypto.getRandomValues(r); for (let i = a.length - 1; i > 0; i--) { const j = r[i] % (i + 1); const t = a[i]; a[i] = a[j]; a[j] = t; } return a; };
 const rList = (s) => (s ? String(s).split(',').filter(Boolean) : []);
+let RANK_MEM = null; /* 순위 자료 기억(45초) */
 async function raid(req, env, out) {
   if (!env.FIREBASE_SA) return out(503, { ok: false, error: 'not_ready' });
   let B; try { B = await req.json(); } catch (e) { return out(400, { ok: false, error: 'bad' }); }
@@ -578,6 +579,11 @@ const maskNick = (v) => { const c = Array.from(String(v || '지휘관')); return
     }
     return out(409, { ok: false, error: 'busy' });
   }
+  /* 순위표 응답. 순위 자료는 45초 동안 기억해 두고 다시 씀: 로비의 실시간 랭킹이 사람마다 주기적으로 물어 오므로, 매번 DB를 읽으면 무료 한도(하루 읽기 5만)를 넘김 */
+  const rankOut = (sn, season, all) => { const N = all.length, pub = (x, k) => Object.assign({ rank: k + 1, me: isMe(x), nick: maskNick(ADMIN_UIDS.includes(x.uid) && RANK_ALIAS[x.nick] ? RANK_ALIAS[x.nick] : x.nick), sc: x.sc, deck: x.deck, chips: x.chips, mult: x.mult, f: x.f, pf: x.pf, fr: x.fr }, admin && x.ai ? { ai: 1 } : {}); /* AI 표시는 관리자에게만 */
+    const mi = uid ? all.findIndex(isMe) : -1;
+    return out(200, { ok: true, season, total: N, cut: [Math.max(3, Math.ceil(N * 0.03)), Math.max(10, Math.ceil(N * 0.1)), Math.max(30, Math.ceil(N * 0.3))], rows: all.slice(0, 100).map(pub), mine: mi >= 0 ? pub(all[mi], mi) : null }); };
+  if (a === 'rank' && RANK_MEM && now - RANK_MEM.t < 45000) return RANK_MEM.sn ? rankOut(RANK_MEM.sn, RANK_MEM.season, RANK_MEM.all) : out(200, { ok: true, season: null, admin });
   const md = await getDoc('meta/raid'), sn = md && md.f.on && md.f.id ? md.f : null, active = !!(sn && now >= sn.start && now < sn.end);
   const season = sn ? { id: sn.id, e: sn.e, r: sn.r, start: sn.start, end: sn.end, active } : null;
   if (a === 'g48') { /* 2048에서 합성한 단계를 이번(또는 곧 시작할) 시즌의 픽업 니케 카드 수로 인정. 보낸 씨앗·움직임을 같은 규칙으로 다시 돌려 확인 */
@@ -597,13 +603,9 @@ const maskNick = (v) => { const c = Array.from(String(v || '지휘관')); return
       if (await commit([{ update: { name: ud.name, fields: { g48b: fsv({ sid: sn.id, m }) } }, updateMask: { fieldPaths: ['g48b'] }, currentDocument: { updateTime: ud.updateTime } }])) return out(200, { ok: true, v, code, sid: sn.id }); }
     return out(409, { ok: false, error: 'busy' });
   }
-  if (!sn) return out(200, { ok: true, season: null, admin });
+  if (!sn) { if (a === 'rank') RANK_MEM = { t: now, sn: null }; return out(200, { ok: true, season: null, admin }); }
   const col = 'raid_' + sn.id;
-  if (a === 'rank') {
-    const all = await rankAll(col, sn, now >= sn.end), N = all.length, pub = (x, k) => Object.assign({ rank: k + 1, me: isMe(x), nick: maskNick(ADMIN_UIDS.includes(x.uid) && RANK_ALIAS[x.nick] ? RANK_ALIAS[x.nick] : x.nick), sc: x.sc, deck: x.deck, chips: x.chips, mult: x.mult, f: x.f, pf: x.pf, fr: x.fr }, admin && x.ai ? { ai: 1 } : {}); /* AI 표시는 관리자에게만 */
-    const mi = uid ? all.findIndex(isMe) : -1;
-    return out(200, { ok: true, season, total: N, cut: [Math.max(3, Math.ceil(N * 0.03)), Math.max(10, Math.ceil(N * 0.1)), Math.max(30, Math.ceil(N * 0.3))], rows: all.slice(0, 100).map(pub), mine: mi >= 0 ? pub(all[mi], mi) : null });
-  }
+  if (a === 'rank') { const all = await rankAll(col, sn, now >= sn.end); RANK_MEM = { t: now, sn, season, all }; return rankOut(sn, season, all); }
   for (let attempt = 0; attempt < 3; attempt++) {
     const my = await getDoc(col + '/' + uid), f = my ? my.f : {};
     const n = f.day === today ? (f.n || 0) : 0, g = f.g && f.g.hand ? f.g : null;
@@ -616,7 +618,7 @@ const maskNick = (v) => { const c = Array.from(String(v || '지휘관')); return
       const ended = now >= sn.end ? sn : (sn.prev && sn.prev.id ? sn.prev : null); /* 끝난 시즌의 순위로 프로필 테두리 지급(한 번만) */
       if (ended && ud && fr[ended.id] == null) { const all = await rankAll('raid_' + ended.id, ended, true), t = tierOf(all.findIndex(isMe), all.length); fr = Object.assign({}, fr, { [ended.id]: t });
         if (await commit([{ update: { name: ud.name, fields: { raidFrames: fsv(fr) } }, updateMask: { fieldPaths: ['raidFrames'] } }])) newFrame = t; }
-      if (my && B.pf != null) { const [p2, f2] = pfFr(fr); if (p2 !== String(f.pf || '') || String(f2) !== String(f.fr || 0)) await commit([{ update: { name: docName(col + '/' + uid), fields: fsv({ pf: p2, fr: f2 }).mapValue.fields }, updateMask: { fieldPaths: ['pf', 'fr'] }, currentDocument: { exists: true } }]); } /* 프로필 니케·테두리를 바꾸면 순위표에도 반영 */
+      if (my && B.pf != null) { const [p2, f2] = pfFr(fr); if (p2 !== String(f.pf || '') || String(f2) !== String(f.fr || 0)) await commit([{ update: { name: docName(col + '/' + uid), fields: fsv({ pf: p2, fr: f2 }).mapValue.fields }, updateMask: { fieldPaths: ['pf', 'fr'] }, currentDocument: { exists: true } }]); RANK_MEM = null; } /* 프로필 니케·테두리를 바꾸면 순위표에도 반영 */
       return out(200, view(g, { chips: (ud && ud.f.chipsV && ud.f.chipsV.d) || 0, frames: Array.from(new Set(Object.values(fr).map(Number).filter((t) => t > 0))), newFrame })); }
     if (a === 'giveup') { /* 진행 중인 판 포기: 쓴 횟수는 돌아오지 않고 기록도 남지 않음 */
       if (!g) return out(200, view(null));
@@ -683,7 +685,7 @@ const maskNick = (v) => { const c = Array.from(String(v || '지휘관')); return
       const up = R.score > (f.sc || 0);
       const fields = { g: null }, mask = ['g'];
       if (up) { Object.assign(fields, { sc: R.score, at: now, bd: sq.map((k) => k + ':' + (g.cnt[k] || 1)).join(','), bc: R.chips, bm: R.mult, bf: R.f }); mask.push('sc', 'at', 'bd', 'bc', 'bm', 'bf'); }
-      if (await commit([save(fields, mask)])) return out(200, { ok: true, season, tries: n, max: mx, best: up ? R.score : (f.sc || 0), result: R, newBest: up, game: null });
+      if (await commit([save(fields, mask)])) { if (up) RANK_MEM = null; return out(200, { ok: true, season, tries: n, max: mx, best: up ? R.score : (f.sc || 0), result: R, newBest: up, game: null }); }
       continue;
     }
     return out(400, { ok: false, error: 'bad' });
