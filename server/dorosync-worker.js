@@ -430,17 +430,17 @@ function rEval(codes, cnt, boss) { /* 니케별 칩과 크리티컬 확률, 배�
   return { ch, pc, chips, mult, f, score: Math.round(chips * mult * f) };
 }
 /* 랭킹의 AI 기록: 순위표가 비어 보이지 않게, 시즌마다 정해진 가상 참가자(12~20명)가 시간이 지나며 하나씩 들어오고 조금씩 기록을 올림. DB에 쓰지 않고 시즌 ID로 매번 똑같이 만들어 냄.
- * 점수는 실제 참가자 상위 30% 경계보다 항상 낮게(참가자가 4명 미만이면 700 기준). 관리자에게만 AI 표시가 감 */
+ * 점수는 낮은 쪽부터 실제 참가자 상위 10% 경계 바로 아래까지 넓게 퍼짐(참가자가 4명 미만이면 1,200 기준). 관리자에게만 AI 표시가 감 */
 const BOT_A = ['도로', '라피', '네온', '아니스', '방주', '전초', '셔플', '럭키', '밤샘', '코어', '버스트', '홍련', '모더', '엘리', '미실', '테트라', '필그림', '라플', '앨리스', '루주', '헬름', '슈가', '프리바', '율하', '디젤', '메이든', '노아', '사쿠라', '블랑', '누아르', 'Rapi', 'Neon', 'doro', 'Ark', 'Nikke'], BOT_B = ['', '', '짱', '단', '러', '킹', '님', '77', '99', '0', '7', '123', '_kr', '02', '츄', '쓰', 'x', '11'];
 function raidBots(sid, sn, now, real, final) {
   let h = 2166136261; for (const ch of String(sid)) h = Math.imul(h ^ ch.charCodeAt(0), 16777619);
   const r0 = tabsRng(h), K = 12 + Math.floor(r0() * 9), st = +sn.start || 0, len = Math.max(1, (+sn.end || now) - st), prog = final || !st ? 1 : (now - st) / len, codes = Object.keys(RAID_NK), out = [];
-  const ref = real.length >= 4 ? real[Math.floor(real.length * 0.3)].sc : 700, boss = { e: R_CYC.includes(sn.e) ? sn.e : '작', r: R_RNG[sn.r] ? sn.r : 'MID' };
+  const ref = real.length >= 4 ? real[Math.floor(real.length * 0.1)].sc : 1200, boss = { e: R_CYC.includes(sn.e) ? sn.e : '작', r: R_RNG[sn.r] ? sn.r : 'MID' };
   for (let i = 0; i < K && codes.length >= 5; i++) {
-    const rb = tabsRng(h ^ Math.imul(i + 1, 2654435761)), join = 0.02 + rb() * 0.85, lvl = 0.35 + 0.6 * rb(), s1 = join + (1 - join) * (0.2 + 0.3 * rb()), s2 = s1 + (1 - s1) * (0.3 + 0.4 * rb()), nick = BOT_A[Math.floor(rb() * BOT_A.length)] + BOT_B[Math.floor(rb() * BOT_B.length)];
-    if (prog < join) continue; const stage = prog >= s2 ? 2 : prog >= s1 ? 1 : 0, target = ref * lvl * [0.62, 0.82, 1][stage], rc = tabsRng(h ^ Math.imul(i + 1, 40503) ^ (stage + 1) * 977); let best = null;
-    for (let q = 0; q < 40; q++) { const cs = []; while (cs.length < 5) { const k = codes[Math.floor(rc() * codes.length)]; if (!cs.includes(k)) cs.push(k); } const cnt = {}; cs.forEach((k) => { cnt[k] = 1 + Math.floor(Math.pow(rc(), 2) * 7); });
-      const R = rEval(cs, cnt, boss), sc = Math.round(R.score * (1 + rc() * 0.55)), d = Math.abs(sc - target); if (sc > 0 && sc < ref * 0.97 && (!best || d < best.d)) best = { d, sc, cs, cnt, R }; }
+    const rb = tabsRng(h ^ Math.imul(i + 1, 2654435761)), join = 0.02 + rb() * 0.85, lvl = 0.12 + 0.88 * rb(), s1 = join + (1 - join) * (0.2 + 0.3 * rb()), s2 = s1 + (1 - s1) * (0.3 + 0.4 * rb()), nick = BOT_A[Math.floor(rb() * BOT_A.length)] + BOT_B[Math.floor(rb() * BOT_B.length)];
+    if (prog < join) continue; const stage = prog >= s2 ? 2 : prog >= s1 ? 1 : 0, target = ref * lvl * [0.6, 0.82, 1][stage], rc = tabsRng(h ^ Math.imul(i + 1, 40503) ^ (stage + 1) * 977); let best = null;
+    for (let q = 0; q < 160; q++) { const cs = []; while (cs.length < 5) { const k = codes[Math.floor(rc() * codes.length)]; if (!cs.includes(k)) cs.push(k); } const cnt = {}; cs.forEach((k) => { cnt[k] = 1 + Math.floor(Math.pow(rc(), 2.2 - 1.6 * lvl) * 11); });
+      const R = rEval(cs, cnt, boss), sc = Math.round(R.score * (1 + rc() * 0.9)), d = Math.abs(sc - target); if (sc > 0 && sc < ref * 0.97 && (!best || d < best.d)) best = { d, sc, cs, cnt, R }; }
     if (!best) continue;
     out.push({ uid: 'ai:' + i, ai: 1, nick, sc: best.sc, at: st + Math.round([join, s1, s2][stage] * len), deck: best.cs.map((k) => k + ':' + best.cnt[k]).join(','), chips: best.R.chips, mult: best.R.mult, f: best.R.f, pf: best.cs[0], fr: 0 });
   }
