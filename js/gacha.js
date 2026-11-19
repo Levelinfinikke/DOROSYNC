@@ -371,10 +371,11 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
 .gm-multi.fs .gm-graph:before,.gm-multi.fs .gm-tray:before{content:"";display:block;flex:none;height:5px;margin:-7px -8px 6px;background:repeating-linear-gradient(-55deg,#16171a 0 8px,#b8962a 8px 16px);opacity:.85}
 .gm-multi.fs .gm-trn{display:inline;font-size:12px;color:#c5cfdf;white-space:nowrap}.gm-multi.fs .gm-trr{width:auto;margin-left:auto}.gm-multi.fs .gm-trh{gap:6px}
 .gm-multi.fs .gm-trh{display:none}.gm-multi.fs .gm-gtr{display:none}.gm-tl-g{display:none}.gm-multi.fs .gm-tl-g{display:grid}.gm-multi.fs .gm-mode .gm-mg{display:none}.gm-multi.fs .gm-pulls{display:none}
-.gm-multi.fs .gm-wal .gm-chipbal{position:absolute;right:62px;top:50%;transform:translateY(-50%);display:inline-flex;align-items:center;gap:4px;padding:2px 8px 2px 4px;border-radius:10px;background:rgba(10,14,22,.62);border:1px solid rgba(255,194,26,.4);font-weight:800;font-size:13px;color:#ffd24d;z-index:2}.gm-multi.fs .gm-wal .gm-chipbal svg{width:16px;height:16px}.gm-multi.fs .gm-wt{padding-right:150px}
-.gm-multi.fs .gm-tray{position:relative;overflow:visible}.gm-multi.fs .gm-tray>.gm-flipall{position:absolute;right:10px;top:-13px;z-index:3;padding:4px 11px;font-size:11.5px;border-radius:99px;background:linear-gradient(#ffd24d,#ffb21c);color:#1b1400;border:1px solid #7a5500;font-weight:900;box-shadow:0 2px 6px rgba(0,0,0,.5)}
-.gm-multi.fs .gm{grid-template-rows:auto auto minmax(172px,1fr)}
-.gm-multi.fs .gm-left{width:min(100%,calc((100vh - 50px - 172px - 14px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) * .8536));width:min(100%,calc((100dvh - 50px - 172px - 14px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) * .8536))} /* 서랍에 보관함 5칸 × 2줄은 늘 보이게 */
+.gm-multi.fs .gm-wal .gm-chipbal{position:absolute;right:8px;top:50%;transform:translateY(-50%);display:inline-flex;align-items:center;gap:4px;padding:2px 8px 2px 4px;border-radius:10px;background:rgba(10,14,22,.62);border:1px solid rgba(255,194,26,.4);font-weight:800;font-size:13px;color:#ffd24d;z-index:2}.gm-multi.fs .gm-wal .gm-chipbal svg{width:16px;height:16px}.gm-multi.fs .gm-wt{padding-right:110px}
+.gm-multi.fs .gm-tray{position:relative;overflow:visible}.gm-multi.fs .gm-flipall{display:none!important}.gm-multi.fs .gm-tray>.gm-flipall{position:absolute;right:10px;top:-13px;z-index:3;padding:4px 11px;font-size:11.5px;border-radius:99px;background:linear-gradient(#ffd24d,#ffb21c);color:#1b1400;border:1px solid #7a5500;font-weight:900;box-shadow:0 2px 6px rgba(0,0,0,.5)}
+.gm-multi.fs .gm{grid-template-rows:auto auto minmax(0,1fr)}.gm-multi.fs .gm-left>.gm-spread{top:12%;bottom:24%;left:6%;right:6%}.gm-multi.fs .gm-left>.gm-spread .gm-spg{max-width:none} /* 머신이 먼저: 폭을 다 쓰고, 보관함은 남는 높이(칸 크기를 높이에 맞춰 최소 1줄) */
+.gm-multi.fs .gm-left{width:100%}
+.gm-multi.fs .gm-tray,.gm-multi.fs .gm-graph{padding:4px 6px 6px}.gm-multi.fs .gm-graph:before,.gm-multi.fs .gm-tray:before{height:4px;margin:-4px -6px 4px}.gm-multi.fs .gm-pan{padding:5px;gap:6px}.gm-multi.fs .gm-mode .gm-fb{display:none} /* 돈통 버튼 없음: 재화가 떨어지면 자동으로 채움 */
 .gm-multi.fs .gm-left.clean{border-radius:0}
 }
 `;
@@ -611,7 +612,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     S.sup = { pick: 0, jw: 0, full: false, acc: 0, key: '' }; S.doro = (() => { try { return localStorage.getItem('dsgm-doromode') !== '0'; } catch (e) { return true; } })();
     const feedCap = () => Math.max(12, Math.floor(PW * PH * 0.8 / 490));
     function uiFeed() { const b = modeEl.querySelector('.gm-fb'); if (!b) return; const u = S.sup; b.classList.toggle('full', u.full); b.classList.toggle('run', !u.full && (u.pick > 0 || u.jw > 0)); }
-    function feedTick(dt) { const u = S.sup; if (u.pick <= 0 && u.jw <= 0 && !u.full) return; const cap = feedCap(), n = S.pile.length;
+    function feedTick(dt) { const u = S.sup; if (MOB() && !u.full) ['pick', 'jw'].forEach((k) => { if (u[k] <= 0 && S.stock[k] < PER[k] / 10 && !S.pile.some((b) => b.k === k)) { u[k] += k === 'pick' ? 500 : 50000; u.acc = 1; } }); /* 휴대폰: 돈통 대신, 한 종류가 바닥나면 자동으로 채움 */ if (u.pick <= 0 && u.jw <= 0 && !u.full) return; const cap = feedCap(), n = S.pile.length;
       if (!u.full && n >= cap) { u.full = true; uiFeed(); return; } if (u.full) { if (n <= cap * 0.5) { u.full = false; uiFeed(); } else return; }
       u.acc += dt; if (u.acc < 0.09) return; u.acc = 0; S.fy = 50;
       ['pick', 'jw'].forEach((k) => { const d = Math.min(PER[k], u[k]); if (d > 0) { u[k] -= d; S.stock[k] += d; } }); pileSync(); S.fy = 0; snd.grab(); uiFeed(); }
@@ -621,7 +622,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     /* 휴대폰: 투입구(위 TICKET · 아래 JEWEL)를 누르면 그 재화를 최대 10뽑만큼 넣음 */
     function tapFeed(k) { if (S.ins.length || S.credN >= 10) { say('크레딧이 남아 있습니다. 레버를 당겨 주세요.'); return; }
       const L = S.pile.filter((b) => b.k === k).sort((a, b) => b.u - a.u), take = []; let u = S.credN; for (const b of L) { if (u + b.u <= 10) { take.push(b); u += b.u; } if (u >= 10) break; }
-      if (!take.length) { say((k === 'jw' ? '쥬얼' : '티켓') + '이 없습니다. 위쪽 [돈통]을 눌러 채우세요.'); snd.clunk(); return; }
+      if (!take.length) { say((k === 'jw' ? '쥬얼' : '티켓') + '을 채우는 중입니다. 잠시 뒤 다시 눌러 주세요.'); snd.clunk(); return; }
       take.forEach((b) => S.pile.splice(S.pile.indexOf(b), 1)); wake(S.pile); insert(k, take, k === 'jw' ? HOLE.x + 150 : SLIT.x + 150, 300); }
     function setMode(k, v) { S.mode[k] = v; [S.dome, S.bask, S.cup].forEach((L) => L.forEach((b) => { if (b && b.kind !== 'orb') b.r = rOf(b.kind); })); wake(S.dome); wake(S.bask); domeStale = true; uiOpt(); }
     function refill() { if (S.refill) return; if (S.dome.length >= NDOME) { say('통이 이미 가득 차 있습니다.'); return; } S.refill = { t: 0, acc: 0 }; snd.lid(); }
@@ -1239,7 +1240,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
       w.innerHTML = e ? trayOrbs(e, tr) : ''; w._h = null; if (e) e.merge = false; traySave();
       { const nT = S.tray.filter(Boolean).length; root.querySelectorAll('.gm-trbtn span,.gm-gtr span').forEach((x) => { x.textContent = nT; }); }
     }
-    function uiTray0() { traySave(); const pw = panEl.clientWidth - 20, ph = panEl.clientHeight - 20, cols = pw > 60 ? Math.max(3, Math.min(12, Math.floor((pw + 8) / (pw < 260 ? 52 : 62)))) : 5, cell = pw > 60 ? (pw - (cols - 1) * 8) / cols : 50, n = cols * Math.max(Math.ceil((S.tray.length + 1) / cols), pw > 60 ? Math.floor((ph + 8 - 14) / (cell + 8)) : 3, 2); panEl.style.setProperty('--cols', cols); { const nT = S.tray.filter(Boolean).length; root.querySelectorAll('.gm-trbtn span,.gm-gtr span').forEach((x) => { x.textContent = nT; }); } while (panEl.children.length > n) panEl.lastElementChild.remove(); while (panEl.children.length < n) { const d = document.createElement('div'); d.className = 'gm-well'; d.dataset.i = panEl.children.length; panEl.appendChild(d); }
+    function uiTray0() { traySave(); const pw = panEl.clientWidth - 20, ph = panEl.clientHeight - 20, cols = pw > 60 ? Math.max(3, Math.min(12, Math.max(Math.floor((pw + 8) / (pw < 260 ? 52 : 62)), MOB() && ph > 24 ? Math.ceil((pw + 8) / (ph + 8)) : 0))) : 5, cell = pw > 60 ? (pw - (cols - 1) * 8) / cols : 50, n = cols * Math.max(Math.ceil((S.tray.length + 1) / cols), pw > 60 ? Math.floor((ph + 8 - 14) / (cell + 8)) : 3, 2); panEl.style.setProperty('--cols', cols); { const nT = S.tray.filter(Boolean).length; root.querySelectorAll('.gm-trbtn span,.gm-gtr span').forEach((x) => { x.textContent = nT; }); } while (panEl.children.length > n) panEl.lastElementChild.remove(); while (panEl.children.length < n) { const d = document.createElement('div'); d.className = 'gm-well'; d.dataset.i = panEl.children.length; panEl.appendChild(d); }
       for (let i = 0; i < n; i++) { const w = panEl.children[i], e = S.tray[i], t = e && e.top; if (t && (t.anim || t.flipping) && t._el && w.contains(t._el)) continue; /* 뒤집는 중인 칸은 그대로(다시 그리면 애니메이션이 끊김) */
         const tr = e ? tShow(e.nk.n, TIERS[S.val.mode === 2 ? 'pvp' : 'boss'][e.nk.n] || '-') : '', h = e ? trayOrbs(e, tr) : ''; if (e) e.merge = false; if (w._h !== h) { w.innerHTML = h; w._h = h; } } }
     const shortN = (n) => (n >= 1e6 ? +(n / 1e6).toFixed(2) + 'M' : n >= 1e4 ? +(n / 1e3).toFixed(1) + 'k' : fmt(n));
@@ -1297,12 +1298,18 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     window.addEventListener('pointercancel', () => { tpd = null; });
     window.addEventListener('pointerup', () => { if (!tpd) return; const en = tpd.en; tpd = null; const i = S.tray.indexOf(en); if (i < 0 || busyE(en)) return; if (!S.doro) return; /* DORO MODE 끔: 초상화는 모으기만 */
       if (en.top && en.top.anim) { if (en.top.skip) en.top.skip(); return; }
+      if (MOB()) { if (isPUn(en.nk)) puSpread(en); else flipAll(); return; } /* 휴대폰: 한 장을 누르면 모두 뒤집기(픽업은 픽업끼리 10뽑 연출로) */
       if (en.count > 1 && !en.top) { if (isSSSn(en.nk)) spreadOpen(en); else { en.rest = true; flipTop(en); } return; } /* 겹친 칸: SSS는 펼쳐서 한 장씩, 나머지는 맨 위 한 장을 뒤집고 칸 전체를 한꺼번에 정산 */
       if (!en.top || !en.top.flip) { flipTop(en); return; }
       absorbTop(en); if (en.all && en.count > 0) setTimeout(() => { if (!en.top && S.tray.includes(en)) flipTop(en); }, 260); });
+    const isPUn = (nk) => !!(nk && (nk.pu || (P.pickup && nk.n === P.pickup.n)));
+    /* 픽업 초상화를 한 칸으로 모아 10뽑 연출(펼치기)로 한꺼번에 뒤집음 */
+    function puSpread(en) { if (S.spread || S.flipAllBusy) return; const L = S.tray.filter((e) => e && isPUn(e.nk) && !busyE(e) && !(e.top && (e.top.anim || e.top.flip))); if (!L.length) return;
+      const base = L.includes(en) ? en : L[0]; L.forEach((e) => { if (e === base) return; base.count += e.count; base.cq = (base.cq || []).concat(e.cq || []); if (e.top) base.count -= 0; S.tray[S.tray.indexOf(e)] = null; });
+      if (base.top && !base.top.flip) { base.top = null; base.ck = null; } while (S.tray.length && !S.tray[S.tray.length - 1]) S.tray.pop(); uiTray(); spreadOpen(base); }
     /* 겹친 칸 펼치기: 최대 10장(5×2)을 펼쳐 0.1초마다 왼쪽부터 한 장씩 뒤집고, 다 끝나면 한꺼번에 잔고로. 남으면 다음 10장 */
     function spreadOpen(en) {
-      if (S.spread) return; const tr = $('.gm-tray'); if (!tr) return;
+      if (S.spread) return; const tr = MOB() && $('.gm-multi.fs .gm-left, .gm-left') ? $('.gm-left') : $('.gm-tray'); if (!tr) return; /* 휴대폰: 보관함이 낮으니 머신 위에 크게 펼침 */
       const box = document.createElement('div'); box.className = 'gm-spread'; tr.appendChild(box); S.spread = { en, box };
       box.addEventListener('pointerdown', (e) => {
         if (e.target.closest('.gm-skip')) return;
