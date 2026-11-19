@@ -531,7 +531,7 @@
       for (let i = deck.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const t = deck[i]; deck[i] = deck[j]; deck[j] = t; }
       if (deck.length < 7) throw new Error('deck');
       L.deck = deck; const total = deck.length;
-      return { hand: L.deck.splice(0, 7), rd: S.mode === 'mine' ? Math.min(3, Math.floor(deck.reduce((t, x) => t + Math.min(11, +x.cnt || 0), 0) / Math.max(1, d.list.length * 11) * 4)) : 3, /* 버리기: 모든 카드 풀코강(니케당 11장) 대비 25%마다 +1 */ left: L.deck.length, total, tries: S.tries + 1, max: 3, chips: S.chips };
+      return { hand: L.deck.splice(0, 7), rd: S.mode === 'mine' ? 1 + Math.min(3, Math.floor(deck.reduce((t, x) => t + Math.min(11, +x.cnt || 0), 0) / Math.max(1, d.list.length * 11) * 4)) : 3, /* 버리기: 기본 1회 + 모든 카드 풀코강(니케당 11장) 대비 25%마다 +1(최대 4회) */ left: L.deck.length, total, tries: S.tries + 1, max: 3, chips: S.chips };
     },
     async discard(ids, flt, cost) { const got = []; for (let k = 0; k < ids.length && L.deck.length; k++) { let i = cost ? L.deck.findIndex(fltMatch) : 0; if (i < 0) i = 0; got.push(L.deck.splice(i, 1)[0]); } return { got, left: L.deck.length, chips: Math.max(0, S.chips - cost) }; }, /* 모의전은 실제 싱크칩을 쓰지 않고 연습용 싱크칩에서 차감 */
     async lock(ids) { const R = evalSquad(C(ids), S.boss); L.crit = R.cards.map((c) => (Math.random() < c.pc ? 1 : 0)); return { sq: ids.slice(), crit: L.crit }; },

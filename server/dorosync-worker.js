@@ -402,7 +402,7 @@ async function chipsClaim(req, env, out) {
 /* ================= 포커레이드 =================
  * 카드는 서버가 뽑음: 덱 순서·손패는 서버 문서(raid_시즌/계정)에만 있고, 사이트는 고른 카드 코드만 보냄.
  * 덱 = 블라블라링크에서 서버가 직접 읽은 보유 SSR(명함 1 + 돌파 + 코강) + 계정 문서 dex(웹에서 얻은 카드), 니케당 최대 11장.
- * 점수 = 칩 합계 × 배수 합계 × 버스트 보정(우월코드 칩 +2, 3버스트 우월코드 +5). 돌파·코강 장당 칩 +1. 버리기는 전체 풀코강 대비 카드 25%마다 1회(최대 3), 필터는 한 판에 한 번·조건 1개·장당 500. 하루(한국 시간) 3회, 시작하는 순간 1회 차감. 진행 중인 판은 다시 들어와도 그대로 이어짐.
+ * 점수 = 칩 합계 × 배수 합계 × 버스트 보정(우월코드 칩 +2, 3버스트 우월코드 +5). 돌파·코강 장당 칩 +1. 버리기는 기본 1회 + 전체 풀코강 대비 카드 25%마다 1회(최대 4), 필터는 한 판에 한 번·조건 1개·장당 500. 하루(한국 시간) 3회, 시작하는 순간 1회 차감. 진행 중인 판은 다시 들어와도 그대로 이어짐.
  * RAID_OPEN이 false면 관리자만 사용할 수 있음(미공개). */
 const RAID_OPEN = true, RAID_TRIES = 3;
 /* 코드를 바로잡은 신규 니케: 옛 코드로 쌓인 카드를 새 코드로 합침(다음 저장 때 옛 칸은 사라짐) */
@@ -642,7 +642,7 @@ const maskNick = (v) => { const c = Array.from(String(v || '지휘관')); return
       { const gb = ud && ud.f.g48b, gm = gb && gb.sid === sn.id ? gb.m || (gb.code ? { [gb.code]: gb.v } : {}) : {}; Object.keys(gm).forEach((k) => { if (RAID_NK[k]) cnt[k] = Math.max(cnt[k] || 0, Math.min(11, Math.floor(+gm[k] || 0))); }); } /* 2048에서 합성한 픽업 니케 단계(이번 시즌만) */
       const codes = Object.keys(cnt).filter((k) => cnt[k] > 0); if (codes.length < 7) return out(409, { ok: false, error: 'deck', have: codes.length });
       rShuffle(codes);
-      const NKN = Object.keys(RAID_NK).length, CN = codes.reduce((t, k) => t + Math.min(11, cnt[k] || 0), 0), x1 = CN >= NKN * 11 ? 1 : 0, rd = Math.min(3, Math.floor(CN / (NKN * 11) * 4)); /* 버리기: 모든 카드 풀코강(니케당 11장) 대비 25%마다 +1(최대 3). 100%는 하루 핸드 +1 */
+      const NKN = Object.keys(RAID_NK).length, CN = codes.reduce((t, k) => t + Math.min(11, cnt[k] || 0), 0), x1 = CN >= NKN * 11 ? 1 : 0, rd = 1 + Math.min(3, Math.floor(CN / (NKN * 11) * 4)); /* 버리기: 기본 1회 + 모든 카드 풀코강(니케당 11장) 대비 25%마다 +1(최대 4회). 100%는 하루 핸드 +1 */
       const g2 = { hand: codes.slice(0, 7).join(','), deck: codes.slice(7).join(','), cnt, rd, total: codes.length, t: now };
       let nick = String((ud && (ud.f.nickname || ud.f.username)) || '').slice(0, 24);
       if (guest) { try { const bi = (await post('GetUserProfileBasicInfo', { intl_open_id: id, nikke_area_id: area }, env.BLA_COOKIE)).basic_info || {}; nick = String(bi.nickname || bi.role_name || '').slice(0, 24); } catch (e) { nick = ''; } } /* 비로그인: 게임 닉네임으로 등재 */
