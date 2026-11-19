@@ -2568,25 +2568,26 @@ self.DATA={"boxes":[[20.24,6437.98,3456],[21.93,9221.99,3935.98],[23.39,12353.99
   const doroBL = window.doroBL = { data: null, win: null, tok: '', timer: 0, fixPend: null, fixTimer: 0, fixTick: 0, sel: null };
   try { const sv = JSON.parse(localStorage.getItem(BLK) || 'null'); if (sv && sv.nikkes) doroBL.data = sv; } catch (e) { /* 저장된 정보 없음 */ }
   /* ---- 싱크칩: 사이트 게임으로 얻는 재화. 싱크칩 10 = 실버칩 2 = 골드칩 1, DORO칩은 별도 ---- */
-  const CHIP_K = 'dorosync-chips', CHIP_COL = { b: ['#f0a020', '#a86405'], s: ['#c3c9d2', '#6f7782'], g: ['#f6c431', '#8a6508'], r: ['#b47cff', '#4a3d8a'] };
+  const CHIP_K = 'dorosync-chips', CHIP_COL = { b: ['#f0a020', '#a86405'], s: ['#c3c9d2', '#6f7782'], g: ['#f6c431', '#8a6508'], r: ['#b47cff', '#4a3d8a'], p: ['#ff8fc0', '#4a3d8a'] }; /* p: DORODORO칩(핑크·라벤더) — 저장만 해 둠, 아직 쓰는 곳 없음 */
   let chipN = 0;
   /* k: b 싱크칩(주황) · s 실버칩 · g 골드칩(반짝임) · r 무지개(프리미엄). fx=false면 애니메이션 없는 가벼운 버전 */
   window.doroChipSvg = function (k, px, fx, flat) {
-    const c = CHIP_COL[k] || CHIP_COL.b, id = 'dc' + (++chipN), grad = k === 'g' || k === 'r', f = grad ? 'url(#' + id + ')' : c[0], anim = grad && fx !== false;
+    const c = CHIP_COL[k] || CHIP_COL.b, id = 'dc' + (++chipN), grad = k === 'g' || k === 'r' || k === 'p', f = grad ? 'url(#' + id + ')' : c[0], anim = grad && fx !== false;
     const dots = [0, 60, 120, 180, 240, 300].map((a) => '<circle cx="' + (40 * Math.sin(a * Math.PI / 180)).toFixed(1) + '" cy="' + (-40 * Math.cos(a * Math.PI / 180)).toFixed(1) + '" r="2.4" fill="' + f + '"/>').join('');
     const star = (x, y, r, col, dur, bg) => '<path d="M0 ' + -r + 'L' + r * 0.22 + ' ' + -r * 0.22 + 'L' + r + ' 0L' + r * 0.22 + ' ' + r * 0.22 + 'L0 ' + r + 'L' + -r * 0.22 + ' ' + r * 0.22 + 'L' + -r + ' 0L' + -r * 0.22 + ' ' + -r * 0.22 + 'Z" fill="' + col + '" transform="translate(' + x + ' ' + y + ')" opacity="0"><animate attributeName="opacity" values="0;1;0" keyTimes="0;.5;1" dur="' + dur + 's" begin="' + bg + 's" repeatCount="indefinite"/></path>';
     let defs = '', fxs = '';
     if (k === 'g') defs = '<linearGradient id="' + id + '" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff6c2"/><stop offset=".35" stop-color="#f9d04a"/><stop offset=".7" stop-color="#e2a60f"/><stop offset="1" stop-color="#fbe08a"/></linearGradient>';
     if (k === 'r') defs = '<linearGradient id="' + id + '" gradientUnits="userSpaceOnUse" x1="-50" y1="-50" x2="50" y2="50"><stop offset="0" stop-color="#ff4f96"/><stop offset=".14" stop-color="#ff4f96"/><stop offset=".32" stop-color="#ff9a1f"/><stop offset=".48" stop-color="#ffe23d"/><stop offset=".64" stop-color="#33dd77"/><stop offset=".82" stop-color="#2fa8ff"/><stop offset="1" stop-color="#9b5cff"/>' + (anim ? '<animateTransform attributeName="gradientTransform" type="rotate" from="0" to="360" dur="3.2s" repeatCount="indefinite"/>' : '') + '</linearGradient>';
+    if (k === 'p') defs = '<linearGradient id="' + id + '" gradientUnits="userSpaceOnUse" x1="-50" y1="-50" x2="50" y2="50"><stop offset="0" stop-color="#ff5fa2"/><stop offset=".25" stop-color="#ff8fc0"/><stop offset=".5" stop-color="#ffd1e6"/><stop offset=".75" stop-color="#b9a2ff"/><stop offset="1" stop-color="#8f74e8"/>' + (anim ? '<animateTransform attributeName="gradientTransform" type="rotate" from="0" to="360" dur="3.2s" repeatCount="indefinite"/>' : '') + '</linearGradient>';
     if (anim) {
       defs += '<clipPath id="' + id + 'c"><circle r="72"/></clipPath>';
       const band = (w, op, dur, bg) => '<rect x="' + -w / 2 + '" y="-110" width="' + w + '" height="220" fill="#fff" opacity="' + op + '" transform="rotate(24)"><animateTransform attributeName="transform" type="translate" values="-150 0;150 0;150 0" keyTimes="0;.45;1" dur="' + dur + 's" begin="' + bg + 's" repeatCount="indefinite" additive="sum"/></rect>';
-      fxs = '<g clip-path="url(#' + id + 'c)">' + band(26, 0.55, k === 'r' ? 1.8 : 2.6, 0) + (k === 'r' ? band(10, 0.4, 1.8, 0.25) : '') + '</g>' +
+      fxs = '<g clip-path="url(#' + id + 'c)">' + band(26, 0.55, k !== 'g' ? 1.8 : 2.6, 0) + (k !== 'g' ? band(10, 0.4, 1.8, 0.25) : '') + '</g>' +
         (k === 'g' ? star(-34, -40, 15, '#fffbe0', 2.2, 0.3) + star(42, 30, 11, '#fffbe0', 2.2, 1.3)
           : star(-36, -42, 17, '#fff', 1.6, 0) + star(44, -20, 12, '#ffe9fb', 1.6, 0.5) + star(30, 46, 14, '#e6fbff', 1.6, 1) + star(-44, 28, 10, '#fff7d6', 1.6, 1.3));
     }
     /* 2.5D: 아래로 두께(옆면)를 겹쳐 그림. 3D로 뒤집는 곳(보관함·컷인)은 flat */
-    const EC = k === 'g' ? ['#7a5a06', '#d6a51c'] : k === 'r' ? ['#5a3d9a', '#b49cff'] : ['#55595f', '#c4c8ce'], TH = flat ? 0 : 7;
+    const EC = k === 'g' ? ['#7a5a06', '#d6a51c'] : k === 'r' ? ['#5a3d9a', '#b49cff'] : k === 'p' ? ['#8a3d78', '#ffb3d6'] : ['#55595f', '#c4c8ce'], TH = flat ? 0 : 7;
     let edge = ''; for (let i = TH; i >= 1; i--) { const p = 1 - i / TH; edge += '<circle cy="' + i + '" r="72" fill="' + (i === TH ? EC[0] : p > 0.6 ? EC[1] : EC[0]) + '"' + (i === TH ? '' : ' opacity="' + (0.55 + p * 0.45).toFixed(2) + '"') + '/>'; }
     if (TH) edge = '<ellipse cy="' + (TH + 2) + '" rx="70" ry="66" fill="rgba(0,0,0,.28)"/>' + edge;
     return '<svg class="dchip dchip-' + k + (anim ? ' fx' : '') + '" viewBox="-80 -80 160 160" width="' + (px || 24) + '" height="' + (px || 24) + '" aria-hidden="true">' + (defs ? '<defs>' + defs + '</defs>' : '') + (TH ? '<g transform="translate(0 -3)">' + edge : '') +
@@ -4042,7 +4043,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   }
   /* ---------- 인벤토리 사진 인식: 칸 찾기 → 아이콘 비교 → 숫자 읽기 (모두 브라우저 안에서 처리) ---------- */
   const INV = (() => {
-    let REF = null; const refLoad = () => (REF ? Promise.resolve() : new Promise((ok, no) => { const sc = document.createElement('script'); sc.src = 'js/inv-ref.js?v=20261121s'; sc.onload = () => { REF = self.DORO_INV_REF; REF ? ok() : no(new Error('ref')); }; sc.onerror = () => no(new Error('ref')); document.head.appendChild(sc); })); /* 아이콘 견본은 사진 인식을 쓸 때만 읽음 */
+    let REF = null; const refLoad = () => (REF ? Promise.resolve() : new Promise((ok, no) => { const sc = document.createElement('script'); sc.src = 'js/inv-ref.js?v=20261121t'; sc.onload = () => { REF = self.DORO_INV_REF; REF ? ok() : no(new Error('ref')); }; sc.onerror = () => no(new Error('ref')); document.head.appendChild(sc); })); /* 아이콘 견본은 사진 인식을 쓸 때만 읽음 */
     const TW = 10, TH = 14, FW = 20, FH = 14, SH = 24, GBW = 200, NW = 111, NH = 115, BW = 34, BH = 18;
     const mk = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; };
     const load = (src) => new Promise((ok, no) => { const im = new Image(); im.onload = () => ok(im); im.onerror = no; im.src = src; });
@@ -4701,7 +4702,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   window.doroPickupList = () => { const now = Date.now(), L = cfgGet().gacha.filter((x) => (x.s || x.e) && (!x.s || now >= x.s) && (!x.e || now < x.e)), U = L.length ? L : [cfgFeat().m]; return U.map((m) => { const k = nkCode(m.n); return { n: m.n, code: k, img: m.face ? cfgImg(m.face) : k ? BL_IMG(k) : cfgImg(m.cover) }; }); };
   window.doroPickup = () => { const m = cfgFeat().m, k = nkCode(m.n); return { n: m.n, code: k, img: m.face ? cfgImg(m.face) : k ? BL_IMG(k) : cfgImg(m.cover) }; };
   function gmMount() {
-    if (gmInst) return; if (!window.DoroGacha) { /* 가챠 엔진은 가챠 탭을 처음 열 때 불러옴 */ if (!gmMount.w) { gmMount.w = 1; const sc = document.createElement('script'); sc.src = 'js/gacha.js?v=20261121s'; sc.onload = () => { gmMount.w = 0; const go = () => { if (curTab === 'gcm') gmMount(); }; if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go(); }; sc.onerror = () => { gmMount.w = 0; const r = document.getElementById('gm-root'); if (r) r.innerHTML = '<p class="muted" style="padding:20px">가챠 머신을 불러오지 못했습니다. 새로고침해 주세요.</p>'; }; document.head.appendChild(sc); } return; } let D; try { D = window.GM_ASSETS; if (!D) throw 0; } catch (e) { return; }
+    if (gmInst) return; if (!window.DoroGacha) { /* 가챠 엔진은 가챠 탭을 처음 열 때 불러옴 */ if (!gmMount.w) { gmMount.w = 1; const sc = document.createElement('script'); sc.src = 'js/gacha.js?v=20261121t'; sc.onload = () => { gmMount.w = 0; const go = () => { if (curTab === 'gcm') gmMount(); }; if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go(); }; sc.onerror = () => { gmMount.w = 0; const r = document.getElementById('gm-root'); if (r) r.innerHTML = '<p class="muted" style="padding:20px">가챠 머신을 불러오지 못했습니다. 새로고침해 주세요.</p>'; }; document.head.appendChild(sc); } return; } let D; try { D = window.GM_ASSETS; if (!D) throw 0; } catch (e) { return; }
     const corp = {}; GC_NK.forEach((r) => { if (r[2] === 'SSR') corp[r[0]] = r[1]; });
     const mk = (L, p, cp) => L.map((n) => { const k = nkCode(n) || nkCode({ '리틀 머메이드': '세이렌' }[n] || ''); return { n, c: corp[n] || cp || '', k, p, img: k ? BL_IMG(k) : '', tall: 1 }; });
     gmStockSync(); const fix = (L) => { L.forEach((x) => { if (!x.img) { x.img = nkFace(x.n); const g = cfgGet().gacha.find((q) => q.n === x.n); if (g && g.corp) x.c = g.corp; if (g && !g.face) x.tall = 0; } }); return L; }, M = (m) => { const PL = gmPoolOf(m), std = fix(mk(PL.std, 0)), pil = fix(mk(PL.pil, 1)); const two = +m.rate === 2, pu = mk([m.n], two ? 0 : 1, m.corp || (two ? '' : '필그림'))[0]; if (m.corp) pu.c = m.corp; if (m.face) pu.img = cfgImg(m.face); else if (!pu.img) { pu.img = cfgImg(m.cover); pu.tall = 0; } /* 픽업 2% = 일반 니케, 1% = 필그림·오버스펙 */
