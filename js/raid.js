@@ -136,7 +136,7 @@
 .pk-bt>.pk-lb,.pk-bt>.pk-nm{position:relative;z-index:1}
 .pk-co img,.pk-co svg{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 0 .25em rgba(0,0,0,.7))}
 .pk-ic{position:absolute;left:.28em;top:.3em;display:flex;flex-direction:column;align-items:center;gap:.14em;z-index:4;width:2em}
-.pk-t{min-width:2em;text-align:center;border-radius:.35em;padding:.05em .2em;font-size:.95em;line-height:1.25;font-weight:900;color:#16181b;font-family:Arial,sans-serif;box-shadow:0 1px 2px rgba(0,0,0,.5)}
+.pk .pk-t{min-width:2em;text-align:center;border-radius:.35em;padding:.05em .2em;font-size:.95em;line-height:1.25;font-weight:900;color:#16181b;font-family:Arial,sans-serif;box-shadow:0 1px 2px rgba(0,0,0,.5)}
 .pk-el{width:1.95em;height:auto;display:block;filter:drop-shadow(0 1px 1px rgba(0,0,0,.6))}
 .pk-hx{width:1.9em;height:2.1em;display:grid;place-items:center;background:#fff;color:#16181b;clip-path:polygon(50% 0,96% 25%,96% 75%,50% 100%,4% 75%,4% 25%);font-weight:900;font-family:Georgia,"Times New Roman",serif;font-size:1em}
 .pk-hx img{width:1.42em;height:1.42em;display:block}
