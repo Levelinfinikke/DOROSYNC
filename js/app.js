@@ -2645,6 +2645,7 @@ self.DATA={"boxes":[[20.24,6437.98,3456],[21.93,9221.99,3935.98],[23.39,12353.99
           const q2 = qGet(); if (q2.o === a.user.uid) { q2.ev = q2.ev.slice(send.length); qSet(q2); }
           if (a.doc) a.doc.chipsV = j.chips;
           const p = qSum(qGet().ev); chipSave({ d: j.chips.d + p.d, r: j.chips.r + p.r, o: a.user.uid });
+          if (j.day) { const g = gmDay(), sd = +j.day.used || 0, sr = +j.day.r || 0; if (sd > g.d || sr > g.r) { g.d = Math.max(g.d, sd); g.r = Math.max(g.r, sr); gmSave(g); } }
           if (j.rejected) console.warn('[싱크칩] 서버가 일부 기록을 받지 않음', j.rejected, j.day);
           if (qGet().ev.length) chipFlush(300);
         } else if (r.status === 401) { /* 토큰 문제: 다음 기회에 */ } else chipFlush(15000);
@@ -2666,11 +2667,25 @@ self.DATA={"boxes":[[20.24,6437.98,3456],[21.93,9221.99,3935.98],[23.39,12353.99
     if (m.d !== l.d || m.r !== l.r || l.o !== uid) chipSave(m);
     if (q.ev.length) chipFlush(800);
   });
+  /* 가챠 머신 하루 상한(한국 시간 자정 기준): 싱크칩(환산) 100,000 · DORO칩 100. 둘 중 하나라도 채우면 컴플리트 → 그날 뽑기 종료. 서버도 같은 상한으로 검사 */
+  const GM_CAP = { d: 100000, r: 100 }, GM_SRC = { ssr: 1, label: 1, cap: 1, streak: 1 }, GM_K = 'dorosync-gmday';
+  const kstDay = () => new Date(Date.now() + 9 * 3600000).toISOString().slice(0, 10);
+  const gmDay = () => { let o = null; try { o = JSON.parse(localStorage.getItem(GM_K) || 'null'); } catch (e) { /* 무시 */ } if (!o || o.day !== kstDay()) o = { day: kstDay(), d: 0, r: 0 }; return o; };
+  const gmSave = (o) => { try { localStorage.setItem(GM_K, JSON.stringify(o)); } catch (e) { /* 저장 불가 */ } if (o.d >= GM_CAP.d || o.r >= GM_CAP.r) window.dispatchEvent(new Event('dorocomplete')); };
   window.doroChips = {
     get: chipGet,
+    gmDone() { const o = gmDay(); return o.d >= GM_CAP.d || o.r >= GM_CAP.r; },
+    gmDay: () => Object.assign({ cap: GM_CAP }, gmDay()),
     total() { return chipRaw().d; },
     /* dl: { b, s, g, r } 개수 · src: 'ssr' | 'label' | 'cap' | 'streak' (서버 검증용 출처) */
     add(dl, src) {
+      if (GM_SRC[src || 'ssr']) { /* 가챠 머신에서 얻은 칩: 하루 상한까지만 */
+        const g = gmDay(), CVv = { b: 1, s: 5, g: 10 }, out = {}; let leftD = Math.max(0, GM_CAP.d - g.d), b0 = 0;
+        ['g', 's', 'b'].forEach((k) => { const n = Math.floor(+(dl && dl[k]) || 0); if (n <= 0) return; const v = Math.min(n * CVv[k], leftD), q = Math.floor(v / CVv[k]); if (q > 0) out[k] = q; b0 += v - q * CVv[k]; leftD -= v; g.d += v; });
+        if (b0) out.b = (out.b || 0) + b0;
+        { const n = Math.floor(+(dl && dl.r) || 0), m = Math.max(0, Math.min(n, GM_CAP.r - g.r)); if (m) { out.r = m; g.r += m; } }
+        gmSave(g); dl = out;
+      }
       const o = chipRaw(), a = acctUser(), t = Date.now();
       ['b', 's', 'g', 'r'].forEach((k) => {
         const n = Math.floor(+(dl && dl[k]) || 0); if (n <= 0) return;
@@ -4043,7 +4058,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   }
   /* ---------- 인벤토리 사진 인식: 칸 찾기 → 아이콘 비교 → 숫자 읽기 (모두 브라우저 안에서 처리) ---------- */
   const INV = (() => {
-    let REF = null; const refLoad = () => (REF ? Promise.resolve() : new Promise((ok, no) => { const sc = document.createElement('script'); sc.src = 'js/inv-ref.js?v=20261122a'; sc.onload = () => { REF = self.DORO_INV_REF; REF ? ok() : no(new Error('ref')); }; sc.onerror = () => no(new Error('ref')); document.head.appendChild(sc); })); /* 아이콘 견본은 사진 인식을 쓸 때만 읽음 */
+    let REF = null; const refLoad = () => (REF ? Promise.resolve() : new Promise((ok, no) => { const sc = document.createElement('script'); sc.src = 'js/inv-ref.js?v=20261122b'; sc.onload = () => { REF = self.DORO_INV_REF; REF ? ok() : no(new Error('ref')); }; sc.onerror = () => no(new Error('ref')); document.head.appendChild(sc); })); /* 아이콘 견본은 사진 인식을 쓸 때만 읽음 */
     const TW = 10, TH = 14, FW = 20, FH = 14, SH = 24, GBW = 200, NW = 111, NH = 115, BW = 34, BH = 18;
     const mk = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; };
     const load = (src) => new Promise((ok, no) => { const im = new Image(); im.onload = () => ok(im); im.onerror = no; im.src = src; });
@@ -4589,12 +4604,12 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
     el.querySelector('b').textContent = txt || '로그인이 필요합니다'; el.classList.remove('on'); void el.offsetWidth; el.classList.add('on'); clearTimeout(window.doroNeedLogin.t); window.doroNeedLogin.t = setTimeout(() => el.classList.remove('on'), 6000);
     const ab = document.getElementById('btn-acct'); if (ab) { ab.classList.remove('nudge'); void ab.offsetWidth; ab.classList.add('nudge'); } };
   /* 피드백 · 버그 제보: 적어서 보내면 서버에 저장되고 관리 탭에서 읽음 */
-  function fbOpen() { let m = document.getElementById('fb-m'); if (!m) { m = document.createElement('div'); m.id = 'fb-m'; m.innerHTML = '<div class="fb-b"><h3>피드백 · 버그 제보</h3><p>불편한 점, 버그, 바라는 기능을 적어 주세요. 운영자에게 전달됩니다.</p><textarea maxlength="1000" placeholder="예: 카드팩을 열 때 ○○ 화면에서 멈춰요 (기기·브라우저를 함께 적어 주시면 도움이 됩니다)"></textarea><div class="fb-a"><span class="fb-msg"></span><button type="button" class="ghost" data-fbx="1">닫기</button><button type="button" class="primary" data-fbs="1">보내기</button></div></div>'; document.body.appendChild(m);
+  function fbOpen() { let m = document.getElementById('fb-m'); if (!m) { m = document.createElement('div'); m.id = 'fb-m'; m.innerHTML = '<div class="fb-b"><h3>피드백 · 버그 제보</h3><p>불편한 점, 버그, 바라는 기능을 적어 주세요. 운영자에게 전달됩니다.</p><textarea maxlength="1000" placeholder="예: 카드팩을 열 때 ○○ 화면에서 멈춰요 (기기·브라우저를 함께 적어 주시면 도움이 됩니다)"></textarea><input type="text" name="website" class="fb-hp" tabindex="-1" autocomplete="off" aria-hidden="true"><div class="fb-a"><span class="fb-msg"></span><button type="button" class="ghost" data-fbx="1">닫기</button><button type="button" class="primary" data-fbs="1">보내기</button></div></div>'; document.body.appendChild(m);
       m.addEventListener('click', async (e) => { if (e.target === m || e.target.closest('[data-fbx]')) { m.hidden = true; return; } const sb = e.target.closest('[data-fbs]'); if (!sb) return; const ta = m.querySelector('textarea'), msg = m.querySelector('.fb-msg'), text = ta.value.trim(); if (text.length < 5) { msg.textContent = '조금 더 자세히 적어 주세요.'; return; }
         sb.disabled = true; msg.textContent = '보내는 중…'; let tk = ''; try { const a = window.doroAccount; if (a && a.user) tk = await a.token(); } catch (er) { /* 비로그인 */ }
-        try { const r = await fetch(BL_WORKER + '/feedback', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, tk ? { Authorization: 'Bearer ' + tk } : {}), body: JSON.stringify({ text, page: curTab }) }), j = await r.json().catch(() => ({})); if (j.ok) { ta.value = ''; msg.textContent = '보냈습니다. 고맙습니다!'; setTimeout(() => { m.hidden = true; msg.textContent = ''; }, 1400); } else msg.textContent = j.error === 'too_many' ? '잠시 후 다시 보내 주세요.' : '보내지 못했습니다. 잠시 후 다시 시도해 주세요.'; }
+        try { const r = await fetch(BL_WORKER + '/feedback', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, tk ? { Authorization: 'Bearer ' + tk } : {}), body: JSON.stringify({ text, page: curTab, hp: (m.querySelector('.fb-hp') || {}).value || '', ms: Date.now() - (fbOpen.t || 0) }) }), j = await r.json().catch(() => ({})); if (j.ok) { ta.value = ''; msg.textContent = '보냈습니다. 고맙습니다!'; setTimeout(() => { m.hidden = true; msg.textContent = ''; }, 1400); } else msg.textContent = j.error === 'dup' ? '같은 내용을 이미 보냈습니다.' : j.error === 'too_many' ? '오늘은 더 보낼 수 없습니다. 잠시 후 다시 보내 주세요.' : '보내지 못했습니다. 잠시 후 다시 시도해 주세요.'; }
         catch (er) { msg.textContent = '보내지 못했습니다. 네트워크를 확인해 주세요.'; } sb.disabled = false; }); }
-    m.hidden = false; m.querySelector('.fb-msg').textContent = ''; setTimeout(() => m.querySelector('textarea').focus(), 50); }
+    fbOpen.t = Date.now(); m.hidden = false; m.querySelector('.fb-msg').textContent = ''; setTimeout(() => m.querySelector('textarea').focus(), 50); }
   /* 로그인하지 않은 채 싱크칩이 1,000을 넘길 때마다 한 번씩 로그인 권유(이 기기에만 있는 칩이라 브라우저 기록을 지우면 사라짐) */
   const chipNag = () => { try { if (acctUser()) return; const o = chipRaw(), th = o.d >= GUEST_D ? GUEST_D : o.d >= 1000 ? 1000 : 0, last = +localStorage.getItem('dorosync-chipnag') || 0, lastR = +localStorage.getItem('dorosync-chipnag-r') || 0;
       if (th > last) { localStorage.setItem('dorosync-chipnag', String(th)); window.doroNeedLogin(th >= GUEST_D ? '비회원 싱크칩 소지 상한(' + fmt(GUEST_D) + ')에 도달했습니다. 더는 적립되지 않습니다. 로그인하면 계속 모을 수 있습니다.' : '싱크칩이 1,000을 넘겼습니다. 로그인하여 안전하게 보관하세요.'); }
@@ -4707,7 +4722,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   window.doroPickupList = () => { const now = Date.now(), L = cfgGet().gacha.filter((x) => (x.s || x.e) && (!x.s || now >= x.s) && (!x.e || now < x.e)), U = L.length ? L : [cfgFeat().m]; return U.map((m) => { const k = nkCode(m.n); return { n: m.n, code: k, img: m.face ? cfgImg(m.face) : k ? BL_IMG(k) : cfgImg(m.cover) }; }); };
   window.doroPickup = () => { const m = cfgFeat().m, k = nkCode(m.n); return { n: m.n, code: k, img: m.face ? cfgImg(m.face) : k ? BL_IMG(k) : cfgImg(m.cover) }; };
   function gmMount() {
-    if (gmInst) return; if (!window.DoroGacha) { /* 가챠 엔진은 가챠 탭을 처음 열 때 불러옴 */ if (!gmMount.w) { gmMount.w = 1; const sc = document.createElement('script'); sc.src = 'js/gacha.js?v=20261122a'; sc.onload = () => { gmMount.w = 0; const go = () => { if (curTab === 'gcm') gmMount(); }; if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go(); }; sc.onerror = () => { gmMount.w = 0; const r = document.getElementById('gm-root'); if (r) r.innerHTML = '<p class="muted" style="padding:20px">가챠 머신을 불러오지 못했습니다. 새로고침해 주세요.</p>'; }; document.head.appendChild(sc); } return; } let D; try { D = window.GM_ASSETS; if (!D) throw 0; } catch (e) { return; }
+    if (gmInst) return; if (!window.DoroGacha) { /* 가챠 엔진은 가챠 탭을 처음 열 때 불러옴 */ if (!gmMount.w) { gmMount.w = 1; const sc = document.createElement('script'); sc.src = 'js/gacha.js?v=20261122b'; sc.onload = () => { gmMount.w = 0; const go = () => { if (curTab === 'gcm') gmMount(); }; if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go(); }; sc.onerror = () => { gmMount.w = 0; const r = document.getElementById('gm-root'); if (r) r.innerHTML = '<p class="muted" style="padding:20px">가챠 머신을 불러오지 못했습니다. 새로고침해 주세요.</p>'; }; document.head.appendChild(sc); } return; } let D; try { D = window.GM_ASSETS; if (!D) throw 0; } catch (e) { return; }
     const corp = {}; GC_NK.forEach((r) => { if (r[2] === 'SSR') corp[r[0]] = r[1]; });
     const mk = (L, p, cp) => L.map((n) => { const k = nkCode(n) || nkCode({ '리틀 머메이드': '세이렌' }[n] || ''); return { n, c: corp[n] || cp || '', k, p, img: k ? BL_IMG(k) : '', tall: 1 }; });
     gmStockSync(); const fix = (L) => { L.forEach((x) => { if (!x.img) { x.img = nkFace(x.n); const g = cfgGet().gacha.find((q) => q.n === x.n); if (g && g.corp) x.c = g.corp; if (g && !g.face) x.tall = 0; } }); return L; }, M = (m) => { const PL = gmPoolOf(m), std = fix(mk(PL.std, 0)), pil = fix(mk(PL.pil, 1)); const two = +m.rate === 2, pu = mk([m.n], two ? 0 : 1, m.corp || (two ? '' : '필그림'))[0]; if (m.corp) pu.c = m.corp; if (m.face) pu.img = cfgImg(m.face); else if (!pu.img) { pu.img = cfgImg(m.cover); pu.tall = 0; } /* 픽업 2% = 일반 니케, 1% = 필그림·오버스펙 */

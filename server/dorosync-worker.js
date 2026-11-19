@@ -9,6 +9,7 @@
  *   BLA_COOKIE    (비밀/Secret) 운영자 블라블라링크 로그인 쿠키. 만료되면 다시 넣어야 합니다.
  *   FIREBASE_SA   (비밀/Secret) Firebase 서비스 계정 키(JSON 전체). 아이디 로그인(/login)에 사용.
  *   ALLOW_ORIGINS (텍스트, 선택) 호출을 허용할 사이트 주소. 쉼표로 구분.
+ *   ALLOW_PREVIEW (텍스트, 선택) 1이면 Claude 미리보기 주소에서도 로그인·연동·칩 저장을 허용(시험용). 비워 두면 미리보기는 공개 자료(/config·/img)만.
  *
  * 예약 실행(Cron, 트리거 이벤트에 등록): 매 2분, UTC 20시대 = 한국 오전 5시~6시
 *   cron "매 2분, 20시(UTC)" → 매일 자동 기록(AUTO)을 켠 유저의 싱크로·전초기지 레벨을 계정 기록(hist)에 추가
@@ -27,9 +28,10 @@ export default {
   async fetch(req, env, ctx) {
     const origin = req.headers.get('Origin') || '';
     const allow = (env.ALLOW_ORIGINS ? env.ALLOW_ORIGINS.split(',').map((s) => s.trim()).filter(Boolean) : DEFAULT_ORIGINS);
-    const okOrigin = allow.includes(origin) || /^https:\/\/[0-9a-f-]+\.frame\.claudeusercontent\.com$/.test(origin);
+    const prev = /^https:\/\/[0-9a-f-]+\.frame\.claudeusercontent\.com$/.test(origin) && env.ALLOW_PREVIEW === '1'; /* 미리보기에서 로그인·연동까지 시험할 때만 ALLOW_PREVIEW=1 */
+    const okOrigin = allow.includes(origin) || prev;
     const cors = {
-      'Access-Control-Allow-Origin': okOrigin ? origin : allow[0],
+      'Access-Control-Allow-Origin': okOrigin || /^https:\/\/[0-9a-f-]+\.frame\.claudeusercontent\.com$/.test(origin) ? origin : allow[0], /* 공개 읽기(/config·/img)는 미리보기에서도 보이게 */
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization',
       'Access-Control-Max-Age': '86400',
@@ -44,6 +46,7 @@ export default {
     if (url.pathname === '/chips') {
       if (req.method !== 'POST') return out(405, { ok: false, error: 'method' });
       if (!okOrigin) return out(403, { ok: false, error: 'origin' });
+      if (!rlHit('chips:' + ipOf(req), 60000, 40)) return out(429, { ok: false, error: 'too_many' });
       return chipsClaim(req, env, out);
     }
     if (url.pathname === '/login') {
@@ -54,6 +57,7 @@ export default {
     if (url.pathname === '/raid') {
       if (req.method !== 'POST') return out(405, { ok: false, error: 'method' });
       if (!okOrigin) return out(403, { ok: false, error: 'origin' });
+      if (!rlHit('raid:' + ipOf(req), 60000, 60)) return out(429, { ok: false, error: 'too_many' });
       return raid(req, env, out);
     }
     if (url.pathname === '/feedback') { if (req.method !== 'POST') return out(405, { ok: false, error: 'method' }); if (!okOrigin) return out(403, { ok: false, error: 'origin' }); return feedback(req, env, out); }
@@ -67,6 +71,7 @@ export default {
       return out(200, { ok: true, cookie: !!env.BLA_COOKIE, login: !!env.FIREBASE_SA, auto });
     }
     if (!okOrigin) return out(403, { ok: false, error: '허용되지 않은 사이트입니다.' });
+    if (!rlHit('bla:' + ipOf(req), 600000, 30)) return out(429, { ok: false, error: '요청이 너무 많습니다. 잠시 뒤 다시 시도해 주세요.' }); /* 블라블라링크 조회(/sync·/check): IP당 10분 30회 */
     if (url.pathname === '/check') { /* 자동 기록 설정 전 확인: 서버별 닉네임·레벨 (닉네임 비공개여도 레벨만 나오면 기록 가능) */
       const id = toIntlId(url.searchParams.get('openid'));
       if (!id) return out(400, { ok: false, error: 'OPENID' });
@@ -217,12 +222,16 @@ const FB_API_KEY = 'AIzaSyC8UPIEelNUmd4XSDTJ4aX4BgYq5YOOSK0'; // 웹 공개용 �
 const FS = 'https://firestore.googleapis.com/v1/projects/' + FB_PROJECT + '/databases/(default)/documents';
 const ID_RE = /^[a-z0-9_]{3,16}$/;
 const tries = new Map(); // 같은 작업 단위 안에서의 간단한 시도 제한(IP별 1분 10회)
+/* 가벼운 요청 제한: 같은 IP가 짧은 시간에 너무 많이 부르면 거절(작업 단위 메모리라 완벽하진 않지만 대량 남용은 막음) */
+const RL = new Map();
+function rlHit(key, winMs, max) { const now = Date.now(), L = (RL.get(key) || []).filter((t) => now - t < winMs); if (L.length >= max) { RL.set(key, L); return false; } L.push(now); RL.set(key, L); if (RL.size > 20000) RL.clear(); return true; }
+const ipOf = (req) => req.headers.get('CF-Connecting-IP') || '?';
 
 async function idLogin(req, env, out) {
   if (!env.FIREBASE_SA) return out(503, { ok: false, error: 'not_ready' });
   const ip = req.headers.get('CF-Connecting-IP') || '?', now = Date.now();
   const t = (tries.get(ip) || []).filter((x) => now - x < 60000); t.push(now); tries.set(ip, t);
-  if (t.length > 10) return out(429, { ok: false, error: 'too_many' });
+  if (t.length > 10 || !rlHit('login:' + ip, 3600000, 30)) return out(429, { ok: false, error: 'too_many' });
   let body; try { body = await req.json(); } catch (e) { return out(400, { ok: false, error: 'bad' }); }
   const id = String(body.id || '').toLowerCase(), pw = String(body.pw || '');
   const fail = () => out(401, { ok: false, error: 'invalid' });
@@ -362,7 +371,7 @@ const dec = (v) => {
  * 검사: 로그인 토큰 확인 · 출처별 허용 종류 · 1회 요청 최대 건수 · 시각이 미래/너무 과거면 거절
  * 하루 지급 상한 없음(비회원 칩 옮기기만 상한). daily(출석 100)는 하루(한국 시간) 한 번. spend(DORO MODE 뽑기)는 잔고에서 뺌(0 아래로는 안 내려감) */
 const CHIP_VAL = { b: 1, s: 5, g: 10 }, CHIP_SRC = { ssr: 'bsgr', label: 'b', cap: 'bsgr', streak: 'bsgr', guest: 'bsgr', daily: 'b', spend: 'b' };
-const MAX_EV = 300, GUEST_CAP_D = 3000, GUEST_CAP_R = 5, DAILY_D = 100;
+const MAX_EV = 300, GUEST_CAP_D = 3000, GUEST_CAP_R = 5, DAILY_D = 100, GM_CAP_D = 100000, GM_CAP_R = 100; /* GM_CAP: 가챠 머신에서 하루(한국 시간 자정 기준)에 얻을 수 있는 싱크칩(환산)·DORO칩 상한 */
 async function chipsClaim(req, env, out) {
   if (!env.FIREBASE_SA) return out(503, { ok: false, error: 'not_ready' });
   const idt = (req.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '');
@@ -386,8 +395,8 @@ async function chipsClaim(req, env, out) {
       const allow = CHIP_SRC[src] || ''; if (!allow.includes(k) || n < 1 || n > 500 || t > now + 120000 || t < now - 3 * 86400000) { rej++; continue; }
       if (src === 'spend') { const m = Math.min(n, cv.d + okD); okD -= m; day.s = (day.s || 0) + m; continue; } /* 뽑기에 쓴 칩 */
       if (src === 'daily') { if (day.a) { rej++; continue; } day.a = 1; okD += DAILY_D; continue; } /* 출석: 하루 한 번 100 */
-      if (k === 'r') { const m = src === 'guest' ? Math.max(0, Math.min(n, GUEST_CAP_R - (day.gr || 0))) : n; if (src === 'guest') day.gr = (day.gr || 0) + m; else day.r += m; okR += m; if (m < n) rej++; continue; }
-      const v = CHIP_VAL[k] * n, m = src === 'guest' ? Math.min(v, Math.max(0, GUEST_CAP_D - (day.g || 0))) : v;
+      if (k === 'r') { const m = src === 'guest' ? Math.max(0, Math.min(n, GUEST_CAP_R - (day.gr || 0))) : Math.max(0, Math.min(n, GM_CAP_R - (day.r || 0))); if (src === 'guest') day.gr = (day.gr || 0) + m; else day.r += m; okR += m; if (m < n) rej++; continue; }
+      const v = CHIP_VAL[k] * n, m = src === 'guest' ? Math.min(v, Math.max(0, GUEST_CAP_D - (day.g || 0))) : Math.min(v, Math.max(0, GM_CAP_D - (day.n || 0)));
       if (src === 'guest') day.g = (day.g || 0) + m; else day.n += m; okD += m; if (m < v) rej++;
     }
     const nv = { d: Math.max(0, cv.d + okD), r: cv.r + okR };
@@ -834,6 +843,8 @@ async function feedback(req, env, out) {
   if (!env.FIREBASE_SA) return out(503, { ok: false, error: 'not_ready' });
   let b = {}; try { b = await req.json(); } catch (e) { return out(400, { ok: false, error: 'bad' }); }
   const text = String(b.text || '').replace(/[\u0000-\u0008\u000b-\u001f]/g, '').trim().slice(0, 1000); if (text.length < 5) return out(400, { ok: false, error: 'short' });
+  if (b.hp || (+b.ms > 0 && +b.ms < 2500)) return out(200, { ok: true }); /* 스팸 방지: 사람에겐 안 보이는 칸을 채웠거나 창을 연 지 2.5초 안에 보냄 → 저장하지 않고 성공처럼 응답 */
+  { const ip0 = ipOf(req), hsh = text.toLowerCase().replace(/\s+/g, ' ').slice(0, 200); if (!rlHit('fbday:' + ip0, 86400000, 10)) return out(429, { ok: false, error: 'too_many' }); if (!rlHit('fbdup:' + ip0 + ':' + hsh, 3600000, 1)) return out(429, { ok: false, error: 'dup' }); }
   const ip = req.headers.get('CF-Connecting-IP') || '?', now = Date.now(), L = (FB_RATE.get(ip) || []).filter((t) => now - t < 60000); if (L.length >= 3) return out(429, { ok: false, error: 'too_many' }); L.push(now); FB_RATE.set(ip, L); if (FB_RATE.size > 5000) FB_RATE.clear();
   let uid = '', nick = ''; const H0 = await saHead(env);
   const idt = (req.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '');
