@@ -100,6 +100,7 @@
 .gm-c3f{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;transform:translateZ(calc(var(--ct) * .5 + .3px)) scale(.93)}.gm-c3b{transform:rotateY(180deg) translateZ(calc(var(--ct) * .5 + .3px)) scale(.93)}.gm-c3f svg{width:100%;height:100%;display:block}
 @keyframes gmC3Spin{from{transform:rotateX(24deg) rotateY(0deg)}to{transform:rotateX(24deg) rotateY(360deg)}}
 .gm-pan{display:grid;grid-template-columns:repeat(var(--cols,4),1fr);align-content:start;flex:1 1 0;min-height:0;overflow-y:auto;gap:8px;padding:10px;border-radius:12px;background:#15171c;box-shadow:inset 0 2px 8px rgba(0,0,0,.7)}
+.gm-well:has(>.gm-orb.flip){z-index:2}.gm-well:has(>.gm-orb.shine),.gm-well:has(>.gm-orb.glow){z-index:4} /* 뒤집혀 빛나는 칩이 옆·아래 홈에 가리지 않게 위로 */
 .gm-well{position:relative;perspective:240px;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 50% 35%,#0c0d10 0%,#1d2027 70%,#30343e 100%);box-shadow:inset 0 5px 9px rgba(0,0,0,.85),0 1px 0 rgba(255,255,255,.1)}
 .gm-well.over{box-shadow:inset 0 5px 9px rgba(0,0,0,.85),0 0 0 3px var(--gold)}
 .gm-cf,.gm-float.orb{background:center/cover no-repeat,radial-gradient(circle at 50% 30%,#fff6d8,#d9b35a)}
