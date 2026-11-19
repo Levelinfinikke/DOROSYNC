@@ -15,7 +15,7 @@
   document.addEventListener('visibilitychange', () => { if (document.hidden) RQ.forEach((x) => { if (x.n) { const w2 = BG.set(x.run, 33); if (w2) { _caf(x.n); x.n = 0; x.w = w2; } } }); });
   const GM_ALL = []; /* 열린 가챠 머신들(보관함 확인용) */
   const W = 960, H = 956, TAU = Math.PI * 2;
-  const MOB = () => { try { return matchMedia('(max-width:1000px),(pointer:coarse)').matches; } catch (e) { return false; } }; /* 휴대폰(작은 화면·터치) */
+  let MOB_V = null; const MOB = () => { if (MOB_V === null) { try { MOB_V = matchMedia('(max-width:1000px),(pointer:coarse)').matches; } catch (e) { MOB_V = false; } } return MOB_V; }; window.addEventListener('resize', () => { MOB_V = null; }); /* 휴대폰(작은 화면·터치) */
   const TRICO = 'assets/img/f2b148d53e13.png';
   const CT = { x: 150, y: 78, w: 660, h: 384, r: 44 }, IN = { x0: 158, x1: 802, y0: 88, y1: 454, r: 40 };  // 볼록한 사각 통
   const BAN = { cx: 480, cy: 268, w: 470, h: 264.4 }, BLK = { x: 272, y: 172, w: 416, h: 196 };
@@ -525,7 +525,8 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
       const n = L.length; let i, j, a, b;
       for (i = 0; i < n; i++) { b = L[i]; b.gc = false; if (b.sl) continue; b.vy += GRAV * dt; b.x += b.vx * dt; b.y += b.vy * dt; b.a += b.w * dt; }
       const O = step.o || (step.o = []); O.length = n; let mr = 0; for (i = 0; i < n; i++) { O[i] = L[i]; if (L[i].r > mr) mr = L[i].r; } const MD = mr * 2 + 2; /* x로 정렬해 가까운 것끼리만 충돌 검사(렉 방지) */
-      for (let it = 0; it < 3; it++) { O.sort((p, q) => p.x - q.x);
+      const IT = MOB() && n > 90 ? 2 : 3; /* 휴대폰·캡슐 많음: 충돌 반복을 줄여 가볍게 */
+      for (let it = 0; it < IT; it++) { O.sort((p, q) => p.x - q.x);
         for (i = 0; i < n; i++) { a = O[i]; for (j = i + 1; j < n; j++) { b = O[j]; if (b.x - a.x > MD) break; if (a.sl && b.sl) continue; const dx = b.x - a.x, dy = b.y - a.y, m = a.r + b.r; if (dx > m || dx < -m || dy > m || dy < -m) continue; const d2 = dx * dx + dy * dy; if (d2 >= m * m || d2 === 0) continue;
           const d = Math.sqrt(d2), nx = dx / d, ny = dy / d, ov = m - d, vn = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
           if (a.sl && (vn < -70 || b.held)) { a.sl = false; a.st = 0; } if (b.sl && (vn < -70 || a.held)) { b.sl = false; b.st = 0; }
@@ -536,7 +537,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
         for (i = 0; i < n; i++) if (!L[i].sl) walls(L[i]);
       }
       for (i = 0; i < n; i++) { b = L[i]; if (b.sl) continue; b.vx *= b.gc ? (b.flat ? 0.93 : 0.985) : 0.999; if (b.flat) b.w *= b.gc ? 0.8 : 0.99; else if (b.gc) b.w += (b.vx / b.r - b.w) * Math.min(1, dt * 14); else b.w *= 0.995;
-        if (b.held) { b.st = 0; continue; } const mx = b.x - (b.ax || 0), my = b.y - (b.ay || 0); if (mx * mx + my * my > 6.25) { b.ax = b.x; b.ay = b.y; b.st = 0; } else { b.st += dt; if (b.st > 0.55) { b.sl = true; b.vx = b.vy = b.w = 0; } } }
+        if (b.held) { b.st = 0; continue; } const mx = b.x - (b.ax || 0), my = b.y - (b.ay || 0); if (mx * mx + my * my > 6.25) { b.ax = b.x; b.ay = b.y; b.st = 0; } else { b.st += dt; if (b.st > (MOB() ? 0.35 : 0.55)) { b.sl = true; b.vx = b.vy = b.w = 0; } } }
     }
     /* 통 안의 캡슐은 넣을 때 내용물이 정해짐(실제 확률). 자동 리필 없음 */
     function roll() { const u = Math.random() * 100; let nk = null, pu = false; if (u < PUR) { nk = P.pickup; pu = true; } else if (u < PUR + 0.5) nk = pick(P.pil); else if (u < 4) nk = pick(P.std); if (nk) return { kind: 'SSR', nk: Object.assign({}, nk, { pu }) }; return { kind: u < 47 ? 'SR' : 'R', dummy: Math.random() < 0.04 }; }
@@ -1716,7 +1717,14 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     function draw() {
       let reb = false; if (dirty) { buildStatic(); reb = true; } const c = ctx, t = S.time, L = S.lev;
       const awake = S.dome.some((b) => !b.sl);
-      if (reb || awake || domeStale) { const x = stD.getContext('2d'); x.setTransform(1, 0, 0, 1, 0, 0); x.drawImage(stA, 0, 0); x.setTransform(scale, 0, 0, scale, 0, 0); x.save(); rr(x, CT.x + 2, CT.y + 2, CT.w - 4, CT.h - 4, CT.r - 2); if (S.cap > 0.03) x.rect(CT.x + 12, -80, CT.w - 24, CT.y + 110); x.clip(); for (const b of S.dome) drawBodyAny(x, b); if (S.mode.black) { x.fillStyle = 'rgba(3,4,8,.93)'; x.fillRect(CT.x, CT.y, CT.w, CT.h); } x.restore(); x.setTransform(1, 0, 0, 1, 0, 0); x.drawImage(stB, 0, 0); domeStale = awake; }
+      if (reb || awake || domeStale) { const x = stD.getContext('2d'); x.setTransform(1, 0, 0, 1, 0, 0);
+        /* 통 둘레만 다시 그림(화면 전체를 매번 옮겨 그리던 것이 리필 때 렉의 대부분) */ const R0 = reb ? null : [Math.max(0, Math.floor((CT.x - 4) * scale)), Math.max(0, Math.floor(((S.cap > 0.03 ? -80 : CT.y) - 4) * scale)), 0, 0]; if (R0) { R0[2] = Math.min(stD.width - R0[0], Math.ceil((CT.w + 8) * scale)); R0[3] = Math.min(stD.height - R0[1], Math.ceil((CT.y + CT.h + 4) * scale) - R0[1]); }
+        if (R0) { x.clearRect(R0[0], R0[1], R0[2], R0[3]); x.drawImage(stA, R0[0], R0[1], R0[2], R0[3], R0[0], R0[1], R0[2], R0[3]); } else x.drawImage(stA, 0, 0);
+        x.setTransform(scale, 0, 0, scale, 0, 0); x.save(); rr(x, CT.x + 2, CT.y + 2, CT.w - 4, CT.h - 4, CT.r - 2); if (S.cap > 0.03) x.rect(CT.x + 12, -80, CT.w - 24, CT.y + 110); x.clip();
+        const bx0 = BAN.cx - BAN.w / 2 + 4, bx1 = BAN.cx + BAN.w / 2 - 4, by0 = BAN.cy - BAN.h / 2 + 4, by1 = BAN.cy + BAN.h / 2 - 4, hideOK = !S.scrPop; /* 픽업 배너 뒤에 통째로 가려진 캡슐은 그리지 않음 */
+        for (const b of S.dome) { if (hideOK && b.kind !== 'orb' && b.x - b.r > bx0 && b.x + b.r < bx1 && b.y - b.r > by0 && b.y + b.r < by1) continue; drawBodyAny(x, b); }
+        if (S.mode.black) { x.fillStyle = 'rgba(3,4,8,.93)'; x.fillRect(CT.x, CT.y, CT.w, CT.h); } x.restore(); x.setTransform(1, 0, 0, 1, 0, 0);
+        if (R0) x.drawImage(stB, R0[0], R0[1], R0[2], R0[3], R0[0], R0[1], R0[2], R0[3]); else x.drawImage(stB, 0, 0); domeStale = awake; }
       c.setTransform(1, 0, 0, 1, 0, 0); c.drawImage(stD, 0, 0); c.setTransform(scale, 0, 0, scale, 0, 0);
       drawLights(c);
       drawScreen(c);
