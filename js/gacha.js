@@ -85,7 +85,7 @@
 @keyframes gmSpIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
 .gm-spg{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;width:100%;max-width:330px;padding:0 6px}
 .gm-spc{position:relative;aspect-ratio:1;perspective:260px}.gm-spc .gm-orb{inset:4%}
-.gm-spn{font-size:12px;color:#9eaac0;min-height:16px}.gm-skip{position:absolute;right:10px;top:10px;display:inline-flex;align-items:center;gap:5px;font-weight:800;letter-spacing:.04em}.gm-odds{position:absolute;z-index:8;top:44px;right:8px;left:8px;padding:10px 12px;border-radius:14px;background:rgba(12,16,26,.97);border:1px solid rgba(240,160,32,.5);box-shadow:0 10px 30px rgba(0,0,0,.6);color:#e9edf5;font-size:12px}
+.gm-spn{font-size:12px;color:#9eaac0;min-height:16px}.gm-skip{position:absolute;right:10px;top:10px;display:inline-flex;align-items:center;gap:5px;font-weight:800;letter-spacing:.04em}.gm-left>.gm-odds{top:8px;z-index:12;max-height:calc(100% - 16px);overflow:auto}.gm-odds{position:absolute;z-index:8;top:44px;right:8px;left:8px;padding:10px 12px;border-radius:14px;background:rgba(12,16,26,.97);border:1px solid rgba(240,160,32,.5);box-shadow:0 10px 30px rgba(0,0,0,.6);color:#e9edf5;font-size:12px}
 .gm-oddh{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}.gm-odds table{width:100%;border-collapse:collapse}.gm-odds th,.gm-odds td{padding:4px 3px;text-align:right;border-bottom:1px solid rgba(255,255,255,.07);font-variant-numeric:tabular-nums}
 .gm-odds tbody th{text-align:left;font-weight:700;white-space:nowrap}.gm-odds th small{display:block;font-weight:400;opacity:.6;font-size:10px}.gm-odds thead th{text-align:right}.gm-odds thead th svg{display:inline-block}.gm-odds td.z{opacity:.35}.gm-odds p{margin:8px 0 0;opacity:.7;font-size:11px;line-height:1.5}.gm-flipall{white-space:nowrap}
 .gm-chipbal{display:inline-flex;align-items:center;gap:5px;padding:3px 10px 3px 5px;border-radius:999px;background:rgba(10,14,22,.75);border:1px solid rgba(240,160,32,.55);font-size:13.5px;font-variant-numeric:tabular-nums;color:#ffd58a}
@@ -1376,7 +1376,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     }
     /* 싱크칩 잔고를 누르면: 어디서 어떤 칩이 몇 %로 나오는지 */
     function chipOdds() {
-      const tr = $('.gm-tray'); let box = tr.querySelector('.gm-odds'); if (box) { box.remove(); return; }
+      const tr = matchMedia('(max-width:1000px)').matches ? $('.gm-left') : $('.gm-tray'); let box = tr.querySelector('.gm-odds'); /* 휴대폰: 보관함이 낮으니 머신 위쪽에 */ if (box) { box.remove(); return; }
       const fv = feverOn(), row = (nm, key, note, arr) => '<tr><th>' + nm + (note ? '<small>' + note + '</small>' : '') + '</th>' + (arr || CHIP_P[key]).map((v, i) => '<td class="' + (v ? '' : 'z') + '">' + (v ? (v < 0.1 ? v.toFixed(2) : v < 1 ? v.toFixed(2).replace(/0$/, '') : v >= 10 ? String(+v.toFixed(1)) : String(+v.toFixed(2))) + '%' : '—') + '</td>').join('') + '</tr>';
       box = document.createElement('div'); box.className = 'gm-odds' + (fv ? ' fev' : '');
       box.innerHTML = '<div class="gm-oddh"><b>확률표' + (fv ? ' <em style="white-space:nowrap">칩 ' + fevMul() + '배!!</em>' : '') + '</b><button class="gm-tb" data-x style="white-space:nowrap">닫기</button></div><table style="font-size:11.5px;letter-spacing:-.2px"><thead><tr><th></th>' + KS.map((k) => '<th>' + chipSvg(k, 20, false) + '</th>').join('') + '</tr></thead><tbody>' +
