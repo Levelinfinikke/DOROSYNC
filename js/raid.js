@@ -925,7 +925,7 @@
     snd(() => { tone(60, 0.9, 'sawtooth', 0.04, 110); noise(0.8, 0.06, 0, 400); });
     { let r = 1; const dec = setInterval(() => { r = Math.max(0, r - 0.09); run.forEach((a) => { try { a.updatePlaybackRate(r); } catch (e) { /* 무시 */ } }); if (r <= 0) clearInterval(dec); }, 70); } /* 승강기가 느려지며 멈춤 */
     A(sh, [{ opacity: 1 }, { opacity: 0.35 }], 800, 'ease-out');
-    A(sil, [{ opacity: 0 }, { opacity: 0.9 }], 500, 'ease-out'); await A(sil.firstElementChild, [{ transform: 'translateY(34%)' }, { transform: 'translateY(0)' }], 900, 'cubic-bezier(.2,.7,.3,1)'); /* 보스가 구멍 사이로 떠오름 */
+    A(sil, [{ opacity: 0 }, { opacity: 0.9 }], 500, 'ease-out'); await A(sil.firstElementChild, [{ transform: 'translateY(-34%)' }, { transform: 'translateY(0)' }], 900, 'cubic-bezier(.2,.7,.3,1)'); /* 보스가 구멍 사이로 떠오름 */
     snd(() => { noise(0.2, 0.4, 0, 500); tone(70, 0.3, 'sine', 0.5, 40); metal(700, 0.16, 0.05, 0.01); }); quake([0, 4, 0], 160); await sleep(220);
     snd(() => { for (let q = 0; q < 4; q++) noise(0.03, 0.1, q * 0.06, 2400); });
     await A(gear, [{ transform: 'translate(-50%,-50%) scale(1)' }, { transform: 'translate(-50%,-57%) scale(1.035)' }], 300, 'cubic-bezier(.3,1.5,.5,1)'); await sleep(140); /* 톱니바퀴가 먼저 들려 올라감 */
