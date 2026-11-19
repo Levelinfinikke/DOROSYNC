@@ -1307,6 +1307,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
       absorbTop(en); if (en.all && en.count > 0) setTimeout(() => { if (!en.top && S.tray.includes(en)) flipTop(en); }, 260); });
     const isPUn = (nk) => !!(nk && (nk.pu || (P.pickup && nk.n === P.pickup.n)));
     /* 픽업 초상화를 한 칸으로 모아 10뽑 연출(펼치기)로 한꺼번에 뒤집음 */
+    $('.gm-tray').addEventListener('pointerdown', (e) => { if (!MOB() || !S.spread || !S.spread.cur || S.spread.box.contains(e.target)) return; e.stopPropagation(); if (!S.spread.cur.hasR) { S.spread.skip = true; S.spread.cur.skip(); } }, true); /* 휴대폰: 펼치기 중에는 보관함 어디를 눌러도 바로 건너뜀 */
     function puSpread(en) { if (S.spread || S.flipAllBusy) return; const L = S.tray.filter((e) => e && isPUn(e.nk) && !busyE(e) && !(e.top && (e.top.anim || e.top.flip))); if (!L.length) return;
       if (L.reduce((a, e) => a + e.count, 0) <= 1) { if (!en.top || !en.top.flip) flipTop(en); else absorbTop(en); return; } /* 픽업이 1장뿐이면 10뽑 연출 없이 */
       const base = L.includes(en) ? en : L[0]; L.forEach((e) => { if (e === base) return; base.count += e.count; base.cq = (base.cq || []).concat(e.cq || []); if (e.top) base.count -= 0; S.tray[S.tray.indexOf(e)] = null; });
