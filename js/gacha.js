@@ -355,6 +355,22 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
 .gm-tools{display:flex;flex-direction:column;gap:5px;width:auto}.gm-pop{left:calc(1.2% + 42px);top:1.4%}
 .gm-trbtn{transition:transform .18s}.gm-trbtn.pop{transform:scale(1.25)}
 @media (max-width:1000px),(pointer:coarse){.gm-pop{left:calc(1.2% + 36px)}.gm-btn{font-size:10.5px;padding:5px 1px}.gm-lab{padding:3px 3px;gap:3px}.gm-lab img{width:18px}.gm-lab b{font-size:11px;letter-spacing:-.3px}}
+/* 휴대폰 세로: 머신이 주인공. 위 = 얇은 재화 바, 가운데 = 머신(양옆 배경을 잘라 크게), 아래 = 머신에 붙은 서랍(SSR 보관함 ↔ 수지 그래프) */
+@media (max-width:1000px) and (orientation:portrait){
+.gm-multi.fs .gm{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto minmax(110px,1fr);gap:0}
+.gm-multi.fs .gm-wal{grid-area:1/1;height:50px;border-radius:12px 12px 0 0;border-width:1.5px 1.5px 0;margin-bottom:0}
+.gm-multi.fs .gm-wcv{display:none}
+.gm-multi.fs .gm-wt{display:flex;align-items:center;gap:10px;height:100%;padding:0 84px 0 10px;flex-wrap:nowrap;min-width:0}.gm-multi.fs .gm-wt>*{margin:0!important}.gm-multi.fs .gm-wt small{display:none}
+.gm-multi.fs .gm-jw{font-size:22px;gap:5px}.gm-multi.fs .gm-jw img{height:19px}.gm-multi.fs .gm-chip{font-size:13px;padding:1px 7px 1px 3px}.gm-multi.fs .gm-chip img{height:18px}.gm-multi.fs .gm-pulls{font-size:11.5px;opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.gm-multi.fs .gm-mode{top:50%;right:6px;transform:translateY(-50%);display:flex;gap:5px}.gm-multi.fs .gm-mode .gm-mg{width:30px;height:30px}
+.gm-multi.fs .gm-left{grid-area:2/1;align-self:start;justify-self:center;aspect-ratio:816/956;border-radius:0;border-width:0 1.5px;border-color:#2a3348;width:min(100%,calc((100vh - 50px - 110px - 14px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) * .8536));width:min(100%,calc((100dvh - 50px - 110px - 14px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) * .8536))}
+.gm-multi.fs .gm-cv{width:117.65%;margin-left:-8.82%;max-width:none} /* 머신 양옆 배경(약 7.5%씩)을 잘라 냄 */
+.gm-multi.fs .gm-tray,.gm-multi.fs .gm-graph{grid-area:3/1;align-self:stretch;min-height:0;border-radius:0 0 14px 14px;border:1.5px solid #3a404d;border-top:0;background:linear-gradient(#24272e,#16181d);box-shadow:inset 0 10px 14px -10px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,255,255,.05);padding:7px 8px 8px}
+.gm-multi.fs .gm-tray{display:none}.gm-multi.fs .gm.topen .gm-tray{display:flex}.gm-multi.fs .gm.topen .gm-graph{display:none}
+.gm-multi.fs .gm-graph:before,.gm-multi.fs .gm-tray:before{content:"";display:block;flex:none;height:5px;margin:-7px -8px 6px;background:repeating-linear-gradient(-55deg,#16171a 0 8px,#b8962a 8px 16px);opacity:.85}
+.gm-multi.fs .gm-trn{display:inline;font-size:12px;color:#c5cfdf;white-space:nowrap}.gm-multi.fs .gm-trr{width:auto;margin-left:auto}.gm-multi.fs .gm-trh{gap:6px}
+.gm-multi.fs .gm-left.clean{border-radius:0}
+}
 `;
 
   function css() { if (!document.getElementById('gm-css')) { const st = document.createElement('style'); st.id = 'gm-css'; st.textContent = CSS; document.head.appendChild(st); } }
