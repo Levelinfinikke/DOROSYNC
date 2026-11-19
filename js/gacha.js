@@ -415,9 +415,9 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
         chipIn(u, soft) { if (thr('ci', S.auto ? 110 : soft ? 45 : 28)) return; const f = 1500 + 1700 * (u || 0), v = soft ? 0.55 : 1; tone(f, 0.07, 'triangle', 0.13 * v); tone(f * 1.5, 0.1, 'sine', 0.07 * v, null, 0.01); },
         chipBurst(big) { noise(0.12, 0.4, big ? 5200 : 4200, 'highpass'); tone(big ? 3200 : 2600, 0.2, 'triangle', 0.16, big ? 1500 : 1900); tone(big ? 4800 : 3900, 0.3, 'sine', 0.1, null, 0.04); },
         flip() { noise(0.05, 0.22, 3200, 'bandpass'); tone(2100, 0.1, 'triangle', 0.12, 2900, 0.12); },
-        coin() { tone(1900, 0.22, 'sine', 0.22); tone(2850, 0.3, 'sine', 0.15, null, 0.05); noise(0.05, 0.2, 500, 'lowpass', 0.18); },
+        coin() { tone(1900, 0.22, 'sine', 0.132); tone(2850, 0.3, 'sine', 0.09, null, 0.05); noise(0.05, 0.12, 500, 'lowpass', 0.18); }, /* 쥬얼 넣는 소리(40% 줄임) */
         /* 모집권 투입: 지폐 인식기 모터 위잉 2번(기존 사락 타이밍) + 8비트 2음 상승(기존 크레딧 상승음 타이밍) */
-        bill() { motor(0.22, 0.07, 260, 370); motor(0.26, 0.07, 275, 395, 0.26); tone(988, 0.07, 'square', 0.09, null, 0.55); tone(1319, 0.25, 'square', 0.09, null, 0.63); },
+        bill() { motor(0.22, 0.042, 260, 370); motor(0.26, 0.042, 275, 395, 0.26); tone(988, 0.07, 'square', 0.054, null, 0.55); tone(1319, 0.25, 'square', 0.054, null, 0.63); }, /* 티켓 넣는 소리(40% 줄임) */
         grab() { if (thr('gr', 40)) return; tone(700, 0.05, 'triangle', 0.12, 1000); },
         drop() { if (thr('dr', 45)) return; tone(rnd(200, 260), 0.09, 'sine', 0.32, 110); noise(0.03, 0.12, 900, 'lowpass'); },
         pop() { if (thr('pp', 35)) return; noise(0.07, 0.3, 1900, 'highpass'); tone(rnd(480, 560), 0.09, 'triangle', 0.18, 950); },
