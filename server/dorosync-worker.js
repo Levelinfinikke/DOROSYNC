@@ -437,12 +437,12 @@ function raidBots(sid, sn, now, real, final) {
   const r0 = tabsRng(h), K = 12 + Math.floor(r0() * 9), st = +sn.start || 0, len = Math.max(1, (+sn.end || now) - st), prog = final || !st ? 1 : (now - st) / len, codes = Object.keys(RAID_NK), out = [];
   const ref = real.length >= 4 ? real[Math.floor(real.length * 0.1)].sc : 1200, boss = { e: R_CYC.includes(sn.e) ? sn.e : '작', r: R_RNG[sn.r] ? sn.r : 'MID' };
   for (let i = 0; i < K && codes.length >= 5; i++) {
-    const rb = tabsRng(h ^ Math.imul(i + 1, 2654435761)), join = 0.02 + rb() * 0.85, lvl = 0.12 + 0.88 * rb(), s1 = join + (1 - join) * (0.2 + 0.3 * rb()), s2 = s1 + (1 - s1) * (0.3 + 0.4 * rb()), nick = BOT_A[Math.floor(rb() * BOT_A.length)] + BOT_B[Math.floor(rb() * BOT_B.length)];
-    if (prog < join) continue; const stage = prog >= s2 ? 2 : prog >= s1 ? 1 : 0, target = ref * lvl * [0.6, 0.82, 1][stage], rc = tabsRng(h ^ Math.imul(i + 1, 40503) ^ (stage + 1) * 977); let best = null;
+    const pre = i < 5, rb = tabsRng(h ^ Math.imul(i + 1, 2654435761)), join = pre ? 0 : 0.02 + rb() * 0.85, /* 앞의 다섯은 시즌 시작부터 있는 기록(700~1,200) */ lvl = 0.12 + 0.88 * rb(), s1 = join + (1 - join) * (0.2 + 0.3 * rb()), s2 = s1 + (1 - s1) * (0.3 + 0.4 * rb()), nick = BOT_A[Math.floor(rb() * BOT_A.length)] + BOT_B[Math.floor(rb() * BOT_B.length)];
+    if (!pre && prog < join) continue; const stage = pre || prog >= s2 ? 2 : prog >= s1 ? 1 : 0, target = pre ? 700 + 500 * (i + rb()) / 5 : ref * lvl * [0.6, 0.82, 1][stage], rc = tabsRng(h ^ Math.imul(i + 1, 40503) ^ (stage + 1) * 977); let best = null;
     for (let q = 0; q < 160; q++) { const cs = []; while (cs.length < 5) { const k = codes[Math.floor(rc() * codes.length)]; if (!cs.includes(k)) cs.push(k); } const cnt = {}; cs.forEach((k) => { cnt[k] = 1 + Math.floor(Math.pow(rc(), 2.2 - 1.6 * lvl) * 11); });
-      const R = rEval(cs, cnt, boss), sc = Math.round(R.score * (1 + rc() * 0.9)), d = Math.abs(sc - target); if (sc > 0 && sc < ref * 0.97 && (!best || d < best.d)) best = { d, sc, cs, cnt, R }; }
+      const R = rEval(cs, cnt, boss), sc = Math.round(R.score * (1 + rc() * 0.9)), d = Math.abs(sc - target); if (sc > 0 && (pre ? sc >= 700 && sc <= 1200 : sc < ref * 0.97) && (!best || d < best.d)) best = { d, sc, cs, cnt, R }; }
     if (!best) continue;
-    out.push({ uid: 'ai:' + i, ai: 1, nick, sc: best.sc, at: st + Math.round([join, s1, s2][stage] * len), deck: best.cs.map((k) => k + ':' + best.cnt[k]).join(','), chips: best.R.chips, mult: best.R.mult, f: best.R.f, pf: best.cs[0], fr: 0 });
+    out.push({ uid: 'ai:' + i, ai: 1, nick, sc: best.sc, at: st + (pre ? i * 60000 : Math.round([join, s1, s2][stage] * len)), deck: best.cs.map((k) => k + ':' + best.cnt[k]).join(','), chips: best.R.chips, mult: best.R.mult, f: best.R.f, pf: best.cs[0], fr: 0 });
   }
   return out;
 }
