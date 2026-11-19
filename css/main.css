@@ -1987,3 +1987,6 @@ mask:linear-gradient(#000 0 0) 0 0/100% .26em no-repeat,linear-gradient(#000 0 0
 .lb-rk .l{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:4px;margin-right:-6px;padding-right:6px;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.25) transparent}.lb-rk .l>em{flex:none}
 .lb-rk .c{gap:6px;margin:1px 0;font-size:10.5px;font-weight:900;color:#6fb0ff}.lb-rk .c img{width:22px;height:22px;flex:none}.lb-rk .c u{text-decoration:none;flex:none}.lb-rk .c:after{content:"";flex:1;height:2px;background:repeating-linear-gradient(90deg,#4f97f0 0 5px,transparent 5px 9px)}
 @media(max-width:700px){.lb-rk{padding:9px 9px 8px;gap:3px;font-size:11.5px}.lb-rk .r{padding:3px 5px;gap:5px}.lb-rk .r b,.lb-rk .r s{font-size:11px}.lb-rk .r i{width:14px}#tab-game .lb-g.lb-rd{padding-right:calc(50% + 8px)}}
+
+/* 모바일 쥬얼 탭: 결과(예상 쥬얼) 카드를 위로 */
+@media (max-width:900px){.jwgrid #jw-out{order:-1}}
