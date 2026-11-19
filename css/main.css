@@ -1527,10 +1527,10 @@ button:not(.tr-clr):not(.tabs button):not(.tr-f):not(.pk-t):not(.pk-r){border-ra
 @keyframes pbArr{0%,100%{opacity:.2}40%{opacity:1}}
 .pbar-l{display:flex;align-items:baseline;gap:8px;font-size:12px;margin-bottom:4px}
 .pbar-l b{font-size:12.5px;min-width:26px}.pbar-l span{color:var(--muted);flex:1}.pbar-l em{font-style:normal;font-weight:800}
-.pbar.pl .pbar-l em{color:var(--c1,#e88800)}.pbar.ac .pbar-l em{color:#16a34a}
+.pbar.pn .pbar-l em{color:var(--c1,#e88800)}.pbar.ac .pbar-l em{color:#16a34a}
 .pbar-t{position:relative;height:12px;border-radius:999px;background:var(--input,rgba(127,127,127,.12));overflow:hidden}
 .pbar-f{position:relative;height:100%;border-radius:999px;min-width:12px;background-size:22px 100%;animation:pbFlow 1s linear infinite;transition:width .6s}
-.pbar.pl .pbar-f{background-color:var(--c1,#e88800);background-image:linear-gradient(135deg,rgba(255,255,255,.28) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.28) 50%,rgba(255,255,255,.28) 75%,transparent 75%)}
+.pbar.pn .pbar-f{background-color:var(--c1,#e88800);background-image:linear-gradient(135deg,rgba(255,255,255,.28) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.28) 50%,rgba(255,255,255,.28) 75%,transparent 75%)}
 .pbar.ac .pbar-f{background-color:#16a34a;background-image:linear-gradient(135deg,rgba(255,255,255,.28) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.28) 50%,rgba(255,255,255,.28) 75%,transparent 75%)}
 @keyframes pbFlow{to{background-position:22px 0}}
 .pbar-a{position:absolute;right:3px;top:50%;width:6px;height:6px;border-top:2px solid #fff;border-right:2px solid #fff;transform:translateY(-50%) rotate(45deg);animation:pbNudge 1s ease-in-out infinite}
