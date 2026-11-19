@@ -516,7 +516,7 @@ const maskNick = (v) => { const c = Array.from(String(v || '지휘관')); return
     return out(409, { ok: false, error: 'busy' });
   }
   if (a === 'tabs') { /* DORO TABS(풀탭): 한 상자 1,000장의 당첨 수와 순서가 미리 정해져 있음(씨앗으로 섞은 순서). 1장 = 싱크칩 10. n = 0 이면 상자 상태만 */
-    const TB = TABS_OUT.length, want = B.reset ? 0 : [0, 1, 5, 10].includes(+B.n) ? +B.n : 1, TVT = { S: 7, SS: 8, SSS: 9 }, DUPG = { 7: 5, 8: 15, 9: 50 };
+    const TB = TABS_OUT.length, want = B.reset ? 0 : [0, 1, 5, 10].includes(+B.n) ? +B.n : 1, TVT = { S: 7, SS: 8, SSS: 9 }, DUPG = { 7: 1, 8: 1, 9: 1 }; /* 풀코강 초과: 카드팩과 같이 장당 골드칩 1 */
     for (let attempt = 0; attempt < 3; attempt++) {
       const ud = await getDoc('users/' + uid); if (!ud) return out(404, { ok: false, error: 'nouser' });
       const cv = ud.f.chipsV || { d: 0, r: 0 }; let pt = !B.reset && ud.f.pt && ud.f.pt.s && ud.f.pt.i < TB ? ud.f.pt : { s: crypto.getRandomValues(new Uint32Array(1))[0], i: 0 }; /* reset: 새 상자로 바꿈 */

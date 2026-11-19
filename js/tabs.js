@@ -5,7 +5,7 @@
 (() => {
   'use strict';
   const PROD = /github\.io$/.test(location.hostname), BOX = 100, K = 'dorosync-tabs2';
-  const SPEC = [['S', 5], ['SS', 2], ['SSS', 1], ['r', 1], ['g20', 1], ['g10', 1], ['g3', 4], ['g1', 10]], TV = { S: 7, SS: 8, SSS: 9 }, DUP = { 7: 5, 8: 15, 9: 50 };
+  const SPEC = [['S', 5], ['SS', 2], ['SSS', 1], ['r', 1], ['g20', 1], ['g10', 1], ['g3', 4], ['g1', 10]], TV = { S: 7, SS: 8, SSS: 9 }, DUP = { 7: 1, 8: 1, 9: 1 }; /* 풀코강 초과: 카드팩과 같이 장당 골드칩 1 */
   const OUT = (() => { const o = []; SPEC.forEach((x) => { for (let i = 0; i < x[1]; i++) o.push(x[0]); }); while (o.length < BOX) o.push(''); return o; })();
   const mulb = (a) => () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
   const order = (seed) => { const r = mulb(seed), a = OUT.map((_, i) => i); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; };
