@@ -450,13 +450,14 @@ const rShuffle = (a) => { const r = new Uint32Array(a.length); crypto.getRandomV
 const rList = (s) => (s ? String(s).split(',').filter(Boolean) : []);
 async function raid(req, env, out) {
   if (!env.FIREBASE_SA) return out(503, { ok: false, error: 'not_ready' });
-  const idt = (req.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '');
-  if (!idt) return out(401, { ok: false, error: 'auth' });
-  const lk = await (await fetch('https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=' + FB_API_KEY, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ idToken: idt }) })).json();
-  const uid = lk && lk.users && lk.users[0] && lk.users[0].localId; if (!uid) return out(401, { ok: false, error: 'auth' });
-  const admin = ADMIN_UIDS.includes(uid); if (!RAID_OPEN && !admin) return out(403, { ok: false, error: 'closed' });
   let B; try { B = await req.json(); } catch (e) { return out(400, { ok: false, error: 'bad' }); }
   const a = String(B.a || 'state');
+  const idt = (req.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '');
+  let uid = ''; /* 순위표(rank)만은 로그인하지 않아도 볼 수 있음. 그 밖의 모든 동작은 로그인 필요 */
+  if (idt) { const lk = await (await fetch('https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=' + FB_API_KEY, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ idToken: idt }) })).json();
+    uid = (lk && lk.users && lk.users[0] && lk.users[0].localId) || ''; }
+  if (!uid && (idt || a !== 'rank')) return out(401, { ok: false, error: 'auth' });
+  const admin = !!uid && ADMIN_UIDS.includes(uid); if (!RAID_OPEN && !admin) return out(403, { ok: false, error: 'closed' });
   let SITE = null; /* 관리 탭 설정: 절대 티어표의 등급(tv), 신규 니케 카드(nk), 부스터팩(packs) */
   try { SITE = await siteTv(env); RAID_SETS = SITE && SITE.sets ? SITE.sets : RAID_SETS0; const tv = SITE && SITE.tv, key = JSON.stringify([tv || {}, (SITE && SITE.nk) || []]); if (key !== RAID_TVK) { const nk = {};
       ((SITE && SITE.nk) || []).forEach((x) => { const k = String(x.code); if (/^\d{3,6}$/.test(k) && !RAID_NK0[k]) nk[k] = [x.corp || '', x.el || '', x.wp || '', x.bu === 'A' ? 'A' : +x.bu || 3, 9]; }); /* 신규 니케: 등급은 티어표에 없으면 SSS(★) */
@@ -472,7 +473,8 @@ async function raid(req, env, out) {
     rows.sort((x, y) => y.sc - x.sc || x.at - y.at); return rows; };
   const rankAll = async (colId, snx, final) => { const real = await rankOf(colId); let bots = []; try { bots = raidBots(String(colId).replace(/^raid_/, ''), snx || {}, now, real, final); } catch (e) { bots = []; } return real.concat(bots).sort((x, y) => y.sc - x.sc || x.at - y.at); }; /* 실제 기록 + AI 기록 */
   const tierOf = (i, N) => (i < 0 ? 0 : i < Math.max(3, Math.ceil(N * 0.03)) ? 1 : i < Math.max(10, Math.ceil(N * 0.1)) ? 2 : i < Math.max(30, Math.ceil(N * 0.3)) ? 3 : 0); /* 테두리: 3%·3위 / 10%·10위 / 30%·30위 */
-  const maskNick = (v) => { const c = Array.from(String(v || '지휘관')); return c.length <= 2 ? c[0] + '*' : c[0] + '*'.repeat(c.length - 2) + c[c.length - 1]; };
+  const RANK_ALIAS = { '벨벳탄환주머니': '내일캐삭' }; /* 관리자 계정이 순위표에 보이는 이름 */
+const maskNick = (v) => { const c = Array.from(String(v || '지휘관')); return c.length <= 2 ? c[0] + '*' : c[0] + '*'.repeat(c.length - 2) + c[c.length - 1]; };
   if (a === 'set') { /* 관리자: 시즌 열기·닫기 { e, r, days } / { off: true } */
     if (!admin) return out(403, { ok: false, error: 'admin' });
     const e = R_CYC.includes(B.e) ? B.e : R_CYC[now % 5], r = R_RNG[B.r] ? B.r : ['NEAR', 'MID', 'FAR'][now % 3], days = Math.max(1, Math.min(31, Math.floor(+B.days || 5)));
@@ -591,8 +593,8 @@ async function raid(req, env, out) {
   if (!sn) return out(200, { ok: true, season: null, admin });
   const col = 'raid_' + sn.id;
   if (a === 'rank') {
-    const all = await rankAll(col, sn, now >= sn.end), N = all.length, pub = (x, k) => Object.assign({ rank: k + 1, me: x.uid === uid, nick: maskNick(x.nick), sc: x.sc, deck: x.deck, chips: x.chips, mult: x.mult, f: x.f, pf: x.pf, fr: x.fr }, admin && x.ai ? { ai: 1 } : {}); /* AI 표시는 관리자에게만 */
-    const mi = all.findIndex((x) => x.uid === uid);
+    const all = await rankAll(col, sn, now >= sn.end), N = all.length, pub = (x, k) => Object.assign({ rank: k + 1, me: !!uid && x.uid === uid, nick: maskNick(ADMIN_UIDS.includes(x.uid) && RANK_ALIAS[x.nick] ? RANK_ALIAS[x.nick] : x.nick), sc: x.sc, deck: x.deck, chips: x.chips, mult: x.mult, f: x.f, pf: x.pf, fr: x.fr }, admin && x.ai ? { ai: 1 } : {}); /* AI 표시는 관리자에게만 */
+    const mi = uid ? all.findIndex((x) => x.uid === uid) : -1;
     return out(200, { ok: true, season, total: N, cut: [Math.max(3, Math.ceil(N * 0.03)), Math.max(10, Math.ceil(N * 0.1)), Math.max(30, Math.ceil(N * 0.3))], rows: all.slice(0, 100).map(pub), mine: mi >= 0 ? pub(all[mi], mi) : null });
   }
   for (let attempt = 0; attempt < 3; attempt++) {

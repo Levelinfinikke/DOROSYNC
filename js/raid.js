@@ -505,8 +505,8 @@
 
   /* ---------- 진행 엔진: 연습(이 브라우저) / 실전(서버) ---------- */
   async function api(a, body) {
-    const ac = acct(); if (!ac || !ac.user) throw new Error('login');
-    const r = await fetch(WORKER + '/raid', { method: 'POST', headers: { Authorization: 'Bearer ' + (await ac.token()), 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({ a }, body || {})) });
+    const ac = acct(), on = !!(ac && ac.user); if (!on && a !== 'rank') throw new Error('login'); /* 순위표는 로그인 없이도 봄 */
+    const r = await fetch(WORKER + '/raid', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, on ? { Authorization: 'Bearer ' + (await ac.token()) } : {}), body: JSON.stringify(Object.assign({ a }, body || {})) });
     const j = await r.json().catch(() => ({})); if (!j.ok) { const e = new Error(j.error || ('http' + r.status)); e.j = j; throw e; } return j;
   }
   const liveCard = (p) => { const b = DB[p[0]]; return b ? Object.assign({}, b, { id: String(p[0]), cnt: p[1], tv: TS[b.t] || 1 }) : null; };
@@ -1069,7 +1069,7 @@
     window.addEventListener('pointermove', onMoveDrag); window.addEventListener('pointerup', onUp); window.addEventListener('pointercancel', onUp);
     window.addEventListener('resize', fit); document.addEventListener('fullscreenchange', () => { fit(); setTimeout(fit, 200); }); try { new ResizeObserver(fit).observe(root); } catch (e) { /* 미지원 */ }
   }
-  window.doroRaid = {
+  window.doroRaid = { rank: () => api('rank'), /* 로비의 실시간 랭킹 */
     api: (a, body) => api(a, body),
     card: (x, boss) => { addCss(); return cardHtml(x, boss); },
     mount(el) {

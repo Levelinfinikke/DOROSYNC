@@ -1968,3 +1968,20 @@ mask:linear-gradient(#000 0 0) 0 0/100% .26em no-repeat,linear-gradient(#000 0 0
 .frp-g button:hover{border-color:var(--accent,#ffb21c)}.frp-g button.on{border-color:#ffb21c;background:rgba(255,178,28,.14)}
 .frp-g img{width:68px;height:68px;object-fit:contain}.frp-g span{font-size:12px;font-weight:800;line-height:1.25;text-align:center}.frp-g small{font-size:10.5px;color:var(--muted)}.frp-g button.on small{color:#ffb21c;font-weight:800}
 .frp-e{margin-top:12px}
+
+/* 니슬렁 모음: 포커레이드는 두 칸, 오른쪽 절반에 실시간 랭킹 */
+#tab-game .lb-g.lb-rd{grid-column:span 2;padding-right:calc(50% + 12px)}
+#tab-game .lb-rd .lb-art{right:50%}
+.lb-rk{position:absolute;left:50%;right:0;top:0;bottom:0;padding:12px 14px 10px;display:flex;flex-direction:column;gap:4px;background:linear-gradient(180deg,rgba(26,14,14,.92),rgba(12,13,18,.96));border-left:1px solid rgba(255,90,77,.35);font-size:12.5px;text-align:left}
+.lb-rk em{font-style:normal;display:flex;align-items:center;gap:7px;min-width:0}
+.lb-rk .h{font:900 13px "Arial Black","Pretendard","Malgun Gothic",sans-serif;color:#ff8a7d;margin-bottom:3px;letter-spacing:.02em}
+.lb-rk .h u{width:7px;height:7px;border-radius:50%;background:#ff5a4d;box-shadow:0 0 8px #ff5a4d;animation:lbLive 1.4s ease-in-out infinite}@keyframes lbLive{50%{opacity:.25}}
+.lb-rk .e{color:#9aa5b8;margin:auto;font-size:12px}
+.lb-rk .r{padding:4px 7px;border-radius:7px;background:rgba(255,255,255,.05)}
+.lb-rk .r i{flex:none;width:18px;text-align:center;font:900 12px "Arial Black",Arial,sans-serif;font-style:normal;color:#9aa5b8}
+.lb-rk .r b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12.5px;font-weight:700;font-family:inherit}
+.lb-rk .r s{flex:none;text-decoration:none;font:900 12px "Arial Black","Pretendard",sans-serif;color:#fff}
+.lb-rk .r.t1 i{color:#ffd24a}.lb-rk .r.t2 i{color:#d5dbe3}.lb-rk .r.t3 i{color:#e09a62}.lb-rk .r.t1{background:rgba(255,210,74,.13)}
+.lb-rk .r.me{box-shadow:inset 0 0 0 1px #ff5a4d}
+.lb-rk .n{margin-top:auto;justify-content:flex-end;font-size:11px;color:#8a93a3}
+@media(max-width:700px){.lb-rk{padding:9px 9px 8px;gap:3px;font-size:11.5px}.lb-rk .r{padding:3px 5px;gap:5px}.lb-rk .r b,.lb-rk .r s{font-size:11px}.lb-rk .r i{width:14px}#tab-game .lb-g.lb-rd{padding-right:calc(50% + 8px)}}
