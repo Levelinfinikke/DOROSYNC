@@ -2930,7 +2930,7 @@ self.DATA={"boxes":[[20.24,6437.98,3456],[21.93,9221.99,3935.98],[23.39,12353.99
       try { doroBL.win.close(); } catch (err) { /* 무시 */ }
       blStep('', true);
       blSay('지휘관, 니케들이 도착했습니다! (' + doroBL.data.nikkes.length + '명)', 'ok');
-      blNick(); blLinked(); blApplyUser(); blNudge(); renderMe();
+      blNick(); blLinked(); blApplyUser(); blNudge(); renderMe(); try { dexRefresh(); } catch (err) { /* 초기화 전 */ }
       try { const w = $('#ol-frame').contentWindow; if (w && w.__blLoad) w.__blLoad(doroBL.data); } catch (err) { /* 오버로드 탭 미로드 */ }
       toast('지휘관, 니케들이 도착했습니다!', 4000);
       setTimeout(() => { if (doroBL.stage === 'done') $('#bl-modal').hidden = true; }, 1200);
@@ -3175,7 +3175,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
     doroBL.data = { area: d.area, me: d.me, clear: d.clear, nikkes: d.nikkes || [], at: Date.now(), src: d.src || '' };
     try { localStorage.setItem(BLK, JSON.stringify(doroBL.data)); } catch (err) { /* 저장 불가 */ }
     histAdd(doroBL.data);
-    blNick(); blLinked(); blApplyUser(); blNudge(); renderMe();
+    blNick(); blLinked(); blApplyUser(); blNudge(); renderMe(); try { dexRefresh(); } catch (err) { /* 초기화 전 */ }
     try { const w = $('#ol-frame').contentWindow; if (w && w.__blLoad) w.__blLoad(doroBL.data); } catch (err) { /* 오버로드 탭 미로드 */ }
   }
   window.doroBLImport = async (code) => {
@@ -4043,7 +4043,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   }
   /* ---------- 인벤토리 사진 인식: 칸 찾기 → 아이콘 비교 → 숫자 읽기 (모두 브라우저 안에서 처리) ---------- */
   const INV = (() => {
-    let REF = null; const refLoad = () => (REF ? Promise.resolve() : new Promise((ok, no) => { const sc = document.createElement('script'); sc.src = 'js/inv-ref.js?v=20261121v'; sc.onload = () => { REF = self.DORO_INV_REF; REF ? ok() : no(new Error('ref')); }; sc.onerror = () => no(new Error('ref')); document.head.appendChild(sc); })); /* 아이콘 견본은 사진 인식을 쓸 때만 읽음 */
+    let REF = null; const refLoad = () => (REF ? Promise.resolve() : new Promise((ok, no) => { const sc = document.createElement('script'); sc.src = 'js/inv-ref.js?v=20261121x'; sc.onload = () => { REF = self.DORO_INV_REF; REF ? ok() : no(new Error('ref')); }; sc.onerror = () => no(new Error('ref')); document.head.appendChild(sc); })); /* 아이콘 견본은 사진 인식을 쓸 때만 읽음 */
     const TW = 10, TH = 14, FW = 20, FH = 14, SH = 24, GBW = 200, NW = 111, NH = 115, BW = 34, BH = 18;
     const mk = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; };
     const load = (src) => new Promise((ok, no) => { const im = new Image(); im.onload = () => ok(im); im.onerror = no; im.src = src; });
@@ -4621,7 +4621,12 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   /* 포커레이드(js/raid.js)가 쓰는 데이터 */
   window.doroRaidData = () => { const tiers = dexTier0(); let purl = '', area = ''; try { purl = localStorage.getItem('dorosync-bl-purl') || ''; area = localStorage.getItem('dorosync-bl-area') || ''; } catch (e) { /* 무시 */ }
     return { sets: cfgGet().sets, ok: dexOk(), list: window.GM_ASSETS ? dexList().filter((r) => r[2] === 'SSR').map((r) => dexObj(r, tiers)) : [], lb: (g, c) => blLbImg(g, c).src, elIco: TR_ICO, elCol: TR_EL, tierCol: TR_COL, pf: (blPfp() || {}).code || '', fr: frmNow(), frImg: FRM_IMG, pfImg: BL_IMG, coIco: ((em) => ({ 엘리시온: em.ely, 미실리스: em.mis, 테트라: em.tet, 필그림: em.pil, 어브노멀: GC_ABN }))((window.GM_ASSETS && window.GM_ASSETS.assets && window.GM_ASSETS.assets.emb) || {}), purl, area, linked: !!(doroBL && doroBL.data) }; };
+  /* 내 카드 = 연동 보유(명함·돌파·코강) + 도로싱크에서 뽑은 카드. 새로고침 뒤 계정 자료·연동 자료가 늦게 와도 바로 다시 그림(바뀐 게 있을 때만) */
+  const dexSig = () => { try { const a = acctUser(); return JSON.stringify([dexLinked(), (a && a.doc && a.doc.dex) || null, dexLoad().n]); } catch (e) { return ''; } };
+  function dexRefresh() { const s = dexSig(); if (s === dexRefresh.s) return; try { if (curTab === 'dex') { const y = window.scrollY, q = document.activeElement && document.activeElement.id === 'dx-q'; renderDex(); window.scrollTo(0, y); if (q) { const i = $('#dx-q'); if (i) { i.focus(); i.setSelectionRange(i.value.length, i.value.length); } } } else { dexRefresh.s = s; if (curTab === 'game') renderLobby(); } } catch (e) { /* 초기화 전 */ } }
+  window.addEventListener('doroacct', () => setTimeout(dexRefresh, 0)); window.addEventListener('storage', (e) => { if (e.key === DEX_KEY || e.key === BLK) { dexSt = null; if (e.key === BLK) { try { doroBL.data = JSON.parse(e.newValue || 'null'); } catch (x) { /* 무시 */ } } setTimeout(dexRefresh, 0); } }); /* 다른 탭에서 바뀐 것도 반영 */
   function renderDex() {
+    dexRefresh.s = dexSig();
     const root = $('#tab-dex'); if (!root) return; if (!dexOk()) { root.innerHTML = ''; return; }
     if (!window.doroRaid || !window.GM_ASSETS) { setTimeout(renderDex, 300); return; }
     const tiers = dexTier0(), all = dexList(), f = dexF, TORD = ['SSS', 'SS', 'S', 'A', 'B', 'C', 'D', 'E', 'F'];
@@ -4637,7 +4642,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
     const linked = !!(typeof doroBL !== 'undefined' && doroBL && doroBL.data);
     root.innerHTML = (linked ? '' : '<div class="dx-link"><b>게임 계정이 연동되지 않았습니다</b><span>전초기지에서 블라블라링크 프로필 주소로 연동하면, 게임에서 보유한 니케(명함·돌파·코강)가 그대로 카드로 들어옵니다.</span><button type="button" data-go="me">연동하러 가기</button></div>') + '<div class="card dx-hd"><h2 class="inline dx-h"><img class="cbic" alt="" src="assets/img/raid-back.webp">카드</h2>' +
       '<div class="dx-kpi"><div class="dx-k"><div class="l">수집</div><b class="num">' + have.length + '<small>/' + pool.length + '</small></b></div><div class="dx-k"><div class="l">풀돌 이상</div><b class="num">' + full + '</b></div><div class="dx-k"><div class="l">풀코강</div><b class="num">' + max + '</b></div><div class="dx-k"><div class="l">카드</div><b class="num">' + fmt(cards) + '<small>/' + fmt(pool.length * DEX_MAX) + '</small></b></div></div>' +
-      '<div class="dx-mst"><div class="dx-mh">풀코강 수집 <small>' + fmt(sh) + '/' + fmt(SM) + '장 (' + (Math.round(sp * 10) / 10) + '%) · 버리기 ' + Math.min(3, Math.floor(sp / 25)) + '회</small></div><div class="dx-mb"><i style="width:' + Math.min(100, sp) + '%"></i>' + ms + '</div></div>' +
+      '<div class="dx-mst"><div class="dx-mh">풀코강 수집 <small>' + fmt(sh) + '/' + fmt(SM) + '장 (' + (Math.round(sp * 10) / 10) + '%) · 버리기 ' + Math.min(3, Math.floor(sp / 25)) + '회</small></div><div class="dx-mb"><i style="width:' + Math.min(100, sp) + '%;background-size:' + (10000 / Math.max(0.5, Math.min(100, sp))).toFixed(1) + '% 100%"></i>' + ms + '</div></div>' +
       '<details class="dx-fd"' + (f.open ? ' open' : '') + '><summary>필터</summary><div class="dx-fs">' + seg('c', [''].concat(corps), ['전체 기업'].concat(corps)) + (ts.length ? seg('t', [''].concat(ts), ['전체 티어'].concat(ts)) : '') +
       '<label class="chk"><input type="checkbox" id="dx-own"' + (f.own ? ' checked' : '') + '> 보유만</label><label class="chk"><input type="checkbox" id="dx-no"' + (f.no ? ' checked' : '') + '> 미보유만</label><input type="search" id="dx-q" placeholder="이름 검색" value="' + esc(f.q) + '"></div></details></div>' +
       '<div class="dx-grid2">' + (L.length ? L.map((r) => { const o = dexObj(r, tiers); return '<div class="dx-cell' + (o.cnt ? '' : ' dx-no') + '">' + window.doroRaid.card(o) + '</div>'; }).join('') : '<p class="muted">해당하는 니케가 없습니다.</p>') + '</div>';
@@ -4702,7 +4707,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   window.doroPickupList = () => { const now = Date.now(), L = cfgGet().gacha.filter((x) => (x.s || x.e) && (!x.s || now >= x.s) && (!x.e || now < x.e)), U = L.length ? L : [cfgFeat().m]; return U.map((m) => { const k = nkCode(m.n); return { n: m.n, code: k, img: m.face ? cfgImg(m.face) : k ? BL_IMG(k) : cfgImg(m.cover) }; }); };
   window.doroPickup = () => { const m = cfgFeat().m, k = nkCode(m.n); return { n: m.n, code: k, img: m.face ? cfgImg(m.face) : k ? BL_IMG(k) : cfgImg(m.cover) }; };
   function gmMount() {
-    if (gmInst) return; if (!window.DoroGacha) { /* 가챠 엔진은 가챠 탭을 처음 열 때 불러옴 */ if (!gmMount.w) { gmMount.w = 1; const sc = document.createElement('script'); sc.src = 'js/gacha.js?v=20261121v'; sc.onload = () => { gmMount.w = 0; const go = () => { if (curTab === 'gcm') gmMount(); }; if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go(); }; sc.onerror = () => { gmMount.w = 0; const r = document.getElementById('gm-root'); if (r) r.innerHTML = '<p class="muted" style="padding:20px">가챠 머신을 불러오지 못했습니다. 새로고침해 주세요.</p>'; }; document.head.appendChild(sc); } return; } let D; try { D = window.GM_ASSETS; if (!D) throw 0; } catch (e) { return; }
+    if (gmInst) return; if (!window.DoroGacha) { /* 가챠 엔진은 가챠 탭을 처음 열 때 불러옴 */ if (!gmMount.w) { gmMount.w = 1; const sc = document.createElement('script'); sc.src = 'js/gacha.js?v=20261121x'; sc.onload = () => { gmMount.w = 0; const go = () => { if (curTab === 'gcm') gmMount(); }; if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go(); }; sc.onerror = () => { gmMount.w = 0; const r = document.getElementById('gm-root'); if (r) r.innerHTML = '<p class="muted" style="padding:20px">가챠 머신을 불러오지 못했습니다. 새로고침해 주세요.</p>'; }; document.head.appendChild(sc); } return; } let D; try { D = window.GM_ASSETS; if (!D) throw 0; } catch (e) { return; }
     const corp = {}; GC_NK.forEach((r) => { if (r[2] === 'SSR') corp[r[0]] = r[1]; });
     const mk = (L, p, cp) => L.map((n) => { const k = nkCode(n) || nkCode({ '리틀 머메이드': '세이렌' }[n] || ''); return { n, c: corp[n] || cp || '', k, p, img: k ? BL_IMG(k) : '', tall: 1 }; });
     gmStockSync(); const fix = (L) => { L.forEach((x) => { if (!x.img) { x.img = nkFace(x.n); const g = cfgGet().gacha.find((q) => q.n === x.n); if (g && g.corp) x.c = g.corp; if (g && !g.face) x.tall = 0; } }); return L; }, M = (m) => { const PL = gmPoolOf(m), std = fix(mk(PL.std, 0)), pil = fix(mk(PL.pil, 1)); const two = +m.rate === 2, pu = mk([m.n], two ? 0 : 1, m.corp || (two ? '' : '필그림'))[0]; if (m.corp) pu.c = m.corp; if (m.face) pu.img = cfgImg(m.face); else if (!pu.img) { pu.img = cfgImg(m.cover); pu.tall = 0; } /* 픽업 2% = 일반 니케, 1% = 필그림·오버스펙 */
