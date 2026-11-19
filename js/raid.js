@@ -206,7 +206,7 @@
 .rd button.rb{border:0;border-radius:10px;padding:8px;font:inherit;font-size:13px;color:#fff;cursor:pointer;box-shadow:0 4px 0 rgba(0,0,0,.4);transition:transform .06s,filter .15s}
 .rd button.rb[hidden]{display:none}
 .rd button.rb:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.4)}
-.rd button.rb:disabled{filter:grayscale(.8) brightness(.6);cursor:default}
+.rd button.rb:disabled,.rd button.rb.dim{filter:grayscale(.8) brightness(.6);cursor:default}
 .rd .rb.red{background:#f0483c}.rd .rb.blue{background:#0d8bf2}.rd .rb.org{background:#f59a0c}.rd .rb.grn{background:#35a36b}.rd .rb.gry{background:#56646b}.rd .rb.pur{background:#8a56d6}
 .rd-main{position:relative;padding:12px 12px 10px;min-height:600px;display:flex;flex-direction:column;overflow:hidden;background:#0e1013}
 .rd-bg{position:absolute;inset:0;z-index:0;background:var(--rd-boss,url(${BOSS_IMG})) 50% 12%/cover;transform-origin:50% 30%}
@@ -523,6 +523,8 @@
   const liveCard = (p) => { const b = DB[p[0]]; return b ? Object.assign({}, b, { id: String(p[0]), cnt: p[1], tv: TS[b.t] || 1 }) : null; };
   const ERR = { login: '로그인이 필요합니다.', closed: '아직 공개 전입니다. (관리자 전용)', inactive: '지금은 레이드 기간이 아닙니다.', tries: '오늘 핸드를 모두 썼습니다. 내일 다시 도전해 주세요.', link: '전초기지 탭에서 블라블라링크 프로필 주소로 먼저 연동해 주세요.', oid: '이번 레이드는 처음 도전한 게임 계정으로만 참여할 수 있습니다.', deck: '보유한 SSR 니케가 7명 이상이어야 합니다.', bla: '블라블라링크에서 보유 정보를 읽지 못했습니다. 프로필 공개 설정을 확인해 주세요.', chips: '싱크칩이 부족합니다.', busy: '잠시 후 다시 시도해 주세요.', nogame: '진행 중인 판이 없습니다.' };
   const errMsg = (e) => ERR[e && e.message] || '서버와 연결하지 못했습니다. (' + ((e && e.message) || e) + ')';
+  /* 다음 버리기 마일스톤(풀코강 수집 25·50·75%)까지 모아야 할 카드 장수. 기록 도전·내 덱에서만, 이미 최대(4회)면 0 */
+  function rdNeed() { if (S.mode !== 'live' && S.mode !== 'mine') return 0; const d = data(), M = d.list.length * 11; if (!M) return 0; const CN = d.list.reduce((t, x) => t + Math.min(11, +x.cnt || 0), 0), k = Math.min(3, Math.floor(CN / M * 4)); if (k >= 3) return 0; return Math.max(1, Math.ceil(M * (k + 1) / 4) - CN); }
   const Local = {
     async start() {
       const d = data(), src = S.mode === 'mine' ? d.list.filter((x) => x.cnt > 0) : d.list;
@@ -561,7 +563,7 @@
     const sb = $('[data-r=snd]'); if (sb) sb.textContent = sndMode === 1 ? '🔊1' : sndMode === 2 ? '🔊2' : '🔇'; $('[data-r=hint]').disabled = busy || !pick;
     const go = $('[data-r=go]'), dc = $('[data-r=disc]');
     go.disabled = busy || !pick || n !== 5;
-    dc.disabled = busy || !pick || nsel < 1 || nsel > 5 || S.redraws < 1 || cost > S.chips || S.deckLeft < 1;
+    { const off = busy || !pick || nsel < 1 || nsel > 5 || cost > S.chips || S.deckLeft < 1, noRd = !off && S.redraws < 1 && !!rdNeed(); dc.disabled = off || (S.redraws < 1 && !noRd); dc.classList.toggle('dim', noRd); } /* 버리기 0회: 누르면 다음 마일스톤까지 남은 장수 안내 */
     dc.innerHTML = '버리기' + (cost ? ' <small>−' + fmt(cost) + '</small>' : '');
     $$('.rd-sort .rb').forEach((b) => { b.classList.toggle('org', b.dataset.s === S.sort); b.classList.toggle('gry', b.dataset.s !== S.sort); });
     $$('.rd-fg button').forEach((b) => { b.classList.toggle('on', S.flt[b.dataset.k] === b.dataset.v); if (b.dataset.k === 'e') { const x2 = !!S.boss && b.dataset.v === supOf(S.boss.e); let t = b.querySelector('small'); if (x2 && !t) { t = document.createElement('small'); t.textContent = '×2'; b.appendChild(t); } else if (!x2 && t) t.remove(); } }); /* 약점 우월코드 필터는 2배 */
@@ -956,7 +958,7 @@
       if (busy) return;
       if (a === 'lk') { lkGo(); return; } if (a === 'gx') { gate(''); return; }
       if (a === 'login') { setFs(false); try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) { /* 무시 */ } const ab = document.getElementById('btn-acct'); if (ab) ab.click(); return; }
-      if (a === 'go') play(); else if (a === 'disc') discard();
+      if (a === 'go') play(); else if (a === 'disc') { if (S.redraws < 1) { const n = rdNeed(), msg = $('.rd-msg'); if (n) { msg.className = 'rd-msg bad'; msg.textContent = fmt(n) + '장의 니케 카드를 더 모아야 합니다!'; } return; } discard(); }
       else if (a === 'again') { if (S.mode === 'live') enterLive(); else deal(false); }
       else if (a === 'start') deal(false);
       else if (a === 'boss') deal(true);
