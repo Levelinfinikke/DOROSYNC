@@ -533,7 +533,7 @@
       L.deck = deck; const total = deck.length;
       return { hand: L.deck.splice(0, 7), rd: S.mode === 'mine' ? Math.min(3, Math.floor(total / Math.max(1, d.list.length) * 4)) : 3, left: L.deck.length, total, tries: S.tries + 1, max: 3, chips: S.chips };
     },
-    async discard(ids, flt, cost) { const got = []; for (let k = 0; k < ids.length && L.deck.length; k++) { let i = cost ? L.deck.findIndex(fltMatch) : 0; if (i < 0) i = 0; got.push(L.deck.splice(i, 1)[0]); } return { got, left: L.deck.length, chips: PROD ? S.chips : S.chips - cost }; }, /* 모의전은 실제 싱크칩을 쓰지 않음 */
+    async discard(ids, flt, cost) { const got = []; for (let k = 0; k < ids.length && L.deck.length; k++) { let i = cost ? L.deck.findIndex(fltMatch) : 0; if (i < 0) i = 0; got.push(L.deck.splice(i, 1)[0]); } return { got, left: L.deck.length, chips: Math.max(0, S.chips - cost) }; }, /* 모의전은 실제 싱크칩을 쓰지 않고 연습용 싱크칩에서 차감 */
     async lock(ids) { const R = evalSquad(C(ids), S.boss); L.crit = R.cards.map((c) => (Math.random() < c.pc ? 1 : 0)); return { sq: ids.slice(), crit: L.crit }; },
     async play(ids, zones) { const R = evalSquad(C(ids), S.boss), crit = L.crit || R.cards.map(() => 0), dmg = R.cards.map((c, i) => Math.round(c.v * R.mult * R.f * (1 + CRIT.dmg * crit[i] + CORE[zones[i] || 0]))), score = dmg.reduce((a, v) => a + v, 0), nb = score > best(); if (nb) { try { localStorage.setItem(BEST_K, String(score)); } catch (e) { /* 무시 */ } } return { score, crit, dmg, newBest: nb, best: Math.max(best(), score) }; }
   };
@@ -601,9 +601,11 @@
     place(isNew ? S.hand.slice() : null); ui();
     S.locked = v.locked || null; if (S.locked && S.locked.sq.every((id) => S.cards[id])) { S.locked.sq.forEach((id, i) => { S.hand = S.hand.filter((x) => x !== id); S.squad[i] = id; }); place(); ui(); setTimeout(() => { if (S.phase === 'pick' && !busy) play(); }, 900); } /* 편성을 확정해 둔 판: 그 편성으로 바로 이어서 출격 */
   }
+  const PRAC_CHIPS = 10000;
   async function deal(newBoss) { /* 새 판 */
     if (busy) return; busy = true;
     try {
+      if (S.mode !== 'live') S.chips = PRAC_CHIPS; /* 모의전: 새 판마다 연습용 싱크칩을 다시 채움(실제 싱크칩과 무관) */
       if (S.mode !== 'live' && (newBoss || !S.boss)) { setBoss(BOSS0); S.tries = 0; }
       if (S.mode !== 'live' && S.tries >= 3) S.tries = 0;
       const v = await E().start(); busy = false; applyGame(v, true);
@@ -634,7 +636,7 @@
     await sleep(410 + ids.length * 55);
     S.hand = S.hand.filter((id) => !S.sel.has(id)); ids.forEach((id) => { delete S.cards[id]; }); S.sel.clear();
     r.got.forEach((c) => { S.cards[c.id] = c; S.hand.push(c.id); }); sortHand();
-    S.redraws--; S.deckLeft = r.left; if (r.chips != null) S.chips = r.chips; S.flt = { e: '', c: '', b: '', r: '' }; $('.rd-flt').hidden = true;
+    S.redraws--; S.deckLeft = r.left; if (r.chips != null) S.chips = r.chips; else if (cost && S.mode !== 'live') S.chips = Math.max(0, S.chips - cost); S.flt = { e: '', c: '', b: '', r: '' }; $('.rd-flt').hidden = true;
     place(r.got.map((c) => c.id)); await sleep(430 + r.got.length * 80);
     busy = false; ui();
   }
@@ -824,7 +826,7 @@
   async function payHint() { /* 싱크칩 100을 내고 추천을 봄(모의전은 미리보기 서버에서만 차감, 실전은 서버가 차감) */
     const msg = $('.rd-msg'); if (S.chips < HINT_COST) { msg.className = 'rd-msg warn'; msg.textContent = '싱크칩이 부족합니다'; return; }
     if (S.mode === 'live') { busy = true; ui(); try { const j = await api('hint'); if (j && j.chips != null) S.chips = j.chips; } catch (e) { busy = false; ui(); $('.rd-msg').textContent = errMsg(e); return; } busy = false; }
-    else if (!PROD) S.chips -= HINT_COST;
+    else S.chips -= HINT_COST; /* 모의전: 연습용 싱크칩에서만 차감 */
     chipFx($('[data-r=hint]'), HINT_COST); ui(); hint();
   }
   function hint() {
@@ -872,7 +874,7 @@
   }
   const pracMode = () => (data().list.filter((x) => x.cnt > 0).length >= 7 ? 'mine' : 'test');
   const realChips = () => { try { return window.doroChips ? window.doroChips.total() : 0; } catch (e) { return 0; } };
-  function setMode(m) { S.mode = m; S.boss = null; S.tries = 0; S.max = 3; if (m === 'live') enterLive(); else { S.chips = PROD ? realChips() : 10000; deal(true); } }
+  function setMode(m) { S.mode = m; S.boss = null; S.tries = 0; S.max = 3; if (m === 'live') enterLive(); else { S.chips = PRAC_CHIPS; deal(true); } }
   /* 도전 중인 판 포기: 한 번 더 눌러야 실행. 쓴 횟수는 돌아오지 않음 */
   async function giveUp() {
     if (!(S.giveArm && Date.now() - S.giveArm < 3500)) { S.giveArm = Date.now(); ui(); setTimeout(() => { if (root && root.isConnected && !busy) ui(); }, 3600); return; }
@@ -1100,7 +1102,7 @@
       if (root === el && S) { fit(); if (!S.introOn && !busy) { if (rd().hidden) S.needIntro = 1; else intro(); } return; } /* 들어올 때마다 입장 연출(하던 판은 그대로) */
       root = el; DB = {}; d.list.forEach((x) => { if (x.code) DB[x.code] = x; });
       S = { mode: 'test', boss: null, cards: {}, hand: [], squad: [null, null, null, null, null], sel: new Set(), redraws: 3, tries: 0, max: 3, phase: 'idle', chips: 10000, sort: 'c', flt: { e: '', c: '', b: '', r: '' }, deckLeft: 0, deckN: 0, liveBest: 0 };
-      S.mode = pracMode(); if (PROD) S.chips = realChips(); S.info = { tries: 0, max: 3 };
+      S.mode = pracMode(); S.chips = PRAC_CHIPS; S.info = { tries: 0, max: 3 };
       build(); setInterval(() => { if (root && root.isConnected && S && !busy) ui(); }, 30000);
       { if (canLive()) api('state').then((j) => { S.info = { tries: j.tries || 0, max: j.max || 3, game: !!j.game }; if (S.mode !== 'live') ui(); introRem(); }).catch(() => {}); } /* 남은 기록 횟수 */
       if (isMobile()) { rd().hidden = true; root.querySelector('.rd-launch').hidden = false; }
