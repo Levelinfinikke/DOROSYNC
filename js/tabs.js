@@ -91,6 +91,7 @@
 svg.tb-cv{position:absolute;inset:0;width:100%;height:100%;overflow:visible;z-index:3;cursor:grab;touch-action:none;filter:drop-shadow(0 1px 1px rgba(0,0,0,.25))}
 .tb-cv .a{stroke:#7a1418;stroke-width:3;stroke-linejoin:round}.tb-cv .b{fill:#ddd2b4;stroke:#7a1418;stroke-width:3;stroke-linejoin:round}.tb-cv .c{fill:none;stroke:#7a1418;stroke-width:1;opacity:.75;pointer-events:none}
 .tb-cv text{font:900 15px "Arial Black",Arial,sans-serif;letter-spacing:.2em;fill:#7a1418;pointer-events:none}.tb-row.done .tb-cv text,.tb-row.done .tb-cv .k{display:none}
+.tb-row:not(.pull):not(.done) .tb-s{visibility:hidden} /* 덮개를 건드리기 전에는 안쪽 무늬를 아예 그리지 않음(휴대폰에서 티켓이 뒤집힐 때 잠깐 비쳐 보였음) */
 .tb-row.pull svg.tb-cv,.tb-row.done svg.tb-cv{filter:drop-shadow(-3px 4px 4px rgba(0,0,0,.4))}.tb-row.done svg.tb-cv{pointer-events:none}
 .tb-row.win{z-index:1}
 .tb-ft{font:800 10.5px "Pretendard",sans-serif;text-align:center;color:#7a1418;opacity:.8}
