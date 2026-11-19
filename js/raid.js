@@ -309,6 +309,10 @@
 @keyframes rdFade{from{opacity:0}}
 .rd-box{text-align:center;padding:16px 24px;border-radius:18px;background:#16191e;border:3px solid #ffd24a;box-shadow:0 8px 0 rgba(0,0,0,.4);animation:rdPunch .4s cubic-bezier(.2,1.8,.4,1);max-width:94%}
 .rd-box h3{margin:0;font-size:14px;letter-spacing:.1em;color:#ffd24a}
+.rd-lk{display:flex;flex-direction:column;align-items:center;gap:6px;margin:0 auto 10px;padding:10px 12px;max-width:520px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,210,74,.35);font-family:"Pretendard","Malgun Gothic",sans-serif}
+.rd-lk b{font-size:13.5px;color:#ffd24a}.rd-lk small{font-size:11.5px;line-height:1.5;opacity:.8;font-weight:600}.rd-lk span{display:flex;gap:6px;width:100%}
+.rd-lk select,.rd-lk input{font:inherit;font-size:13px;font-weight:600;padding:8px 9px;border-radius:9px;border:1px solid #454c58;background:#0e1014;color:#fff;min-width:0}.rd-lk input{flex:1 1 0!important;width:0!important;user-select:text;-webkit-user-select:text}.rd-lk select{flex:0 0 96px!important;width:96px!important}
+.rd-lk em{font-style:normal;font-size:12px;font-weight:700;color:#ff9a8a;min-height:0}.rd-lk em:empty{display:none}
 .rd-fs{font-size:52px;line-height:1.15;text-shadow:0 4px 0 #7a2a00;color:#ffb347}
 .rd-fs small{font-size:22px}
 .rd-fd{font-family:"Pretendard","Malgun Gothic",sans-serif;font-weight:700;font-size:13px;opacity:.92;margin:4px 0 12px;line-height:1.6}
@@ -578,7 +582,14 @@
     $('.rd-bi').innerHTML = '<span>추천</span><span class="rd-rc">' + (d.elIco ? '<img alt="' + ELN[sp] + '" title="우월코드 ' + ELN[sp] + '" src="' + d.elIco[sp] + '">' : ELN[sp]) + '<span class="rd-wps" title="추천 총기 ' + RNG[b.r].join('·') + '">' + RNG[b.r].map((w) => '<img alt="' + w + '" src="assets/img/wp-' + w + '.png">').join('') + '</span></span>';
   }
   function clearTable() { bgm.stop(); Object.keys(els).forEach((id) => els[id].remove()); els = {}; S.cards = {}; S.hand = []; S.squad = EMPTY(); S.sel = new Set(); poolKey = ''; S.flt = { e: '', c: '', b: '', r: '' }; $('.rd-main').classList.remove('atk'); $('.rd-total b').textContent = '0억'; $$('.rd-dmg,.rd-ban,.rd-burst').forEach((e) => e.remove()); $('.rd-fin').hidden = true; $('.rd-flt').hidden = true; }
-  function gate(html) { const g = $('.rd-gate'); g.hidden = !html; if (html) g.querySelector('.rd-box').innerHTML = html; }
+  /* 프로필 연동 칸: 로그인 없이도 여기서 바로 프로필 주소를 넣고 도전(연동이 안 됐거나 보유 정보를 못 읽었을 때 보임) */
+  const LK_ERR = ['link', 'bla', 'auth', 'login'], lkBox = () => { let ar = '83', u = ''; try { ar = localStorage.getItem('dorosync-bl-area') || '83'; u = localStorage.getItem('dorosync-bl-purl') || ''; } catch (e) { /* 무시 */ } const sel = document.getElementById('bl-area'), opts = sel ? sel.innerHTML : '<option value="83">한국</option>';
+    return '<div class="rd-lk"><b>블라블라링크 프로필 연동</b><small>블라블라링크 앱 → 내 프로필 → 공유 → 링크 복사 후 붙여 넣으세요. 로그인 없이도 도전할 수 있습니다.</small><span><select class="rd-lk-a" data-v="' + esc(ar) + '">' + opts + '</select><input class="rd-lk-u" type="url" inputmode="url" autocomplete="off" placeholder="https://www.blablalink.com/…?openid=…" value="' + esc(u) + '"></span><em class="rd-lk-m"></em><button type="button" class="rb org" data-r="lk">연동하고 도전하기</button></div>'; };
+  function lkGo() { const u = $('.rd-lk-u'), a = $('.rd-lk-a'), m = $('.rd-lk-m'); if (!u) return; const raw = u.value.trim(); if (!/openid=[^&\s]{6,}/i.test(raw) && !/^\d{6,25}$/.test(raw)) { m.textContent = '프로필 공유 링크(…?openid=…)를 넣어 주세요.'; u.focus(); return; }
+    try { localStorage.setItem('dorosync-bl-area', a.value); localStorage.setItem('dorosync-bl-purl', raw); } catch (e) { /* 무시 */ }
+    try { const A = document.getElementById('bl-area'), U = document.getElementById('bl-purl'), G = document.getElementById('bl-url-go'); if (A && U && G) { A.value = a.value; U.value = raw; G.click(); } } catch (e) { /* 전초기지 쪽 연동(내 카드 등)은 실패해도 도전에는 지장 없음 */ }
+    goChal(); }
+  function gate(html) { const g = $('.rd-gate'); g.hidden = !html; if (html) { g.querySelector('.rd-box').innerHTML = html; const sa = g.querySelector('.rd-lk-a'); if (sa) sa.value = sa.dataset.v; } }
   function applyGame(v, isNew) {
     clearTable(); S.phase = 'pick'; S.fltUsed = !!v.fu; S.redraws = v.rd; S.deckLeft = v.left; S.deckN = v.total; S.tries = v.tries; S.max = v.max || 3; if (v.chips != null) S.chips = v.chips;
     v.hand.forEach((c) => { S.cards[c.id] = c; S.hand.push(c.id); }); sortHand(); gate('');
@@ -592,7 +603,7 @@
       if (S.mode !== 'live' && S.tries >= 3) S.tries = 0;
       const v = await E().start(); busy = false; applyGame(v, true);
     } catch (e) { busy = false; clearTable(); S.phase = 'idle'; place(); ui();
-      gate('<h3>포커레이드</h3><div class="rd-fd">' + esc(S.mode === 'live' ? errMsg(e) : '내 도감에 SSR 카드가 7장 이상 필요합니다.') + '</div><button type="button" class="rb blue" data-r="prac">모의전</button>'); }
+      gate('<h3>포커레이드</h3><div class="rd-fd">' + esc(S.mode === 'live' ? errMsg(e) : '내 도감에 SSR 카드가 7장 이상 필요합니다.') + '</div>' + (S.mode === 'live' && LK_ERR.includes(e && e.message) ? lkBox() : '') + '<button type="button" class="rb blue" data-r="prac">모의전</button>'); }
   }
   async function enterLive() { /* 실전: 시즌·내 기록을 받아 와서 이어 하거나 시작 버튼을 보여 줌 */
     clearTable(); S.phase = 'idle'; place(); busy = true; ui(); gate('<h3>실전</h3><div class="rd-fd">서버에서 레이드 정보를 불러오는 중입니다…</div>');
@@ -605,7 +616,7 @@
       if (left > 0) { deal(false); return; } /* 도전하기: 남은 횟수가 있으면 바로 시작 */
       ui();
       gate('<h3>RAID · ' + ELN[S.boss.e] + ' 보스</h3><div class="rd-fd">' + (S.newFrame ? '<b style="color:#8df0b0">지난 레이드 보상: 새 프로필 테두리 획득!</b><br>' : '') + '남은 기간 ' + dl + '일 · 오늘 핸드 ' + S.tries + '/' + S.max + ' · 내 최고 ' + fmt(S.liveBest) + '억</div>' + (left > 0 ? '<button type="button" class="rb blue" data-r="start">핸드 시작</button>' : '<div class="rd-fd">오늘 핸드를 모두 썼습니다.</div>') + '<button type="button" class="rb pur" data-r="rank">랭킹</button><button type="button" class="rb blue" data-r="prac">모의전</button>');
-    } catch (e) { busy = false; ui(); gate('<h3>실전</h3><div class="rd-fd">' + esc(errMsg(e)) + '</div><button type="button" class="rb blue" data-r="prac">모의전</button>'); }
+    } catch (e) { busy = false; ui(); gate('<h3>실전</h3><div class="rd-fd">' + esc(errMsg(e)) + '</div>' + (LK_ERR.includes(e && e.message) ? lkBox() : '') + '<button type="button" class="rb blue" data-r="prac">모의전</button>'); }
   }
   async function discard() {
     const ids = S.hand.filter((id) => S.sel.has(id)), cost = fltCost(); if (!ids.length || busy) return;
@@ -863,7 +874,7 @@
       gate('<h3>포기했습니다</h3><div class="rd-fd">이번 판은 기록되지 않습니다 · 오늘 핸드 ' + S.tries + '/' + S.max + '</div>' + (left > 0 ? '<button type="button" class="rb org" data-r="chal">다시 도전하기</button>' : '<div class="rd-fd">오늘 핸드를 모두 썼습니다.</div>') + '<button type="button" class="rb pur" data-r="rank">랭킹</button><button type="button" class="rb blue" data-r="prac">모의전</button>');
     } catch (e) { busy = false; ui(); $('.rd-msg').textContent = errMsg(e); }
   }
-  function goChal() { if (canLive()) setMode('live'); else { if (window.doroNeedLogin) window.doroNeedLogin('도전하기는 로그인 또는 프로필 연동이 필요합니다'); S.mode = 'live'; clearTable(); S.phase = 'idle'; place(); ui(); gate('<h3>도전하기</h3><div class="rd-fd" style="font-size:16px;font-weight:900;color:#ffd24a">로그인하거나, 전초기지 탭에서<br>블라블라링크 프로필 주소를 연동해 주세요.</div><button type="button" class="rb blue" data-r="prac">모의전</button>'); } }
+  function goChal() { if (canLive()) setMode('live'); else { if (window.doroNeedLogin) window.doroNeedLogin('도전하기는 로그인 또는 프로필 연동이 필요합니다'); S.mode = 'live'; clearTable(); S.phase = 'idle'; place(); ui(); gate('<h3>도전하기</h3><div class="rd-fd" style="font-size:16px;font-weight:900;color:#ffd24a">로그인하거나, 아래에 프로필 주소를 넣어 주세요.</div>' + lkBox() + '<button type="button" class="rb blue" data-r="prac">모의전</button>'); } }
   /* 입장 연출(솔로레이드 입장처럼): 게이트 닫힘 → 톱니 장치 하강 → 모의전/도전 선택 → 보스 실루엣이 올라오고 장치 상승 → 게이트 열리며 시작 */
   let introPick = null;
   const liveOn = () => !!(S && S.mode === 'live' && S.phase === 'pick'); /* 도전 중인 판이 깔려 있음 */
@@ -934,6 +945,7 @@
       if (a === 'rank') { showRank(); return; }
       if (a === 'exit') { setFs(false); return; }
       if (busy) return;
+      if (a === 'lk') { lkGo(); return; }
       if (a === 'go') play(); else if (a === 'disc') discard();
       else if (a === 'again') { if (S.mode === 'live') enterLive(); else deal(false); }
       else if (a === 'start') deal(false);
