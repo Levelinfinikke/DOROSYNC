@@ -2049,7 +2049,7 @@ html .daily-note{left:10px;right:10px;transform:translateY(20px);justify-content
 @keyframes fcPop{from{transform:scale(.3) rotate(-25deg);opacity:0}to{transform:none;opacity:1}}
 #fr-cel .fc-glow{position:absolute;inset:-22%;border-radius:50%;background:radial-gradient(circle,var(--tc) 0,transparent 62%);opacity:.38;animation:fcGl 2s ease-in-out infinite}
 @keyframes fcGl{50%{opacity:.6;transform:scale(1.08)}}
-#fr-cel .fc-pf{position:absolute;inset:17%;width:66%;height:66%;border-radius:50%;object-fit:cover}
+#fr-cel .fc-pf{position:absolute;left:50%;top:50%;width:66.667%;height:66.667%;transform:translate(-50%,-50%);border-radius:50%;object-fit:cover;object-position:50% 15%} /* 프로필 아이콘과 같은 비율: 테두리 = 초상화 원의 150%, 한가운데 */
 #fr-cel .fc-im{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 4px 10px rgba(0,0,0,.5))}
 #fr-cel h3{margin:6px 0 2px;font-size:20px;font-weight:800;line-height:1.35}#fr-cel h3 b{color:var(--tc);font-size:1.3em;text-shadow:0 0 14px color-mix(in srgb,var(--tc) 60%,transparent)}
 #fr-cel .fc-t{margin:0 0 12px;font-size:13px;color:#aab4c5}
