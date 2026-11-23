@@ -385,7 +385,7 @@
 .rk-dk{width:38px;height:38px;border-radius:10px;border:0;background:#e3e7ec;box-shadow:0 2px 0 #b9c2cc;cursor:pointer;font-size:16px}
 .rk-deck{grid-column:1/-1;display:flex;gap:4px;justify-content:center;--cw:58px;padding:4px 0 2px}.rk-deck[hidden]{display:none}.rk-deck .pk{cursor:default;touch-action:auto;transform:none}.rk-deck small{align-self:center;margin-left:8px;font-weight:800;color:#56646b}
 .rk-cut{display:flex;align-items:center;gap:8px;margin:8px 2px;font-size:12px;font-weight:900;color:#1667d9}.rk-cut:before,.rk-cut:after{content:"";flex:1;height:2px;background:repeating-linear-gradient(90deg,#1667d9 0 6px,transparent 6px 10px)}.rk-cut img{width:26px;height:26px}
-.rk-me{background:#2a2f37;color:#fff;padding:8px 10px}.rk-me .rd-rk{margin:0;background:#fff;color:#20252b}.rk-me .rk-n{font-size:14px;color:#fff;background:#1e9bff;border-radius:8px;padding:8px 2px}
+.rk-me{background:#2a2f37;color:#fff;padding:8px 10px}.rd-pn{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:6px;font-size:12.5px;font-weight:700;color:#cfd6e0;cursor:pointer;user-select:none}.rd-pn input{position:absolute;opacity:0;pointer-events:none}.rd-pn i{width:34px;height:20px;border-radius:10px;background:#555c68;position:relative;transition:background .15s;flex:none}.rd-pn i:after{content:'';position:absolute;left:2px;top:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .15s}.rd-pn input:checked+i{background:#34c759}.rd-pn input:checked+i:after{transform:translateX(14px)}.rd-pnw{margin:8px 0 2px}.rd-pnw .rd-pn{justify-content:center}.rk-me .rd-rk{margin:0;background:#fff;color:#20252b}.rk-me .rk-n{font-size:14px;color:#fff;background:#1e9bff;border-radius:8px;padding:8px 2px}
 .rd-launch{position:relative;overflow:hidden;border-radius:16px;min-height:440px;color:#fff;background:#0e1013 var(--rd-boss,url(${BOSS_IMG})) 50% 8%/cover;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:16px 10px 20px;text-align:center;font-family:"Arial Black","Pretendard","Malgun Gothic",sans-serif}
 .rd-launch[hidden]{display:none}
 .rd-launch:before{content:"";position:absolute;inset:0;background:linear-gradient(rgba(14,16,20,.15),rgba(14,16,20,.45) 45%,rgba(14,16,20,.95))}
@@ -514,7 +514,11 @@
   /* ---------- 진행 엔진: 연습(이 브라우저) / 실전(서버) ---------- */
   /* 비로그인 참가: 프로필 주소를 연동했으면 그 게임 계정으로 도전·랭킹 등재(추천·필터는 로그인 필요) */
   const isGuest = () => { const ac = acct(); return !(ac && ac.user); }, guestId = () => { try { const d = data(); return d && d.purl ? { openid: d.purl, area: +d.area || 0 } : null; } catch (e) { return null; } }, canLive = () => !isGuest() || !!guestId();
-  const pfNow = () => { try { const d = data(); return { pf: d.pf || '', fr: d.fr || 0 }; } catch (e) { return {}; } }; /* 상태를 물을 때마다 지금 프로필 니케·테두리를 함께 보내 순위표에 반영 */
+  /* 랭킹에 내 닉네임 공개 여부(기본: 가림). 이 기기에 저장하고, 상태를 물을 때 함께 보내 서버 기록에 반영 */
+  const PN_K = 'dorosync-raid-pn', pnGet = () => { try { return localStorage.getItem(PN_K) === '1' ? 1 : 0; } catch (e) { return 0; } };
+  const pnHtml = () => '<label class="rd-pn"><input type="checkbox"' + (pnGet() ? ' checked' : '') + '><i></i><span>내 닉네임 공개</span></label>';
+  async function pnSet(on) { try { localStorage.setItem(PN_K, on ? '1' : '0'); } catch (e) { /* 저장 불가 */ } $$('.rd-pn input').forEach((c) => { c.checked = !!on; }); try { await api('state'); if (!$('.rd-rank').hidden) showRank(); } catch (e) { /* 다음 기회에 반영 */ } }
+  const pfNow = () => { try { const d = data(); return { pf: d.pf || '', fr: d.fr || 0, pn: pnGet() }; } catch (e) { return {}; } }; /* 상태를 물을 때마다 지금 프로필 니케·테두리를 함께 보내 순위표에 반영 */
   async function api(a, body) {
     const ac = acct(), on = !!(ac && ac.user), gd = guestId(); if (!on && !gd && a !== 'rank') throw new Error('login'); /* 순위표는 로그인 없이도 봄 · 비로그인은 연동한 게임 계정으로 참가 */
     const r = await fetch(WORKER + '/raid', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, on ? { Authorization: 'Bearer ' + (await ac.token()) } : {}), body: JSON.stringify(Object.assign({ a }, !on || a === 'state' || a === 'rank' ? gd || {} : {}, a === 'state' ? pfNow() : {}, body || {})) }); /* 연동한 게임 계정을 함께 보냄: 비로그인은 그것이 참가자, 로그인은 그 계정의 기록을 내 것으로 봄 */
@@ -755,7 +759,7 @@
     await slow(450);
     ex.textContent = fmt(score) + '억'; tot.textContent = fmt(score) + '억'; S.phase = 'done'; if (S.mode === 'live') { api('rank').then((j) => { if (j.mine && window.doroStat) window.doroStat.raid(j.season && j.season.id, j.mine.rank, j.total || 0, j.mine.sc || 0); }).catch(() => {}); /* 통합 기록: 최고 등수 */ S.liveBest = res.best; S.info = { tries: S.tries, max: S.max }; }
     const live = S.mode === 'live', left = S.max - S.tries, fin = $('.rd-fin'), ag = $('.rd-fin [data-r=again]'); bgm.stop(); fin.hidden = false; msg.textContent = '';
-    fin.querySelector('h3').textContent = res.newBest ? 'NEW BEST!' : 'RAID SCORE';
+    fin.querySelector('h3').textContent = res.newBest ? 'NEW BEST!' : 'RAID SCORE'; { const pw = fin.querySelector('.rd-pnw'); pw.hidden = !live; pw.innerHTML = live ? pnHtml() : ''; }
     $('.rd-rkl').textContent = '';
     $('.rd-fin .rd-fd').innerHTML = R.steps.map((x) => '<span class="rd-fh">' + x.h + '<b>+' + x.v + '</b></span>').join('') + '<br>칩 ' + fmt(chips) + ' × 배수 ' + mult + (R.f < 1 ? ' × 0.8' : '') + '<br><small>크리티컬 ' + crit.filter(Boolean).length + '회 · 코어 히트 ' + zones.map((z) => (z ? z + '존' : 'MISS')).join(' ') + '</small>';
     ag.hidden = live && left <= 0; ag.textContent = left > 0 ? '재도전 (남은 ' + left + '회)' : '재도전'; $('.rd-fin [data-r=rank]').hidden = false;
@@ -778,7 +782,7 @@
     try { const j = await api('rank'); if (!j.season || !j.rows) { box.innerHTML = '<p style="padding:14px">지금은 열린 시즌이 없습니다.</p>'; return; } if (j.season && j.season.end) { S.end = j.season.end; tick(); } try { if (j.mine && window.doroStat) window.doroStat.raid(j.season && j.season.id, j.mine.rank, j.total || 0, j.mine.sc || 0); } catch (e2) { /* 무시 */ } const N = j.total || j.rows.length, cut = j.cut || [], d = data(), CL = ['상위 3%', '상위 10%', '상위 30%'];
       let h = ''; j.rows.forEach((r, i) => { h += rkRow(r, N); cut.forEach((c, k) => { if (r.rank === c && (i < j.rows.length - 1 || N > j.rows.length)) h += '<div class="rk-cut">' + (d.frImg ? '<img alt="" src="' + esc(d.frImg((j.season && j.season.id ? j.season.id + ':' : '') + (k + 1))) + '">' : '') + CL[k] + ' 선</div>'; }); });
       box.innerHTML = h || '<p style="padding:14px">아직 기록이 없습니다.</p>';
-      me.innerHTML = j.mine ? rkRow(j.mine, N, true) : '';
+      me.innerHTML = j.mine ? rkRow(j.mine, N, true) + pnHtml() : '';
     } catch (e) { box.innerHTML = '<p style="padding:14px">' + esc(errMsg(e)) + '</p>'; }
   }
   /* ---------- 추천: 지금 바로 낼 수 있는 최고 스쿼드와, 버리고 새로 받을 때의 기대 점수를 견줌 ---------- */
@@ -1075,7 +1079,7 @@
       '<div class="rd-fc" style="margin-left:auto;color:#ffd24a;font-size:14px;display:flex;align-items:center;gap:3px"></div></div></div>' +
       '<div class="rd-pool"><div class="rd-ph"></div><div class="rd-pl"></div></div></div>' +
       '<div class="rd-ov rd-gate" hidden><div class="rd-box"></div></div>' +
-      '<div class="rd-ov rd-fin" hidden><div class="rd-box"><h3>RAID SCORE</h3><div class="rd-fs"><b>0</b><small>억</small></div><div class="rd-rkl"></div><div class="rd-fd"></div><button type="button" class="rb blue" data-r="again">재도전</button><button type="button" class="rb pur" data-r="rank">랭킹</button></div></div>' +
+      '<div class="rd-ov rd-fin" hidden><div class="rd-box"><h3>RAID SCORE</h3><div class="rd-fs"><b>0</b><small>억</small></div><div class="rd-rkl"></div><div class="rd-fd"></div><div class="rd-pnw" hidden></div><button type="button" class="rb blue" data-r="again">재도전</button><button type="button" class="rb pur" data-r="rank">랭킹</button></div></div>' +
       '</main>' +
       '<div class="rd-modal rd-rule" hidden><div class="rd-mb"><h3>족보</h3><div class="rd-eq">점수 = <b class="c">칩</b> × <b class="m">배수</b> × <b class="f">버스트</b> × <b class="k">크리티컬</b></div><div class="rd-rg">' +
       '<div class="rd-w c"><h4>칩 <small>니케</small></h4><table><tr><td>티어</td><td>SSS 9 → F 1</td></tr><tr><td>돌파 · 코강 (1장당)</td><td>+1</td></tr>' +
@@ -1091,6 +1095,7 @@
     $('.rd-half [data-r=hint] em').innerHTML = chipIco(14) + '100'; $('.rd-hb').innerHTML = chipIco(15) + '100으로 힌트 보기';
     document.addEventListener('click', (ev) => { if (!root.contains(ev.target)) { const h = $('.rd-half'); if (h) h.classList.remove('arm'); } });
     root.addEventListener('click', (ev) => { if (ev.target.closest('[data-fs]')) { setFs(true); return; } onClick(ev); });
+    root.addEventListener('change', (ev) => { const c = ev.target.closest && ev.target.closest('.rd-pn input'); if (c) pnSet(c.checked); });
     root.addEventListener('pointerdown', onDown); root.addEventListener('pointermove', onHover);
     window.addEventListener('pointermove', onMoveDrag); window.addEventListener('pointerup', onUp); window.addEventListener('pointercancel', onUp);
     window.addEventListener('resize', fit); document.addEventListener('fullscreenchange', () => { fit(); setTimeout(fit, 200); }); try { new ResizeObserver(fit).observe(root); } catch (e) { /* 미지원 */ }

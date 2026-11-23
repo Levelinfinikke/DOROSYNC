@@ -487,7 +487,7 @@ async function raid(req, env, out) {
   const now = Date.now(), today = kstDay(now);
   /* 순위: 점수 높은 순, 같은 점수는 먼저 낸 순 */
   const rankOf = async (colId) => { const q = await (await fetch(FS + ':runQuery', { method: 'POST', headers: H, body: JSON.stringify({ structuredQuery: { from: [{ collectionId: colId }], where: { fieldFilter: { field: { fieldPath: 'sc' }, op: 'GREATER_THAN', value: { integerValue: '0' } } }, orderBy: [{ field: { fieldPath: 'sc' }, direction: 'DESCENDING' }], limit: 1000 } }) })).json();
-    const rows = (Array.isArray(q) ? q : []).filter((x) => x.document).map((x) => { const f = {}; Object.entries(x.document.fields || {}).forEach(([k, v]) => { f[k] = dec(v); }); return { uid: x.document.name.split('/').pop(), k: f.oid ? (f.area || 0) + '_' + f.oid : '', nick: f.nick || '', sc: f.sc || 0, at: f.at || 0, deck: f.bd || '', chips: f.bc || 0, mult: f.bm || 0, f: f.bf || 1, pf: f.pf || '', fr: f.fr || 0 }; });
+    const rows = (Array.isArray(q) ? q : []).filter((x) => x.document).map((x) => { const f = {}; Object.entries(x.document.fields || {}).forEach(([k, v]) => { f[k] = dec(v); }); return { uid: x.document.name.split('/').pop(), k: f.oid ? (f.area || 0) + '_' + f.oid : '', nick: f.nick || '', sc: f.sc || 0, at: f.at || 0, deck: f.bd || '', chips: f.bc || 0, mult: f.bm || 0, f: f.bf || 1, pf: f.pf || '', fr: f.fr || 0, pn: f.pn ? 1 : 0 }; });
     rows.sort((x, y) => y.sc - x.sc || x.at - y.at);
     const seen = {}, one = []; rows.forEach((x) => { const k = x.k || x.uid; if (seen[k]) { seen[k].al.push(x.uid); return; } x.al = []; seen[k] = x; one.push(x); }); return one; }; /* 같은 게임 계정(로그인 + 비로그인으로 각각 도전)은 가장 높은 기록 한 줄만 */
   const isMe = (x) => !!uid && (x.uid === uid || (x.al || []).includes(uid) || (!!gKey && x.k === gKey));
@@ -592,7 +592,7 @@ const maskNick = (v) => { const c = Array.from(String(v || '지휘관')); return
     return out(409, { ok: false, error: 'busy' });
   }
   /* 순위표 응답. 순위 자료는 45초 동안 기억해 두고 다시 씀: 로비의 실시간 랭킹이 사람마다 주기적으로 물어 오므로, 매번 DB를 읽으면 무료 한도(하루 읽기 5만)를 넘김 */
-  const rankOut = (sn, season, all) => { const N = all.length, pub = (x, k) => Object.assign({ rank: k + 1, me: isMe(x), nick: maskNick(ADMIN_UIDS.includes(x.uid) && RANK_ALIAS[x.nick] ? RANK_ALIAS[x.nick] : x.nick), sc: x.sc, deck: x.deck, chips: x.chips, mult: x.mult, f: x.f, pf: x.pf, fr: x.fr }, admin && x.ai ? { ai: 1 } : {}); /* AI 표시는 관리자에게만 */
+  const rankOut = (sn, season, all) => { const N = all.length, pub = (x, k) => Object.assign({ rank: k + 1, me: isMe(x), nick: ((nk) => (x.pn ? String(nk || '지휘관') : maskNick(nk)))(ADMIN_UIDS.includes(x.uid) && RANK_ALIAS[x.nick] ? RANK_ALIAS[x.nick] : x.nick), pn: x.pn ? 1 : 0, sc: x.sc, deck: x.deck, chips: x.chips, mult: x.mult, f: x.f, pf: x.pf, fr: x.fr }, admin && x.ai ? { ai: 1 } : {}); /* AI 표시는 관리자에게만 */
     const mi = uid ? all.findIndex(isMe) : -1;
     return out(200, { ok: true, season, total: N, cut: [Math.max(3, Math.ceil(N * 0.03)), Math.max(10, Math.ceil(N * 0.1)), Math.max(30, Math.ceil(N * 0.3))], rows: all.slice(0, 100).map(pub), mine: mi >= 0 ? pub(all[mi], mi) : null }); };
   if (a === 'rank' && RANK_MEM && now - RANK_MEM.t < 45000) return RANK_MEM.sn ? rankOut(RANK_MEM.sn, RANK_MEM.season, RANK_MEM.all) : out(200, { ok: true, season: null, admin });
@@ -632,7 +632,7 @@ const maskNick = (v) => { const c = Array.from(String(v || '지휘관')); return
       const ended = now >= sn.end ? sn : (sn.prev && sn.prev.id ? sn.prev : null); /* 끝난 시즌의 순위로 프로필 테두리 지급(한 번만) */
       if (ended && ud && fr[ended.id] == null) { const all = await rankAll('raid_' + ended.id, ended, true), t = tierOf(all.findIndex(isMe), all.length); fr = Object.assign({}, fr, { [ended.id]: t });
         if (await commit([{ update: { name: ud.name, fields: { raidFrames: fsv(fr) } }, updateMask: { fieldPaths: ['raidFrames'] } }])) newFrame = t; }
-      if (my && B.pf != null) { const [p2, f2] = pfFr(fr); if (p2 !== String(f.pf || '') || String(f2) !== String(f.fr || 0)) await commit([{ update: { name: docName(col + '/' + uid), fields: fsv({ pf: p2, fr: f2 }).mapValue.fields }, updateMask: { fieldPaths: ['pf', 'fr'] }, currentDocument: { exists: true } }]); RANK_MEM = null; } /* 프로필 니케·테두리를 바꾸면 순위표에도 반영 */
+      if (my && B.pf != null) { const [p2, f2] = pfFr(fr), n2 = B.pn != null ? (+B.pn ? 1 : 0) : (f.pn ? 1 : 0); if (p2 !== String(f.pf || '') || String(f2) !== String(f.fr || 0) || n2 !== (f.pn ? 1 : 0)) { await commit([{ update: { name: docName(col + '/' + uid), fields: fsv({ pf: p2, fr: f2, pn: n2 }).mapValue.fields }, updateMask: { fieldPaths: ['pf', 'fr', 'pn'] }, currentDocument: { exists: true } }]); RANK_MEM = null; } } /* pn: 랭킹에 닉네임 공개(1) · 기본은 가림 */ /* 프로필 니케·테두리를 바꾸면 순위표에도 반영 */
       return out(200, view(g, { chips: (ud && ud.f.chipsV && ud.f.chipsV.d) || 0, frames: Array.from(new Set(Object.values(fr).map(Number).filter((t) => t > 0))), newFrame })); }
     if (a === 'giveup') { /* 진행 중인 판 포기: 쓴 횟수는 돌아오지 않고 기록도 남지 않음 */
       if (!g) return out(200, view(null));
