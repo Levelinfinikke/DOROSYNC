@@ -2034,3 +2034,6 @@ html .daily-note{left:10px;right:10px;transform:translateY(20px);justify-content
 .pwa-ok{display:block;width:100%;height:46px;margin-top:14px;border:0;background:#f5b301;color:#1a1200;font-weight:800;font-size:15px;cursor:pointer}
 
 #fb-m .fb-hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none}
+
+.lb-rk .h .cw{width:17px;height:14px;flex:none;margin-right:1px;filter:drop-shadow(0 0 4px rgba(255,207,74,.6))}
+.lb-rk .h.fin{color:#ffd56a}
