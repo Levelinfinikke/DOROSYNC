@@ -627,6 +627,8 @@ const maskNick = (v) => { const c = Array.from(String(v || '지휘관')); return
     const save = (fields, mask) => ({ update: { name: docName(col + '/' + uid), fields: fsv(fields).mapValue.fields }, updateMask: { fieldPaths: mask }, currentDocument: pre });
     const pfFr = (rf) => { const pf = String(B.pf || '').replace(/\D/g, '').slice(0, 6), fm = String(B.fr || '').match(/^([0-9a-zA-Z-]{1,20}):([123])$/), fr = fm ? (+rf[fm[1]] === +fm[2] ? fm[0] : 0) : [1, 2, 3].includes(+B.fr) && Object.values(rf).map(Number).includes(+B.fr) ? +B.fr : 0; return [pf, fr]; }; /* 랭킹에 보일 프로필 니케·테두리(가진 테두리만) */
     if (a === 'state') { const ud = await getDoc('users/' + uid); let fr = (ud && ud.f.raidFrames) || {}, newFrame = 0;
+      { const junk = Object.keys(fr).filter((k) => /^test/i.test(k)); /* 시험용 시즌(test-…)에서 받은 임시 테두리는 지움 */
+        if (junk.length && ud) { const f2 = Object.assign({}, fr); junk.forEach((k) => { delete f2[k]; }); if (await commit([{ update: { name: ud.name, fields: { raidFrames: fsv(f2) } }, updateMask: { fieldPaths: ['raidFrames'] } }])) fr = f2; } }
       const ended = now >= sn.end ? sn : (sn.prev && sn.prev.id ? sn.prev : null); /* 끝난 시즌의 순위로 프로필 테두리 지급(한 번만) */
       if (ended && ud && fr[ended.id] == null) { const all = await rankAll('raid_' + ended.id, ended, true), t = tierOf(all.findIndex(isMe), all.length); fr = Object.assign({}, fr, { [ended.id]: t });
         if (await commit([{ update: { name: ud.name, fields: { raidFrames: fsv(fr) } }, updateMask: { fieldPaths: ['raidFrames'] } }])) newFrame = t; }
