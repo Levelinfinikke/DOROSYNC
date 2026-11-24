@@ -1529,10 +1529,10 @@ button:not(.tr-clr):not(.tabs button):not(.tr-f):not(.pk-t):not(.pk-r){border-ra
 .pbar-l b{font-size:12.5px;min-width:26px}.pbar-l span{color:var(--muted);flex:1}.pbar-l em{font-style:normal;font-weight:800}
 .pbar.pn .pbar-l em{color:var(--c1,#e88800)}.pbar.ac .pbar-l em{color:#16a34a}
 .pbar-t{position:relative;height:12px;border-radius:999px;background:var(--input,rgba(127,127,127,.12));overflow:hidden}
-.pbar-f{position:relative;height:100%;border-radius:999px;min-width:12px;background-size:22px 100%;animation:pbFlow 1s linear infinite;transition:width .6s}
-.pbar.pn .pbar-f{background-color:var(--c1,#e88800);background-image:linear-gradient(135deg,rgba(255,255,255,.28) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.28) 50%,rgba(255,255,255,.28) 75%,transparent 75%)}
-.pbar.ac .pbar-f{background-color:#16a34a;background-image:linear-gradient(135deg,rgba(255,255,255,.28) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.28) 50%,rgba(255,255,255,.28) 75%,transparent 75%)}
-@keyframes pbFlow{to{background-position:22px 0}}
+.pbar-f{position:relative;height:100%;border-radius:999px;min-width:12px;background-size:22.627px 100%;animation:pbFlow 1s linear infinite;transition:width .6s} /* 줄무늬: 16px 주기의 45° 반복 무늬 → 가로로 22.627px(16÷sin45°)마다 똑같아 이음매 없이 흐름 */
+.pbar.pn .pbar-f{background-color:var(--c1,#e88800);background-image:repeating-linear-gradient(135deg,rgba(255,255,255,.26) 0 8px,transparent 8px 16px)}
+.pbar.ac .pbar-f{background-color:#16a34a;background-image:repeating-linear-gradient(135deg,rgba(255,255,255,.26) 0 8px,transparent 8px 16px)}
+@keyframes pbFlow{to{background-position:22.627px 0}}
 .pbar-a{position:absolute;right:3px;top:50%;width:6px;height:6px;border-top:2px solid #fff;border-right:2px solid #fff;transform:translateY(-50%) rotate(45deg);animation:pbNudge 1s ease-in-out infinite}
 @keyframes pbNudge{0%,100%{right:4px}50%{right:1px}}
 @media(prefers-reduced-motion:reduce){.pbar-f,.pbar-a,.pbar-arr u{animation:none}}
