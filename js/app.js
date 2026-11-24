@@ -3341,6 +3341,46 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
     } catch (e) { /* 무시 */ }
     return out.sort((x, y) => y.bill - x.bill);
   }
+  /* 확정한 플랜의 패키지 고치기: 오늘까지의 곡선은 그대로 두고, 오늘부터 고른 패키지로 다시 계산해 이어 붙임.
+     출발 레벨 = 실제 기록(플랜 시작 뒤의 최신 기록), 없으면 플랜이 오늘 가리키는 레벨. 패키지 외 입력(수급·보유 재화 등)은 지금 싱크로 탭 값 */
+  const PENCIL_PK = '<svg class="icb-i" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h13M3 12h9M3 18h7"/><path d="M17.5 12.5l3 3L15 21l-3.5.5.5-3.5z"/></svg>';
+  function planEdit(id) {
+    const a0 = plansGet(), p0 = a0.find((q) => q.id === id); if (!p0) return;
+    if (!E || !D || !st || !Array.isArray(st.pk)) { toast('싱크로 탭을 한 번 연 뒤 다시 시도해 주세요.'); return; }
+    const today = todayStr(), el = Math.round((ymdMs(today) - ymdMs(p0.start)) / DAY), from = Math.max(0, Math.min(el, p0.days || 0));
+    if (el > (p0.days || 0)) { toast('이미 끝난 플랜입니다. 싱크로 탭에서 새 플랜을 확정해 주세요.'); return; }
+    const lvPlan = (() => { let v = p0.S0; (p0.pts || []).forEach((q) => { if (q[0] <= from) v = q[1]; }); return v; })();
+    const rec = histGet().filter((x) => x.d >= p0.start && x.d <= today).pop(), lv0 = el <= 0 ? p0.S0 : rec ? rec.s : lvPlan;
+    if (lv0 >= p0.T) { toast('이미 목표 레벨(' + p0.T + ')에 도달했습니다.'); return; }
+    const had = new Set(p0.pkNow || (p0.buys || []).map((x) => x[0]));
+    const PERS = ['월정액', '월간', '주간', '일일', '기간', '1회'], perOf = (n) => { const v = E.periodOf(n); return PERS.indexOf(v) >= 0 ? v : '기타'; };
+    const items = st.pk.map((x, j) => ({ j, n: x.name, per: perOf(x.name), price: x.price, on: perOf(x.name) === '1회' ? false : had.has(x.name) }));
+    const d = document.createElement('div'); d.id = 'pinrest'; d.className = 'pl-ed';
+    const grp = PERS.concat(['기타']).map((per) => { const L = items.filter((x) => x.per === per); return L.length ? '<li class="pe-h">' + (per === '일일' ? '일간' : per) + (per === '1회' ? ' <small>지금 새로 사는 것만 체크</small>' : '') + '</li>' + L.map((x) => '<li><label><input type="checkbox" data-j="' + x.j + '"' + (x.on ? ' checked' : '') + '><span>' + esc(x.n.replace(/^\((월정액|기간)\)\s*/, '').replace(/^(일일|주간|월간|1회)\s*/, '')) + '</span><b>' + won(x.price) + '</b></label></li>').join('') : ''; }).join('');
+    d.innerHTML = '<div class="pbox" role="dialog" aria-modal="true"><h4>' + esc(plName(p0)) + ' · 패키지 고치기</h4><p class="note"><b>오늘(' + today.slice(5).replace('-', '/') + ')부터</b> 아래 패키지로 다시 계산합니다. 출발 레벨 <b>' + lv0 + '</b> (' + (el <= 0 ? '플랜 시작 레벨' : rec ? '실제 기록 ' + rec.d.slice(5).replace('-', '/') : '플랜 예상') + ') → 목표 ' + p0.T + '</p><ul class="pe-l">' + grp + '</ul><p class="pe-r muted sm"></p><p class="note">패키지 외 입력(일일 수급·보유 재화 등)은 지금 [싱크로] 탭에 입력된 값으로 계산합니다.</p><div class="pbtn"><button type="button" class="ghost sm" data-pr="x">취소</button><button type="button" class="sm" data-pr="ok">저장</button></div></div>';
+    document.body.appendChild(d);
+    let last = null;
+    const calc = () => { const s2 = JSON.parse(JSON.stringify(st)); s2.start = today; s2.S0 = lv0; s2.T = p0.T; const on = {}; d.querySelectorAll('input[data-j]').forEach((c) => { on[c.dataset.j] = c.checked; });
+      s2.pk.forEach((x, j) => { x.use = !!on[j]; if (x.trim) { x.max = 0; delete x.trim; } }); (s2.etc || []).forEach((e) => { if (E.periodOf(e.name) === '1회') e.use = false; }); if (lv0 !== st.S0) { s2.L0 = 0; s2.power = 0; } /* 출발 레벨이 입력값과 다르면 전초기지 Lv·전투력은 그 레벨의 평균으로 */
+      const m2 = E.buildModel(s2, D), tr = E.simulate(m2, null, true), rows = tr.rows || [], lt = rows.length ? rows[rows.length - 1].t : 0, done = rows.length && rows[rows.length - 1].S >= p0.T;
+      last = { s2, m2, tr, lt, done, names: s2.pk.filter((x) => x.use).map((x) => x.name) };
+      d.querySelector('.pe-r').innerHTML = !lt ? '계산할 수 없습니다.' : '예상: 오늘부터 <b>' + lt + '일</b> 뒤 ' + (done ? '목표 도달' : 'Lv ' + rows[rows.length - 1].S) + ' (플랜 전체 ' + (from + lt) + '일 · 기존 ' + p0.days + '일) · 앞으로 과금 <b>' + won(tr.bill || 0) + '</b>'; };
+    try { calc(); } catch (e) { d.querySelector('.pe-r').textContent = '계산 중 오류가 났습니다.'; }
+    d.addEventListener('change', () => { try { calc(); } catch (e) { last = null; } });
+    d.addEventListener('click', (e) => { const b = e.target.closest('[data-pr]'); if (e.target === d || (b && b.dataset.pr === 'x')) { d.remove(); return; } if (!b) return;
+      if (!last || !last.lt) { toast('계산 결과가 없어 저장하지 못했습니다.'); return; }
+      const a = plansGet(), p = a.find((q) => q.id === id); if (!p) { d.remove(); return; }
+      const keep = (p.pts || []).filter((q) => q[0] <= from), nw = trPts(last.tr, lv0).map((q) => [q[0] + from, q[1]]);
+      if (!keep.length) keep.push([0, p.S0]);
+      /* 구매 내역: 지나간 기간 몫(횟수를 기간 비율로 어림) + 앞으로의 구매 */
+      const ratio = p.days > 0 ? Math.min(1, from / p.days) : 0, map = {}, ord = [];
+      (p.buys || []).forEach((x) => { const c = x[1] === '1회' || x[1] === '팝업' ? (from > 0 ? x[3] : 0) : Math.round(x[3] * ratio); if (c > 0) { map[x[0]] = [x[0], x[1], x[2], c, Math.round(x[4] / x[3] * c)]; ord.push(x[0]); } });
+      let fut = []; try { fut = buysOf(last.m2, last.tr, last.s2.pk); } catch (er) { /* 무시 */ }
+      fut.forEach((x) => { if (map[x[0]]) { map[x[0]][3] += x[3]; map[x[0]][4] += x[4]; if (x[2]) map[x[0]][2] = x[2]; } else { map[x[0]] = x.slice(); ord.push(x[0]); } });
+      const o2 = (x) => { const i = PER_ORD.indexOf(x[1]); return i < 0 ? 9 : i; }, buys = ord.map((k) => map[k]).sort((x, y) => o2(x) - o2(y) || y[4] - x[4]);
+      p.pts = keep.concat(nw.filter((q) => q[0] > keep[keep.length - 1][0] || q[1] !== keep[keep.length - 1][1])); p.days = from + last.lt; p.buys = buys; p.bill = buys.reduce((t, x) => t + x[4], 0); p.pkNow = last.names; p.edit = { d: today, t: from, lv: lv0 };
+      if (plansSet(a)) { d.remove(); renderProg.openBuy = p.id; renderProg(); toast(plName(p) + '의 패키지를 고쳐 오늘부터 다시 계산했습니다.', 3500); } });
+  }
   function commitPlan() {
     if (!TR || !M || !/^\d{4}-\d{2}-\d{2}$/.test(st.start)) { toast('먼저 시작 날짜와 목표를 입력하고 계산해 주세요.'); return; }
     const pts = trPts(TR, st.S0), rows = TR.rows || [];
@@ -3593,9 +3633,10 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
     html += series.length ? '<div class="chart" id="ch-prog"></div>' : '';
     /* 플랜 목록: 기준 지정 · 숨기기 */
     if (all.length) {
-      const row = (p) => '<li class="' + (p.hidden ? 'hid' : '') + '"><i class="pl-sw" style="background:' + (p.bill || p === ref ? plCol(p) : NP_COL) + '"></i><b>' + plName(p) + '</b><span class="muted sm">' + p.start + ' 시작 · ' + p.S0 + '→' + p.T + ' · ' + p.days + '일 · ' + won(p.bill) + '</span>' +
+      const row = (p) => '<li class="' + (p.hidden ? 'hid' : '') + '"><i class="pl-sw" style="background:' + (p.bill || p === ref ? plCol(p) : NP_COL) + '"></i><b>' + plName(p) + '</b><span class="muted sm">' + p.start + ' 시작 · ' + p.S0 + '→' + p.T + ' · ' + p.days + '일 · ' + won(p.bill) + (p.edit ? ' · ' + p.edit.d.slice(5).replace('-', '/') + ' 수정' : '') + '</span>' +
         (p.hidden ? '' : p === ref ? '<span class="pl-ref">기준</span>' : '<button type="button" class="ghost sm" data-pref="' + p.id + '">기준으로</button>') +
         giftBtn(p.id) +
+        (p.hidden ? '' : '<button type="button" class="ghost sm icb" data-pedit="' + p.id + '" title="패키지 고치기 (오늘부터 다시 계산)" aria-label="패키지 고치기">' + PENCIL_PK + '</button>') +
         '<button type="button" class="ghost sm icb" data-pren="' + p.id + '" title="이름 바꾸기" aria-label="이름 바꾸기"><svg class="icb-i" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>' +
         '<button type="button" class="ghost sm icb" data-phide="' + p.id + '" title="' + (p.hidden ? '다시 보이기' : '숨기기') + '" aria-label="' + (p.hidden ? '다시 보이기' : '숨기기') + '">' + (p.hidden
           ? '<svg class="icb-i" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>'
@@ -3608,6 +3649,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
     autoBind(box, true);
     box.querySelectorAll('[data-pz]').forEach((b) => b.addEventListener('click', () => { renderProg.full = b.dataset.pz === '1'; renderProg(); }));
     box.querySelectorAll('[data-pref]').forEach((b) => b.addEventListener('click', () => { const a = plansGet(); a.forEach((p) => { p.ref = p.id === b.dataset.pref; }); plansSet(a); renderProg(); }));
+    box.querySelectorAll('[data-pedit]').forEach((b) => b.addEventListener('click', () => planEdit(b.dataset.pedit)));
     box.querySelectorAll('[data-pren]').forEach((b) => b.addEventListener('click', () => {
       const a = plansGet(), p = a.find((q) => q.id === b.dataset.pren); if (!p) return;
       const v = prompt('플랜 이름 (최대 16자, 비우면 기본 이름)', p.label || plName(p)); if (v === null) return;
@@ -4058,7 +4100,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   }
   /* ---------- 인벤토리 사진 인식: 칸 찾기 → 아이콘 비교 → 숫자 읽기 (모두 브라우저 안에서 처리) ---------- */
   const INV = (() => {
-    let REF = null; const refLoad = () => (REF ? Promise.resolve() : new Promise((ok, no) => { const sc = document.createElement('script'); sc.src = 'js/inv-ref.js?v=20261122h'; sc.onload = () => { REF = self.DORO_INV_REF; REF ? ok() : no(new Error('ref')); }; sc.onerror = () => no(new Error('ref')); document.head.appendChild(sc); })); /* 아이콘 견본은 사진 인식을 쓸 때만 읽음 */
+    let REF = null; const refLoad = () => (REF ? Promise.resolve() : new Promise((ok, no) => { const sc = document.createElement('script'); sc.src = 'js/inv-ref.js?v=20261122i'; sc.onload = () => { REF = self.DORO_INV_REF; REF ? ok() : no(new Error('ref')); }; sc.onerror = () => no(new Error('ref')); document.head.appendChild(sc); })); /* 아이콘 견본은 사진 인식을 쓸 때만 읽음 */
     const TW = 10, TH = 14, FW = 20, FH = 14, SH = 24, GBW = 200, NW = 111, NH = 115, BW = 34, BH = 18;
     const mk = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; };
     const load = (src) => new Promise((ok, no) => { const im = new Image(); im.onload = () => ok(im); im.onerror = no; im.src = src; });
@@ -4762,7 +4804,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   window.doroPickupList = () => { const now = Date.now(), L = cfgGet().gacha.filter((x) => (x.s || x.e) && (!x.s || now >= x.s) && (!x.e || now < x.e)), U = L.length ? L : [cfgFeat().m]; return U.map((m) => { const k = nkCode(m.n); return { n: m.n, code: k, img: m.face ? cfgImg(m.face) : k ? BL_IMG(k) : cfgImg(m.cover) }; }); };
   window.doroPickup = () => { const m = cfgFeat().m, k = nkCode(m.n); return { n: m.n, code: k, img: m.face ? cfgImg(m.face) : k ? BL_IMG(k) : cfgImg(m.cover) }; };
   function gmMount() {
-    if (gmInst) return; if (!window.DoroGacha) { /* 가챠 엔진은 가챠 탭을 처음 열 때 불러옴 */ if (!gmMount.w) { gmMount.w = 1; const sc = document.createElement('script'); sc.src = 'js/gacha.js?v=20261122h'; sc.onload = () => { gmMount.w = 0; const go = () => { if (curTab === 'gcm') gmMount(); }; if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go(); }; sc.onerror = () => { gmMount.w = 0; const r = document.getElementById('gm-root'); if (r) r.innerHTML = '<p class="muted" style="padding:20px">가챠 머신을 불러오지 못했습니다. 새로고침해 주세요.</p>'; }; document.head.appendChild(sc); } return; } let D; try { D = window.GM_ASSETS; if (!D) throw 0; } catch (e) { return; }
+    if (gmInst) return; if (!window.DoroGacha) { /* 가챠 엔진은 가챠 탭을 처음 열 때 불러옴 */ if (!gmMount.w) { gmMount.w = 1; const sc = document.createElement('script'); sc.src = 'js/gacha.js?v=20261122i'; sc.onload = () => { gmMount.w = 0; const go = () => { if (curTab === 'gcm') gmMount(); }; if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go(); }; sc.onerror = () => { gmMount.w = 0; const r = document.getElementById('gm-root'); if (r) r.innerHTML = '<p class="muted" style="padding:20px">가챠 머신을 불러오지 못했습니다. 새로고침해 주세요.</p>'; }; document.head.appendChild(sc); } return; } let D; try { D = window.GM_ASSETS; if (!D) throw 0; } catch (e) { return; }
     const corp = {}; GC_NK.forEach((r) => { if (r[2] === 'SSR') corp[r[0]] = r[1]; });
     const mk = (L, p, cp) => L.map((n) => { const k = nkCode(n) || nkCode({ '리틀 머메이드': '세이렌' }[n] || ''); return { n, c: corp[n] || cp || '', k, p, img: k ? BL_IMG(k) : '', tall: 1 }; });
     gmStockSync(); const fix = (L) => { L.forEach((x) => { if (!x.img) { x.img = nkFace(x.n); const g = cfgGet().gacha.find((q) => q.n === x.n); if (g && g.corp) x.c = g.corp; if (g && !g.face) x.tall = 0; } }); return L; }, M = (m) => { const PL = gmPoolOf(m), std = fix(mk(PL.std, 0)), pil = fix(mk(PL.pil, 1)); const two = +m.rate === 2, pu = mk([m.n], two ? 0 : 1, m.corp || (two ? '' : '필그림'))[0]; if (m.corp) pu.c = m.corp; if (m.face) pu.img = cfgImg(m.face); else if (!pu.img) { pu.img = cfgImg(m.cover); pu.tall = 0; } /* 픽업 2% = 일반 니케, 1% = 필그림·오버스펙 */

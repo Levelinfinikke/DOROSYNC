@@ -2061,3 +2061,13 @@ html .daily-note{left:10px;right:10px;transform:translateY(20px);justify-content
 #fr-cel .fc-go:active{transform:translateY(3px);box-shadow:0 1px 0 #a86f00}
 #fr-cel .fc-g{margin:12px 0 0;font-size:12.5px;line-height:1.5;color:#ffd56a}
 #fr-cel .fc-no{display:block;width:100%;margin-top:10px;padding:8px;border:0;background:none;color:#9aa5b8;font-size:13px;cursor:pointer}
+
+/* 확정 플랜 패키지 고치기 */
+#pinrest.pl-ed .pbox{max-height:88vh;display:flex;flex-direction:column}
+.pl-ed .pe-l{list-style:none;margin:8px 0;padding:0;overflow:auto;flex:1;min-height:120px;border:1px solid var(--line);border-radius:8px}
+.pl-ed .pe-l li label{display:flex;align-items:center;gap:8px;padding:7px 10px;font-size:13.5px;cursor:pointer}
+.pl-ed .pe-l li label span{flex:1;min-width:0}.pl-ed .pe-l li label b{font-weight:600;font-size:12.5px;color:var(--muted);white-space:nowrap}
+.pl-ed .pe-l li+li{border-top:1px solid color-mix(in srgb,var(--line) 60%,transparent)}
+.pl-ed .pe-l .pe-h{padding:5px 10px;font-size:11.5px;font-weight:800;color:var(--muted);background:color-mix(in srgb,var(--line) 35%,transparent);position:sticky;top:0}
+.pl-ed .pe-l .pe-h small{font-weight:500}
+.pl-ed .pe-r{margin:4px 0 6px;line-height:1.5}.pl-ed .pe-r b{color:var(--ink)}
