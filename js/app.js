@@ -578,6 +578,9 @@ self.DATA={"boxes":[[20.24,6437.98,3456],[21.93,9221.99,3935.98],[23.39,12353.99
   st.cfg = Object.assign({}, st.cfg, { mlen: 30, ratio: [1, 1, 3] });
   st.must = false;
   st.pk.forEach((p) => { if (p.name === '월간 스텝업 패키지5') p.name = '월간 스텝업5'; });
+  /* 판매가 끝난 패키지: 목록에서 숨기고 계산에서도 뺌(저장된 설정의 순서는 유지) */
+  const PK_HIDE = { '1회 주년 이벤트 패키지2': 1 };
+  st.pk.forEach((p) => { if (PK_HIDE[p.name]) { p.use = false; p.opt = false; if (p.chip) p.chip = 0; } });
   let saveT = 0;
   function save() {
     clearTimeout(saveT);
@@ -757,7 +760,7 @@ self.DATA={"boxes":[[20.24,6437.98,3456],[21.93,9221.99,3935.98],[23.39,12353.99
   };
   const EFF = D.pk.map(pkEff);
   const PKORD0 = (() => { const o = D.pk.map((p, j) => j).filter((j) => j < ORIG_PK).sort((x, y) => EFF[y] - EFF[x] || x - y), ex = D.pk.map((p, j) => j).filter((j) => j >= ORIG_PK), at = o.findIndex((j) => D.pk[j].name.indexOf('스텝업') >= 0); o.splice(at + 1, 0, ...ex); return o; })();
-  const pkOrder = () => PKORD0.concat(st.pk.map((p, j) => j).filter((j) => j >= D.pk.length));
+  const pkOrder = () => PKORD0.concat(st.pk.map((p, j) => j).filter((j) => j >= D.pk.length)).filter((j) => st.pk[j] && !PK_HIDE[st.pk[j].name]);
   const mustIdx = () => -1; // 스텝업5도 다른 패키지처럼 후보로 계산
   const eligible = (j) => !!(st.pk[j] && st.pk[j].opt) && j !== mustIdx() && !(PK_CHIP[st.pk[j].name] && st.pk[j].chip > 0);
   function comboCount() {
@@ -3354,7 +3357,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
     if (lv0 >= p0.T) { toast('이미 목표 레벨(' + p0.T + ')에 도달했습니다.'); return; }
     const had = new Set(p0.pkNow || (p0.buys || []).map((x) => x[0]));
     const PERS = ['월정액', '월간', '주간', '일일', '기간', '1회'], perOf = (n) => { const v = E.periodOf(n); return PERS.indexOf(v) >= 0 ? v : '기타'; };
-    const items = st.pk.map((x, j) => ({ j, n: x.name, per: perOf(x.name), price: x.price, on: perOf(x.name) === '1회' ? false : had.has(x.name) }));
+    const items = st.pk.map((x, j) => ({ j, n: x.name, per: perOf(x.name), price: x.price, on: perOf(x.name) === '1회' ? false : had.has(x.name) })).filter((x) => !PK_HIDE[x.n]);
     const d = document.createElement('div'); d.id = 'pinrest'; d.className = 'pl-ed';
     const grp = PERS.concat(['기타']).map((per) => { const L = items.filter((x) => x.per === per); return L.length ? '<li class="pe-h">' + (per === '일일' ? '일간' : per) + (per === '1회' ? ' <small>지금 새로 사는 것만 체크</small>' : '') + '</li>' + L.map((x) => '<li><label><input type="checkbox" data-j="' + x.j + '"' + (x.on ? ' checked' : '') + '><span>' + esc(x.n.replace(/^\((월정액|기간)\)\s*/, '').replace(/^(일일|주간|월간|1회)\s*/, '')) + '</span><b>' + won(x.price) + '</b></label></li>').join('') : ''; }).join('');
     d.innerHTML = '<div class="pbox" role="dialog" aria-modal="true"><h4>' + esc(plName(p0)) + ' · 패키지 고치기</h4><p class="note"><b>오늘(' + today.slice(5).replace('-', '/') + ')부터</b> 아래 패키지로 다시 계산합니다. 출발 레벨 <b>' + lv0 + '</b> (' + (el <= 0 ? '플랜 시작 레벨' : rec ? '실제 기록 ' + rec.d.slice(5).replace('-', '/') : '플랜 예상') + ') → 목표 ' + p0.T + '</p><ul class="pe-l">' + grp + '</ul><p class="pe-r muted sm"></p><p class="note">패키지 외 입력(일일 수급·보유 재화 등)은 지금 [싱크로] 탭에 입력된 값으로 계산합니다.</p><div class="pbtn"><button type="button" class="ghost sm" data-pr="x">취소</button><button type="button" class="sm" data-pr="ok">저장</button></div></div>';
@@ -4100,7 +4103,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   }
   /* ---------- 인벤토리 사진 인식: 칸 찾기 → 아이콘 비교 → 숫자 읽기 (모두 브라우저 안에서 처리) ---------- */
   const INV = (() => {
-    let REF = null; const refLoad = () => (REF ? Promise.resolve() : new Promise((ok, no) => { const sc = document.createElement('script'); sc.src = 'js/inv-ref.js?v=20261122i'; sc.onload = () => { REF = self.DORO_INV_REF; REF ? ok() : no(new Error('ref')); }; sc.onerror = () => no(new Error('ref')); document.head.appendChild(sc); })); /* 아이콘 견본은 사진 인식을 쓸 때만 읽음 */
+    let REF = null; const refLoad = () => (REF ? Promise.resolve() : new Promise((ok, no) => { const sc = document.createElement('script'); sc.src = 'js/inv-ref.js?v=20261122j'; sc.onload = () => { REF = self.DORO_INV_REF; REF ? ok() : no(new Error('ref')); }; sc.onerror = () => no(new Error('ref')); document.head.appendChild(sc); })); /* 아이콘 견본은 사진 인식을 쓸 때만 읽음 */
     const TW = 10, TH = 14, FW = 20, FH = 14, SH = 24, GBW = 200, NW = 111, NH = 115, BW = 34, BH = 18;
     const mk = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; };
     const load = (src) => new Promise((ok, no) => { const im = new Image(); im.onload = () => ok(im); im.onerror = no; im.src = src; });
@@ -4804,7 +4807,7 @@ location.href='${SITE}#dorobl='+c;}catch(e){alert('DOROSYNC 연동 실패: '+((e
   window.doroPickupList = () => { const now = Date.now(), L = cfgGet().gacha.filter((x) => (x.s || x.e) && (!x.s || now >= x.s) && (!x.e || now < x.e)), U = L.length ? L : [cfgFeat().m]; return U.map((m) => { const k = nkCode(m.n); return { n: m.n, code: k, img: m.face ? cfgImg(m.face) : k ? BL_IMG(k) : cfgImg(m.cover) }; }); };
   window.doroPickup = () => { const m = cfgFeat().m, k = nkCode(m.n); return { n: m.n, code: k, img: m.face ? cfgImg(m.face) : k ? BL_IMG(k) : cfgImg(m.cover) }; };
   function gmMount() {
-    if (gmInst) return; if (!window.DoroGacha) { /* 가챠 엔진은 가챠 탭을 처음 열 때 불러옴 */ if (!gmMount.w) { gmMount.w = 1; const sc = document.createElement('script'); sc.src = 'js/gacha.js?v=20261122i'; sc.onload = () => { gmMount.w = 0; const go = () => { if (curTab === 'gcm') gmMount(); }; if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go(); }; sc.onerror = () => { gmMount.w = 0; const r = document.getElementById('gm-root'); if (r) r.innerHTML = '<p class="muted" style="padding:20px">가챠 머신을 불러오지 못했습니다. 새로고침해 주세요.</p>'; }; document.head.appendChild(sc); } return; } let D; try { D = window.GM_ASSETS; if (!D) throw 0; } catch (e) { return; }
+    if (gmInst) return; if (!window.DoroGacha) { /* 가챠 엔진은 가챠 탭을 처음 열 때 불러옴 */ if (!gmMount.w) { gmMount.w = 1; const sc = document.createElement('script'); sc.src = 'js/gacha.js?v=20261122j'; sc.onload = () => { gmMount.w = 0; const go = () => { if (curTab === 'gcm') gmMount(); }; if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go(); }; sc.onerror = () => { gmMount.w = 0; const r = document.getElementById('gm-root'); if (r) r.innerHTML = '<p class="muted" style="padding:20px">가챠 머신을 불러오지 못했습니다. 새로고침해 주세요.</p>'; }; document.head.appendChild(sc); } return; } let D; try { D = window.GM_ASSETS; if (!D) throw 0; } catch (e) { return; }
     const corp = {}; GC_NK.forEach((r) => { if (r[2] === 'SSR') corp[r[0]] = r[1]; });
     const mk = (L, p, cp) => L.map((n) => { const k = nkCode(n) || nkCode({ '리틀 머메이드': '세이렌' }[n] || ''); return { n, c: corp[n] || cp || '', k, p, img: k ? BL_IMG(k) : '', tall: 1 }; });
     gmStockSync(); const fix = (L) => { L.forEach((x) => { if (!x.img) { x.img = nkFace(x.n); const g = cfgGet().gacha.find((q) => q.n === x.n); if (g && g.corp) x.c = g.corp; if (g && !g.face) x.tall = 0; } }); return L; }, M = (m) => { const PL = gmPoolOf(m), std = fix(mk(PL.std, 0)), pil = fix(mk(PL.pil, 1)); const two = +m.rate === 2, pu = mk([m.n], two ? 0 : 1, m.corp || (two ? '' : '필그림'))[0]; if (m.corp) pu.c = m.corp; if (m.face) pu.img = cfgImg(m.face); else if (!pu.img) { pu.img = cfgImg(m.cover); pu.tall = 0; } /* 픽업 2% = 일반 니케, 1% = 필그림·오버스펙 */
