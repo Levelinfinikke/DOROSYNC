@@ -14,7 +14,7 @@
   const COS = ['엘리시온', '미실리스', '테트라', '필그림', '어브노멀'], COL = { 엘리시온: 'E', 미실리스: 'M', 테트라: 'T', 필그림: 'P', 어브노멀: 'A' };
   const TS = { SSS: 9, SS: 8, S: 7, A: 6, B: 5, C: 4, D: 3, E: 2, F: 1 };
   const HN = { 0: '-', 1: '하이카드', 2: '페어', 3: '투페어', 4: '트리플', 5: '스트레이트', 6: '풀하우스', 7: '포카드', 8: '플러시' };
-  const BU = { 1: 'I', 2: 'II', 3: 'III', A: 'A', '?': '<b class="pk-qt">?</b>' };
+  const BU = { 1: 'I', 2: 'II', 3: 'III', A: 'A', '?': '<span class="pk-qt">?</span>' };
   const BACK = 'assets/img/raid-back.webp', BOSS_IMG = 'assets/img/raid-boss-1.webp', BOSS0 = { e: '풍', r: 'NEAR' };
   const bossNm = () => { let n = ''; try { n = window.doroCfg.get().raid.nm; } catch (e) { /* 설정 전 */ } return String(n || '승리의 여신').replace(/[&<>"]/g, ''); }; /* 보스 이름·배경은 관리 탭에서 바꿈(배경 = CSS 변수 --rd-boss) */
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -137,7 +137,7 @@
 .pk-co img,.pk-co svg{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 0 .25em rgba(0,0,0,.7))}
 .pk-ic{position:absolute;left:.28em;top:.3em;display:flex;flex-direction:column;align-items:center;gap:.14em;z-index:4;width:2em}
 .pk .pk-t{min-width:2em;text-align:center;border-radius:.35em;padding:.05em .2em;font-size:.95em;line-height:1.25;font-weight:900;color:#16181b;font-family:Arial,sans-serif;box-shadow:0 1px 2px rgba(0,0,0,.5)}
-.pk-el{width:1.95em;height:auto;display:block;filter:drop-shadow(0 1px 1px rgba(0,0,0,.6))}.pk-eq{flex:none;width:1.7em;height:1.7em;border-radius:50%;background:#5b6270;border:.12em solid #fff;color:#fff;display:grid;place-items:center;font-weight:900;font-family:Arial,sans-serif;font-size:1em;line-height:1;box-sizing:border-box;filter:drop-shadow(0 1px 1px rgba(0,0,0,.6))}.pk-qt{font:900 1.25em/1 Arial,sans-serif;color:inherit}.pk-co .pk-qt{display:grid;place-items:center;width:100%;height:100%;font-size:3.6em;color:#fff}
+.pk-el{width:1.95em;height:auto;display:block;filter:drop-shadow(0 1px 1px rgba(0,0,0,.6))}.pk-eq{flex:none;width:1.7em;height:1.7em;border-radius:50%;background:#5b6270;border:.12em solid #fff;color:#fff;display:grid;place-items:center;font-weight:900;font-family:Arial,sans-serif;font-size:1em;line-height:1;box-sizing:border-box;filter:drop-shadow(0 1px 1px rgba(0,0,0,.6))}.pk-qt{display:block;font:900 1.25em/1 Arial,sans-serif;color:inherit}.pk-co .pk-qt{display:grid;place-items:center;width:100%;height:100%;font-size:3.6em;color:#fff}
 .pk-hx{width:1.9em;height:2.1em;display:grid;place-items:center;background:#fff;color:#16181b;clip-path:polygon(50% 0,96% 25%,96% 75%,50% 100%,4% 75%,4% 25%);font-weight:900;font-family:Georgia,"Times New Roman",serif;font-size:1em}
 .pk-hx img{width:1.42em;height:1.42em;display:block}
 .pk-hw{filter:drop-shadow(0 1px 1px rgba(0,0,0,.5))}
@@ -465,10 +465,10 @@
       (x.img ? '<img class="pk-pt" alt="" loading="lazy" src="' + esc(x.img) + '" onerror="this.remove()">' : '') + '<div class="pk-fx"></div>' +
       '<div class="pk-gl"></div>' +
       '<div class="pk-ic">' + (x.e === '?' ? '<span class="pk-eq" title="코드 미정">?</span>' : d.elIco && d.elIco[x.e] ? '<img class="pk-el' + (sp && x.e === sp ? ' hl' : '') + '" alt="' + (ELN[x.e] || '') + '" title="' + (ELN[x.e] || '') + '" src="' + d.elIco[x.e] + '">' : '') +
-      '<span class="pk-hw' + inR + '" title="' + (x.w === '?' ? '총기 미정' : esc(x.w)) + '"><span class="pk-hx">' + (x.w === '?' ? '<b class="pk-qt">?</b>' : '<img alt="' + esc(x.w) + '" src="assets/img/wp-' + esc(x.w) + '.png">') + '</span></span>' +
+      '<span class="pk-hw' + inR + '" title="' + (x.w === '?' ? '총기 미정' : esc(x.w)) + '"><span class="pk-hx">' + (x.w === '?' ? '<span class="pk-qt">?</span>' : '<img alt="' + esc(x.w) + '" src="assets/img/wp-' + esc(x.w) + '.png">') + '</span></span>' +
       '<span class="pk-hw" title="버스트"><span class="pk-hx">' + (BU[x.b] || '') + '</span></span></div>' +
       (tv ? '<div class="pk-sc" style="--tc:' + ((d.tierCol && d.tierCol[x.t]) || '#ccc') + '" title="티어 ' + tv + ' + 돌파 ' + brkChip(cnt) + '"><b>' + (tv + brkChip(cnt)) + '</b><i>' + esc(x.t) + '</i></div>' : '') +
-      '<div class="pk-bt">' + '<div class="pk-co" title="' + (x.c === '?' ? '기업 미정' : esc(x.c)) + '">' + (x.c === '?' ? '<b class="pk-qt">?</b>' : d.coIco && d.coIco[x.c] ? '<img alt="" src="' + esc(d.coIco[x.c]) + '">' : coSvg(x.c)) + '</div>' + (cnt && d.lb ? '<img class="pk-lb" alt="" src="' + d.lb(g, core) + '">' : '') + '<b class="pk-nm">' + esc(x.n) + '</b></div></div></div>';
+      '<div class="pk-bt">' + '<div class="pk-co" title="' + (x.c === '?' ? '기업 미정' : esc(x.c)) + '">' + (x.c === '?' ? '<span class="pk-qt">?</span>' : d.coIco && d.coIco[x.c] ? '<img alt="" src="' + esc(d.coIco[x.c]) + '">' : coSvg(x.c)) + '</div>' + (cnt && d.lb ? '<img class="pk-lb" alt="" src="' + d.lb(g, core) + '">' : '') + '<b class="pk-nm">' + esc(x.n) + '</b></div></div></div>';
   }
   const elOf = (id) => { if (!els[id]) { const t = document.createElement('div'); t.innerHTML = cardHtml(S.cards[id], S.boss); els[id] = t.firstChild; } return els[id]; };
   const C = (ids) => ids.map((id) => S.cards[id]);
