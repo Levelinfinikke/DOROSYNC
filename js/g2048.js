@@ -67,7 +67,7 @@
   const dress = (e, v, im) => { const lb = lbSrc(v); e.className = 'g48-tl s' + (v >= GOAL ? 11 : v >= 8 ? 8 : v >= 5 ? 5 : v >= 4 ? 4 : v <= 1 ? 1 : 2) + (v >= GOAL ? ' poly' : v >= 4 ? ' foil' : ''); e.style.setProperty('--img', 'url(' + (im || pick().img) + ')'); e.innerHTML = v >= 5 ? '<em>' + (v >= GOAL ? 'MAX' : v - 4) + '</em>' : lb ? '<img alt="" src="' + lb + '">' : ''; e.title = stage(v); }; /* 코강 단계: 별 없이 코강 숫자만(초상화가 잘 보이게) */
   function ui() {
     if (!root) return; const o = window.doroChips.get(), mx = G ? maxOf(G) : 0, p = pick();
-    $('.g48-pk', root).innerHTML = '<i style="background-image:url(' + p.img + ')"></i><span>지금 픽업<b>' + String(p.n).replace(/[<>&]/g, '') + '</b></span>' + (pickList().length > 1 ? '<button type="button" class="g48-ch" data-g="pick" title="지금 픽업 중인 다른 니케로 바꾸기">변경</button>' : '');
+    $('.g48-pk', root).innerHTML = '<i style="background-image:url(' + p.img + ')"></i><span>' + (p.s && Date.now() < p.s ? '출시 예정' : p.e && Date.now() >= p.e ? '지난 픽업' : '지금 픽업') + '<b>' + String(p.n).replace(/[<>&]/g, '') + '</b></span>' + (pickList().length > 1 ? '<button type="button" class="g48-ch" data-g="pick" title="지금 픽업 중인 다른 니케로 바꾸기">변경</button>' : '');
     $('.g48-bal', root).innerHTML = '<span>' + chip('b', 18) + fmt(window.doroChips.total()) + '</span><span>' + chip('r', 18) + fmt((o && o.r) || 0) + '</span>';
     $('.g48-k', root).innerHTML = '<div>움직인 횟수<b>' + fmt(G ? G.n : 0) + '</b></div><div>가장 높은 단계<b>' + (mx ? stage(mx) : '-') + '</b></div>';
     const ab = $('[data-g=auto]', root), over = !G || maxOf(G) >= GOAL || !canMove(G); ab.disabled = over; ab.classList.toggle('on', !!(G && G.on)); ab.innerHTML = G && G.auto > 0 ? (G.on ? 'AUTO 멈춤 (' + G.auto + ')' : 'AUTO 계속 (' + G.auto + ')') : AUTO_N + '회 AUTO ' + chip('b', 15) + AUTO_FEE;
@@ -86,7 +86,7 @@
   const AP_ERR = { noseason: '지금은 열린 시즌이 없어 적용되지 않습니다.', nopick: '픽업 니케가 아직 카드로 등록되지 않아 적용되지 않습니다.', closed: '아직 공개 전입니다.', auth: '로그인하면 포커레이드에 적용됩니다.' };
   function apShow() { const e = root && $('.g48-ap', root); if (e) e.textContent = apMsg; }
   function apply2048() { clearTimeout(apT); if (!G) return; const mx = maxOf(G); if (mx < 2 || (G.sent || 0) >= mx) return;
-    apT = setTimeout(async () => { const g = G, a = window.doroAccount; if (!g) return; if (!(a && a.user)) { apMsg = AP_ERR.auth; apShow(); return; } if (!(window.doroRaid && window.doroRaid.api)) return;
+    apT = setTimeout(async () => { const g = G, a = window.doroAccount; if (!g) return; if (!(a && a.user)) { apMsg = AP_ERR.auth; apShow(); return; } if (!(window.doroRaid && window.doroRaid.api)) return; if (!pick().code) { apMsg = '아직 카드로 등록되지 않은 니케라 포커레이드에는 적용되지 않습니다.'; apShow(); return; }
       try { const m0 = maxOf(g), j = await window.doroRaid.api('g48', { seed: g.seed, moves: g.moves, code: pick().code || '' }); g.sent = m0; apMsg = '적용됨: ' + String(pick().n).replace(/[<>&]/g, '') + ' ' + stage(j.v || m0); }
       catch (e) { apMsg = AP_ERR[e && e.message] || '포커레이드에 적용하지 못했습니다. 잠시 후 다시 합성하면 다시 시도합니다.'; } apShow(); }, 1500); }
   function go(d) { if (!G || maxOf(G) >= GOAL) return false; peek = false; const r = move(G, d); if (!r.moved) return false; paint(r.gone); save(); const mx = maxOf(G); if (r.gain) apply2048();
