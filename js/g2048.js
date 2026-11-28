@@ -64,7 +64,7 @@
 @media(max-width:760px){.g48{grid-template-columns:1fr}.g48-main{order:-1}}
 `;
   const addCss = () => { if (!document.getElementById('g48-css')) { const s = document.createElement('style'); s.id = 'g48-css'; s.textContent = CSS; document.head.appendChild(s); } };
-  const dress = (e, v) => { const lb = lbSrc(v); e.className = 'g48-tl s' + (v >= GOAL ? 11 : v >= 8 ? 8 : v >= 5 ? 5 : v >= 4 ? 4 : v <= 1 ? 1 : 2) + (v >= GOAL ? ' poly' : v >= 4 ? ' foil' : ''); e.style.setProperty('--img', 'url(' + pick().img + ')'); e.innerHTML = v >= 5 ? '<em>' + (v >= GOAL ? 'MAX' : v - 4) + '</em>' : lb ? '<img alt="" src="' + lb + '">' : ''; e.title = stage(v); }; /* 코강 단계: 별 없이 코강 숫자만(초상화가 잘 보이게) */
+  const dress = (e, v, im) => { const lb = lbSrc(v); e.className = 'g48-tl s' + (v >= GOAL ? 11 : v >= 8 ? 8 : v >= 5 ? 5 : v >= 4 ? 4 : v <= 1 ? 1 : 2) + (v >= GOAL ? ' poly' : v >= 4 ? ' foil' : ''); e.style.setProperty('--img', 'url(' + (im || pick().img) + ')'); e.innerHTML = v >= 5 ? '<em>' + (v >= GOAL ? 'MAX' : v - 4) + '</em>' : lb ? '<img alt="" src="' + lb + '">' : ''; e.title = stage(v); }; /* 코강 단계: 별 없이 코강 숫자만(초상화가 잘 보이게) */
   function ui() {
     if (!root) return; const o = window.doroChips.get(), mx = G ? maxOf(G) : 0, p = pick();
     $('.g48-pk', root).innerHTML = '<i style="background-image:url(' + p.img + ')"></i><span>지금 픽업<b>' + String(p.n).replace(/[<>&]/g, '') + '</b></span>' + (pickList().length > 1 ? '<button type="button" class="g48-ch" data-g="pick" title="지금 픽업 중인 다른 니케로 바꾸기">변경</button>' : '');
@@ -112,7 +112,7 @@
   }
   const KEY = { ArrowLeft: 'L', ArrowRight: 'R', ArrowUp: 'U', ArrowDown: 'D', a: 'L', d: 'R', w: 'U', s: 'D', A: 'L', D: 'R', W: 'U', S: 'D' };
   window.doro2048 = { _ai(n) { const out = []; for (let k = 0; k < n; k++) { const g = fresh((Math.random() * 4294967296) >>> 0, ''); let mv = 0; for (;;) { if (maxOf(g) >= GOAL) break; const b = best(g.c); if (!b.d || !move(g, b.d).moved) break; mv++; } out.push([maxOf(g), mv]); } return out; }, /* AUTO 실력 측정용 */
-    art() { addCss(); const d = document.createElement('div'); return '<span class="lb-48g">' + [1, 2, 4, 3, 6, 8, 1, 5, 11].map((v) => { dress(d, v); return d.outerHTML; }).join('') + '</span>'; }, /* 로비 그림: 지금 픽업 니케의 타일 */
+    art() { addCss(); const d = document.createElement('div'), up = (window.doroUpcoming && window.doroUpcoming()) || null, im = up && up.img; return '<span class="lb-48g">' + [1, 2, 4, 3, 6, 8, 1, 5, 11].map((v) => { dress(d, v, im); return d.outerHTML; }).join('') + '</span>'; }, /* 로비 그림: 출시 예정 니케 중 가장 먼저 나오는 니케(없으면 지금 픽업)의 타일 */
     mount(el) {
       if (!el) return; if (!data().ok) { el.innerHTML = ''; return; } addCss();
       if (root !== el) { root = el; el.addEventListener('click', (e) => { const b = e.target.closest('[data-g]'); if (!b) return; if (b.dataset.g === 'pick') { const L = pickList(), i = L.findIndex((x) => x.n === pick().n), nx = L[(i + 1) % L.length]; if (nx) { stopAuto(); save(); try { localStorage.setItem(PK_K, nx.n); } catch (er) { /* 무시 */ } G = load(); peek = false; fxOn = false; root.querySelectorAll('.g48-fx').forEach((el) => el.remove()); apMsg = ''; /* 니케마다 자기 판을 이어서 함 */ root.querySelectorAll('.g48-tl').forEach((el) => el.remove()); paint(); ui(); apShow(); apply2048(); } return; }
